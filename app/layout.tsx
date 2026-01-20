@@ -1,13 +1,14 @@
 // app/layout.tsx
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, DM_Sans } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
+const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans" });
 
 export const metadata: Metadata = {
-  title: "Ethiopia Engineering Corporation - Internal Management System",
-  description: "Internal Management System for Ethiopia Engineering Corporation",
+  title: "ECWC CMMS",
+  description: "Internal Management System for ECWC",
 };
 
 export default function RootLayout({
@@ -17,7 +18,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={`${inter.className} ${dmSans.variable}`}>
         {children}
       </body>
     </html>

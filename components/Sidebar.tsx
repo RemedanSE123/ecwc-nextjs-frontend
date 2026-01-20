@@ -144,7 +144,7 @@ export default function Sidebar({ isCollapsed = false, onToggleCollapse }: Sideb
           {isCollapsed ? (
             <div className="relative w-16 h-16">
               <Image
-                src="/ECWC-Official-Logo.png"
+                src="/ecwc png logo.png"
                 alt="ECWC Logo"
                 fill
                 sizes="64px"
@@ -157,7 +157,7 @@ export default function Sidebar({ isCollapsed = false, onToggleCollapse }: Sideb
           ) : (
             <div className="relative w-full h-full">
               <Image
-                src="/ECWC-Official-Logo.png"
+                src="/ecwc png logo.png"
                 alt="ECWC Logo"
                 fill
                 sizes="512px"

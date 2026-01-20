@@ -63,7 +63,8 @@ import {
   QrCode,
   DollarSign,
   Activity,
-  History
+  History,
+  X
 }  from "lucide-react"
 import { motion, useScroll, useTransform } from "framer-motion"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -189,128 +190,6 @@ const getStatusColor = (utilization: number) => {
   return "bg-red-500";
 };
 
-// Orbital System Visualization Component
-const OrbitalSystemVisualization = () => {
-  const [rotation, setRotation] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setRotation((prev) => (prev + 0.5) % 360);
-    }, 50);
-    return () => clearInterval(interval);
-  }, []);
-
-  const centerX = 200;
-  const centerY = 200;
-  const planets = [
-    { angle: 0, radius: 120, size: 25, color: "#3b82f6", label: "Inventory", speed: 1 },
-    { angle: 90, radius: 120, size: 25, color: "#f59e0b", label: "Work Orders", speed: 1 },
-    { angle: 180, radius: 160, size: 30, color: "#8b5cf6", label: "Maintenance", speed: 0.7 },
-    { angle: 270, radius: 160, size: 25, color: "#ec4899", label: "Reports", speed: 0.7 }
-  ];
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: 50 }}
-      whileInView={{ opacity: 1, x: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.8 }}
-      className="relative h-[500px] flex items-center justify-center"
-    >
-      <svg
-        viewBox="0 0 400 400"
-        className="w-full h-full"
-        style={{ filter: 'drop-shadow(0 0 20px rgba(112,200,42,0.3))' }}
-      >
-        <defs>
-          <radialGradient id="coreGradient">
-            <stop offset="0%" stopColor="#70c82a" stopOpacity="1" />
-            <stop offset="100%" stopColor="#5fa822" stopOpacity="0.8" />
-          </radialGradient>
-        </defs>
-
-        {/* Central Core */}
-        <motion.circle
-          cx={centerX}
-          cy={centerY}
-          r="40"
-          fill="url(#coreGradient)"
-          initial={{ scale: 0 }}
-          whileInView={{ scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, type: "spring" }}
-          className="drop-shadow-[0_0_30px_rgba(112,200,42,0.6)]"
-        >
-          <animate
-            attributeName="opacity"
-            values="0.8;1;0.8"
-            dur="2s"
-            repeatCount="indefinite"
-          />
-        </motion.circle>
-        <text x={centerX} y={centerY + 10} textAnchor="middle" className="fill-white text-sm font-bold">ERP Core</text>
-
-        {/* Orbit Paths */}
-        <circle cx={centerX} cy={centerY} r="120" fill="none" stroke="rgba(112,200,42,0.2)" strokeWidth="1" strokeDasharray="4,4" />
-        <circle cx={centerX} cy={centerY} r="160" fill="none" stroke="rgba(112,200,42,0.15)" strokeWidth="1" strokeDasharray="4,4" />
-
-        {/* Planets */}
-        {planets.map((planet, i) => {
-          const currentAngle = (planet.angle + rotation * planet.speed) * (Math.PI / 180);
-          const x = centerX + planet.radius * Math.cos(currentAngle);
-          const y = centerY + planet.radius * Math.sin(currentAngle);
-
-          return (
-            <g key={i}>
-              {/* Connection Line */}
-              <line
-                x1={centerX}
-                y1={centerY}
-                x2={x}
-                y2={y}
-                stroke="rgba(112,200,42,0.3)"
-                strokeWidth="2"
-              >
-                <animate
-                  attributeName="opacity"
-                  values="0.3;0.6;0.3"
-                  dur="2s"
-                  repeatCount="indefinite"
-                />
-              </line>
-              {/* Planet */}
-              <g>
-                <circle
-                  cx={x}
-                  cy={y}
-                  r={planet.size}
-                  fill={planet.color}
-                  className="drop-shadow-[0_0_15px_rgba(112,200,42,0.4)]"
-                >
-                  <animate
-                    attributeName="opacity"
-                    values="0.8;1;0.8"
-                    dur="2s"
-                    repeatCount="indefinite"
-                  />
-                </circle>
-                <text
-                  x={x}
-                  y={y + planet.size + 15}
-                  textAnchor="middle"
-                  className="fill-white text-xs font-semibold"
-                >
-                  {planet.label}
-                </text>
-              </g>
-            </g>
-          );
-        })}
-      </svg>
-    </motion.div>
-  );
-};
-
 const CommandCenterSection = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
@@ -431,7 +310,7 @@ const CommandCenterSection = () => {
   const statusColor = getStatusColor(utilization);
 
   return (
-    <section className="relative py-32 bg-zinc-950">
+    <section className="relative py-32 bg-background dark:bg-zinc-950">
       <div className="container mx-auto px-4 lg:px-8 relative z-10">
         {/* Cinematic Background Lighting */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -451,11 +330,11 @@ const CommandCenterSection = () => {
             <motion.h2 
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              className="text-4xl md:text-6xl font-bold text-white mb-2 tracking-tight"
+              className="text-4xl md:text-6xl font-bold text-foreground mb-2 tracking-tight"
             >
-              ECWC <span className="text-[#70c82a]">Equipment Command Center</span>
+               <span className="text-[#70c82a]">Equipment Command Center</span>
             </motion.h2>
-            <p className="text-zinc-400 text-lg md:text-xl font-medium">Every machine. Every detail. One intelligent system.</p>
+            <p className="text-muted-foreground text-lg md:text-xl font-medium">Every machine. Every detail. One intelligent system.</p>
           </div>
 
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -535,13 +414,13 @@ const CommandCenterSection = () => {
                     <div className="space-y-2">
                       <div className="flex items-center gap-3">
                         <div className={`w-3 h-3 rounded-full ${categoryStatusColor} animate-pulse shadow-[0_0_10px_${categoryStatusColor.replace('bg-', '')}]`} />
-                        <span className="text-sm font-bold tracking-widest uppercase text-zinc-400">
+                        <span className="text-sm font-bold tracking-widest uppercase text-muted-foreground">
                           {categoryUtilization >= 80 ? '🚀 OPTIMAL PERFORMANCE' : categoryUtilization >= 60 ? '✅ GOOD STATUS' : categoryUtilization >= 40 ? '⚠️ NEEDS ATTENTION' : '🔴 CRITICAL ALERT'}
                         </span>
                       </div>
-                      <h3 className="text-3xl md:text-4xl font-bold text-white tracking-tight leading-tight">{category.name}</h3>
+                      <h3 className="text-3xl md:text-4xl font-bold text-foreground tracking-tight leading-tight">{category.name}</h3>
                       <p className="text-[#70c82a] font-mono text-base">Fleet Category #{category.id} of {equipmentCategories.length}</p>
-                      <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed italic mb-4">{getEquipmentDescription(category.name)}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed italic mb-4">{getEquipmentDescription(category.name)}</p>
                     </div>
 
                     {/* Main Stats with Icons and Descriptions */}
@@ -553,12 +432,12 @@ const CommandCenterSection = () => {
                       >
                         <div className="flex items-center gap-2 mb-1.5">
                           <CheckCircle className="w-4 h-4 text-[#70c82a]" />
-                          <p className="text-xs font-semibold text-zinc-400">Operational & Ready</p>
+                          <p className="text-xs font-semibold text-muted-foreground">Operational & Ready</p>
                         </div>
                         <div className="text-2xl font-bold text-[#70c82a] mb-1">
                           <AnimatedCounter value={category.op} duration={1000} />
                         </div>
-                        <p className="text-[10px] text-zinc-500 leading-tight">Units actively working on projects</p>
+                        <p className="text-[10px] text-muted-foreground leading-tight">Units actively working on projects</p>
                       </motion.div>
 
                       <motion.div
@@ -568,12 +447,12 @@ const CommandCenterSection = () => {
                       >
                         <div className="flex items-center gap-2 mb-1.5">
                           <Truck className="w-4 h-4 text-blue-500" />
-                          <p className="text-xs font-semibold text-zinc-400">Total Fleet Size</p>
+                          <p className="text-xs font-semibold text-muted-foreground">Total Fleet Size</p>
                         </div>
-                        <div className="text-2xl font-bold text-white mb-1">
+                        <div className="text-2xl font-bold text-foreground mb-1">
                           <AnimatedCounter value={category.totalQty} duration={1000} />
                         </div>
-                        <p className="text-[10px] text-zinc-500 leading-tight">Total equipment in this category</p>
+                        <p className="text-[10px] text-muted-foreground leading-tight">Total equipment in this category</p>
                       </motion.div>
 
                       <motion.div
@@ -583,12 +462,12 @@ const CommandCenterSection = () => {
                       >
                         <div className="flex items-center gap-2 mb-1.5">
                           <Gauge className="w-4 h-4 text-amber-500" />
-                          <p className="text-xs font-semibold text-zinc-400">Utilization Rate</p>
+                          <p className="text-xs font-semibold text-muted-foreground">Utilization Rate</p>
                         </div>
                         <div className="text-2xl font-bold text-amber-500 mb-1">
                           <AnimatedCounter value={categoryUtilization} duration={1000} />%
                         </div>
-                        <p className="text-[10px] text-zinc-500 leading-tight">Percentage of fleet in use</p>
+                        <p className="text-[10px] text-muted-foreground leading-tight">Percentage of fleet in use</p>
                       </motion.div>
 
                       <motion.div
@@ -598,31 +477,31 @@ const CommandCenterSection = () => {
                       >
                         <div className="flex items-center gap-2 mb-1.5">
                           <AlertTriangle className="w-4 h-4 text-red-500" />
-                          <p className="text-xs font-semibold text-zinc-400">Out of Service</p>
+                          <p className="text-xs font-semibold text-muted-foreground">Out of Service</p>
                         </div>
                         <div className="text-2xl font-bold text-red-500 mb-1">
                           <AnimatedCounter value={category.down} duration={1000} />
                         </div>
-                        <p className="text-[10px] text-zinc-500 leading-tight">Units requiring immediate attention</p>
+                        <p className="text-[10px] text-muted-foreground leading-tight">Units requiring immediate attention</p>
                       </motion.div>
                     </div>
 
                     {/* Additional Status Info */}
-                    <div className="grid grid-cols-3 gap-2 pt-3 border-t border-zinc-800">
-                      <div className="text-center p-2 rounded-lg bg-zinc-900/50 border border-zinc-800">
+                    <div className="grid grid-cols-3 gap-2 pt-3 border-t border-border dark:border-zinc-800">
+                      <div className="text-center p-2 rounded-lg bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800">
                         <Clock className="w-4 h-4 text-amber-400 mx-auto mb-1" />
-                        <div className="text-base font-bold text-white mb-0.5">{category.idle}</div>
-                        <p className="text-[9px] text-zinc-500 leading-tight">Standby / Idle</p>
+                        <div className="text-base font-bold text-foreground mb-0.5">{category.idle}</div>
+                        <p className="text-[9px] text-muted-foreground leading-tight">Standby / Idle</p>
                       </div>
-                      <div className="text-center p-2 rounded-lg bg-zinc-900/50 border border-zinc-800">
+                      <div className="text-center p-2 rounded-lg bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800">
                         <Wrench className="w-4 h-4 text-orange-400 mx-auto mb-1" />
-                        <div className="text-base font-bold text-white mb-0.5">{category.ur}</div>
-                        <p className="text-[9px] text-zinc-500 leading-tight">Under Repair</p>
+                        <div className="text-base font-bold text-foreground mb-0.5">{category.ur}</div>
+                        <p className="text-[9px] text-muted-foreground leading-tight">Under Repair</p>
                       </div>
-                      <div className="text-center p-2 rounded-lg bg-zinc-900/50 border border-zinc-800">
+                      <div className="text-center p-2 rounded-lg bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800">
                         <TrendingUp className="w-4 h-4 text-[#70c82a] mx-auto mb-1" />
-                        <div className="text-base font-bold text-white mb-0.5">{category.hr + category.ui + category.rfd + category.afd}</div>
-                        <p className="text-[9px] text-zinc-500 leading-tight">In Transit / Other</p>
+                        <div className="text-base font-bold text-foreground mb-0.5">{category.hr + category.ui + category.rfd + category.afd}</div>
+                        <p className="text-[9px] text-muted-foreground leading-tight">In Transit / Other</p>
                       </div>
                     </div>
                   </motion.div>
@@ -632,17 +511,17 @@ const CommandCenterSection = () => {
           </div>
 
           {/* Scrollable Image Carousel - Small Images with Names */}
-          <div className="mt-12 pt-8 border-t border-zinc-800">
+          <div className="mt-12 pt-8 border-t border-border dark:border-zinc-800">
             {/* Search Bar */}
             <div className="mb-6 flex justify-center">
               <div className="relative w-full max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
                   type="text"
                   placeholder="Search equipment categories..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-zinc-900/50 border border-zinc-700 rounded-lg text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[#70c82a] transition-colors"
+                  className="w-full pl-10 pr-4 py-2.5 bg-input dark:bg-zinc-900/50 border border-border dark:border-zinc-700 rounded-lg text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:border-[#70c82a] transition-colors"
                 />
               </div>
             </div>
@@ -652,19 +531,19 @@ const CommandCenterSection = () => {
               {/* Left Scroll Button - Always Visible */}
               <button
                 onClick={() => handleNavigate('left')}
-                className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-zinc-900/95 border border-zinc-700 hover:border-[#70c82a] flex items-center justify-center transition-all hover:bg-zinc-800 hover:scale-110 shadow-lg"
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-background/95 dark:bg-zinc-900/95 border border-border dark:border-zinc-700 hover:border-[#70c82a] flex items-center justify-center transition-all hover:bg-muted dark:hover:bg-zinc-800 hover:scale-110 shadow-lg"
                 aria-label="Scroll left"
               >
-                <ChevronRight className="w-5 h-5 text-zinc-400 hover:text-[#70c82a] rotate-180 transition-colors" />
+                <ChevronRight className="w-5 h-5 text-muted-foreground hover:text-[#70c82a] rotate-180 transition-colors" />
               </button>
 
               {/* Right Scroll Button - Always Visible */}
               <button
                 onClick={() => handleNavigate('right')}
-                className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-zinc-900/95 border border-zinc-700 hover:border-[#70c82a] flex items-center justify-center transition-all hover:bg-zinc-800 hover:scale-110 shadow-lg"
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-background/95 dark:bg-zinc-900/95 border border-border dark:border-zinc-700 hover:border-[#70c82a] flex items-center justify-center transition-all hover:bg-muted dark:hover:bg-zinc-800 hover:scale-110 shadow-lg"
                 aria-label="Scroll right"
               >
-                <ChevronRight className="w-5 h-5 text-zinc-400 hover:text-[#70c82a] transition-colors" />
+                <ChevronRight className="w-5 h-5 text-muted-foreground hover:text-[#70c82a] transition-colors" />
               </button>
 
               <div 
@@ -693,7 +572,7 @@ const CommandCenterSection = () => {
                           relative flex flex-col items-center gap-2 w-20 sm:w-24 p-3 rounded-xl border-2 transition-all cursor-pointer flex-shrink-0 group
                           ${isActive 
                             ? 'bg-[#70c82a]/10 border-[#70c82a] shadow-[0_0_20px_rgba(112,200,42,0.4)] scale-105' 
-                            : 'bg-zinc-900/50 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900/70'
+                            : 'bg-card/50 dark:bg-zinc-900/50 border-border dark:border-zinc-800 hover:border-border/80 dark:hover:border-zinc-700 hover:bg-card/70 dark:hover:bg-zinc-900/70'
                           }
                         `}
                       >
@@ -709,7 +588,7 @@ const CommandCenterSection = () => {
                         <div className={`absolute top-1 right-1 w-2.5 h-2.5 rounded-full ${categoryStatusColor} ${isActive ? 'animate-pulse shadow-[0_0_8px_rgba(112,200,42,0.6)]' : ''} z-10`} />
 
                         {/* Small Image */}
-                        <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-zinc-800 border border-zinc-700 group-hover:border-[#70c82a]/50 transition-colors">
+                        <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-muted dark:bg-zinc-800 border border-border dark:border-zinc-700 group-hover:border-[#70c82a]/50 transition-colors">
                           <Image
                             src={category.image}
                             alt={category.name}
@@ -722,10 +601,10 @@ const CommandCenterSection = () => {
 
                         {/* Category Name */}
                         <div className="text-center w-full">
-                          <p className={`text-[10px] sm:text-[11px] font-semibold line-clamp-2 leading-tight ${isActive ? 'text-white' : 'text-zinc-300 group-hover:text-white'}`}>
+                          <p className={`text-[10px] sm:text-[11px] font-semibold line-clamp-2 leading-tight ${isActive ? 'text-foreground' : 'text-foreground/80 dark:text-zinc-300 group-hover:text-foreground'}`}>
                             {category.name}
                           </p>
-                          <div className={`mt-1 text-[9px] font-bold ${isActive ? 'text-[#70c82a]' : 'text-zinc-500'}`}>
+                          <div className={`mt-1 text-[9px] font-bold ${isActive ? 'text-[#70c82a]' : 'text-muted-foreground'}`}>
                             {categoryUtilization}% · {category.op}/{category.totalQty}
                           </div>
                         </div>
@@ -904,19 +783,18 @@ const AnimatedEquipmentProgress = ({
   return (
     <div className="space-y-2" ref={ref}>
       <div className="flex items-center justify-between text-sm">
-        <span className="font-medium text-white">{name}</span>
-        <span className="text-zinc-400">
-          {operational}/{total}
+        <span className="font-medium text-foreground">{name}</span>
+        <span className="text-muted-foreground">
+          {total}/{operational}
         </span>
       </div>
-      <div className="relative h-2 bg-zinc-800 rounded-full overflow-hidden">
-      <motion.div
-  className={`h-full rounded-full bg-gradient-to-r from-[#70c82a] to-emerald-400`}
-  initial={{ width: 0 }}
-  animate={{ width: `${progress}%` }}
-  transition={{ duration: duration / 1000, ease: "easeOut" }}
-/>
-
+      <div className="relative h-2 bg-muted dark:bg-zinc-800 rounded-full overflow-hidden">
+        <motion.div
+          className={`h-full rounded-full bg-gradient-to-r from-[#70c82a] to-emerald-400`}
+          initial={{ width: 0 }}
+          animate={{ width: `${progress}%` }}
+          transition={{ duration: duration / 1000, ease: "easeOut" }}
+        />
       </div>
     </div>
   )
@@ -952,7 +830,7 @@ export default function LandingPage() {
                 className="flex items-center justify-center"
               >
                 <Image
-                  src="/ECWC-Official-Logo.png"
+                  src="/ecwc png logo.png"
                   alt="ECWC Logo"
                   width={80}
                   height={80}
@@ -967,7 +845,7 @@ export default function LandingPage() {
                 <span className="text-sm font-bold bg-gradient-to-r from-cyan-600 to-teal-500 bg-clip-text text-transparent">
                 ETHIOPIAN CONSTRUCTION WORKS CORPORATION
                 </span>
-                <span className="text-xs text-muted-foreground font-medium">የኢትዮጵያ ኮንቦትሬክሽን ምልዎት ኮርፖሬሽን</span>
+                <span className="text-xs text-muted-foreground font-medium">የኢትዮጵያ ኮንስትራክሽን ሥራዎች ኮርፖሬሽን</span>
               </div>
             </motion.div>
 
@@ -1009,8 +887,8 @@ export default function LandingPage() {
       </motion.header>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-20 lg:py-32 bg-black">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(112,200,42,0.05),transparent_50%)]" />
+      <section className="relative overflow-hidden py-12 lg:py-16 bg-background dark:bg-black">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(112,200,42,0.05),transparent_50%)] dark:bg-[radial-gradient(circle_at_30%_50%,rgba(112,200,42,0.05),transparent_50%)]" />
         <motion.div 
           className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#70c82a] to-transparent"
           initial={{ scaleX: 0 }}
@@ -1028,58 +906,151 @@ export default function LandingPage() {
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               {/* Left Content */}
               <motion.div variants={fadeInUp} className="space-y-8">
+                {/* CMMS Acronym with Explanations */}
+                <div className="relative">
+                  {/* Vertical Connecting Line */}
+                  <div className="absolute left-3 top-0 bottom-0 w-0.5 bg-black/40 dark:bg-white/40 rounded-full">
+                    <motion.div
+                      initial={{ scaleY: 0 }}
+                      animate={{ scaleY: 1 }}
+                      transition={{ duration: 1.5, delay: 0.5, ease: [0.4, 0, 0.2, 1] }}
+                      className="w-full h-full bg-black/40 dark:bg-white/40 rounded-full origin-top"
+                    />
+                  </div>
+
+                  {/* CMMS Letters with Full Words */}
+                  <div className="flex flex-col gap-5">
+                    {[
+                      { letter: "C", word: "Computerized" },
+                      { letter: "M", word: "Maintenance" },
+                      { letter: "M", word: "Management" },
+                      { letter: "S", word: "System" }
+                    ].map((item, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ x: -30, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        transition={{ 
+                          duration: 0.7, 
+                          delay: 0.6 + i * 0.25, 
+                          ease: [0.4, 0, 0.2, 1] 
+                        }}
+                        className="flex items-center gap-4 relative"
+                      >
+                        {/* Bullet Point aligned with letter */}
+                        <div className="relative flex-shrink-0" style={{ width: '24px' }}>
+                          <motion.div
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            transition={{ duration: 0.6, delay: 0.3 + i * 0.3, type: "spring", stiffness: 200 }}
+                            className="relative z-10"
+                          >
+                            <div className="w-3 h-3 rounded-full bg-black dark:bg-white shadow-lg flex items-center justify-center mx-auto">
+                              <div className="w-1.5 h-1.5 rounded-full bg-white dark:bg-black"></div>
+                            </div>
+                            <motion.div
+                              initial={{ scale: 0, opacity: 0 }}
+                              animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
+                              transition={{ duration: 2, repeat: Infinity, delay: 0.8 + i * 0.3 }}
+                              className="absolute inset-0 rounded-full border border-black/30 dark:border-white/30"
+                            />
+                          </motion.div>
+                        </div>
+
+                        {/* Large Letter */}
+                        <div
+                          className="text-3xl md:text-4xl lg:text-5xl font-black text-foreground flex-shrink-0"
+                          style={{ 
+                            fontFamily: 'var(--font-dm-sans), "DM Sans", sans-serif',
+                            lineHeight: 1,
+                            width: '40px'
+                          }}
+                        >
+                          {item.letter}
+                        </div>
+                        
+                        {/* Animated Arrow Connector */}
+                        <motion.div
+                          initial={{ width: 0, opacity: 0 }}
+                          animate={{ width: "auto", opacity: 1 }}
+                          transition={{ duration: 0.5, delay: 0.8 + i * 0.25 }}
+                          className="flex items-center gap-2"
+                        >
+                          <div className="h-0.5 w-6 bg-black/60 dark:bg-white/60"></div>
+                          <motion.div
+                            animate={{ x: [0, 3, 0] }}
+                            transition={{ duration: 1.5, repeat: Infinity, delay: 1 + i * 0.25 }}
+                          >
+                            <ChevronRight className="w-4 h-4 text-foreground" />
+                          </motion.div>
+                          <div className="h-0.5 w-3 bg-black/30 dark:bg-white/30"></div>
+                        </motion.div>
+                        
+                        {/* Full Word */}
+                        <h1
+                          className="text-xl md:text-2xl lg:text-3xl font-bold tracking-tight text-foreground"
+                          style={{ 
+                            fontFamily: 'var(--font-dm-sans), "DM Sans", sans-serif',
+                            letterSpacing: '-0.01em',
+                            fontWeight: 700
+                          }}
+                        >
+                          {item.word}
+                        </h1>
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Subheading with Vertical Line */}
                 <motion.div
                   variants={fadeInUp}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#70c82a]/10 text-[#70c82a] text-sm font-semibold border border-[#70c82a]/20"
+                  className="flex items-start gap-5"
                 >
-                  <Shield className="h-4 w-4" />
-                  Internal Enterprise Management Platform
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "100%", opacity: 1 }}
+                    transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
+                    className="w-2 bg-[#70c82a] rounded-full shrink-0 mt-2 shadow-lg shadow-[#70c82a]/40"
+                  />
+               
                 </motion.div>
-
-                <motion.h1
-                  variants={fadeInUp}
-                  className="text-3xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight text-white"
-                >
-                  ECWC{" "}
-                  <span className="text-[#70c82a]">
-                      Maintenance Management System
-                  </span>
-                </motion.h1>
 
                 <motion.p
                   variants={fadeInUp}
-                  className="mt-4 text-base md:text-lg text-zinc-400 leading-relaxed max-w-2xl"
+                  className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl"
+                  style={{ 
+                    fontFamily: 'var(--font-dm-sans), "DM Sans", sans-serif'
+                  }}
                 >
-                  Empowering <span className="text-white font-semibold">ETHIOPIAN CONSTRUCTION WORKS CORPORATION (ECWC)</span> / <span className="text-white font-semibold">የኢትዮጵያ ኮንቦትሬክሽን ምልዎት ኮርፖሬሽን</span> with a unified digital system to efficiently manage
-                  <span className="text-[#70c82a] font-semibold"> inventory</span>, <span className="text-[#70c82a] font-semibold">work orders</span>, <span className="text-[#70c82a] font-semibold">maintenance</span>, <span className="text-[#70c82a] font-semibold">requests</span>, and <span className="text-[#70c82a] font-semibold">invoices</span> — promoting
-                  transparency and operational excellence across all divisions.
+                  Built for Ethiopian Construction Works Corporation to track assets, plan maintenance, control inventory, and monitor performance all in real time.
                 </motion.p>
 
-                <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row gap-4">
-                  <Button size="lg" className="gap-2 text-base h-12 px-8 bg-[#70c82a] hover:bg-[#5fa822] text-black font-semibold" asChild>
-                    <Link href="/dashboard">
-                      Access System
-                      <ArrowRight className="h-5 w-5" />
-                    </Link>
-                  </Button>
-                  <Button size="lg" variant="outline" className="gap-2 text-base h-12 px-8 border-zinc-700 text-white hover:bg-zinc-900 hover:border-[#70c82a]">
-                    <Play className="h-5 w-5" />
-                    View Demo
-                  </Button>
-                </motion.div>
-
                 {/* Stats */}
-                <motion.div variants={fadeInUp} className="grid grid-cols-3 gap-8 pt-8">
+                <motion.div variants={fadeInUp} className="grid grid-cols-3 gap-6 pt-4">
                   {[
-                    { value: 150, label: "Equipment" },
-                    { value: 98, label: "Uptime" },
-                    { value: 24, label: "Monitoring" }
+                    { value: 150, label: "Equipment", suffix: "" },
+                    { value: 98, label: "Uptime", suffix: "%" },
+                    { value: 24, label: "Monitoring", suffix: "/7" }
                   ].map((stat, i) => (
                     <div key={i} className="text-center">
-                      <div className="text-2xl font-bold text-[#70c82a]">
+                      <div 
+                        className="text-3xl md:text-4xl font-bold text-[#70c82a] mb-1"
+                        style={{ 
+                          fontFamily: 'var(--font-dm-sans), "DM Sans", sans-serif'
+                        }}
+                      >
                         <AnimatedCounter value={stat.value} />
+                        {stat.suffix && <span className="text-2xl md:text-3xl">{stat.suffix}</span>}
                       </div>
-                      <div className="text-sm text-zinc-400 font-medium">{stat.label}</div>
+                      <div 
+                        className="text-xs text-muted-foreground font-semibold uppercase tracking-wider"
+                        style={{ 
+                          fontFamily: 'var(--font-dm-sans), "DM Sans", sans-serif'
+                        }}
+                      >
+                        {stat.label}
+                      </div>
                     </div>
                   ))}
                 </motion.div>
@@ -1090,11 +1061,11 @@ export default function LandingPage() {
                 variants={scaleIn}
                 className="relative"
               >
-                <div className="relative overflow-hidden rounded-2xl bg-zinc-950 border border-zinc-800 shadow-2xl">
+                <div className="relative overflow-hidden rounded-2xl bg-card dark:bg-zinc-950 border border-border dark:border-zinc-800 shadow-2xl">
                   <div className="absolute inset-0 bg-gradient-to-br from-[#70c82a]/5 to-transparent" />
                   <div className="p-6 relative z-10">
-                    <div className="flex items-center justify-between mb-6 pb-4 border-b border-zinc-800">
-                      <h3 className="text-lg font-bold text-white">Live Equipment Dashboard</h3>
+                    <div className="flex items-center justify-between mb-6 pb-4 border-b border-border dark:border-zinc-800">
+                      <h3 className="text-lg font-bold text-foreground">Live Equipment Dashboard</h3>
                       <Badge className="bg-[#70c82a] text-black font-bold">
                         <div className="h-2 w-2 bg-black rounded-full mr-2 animate-pulse" />
                         Live
@@ -1102,46 +1073,32 @@ export default function LandingPage() {
                     </div>
                     <div className="space-y-6">
                       {/* Equipment Uptime Progress */}
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="font-medium text-white">Equipment Uptime</span>
-                          <span className="text-zinc-400">98%</span>
-                        </div>
-                        <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            whileInView={{ width: "98%" }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 1.5 }}
-                            className="h-full bg-gradient-to-r from-[#70c82a] to-emerald-400 rounded-full"
-                          />
-                        </div>
-                      </div>
+                     
 
                       {/* Equipment Status with Animated Progress Bars */}
                       <div className="space-y-4">
                         <AnimatedEquipmentProgress 
-                          name="Excavators" 
-                          operational={12} 
-                          total={15} 
+                          name="Machinery" 
+                          operational={122} 
+                          total={312} 
                           duration={1600}
                         />
                         <AnimatedEquipmentProgress 
-                          name="Bulldozers" 
-                          operational={8} 
-                          total={10} 
+                          name="Dump Trucks" 
+                          operational={111} 
+                          total={365} 
                           duration={1800}
                         />
                         <AnimatedEquipmentProgress 
-                          name="Loaders" 
-                          operational={15} 
-                          total={18} 
+                          name="Heavy Vehicles" 
+                          operational={201} 
+                          total={540} 
                           duration={2000}
                         />
                         <AnimatedEquipmentProgress 
-                          name="Dump Trucks" 
-                          operational={22} 
-                          total={25} 
+                          name="Light Vehicles" 
+                          operational={111} 
+                          total={288} 
                           duration={2200}
                         />
                       </div>
@@ -1155,8 +1112,8 @@ export default function LandingPage() {
                         variants={staggerContainer}
                       >
                         {[
-                          { value: "24", label: "Active WO", color: "bg-[#70c82a]/10 border-[#70c82a]/20", textColor: "text-[#70c82a]" },
-                          { value: "156", label: "Total Assets", color: "bg-[#70c82a]/10 border-[#70c82a]/20", textColor: "text-[#70c82a]" }
+                          { value: "434", label: "Active Assets", color: "bg-[#70c82a]/10 border-[#70c82a]/20", textColor: "text-[#70c82a]" },
+                          { value: "1140", label: "Total Assets", color: "bg-[#70c82a]/10 border-[#70c82a]/20", textColor: "text-[#70c82a]" }
                         ].map((stat, i) => (
                           <motion.div
                             key={i}
@@ -1172,7 +1129,7 @@ export default function LandingPage() {
                             >
                               {stat.value}
                             </motion.div>
-                            <div className="text-xs text-zinc-400 mt-1">{stat.label}</div>
+                            <div className="text-xs text-muted-foreground mt-1">{stat.label}</div>
                           </motion.div>
                         ))}
                       </motion.div>
@@ -1212,59 +1169,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Design 1: Orbital System - Planets & Connections */}
-      <section className="relative py-32 bg-black overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(112,200,42,0.03),transparent_70%)]" />
-        <div className="container mx-auto px-4 lg:px-8 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Left: Content */}
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="space-y-6"
-            >
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#70c82a]/10 text-[#70c82a] text-xs font-bold uppercase tracking-widest border border-[#70c82a]/20">
-                <Globe className="w-4 h-4" />
-                System Architecture
-              </div>
-              <h2 className="text-4xl md:text-5xl font-bold text-white">
-                Unified <span className="text-[#70c82a]">Orbital System</span>
-              </h2>
-              <p className="text-zinc-400 text-lg leading-relaxed">
-                Our ERP system operates like a planetary system, with each module orbiting around a central core, seamlessly connected and synchronized for optimal performance.
-              </p>
-              <div className="space-y-4 pt-4">
-                {[
-                  "Centralized core managing all operations",
-                  "Modular planets representing system components",
-                  "Real-time data flow through connections",
-                  "Synchronized operations across all modules"
-                ].map((item, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.1 }}
-                    className="flex items-center gap-3 text-zinc-300"
-                  >
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#70c82a]" />
-                    <span className="text-sm">{item}</span>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-
-            {/* Right: Orbital Visualization */}
-            <OrbitalSystemVisualization />
-          </div>
-        </div>
-      </section>
-
       {/* ECWC System Overview Video Section */}
-      <section className="relative py-20 lg:py-32 bg-gradient-to-b from-background via-zinc-950 to-black overflow-hidden">
+      <section className="relative py-20 lg:py-32 bg-gradient-to-b from-background via-muted/30 to-background dark:from-background dark:via-zinc-950 dark:to-black overflow-hidden">
         {/* Animated Background */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(112,200,42,0.05),transparent_70%)]" />
         <motion.div 
@@ -1287,12 +1193,10 @@ export default function LandingPage() {
               <Play className="w-4 h-4" />
               System Overview
             </div>
-            <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-6">
-              Experience <span className="text-[#70c82a]">ECWC Plant Management</span> in Action
+            <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6">
+               <span className="text-[#70c82a]">ECWC Plant Management</span> in Action
             </h2>
-            <p className="text-zinc-400 text-lg lg:text-xl max-w-3xl mx-auto leading-relaxed">
-              See how our comprehensive digital platform transforms heavy equipment management, maintenance operations, and fleet oversight for Ethiopia's largest construction corporation.
-            </p>
+          
           </motion.div>
 
           {/* Video Container with Cinematic Frame */}
@@ -1307,7 +1211,7 @@ export default function LandingPage() {
             <div className="absolute -inset-1 bg-gradient-to-r from-[#70c82a] via-emerald-500 to-teal-500 rounded-3xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500" />
             
             {/* Video Frame */}
-            <div className="relative rounded-2xl overflow-hidden border border-zinc-800 bg-zinc-950 shadow-2xl">
+            <div className="relative rounded-2xl overflow-hidden border border-border dark:border-zinc-800 bg-card dark:bg-zinc-950 shadow-2xl">
               {/* Video Player */}
               <div className="relative aspect-video bg-black">
                 <video
@@ -1340,14 +1244,14 @@ export default function LandingPage() {
               </div>
 
               {/* Video Info Bar */}
-              <div className="p-6 border-t border-zinc-800">
+              <div className="p-6 border-t border-border dark:border-zinc-800">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div>
-                    <h3 className="text-white font-bold text-lg mb-1">ECWC Plant & Maintenance Management System</h3>
-                    <p className="text-zinc-400 text-sm">Comprehensive overview of features, capabilities, and operational excellence</p>
+                    <h3 className="text-foreground font-bold text-lg mb-1">ECWC Plant & Maintenance Management System</h3>
+                    <p className="text-muted-foreground text-sm">Comprehensive overview of features, capabilities, and operational excellence</p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <Button variant="outline" size="sm" className="gap-2 border-zinc-700 hover:border-[#70c82a]">
+                    <Button variant="outline" size="sm" className="gap-2 border-border hover:border-[#70c82a]">
                       <Download className="w-4 h-4" />
                       Brochure
                     </Button>
@@ -1366,15 +1270,15 @@ export default function LandingPage() {
         whileInView={{ opacity: 1, x: 0 }} 
         viewport={{ once: true }}
               transition={{ duration: 0.8, delay: 0.5 }}
-              className="hidden lg:block absolute -left-12 top-1/4 w-64 p-4 rounded-xl bg-zinc-900 border border-zinc-800 shadow-xl"
+              className="hidden lg:block absolute -left-12 top-1/4 w-64 p-4 rounded-xl bg-card dark:bg-zinc-900 border border-border dark:border-zinc-800 shadow-xl"
             >
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-10 h-10 rounded-lg bg-[#70c82a]/10 flex items-center justify-center">
                   <Shield className="w-5 h-5 text-[#70c82a]" />
         </div>
                 <div>
-                  <div className="text-white font-bold text-sm">Government-Grade</div>
-                  <div className="text-zinc-500 text-xs">Security & Compliance</div>
+                  <div className="text-foreground font-bold text-sm">Government-Grade</div>
+                  <div className="text-muted-foreground text-xs">Security & Compliance</div>
                 </div>
               </div>
             </motion.div>
@@ -1384,345 +1288,29 @@ export default function LandingPage() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8, delay: 0.7 }}
-              className="hidden lg:block absolute -right-12 bottom-1/4 w-64 p-4 rounded-xl bg-zinc-900 border border-zinc-800 shadow-xl"
+              className="hidden lg:block absolute -right-12 bottom-1/4 w-64 p-4 rounded-xl bg-card dark:bg-zinc-900 border border-border dark:border-zinc-800 shadow-xl"
             >
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-10 h-10 rounded-lg bg-[#70c82a]/10 flex items-center justify-center">
                   <Zap className="w-5 h-5 text-[#70c82a]" />
                 </div>
                 <div>
-                  <div className="text-white font-bold text-sm">Real-Time Analytics</div>
-                  <div className="text-zinc-500 text-xs">Live Equipment Monitoring</div>
+                  <div className="text-foreground font-bold text-sm">Real-Time Analytics</div>
+                  <div className="text-muted-foreground text-xs">Live Equipment Monitoring</div>
                 </div>
               </div>
             </motion.div>
           </motion.div>
 
-          {/* Key Features Grid Below Video */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="grid md:grid-cols-4 gap-6 mt-16 max-w-6xl mx-auto"
-          >
-            {[
-              { icon: HardHat, label: "Equipment Tracking", value: "Real-time GPS" },
-              { icon: Wrench, label: "Smart Maintenance", value: "AI-Powered" },
-              { icon: BarChart3, label: "Executive Reports", value: "Live Dashboards" },
-              { icon: Server, label: "Multi-Site Ready", value: "31 Locations" }
-            ].map((feature, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.6 + i * 0.1 }}
-                className="text-center p-6 rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-[#70c82a]/30 transition-all group"
-              >
-                <div className="w-12 h-12 rounded-lg bg-[#70c82a]/10 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                  <feature.icon className="w-6 h-6 text-[#70c82a]" />
-                </div>
-                <h4 className="text-white font-bold text-sm mb-1">{feature.label}</h4>
-                <p className="text-zinc-500 text-xs">{feature.value}</p>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Design 3: 3D Layered Architecture */}
-      <section className="relative py-32 bg-black overflow-hidden" style={{ perspective: '1000px' }}>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(112,200,42,0.02),transparent_70%)]" />
-        <div className="container mx-auto px-4 lg:px-8 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#70c82a]/10 text-[#70c82a] text-xs font-bold uppercase tracking-widest mb-6 border border-[#70c82a]/20">
-              <Layers className="w-4 h-4" />
-              System Architecture
-            </div>
-            <h2 className="text-4xl md:text-6xl font-bold text-white mb-4">
-              <span className="text-[#70c82a]">3D Layered</span> Architecture
-            </h2>
-            <p className="text-zinc-400 text-lg max-w-3xl mx-auto">
-              Experience our system's depth through floating layers that represent the hierarchical structure of our enterprise platform.
-            </p>
-          </motion.div>
-
-          <div className="relative h-[600px] flex items-center justify-center">
-            <div className="relative w-full max-w-4xl" style={{ transformStyle: 'preserve-3d' }}>
-              {[
-                { 
-                  label: "User Interface", 
-                  desc: "Frontend Layer", 
-                  z: 0, 
-                  scale: 1, 
-                  color: "from-[#70c82a]/20 to-transparent",
-                  borderColor: "border-[#70c82a]/30",
-                  delay: 0
-                },
-                { 
-                  label: "API Gateway", 
-                  desc: "Integration Layer", 
-                  z: -100, 
-                  scale: 0.9, 
-                  color: "from-blue-500/20 to-transparent",
-                  borderColor: "border-blue-500/30",
-                  delay: 0.2
-                },
-                { 
-                  label: "Business Logic", 
-                  desc: "Core Services", 
-                  z: -200, 
-                  scale: 0.8, 
-                  color: "from-amber-500/20 to-transparent",
-                  borderColor: "border-amber-500/30",
-                  delay: 0.4
-                },
-                { 
-                  label: "Database", 
-                  desc: "Data Layer", 
-                  z: -300, 
-                  scale: 0.7, 
-                  color: "from-purple-500/20 to-transparent",
-                  borderColor: "border-purple-500/30",
-                  delay: 0.6
-                }
-              ].map((layer, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 100, rotateX: -45 }}
-                  whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.8, delay: layer.delay }}
-                  className={`absolute inset-0 p-8 rounded-2xl bg-gradient-to-br ${layer.color} border-2 ${layer.borderColor} backdrop-blur-sm`}
-                  style={{
-                    transform: `translateZ(${layer.z}px) scale(${layer.scale})`,
-                    transformStyle: 'preserve-3d',
-                    boxShadow: `0 ${Math.abs(layer.z) / 10}px ${Math.abs(layer.z) / 5}px rgba(0,0,0,0.5)`
-                  }}
-                  whileHover={{ 
-                    scale: layer.scale + 0.05,
-                    z: layer.z + 20,
-                    transition: { duration: 0.3 }
-                  }}
-                >
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-white mb-2">{layer.label}</div>
-                    <div className="text-zinc-400 text-sm">{layer.desc}</div>
-                    <div className="mt-6 flex justify-center gap-2">
-                      {[1, 2, 3].map((dot) => (
-                        <motion.div
-                          key={dot}
-                          className="w-2 h-2 rounded-full bg-[#70c82a]"
-                          animate={{
-                            scale: [1, 1.5, 1],
-                            opacity: [0.5, 1, 0.5]
-                          }}
-                          transition={{
-                            duration: 2,
-                            repeat: Infinity,
-                            delay: dot * 0.3
-                          }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-
-          {/* Side Content */}
-          <div className="grid lg:grid-cols-2 gap-12 mt-16">
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="space-y-4"
-            >
-              <h3 className="text-2xl font-bold text-white mb-4">Layered Excellence</h3>
-              <p className="text-zinc-400 leading-relaxed">
-                Each layer represents a critical component of our system architecture, working in harmony to deliver seamless performance.
-              </p>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, x: 50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="space-y-4"
-            >
-              <h3 className="text-2xl font-bold text-white mb-4">Depth & Performance</h3>
-              <p className="text-zinc-400 leading-relaxed">
-                Our multi-layered approach ensures optimal performance, security, and scalability across all system components.
-              </p>
-            </motion.div>
-          </div>
+          
         </div>
       </section>
 
       {/* ECWC Equipment Command Center */}
       <CommandCenterSection />
 
-      {/* Design 2: Neural Network / Node Graph */}
-      <section className="relative py-32 bg-zinc-950 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(112,200,42,0.02),transparent_70%)]" />
-        <div className="container mx-auto px-4 lg:px-8 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#70c82a]/10 text-[#70c82a] text-xs font-bold uppercase tracking-widest mb-6 border border-[#70c82a]/20">
-              <Activity className="w-4 h-4" />
-              Data Flow Network
-            </div>
-            <h2 className="text-4xl md:text-6xl font-bold text-white mb-4">
-              Intelligent <span className="text-[#70c82a]">Neural Network</span>
-            </h2>
-            <p className="text-zinc-400 text-lg max-w-3xl mx-auto">
-              Every module is a node, every connection is a pathway. Our system operates like a neural network, with intelligent data flow connecting all components seamlessly.
-            </p>
-          </motion.div>
-
-          <div className="relative h-[600px] w-full">
-            <svg
-              viewBox="0 0 1000 600"
-              className="w-full h-full"
-              style={{ filter: 'drop-shadow(0 0 30px rgba(112,200,42,0.2))' }}
-            >
-              <defs>
-                <linearGradient id="nodeGradient1" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#70c82a" stopOpacity="1" />
-                  <stop offset="100%" stopColor="#5fa822" stopOpacity="0.8" />
-                </linearGradient>
-                <linearGradient id="nodeGradient2" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#3b82f6" stopOpacity="1" />
-                  <stop offset="100%" stopColor="#2563eb" stopOpacity="0.8" />
-                </linearGradient>
-                <linearGradient id="nodeGradient3" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#f59e0b" stopOpacity="1" />
-                  <stop offset="100%" stopColor="#d97706" stopOpacity="0.8" />
-                </linearGradient>
-                <linearGradient id="nodeGradient4" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#8b5cf6" stopOpacity="1" />
-                  <stop offset="100%" stopColor="#7c3aed" stopOpacity="0.8" />
-                </linearGradient>
-                <linearGradient id="connectionGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#70c82a" stopOpacity="0" />
-                  <stop offset="50%" stopColor="#70c82a" stopOpacity="0.6" />
-                  <stop offset="100%" stopColor="#70c82a" stopOpacity="0" />
-                </linearGradient>
-                <filter id="glow">
-                  <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                  <feMerge>
-                    <feMergeNode in="coloredBlur"/>
-                    <feMergeNode in="SourceGraphic"/>
-                  </feMerge>
-                </filter>
-              </defs>
-
-              {/* Node positions */}
-              {[
-                { x: 200, y: 150, label: "Inventory", gradient: "url(#nodeGradient1)", size: 50 },
-                { x: 500, y: 100, label: "Work Orders", gradient: "url(#nodeGradient2)", size: 55 },
-                { x: 800, y: 150, label: "Maintenance", gradient: "url(#nodeGradient3)", size: 50 },
-                { x: 150, y: 350, label: "Reports", gradient: "url(#nodeGradient4)", size: 45 },
-                { x: 500, y: 400, label: "Analytics", gradient: "url(#nodeGradient1)", size: 60 },
-                { x: 850, y: 350, label: "Dashboard", gradient: "url(#nodeGradient2)", size: 50 },
-                { x: 500, y: 250, label: "ERP Core", gradient: "url(#nodeGradient1)", size: 70 }
-              ].map((node, i) => (
-                <g key={i}>
-                  {/* Connections to other nodes */}
-                  {i < 6 && (
-                    <motion.line
-                      x1={node.x}
-                      y1={node.y}
-                      x2={500}
-                      y2={250}
-                      stroke="url(#connectionGradient)"
-                      strokeWidth="2"
-                      initial={{ pathLength: 0, opacity: 0 }}
-                      whileInView={{ pathLength: 1, opacity: 0.4 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 1.5, delay: i * 0.2 }}
-                    >
-                      <animate
-                        attributeName="opacity"
-                        values="0.2;0.5;0.2"
-                        dur="3s"
-                        repeatCount="indefinite"
-                      />
-                    </motion.line>
-                  )}
-                  
-                  {/* Node */}
-                  <motion.g
-                    initial={{ scale: 0, opacity: 0 }}
-                    whileInView={{ scale: 1, opacity: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: i * 0.15, type: "spring" }}
-                  >
-                    <circle
-                      cx={node.x}
-                      cy={node.y}
-                      r={node.size}
-                      fill={node.gradient}
-                      filter="url(#glow)"
-                      className="cursor-pointer"
-                    >
-                      <animate
-                        attributeName="r"
-                        values={`${node.size};${node.size + 5};${node.size}`}
-                        dur="2s"
-                        repeatCount="indefinite"
-                      />
-                    </circle>
-                    <text
-                      x={node.x}
-                      y={node.y + node.size + 20}
-                      textAnchor="middle"
-                      className="fill-white text-sm font-semibold"
-                    >
-                      {node.label}
-                    </text>
-                  </motion.g>
-                </g>
-              ))}
-
-              {/* Animated data flow particles */}
-              {[0, 1, 2, 3].map((i) => (
-                <motion.circle
-                  key={`particle-${i}`}
-                  r="4"
-                  fill="#70c82a"
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  viewport={{ once: true }}
-                  animate={{
-                    cx: [200, 500, 800, 500, 200],
-                    cy: [150, 100, 150, 400, 350],
-                  }}
-                  transition={{
-                    duration: 8,
-                    repeat: Infinity,
-                    delay: i * 2,
-                    ease: "linear"
-                  }}
-                />
-              ))}
-            </svg>
-          </div>
-        </div>
-      </section>
-
       {/* Core Functional Areas - Enterprise Data-Driven */}
-      <section id="features" className="py-32 bg-black relative overflow-hidden">
+      <section id="features" className="py-32 bg-background dark:bg-black relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(112,200,42,0.03),transparent_70%)]" />
         <div className="container mx-auto px-4 lg:px-8 relative z-10">
           <motion.div 
@@ -1734,10 +1322,10 @@ export default function LandingPage() {
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#70c82a]/10 text-[#70c82a] text-xs font-bold uppercase tracking-widest mb-6 border border-[#70c82a]/20">
               Enterprise Architecture
             </div>
-            <h2 className="text-4xl md:text-6xl font-bold text-white mb-4">
+            <h2 className="text-4xl md:text-6xl font-bold text-foreground mb-4">
               Core <span className="text-[#70c82a]">Functional Areas</span>
         </h2>
-            <p className="text-zinc-400 text-lg max-w-3xl mx-auto">
+            <p className="text-muted-foreground text-lg max-w-3xl mx-auto">
               Comprehensive operational intelligence platform built for national-scale infrastructure management
             </p>
           </motion.div>
@@ -1757,36 +1345,44 @@ export default function LandingPage() {
         </div>
                 <div>
                   <div className="text-xs text-[#70c82a] font-bold uppercase tracking-wider mb-1">Module 01</div>
-                  <h3 className="text-3xl font-bold text-white">Plant & Equipment Management</h3>
+                  <h3 className="text-3xl font-bold text-foreground">Asset & Fleet Management</h3>
                 </div>
               </div>
-              <p className="text-zinc-400 text-lg leading-relaxed">
-                Centralized digital asset registry providing complete lifecycle visibility across all ECWC machinery with real-time location tracking and valuation.
+              <p className="text-muted-foreground text-lg leading-relaxed mb-6">
+                Know every piece of equipment, where it is, and its condition.
               </p>
-              <div className="space-y-4">
-                {[
-                  { icon: Database, label: "Centralized Asset Register", value: "156 Units Tracked" },
-                  { icon: MapPin, label: "Location & Condition", value: "GPS-Enabled Live" },
-                  { icon: History, label: "Full Maintenance History", value: "2,847 Records" },
-                  { icon: DollarSign, label: "Lifecycle Cost Analytics", value: "$12.4M Managed" },
-                  { icon: QrCode, label: "QR Code Identification", value: "Instant Mobile ID" }
-          ].map((item, i) => (
-                  <motion.div
-              key={i} 
-                    initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-                    className="flex items-center gap-4 p-4 rounded-xl bg-zinc-900/30 border border-zinc-800 hover:border-[#70c82a]/30 transition-all group"
-                  >
-                    <item.icon className="w-5 h-5 text-[#70c82a] group-hover:scale-110 transition-transform" />
-                    <div className="flex-1">
-                      <div className="text-white font-semibold text-sm">{item.label}</div>
-                      <div className="text-zinc-500 text-xs">{item.value}</div>
+              <div className="mb-8">
+                <h4 className="text-foreground font-semibold mb-4">What this module does</h4>
+                <div className="space-y-3">
+                  {[
+                    "Keeps a single list of all ECWC equipment",
+                    "Stores equipment type, value, site, and condition",
+                    "Tracks full maintenance and usage history",
+                    "Supports QR code for quick mobile access",
+                    "Shows equipment availability in real time"
+                  ].map((item, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, x: -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: i * 0.08 }}
+                      className="flex items-center gap-3 text-foreground"
+                    >
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#70c82a]" />
+                      <span className="text-sm">{item}</span>
+                    </motion.div>
+                  ))}
+                </div>
               </div>
-                    <ChevronRight className="w-4 h-4 text-zinc-600 group-hover:text-[#70c82a] transition-colors" />
-                  </motion.div>
-          ))}
+              <div className="p-6 rounded-xl bg-[#70c82a]/5 border border-[#70c82a]/20">
+                <h4 className="text-foreground font-semibold mb-3">ECWC Scenario</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  ECWC receives a new excavator for a road project in Bahir Dar.
+                  The asset officer registers it in the system, assigns an ID and QR code, and records its value and location.
+                  From that day, every maintenance job, part replacement, and cost is automatically linked to this excavator.
+                  Managers can see its status anytime without calling the site.
+                </p>
               </div>
       </motion.div>
 
@@ -1798,19 +1394,19 @@ export default function LandingPage() {
         className="relative"
       >
               <div className="absolute inset-0 bg-[#70c82a]/5 blur-3xl rounded-full" />
-              <div className="relative p-6 rounded-2xl bg-zinc-950 border border-zinc-800">
-                <div className="flex items-center justify-between mb-6 pb-4 border-b border-zinc-800">
-                  <div className="text-white font-bold">Equipment Registry Overview</div>
+              <div className="relative p-6 rounded-2xl bg-card dark:bg-zinc-950 border border-border dark:border-zinc-800">
+                <div className="flex items-center justify-between mb-6 pb-4 border-b border-border dark:border-zinc-800">
+                  <div className="text-foreground font-bold">Equipment Registry Overview</div>
                   <Badge className="bg-[#70c82a] text-black">Live Data</Badge>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="border-b border-zinc-800">
-                        <th className="text-left py-3 px-2 text-xs font-bold text-zinc-400 uppercase">Asset ID</th>
-                        <th className="text-left py-3 px-2 text-xs font-bold text-zinc-400 uppercase">Type</th>
-                        <th className="text-left py-3 px-2 text-xs font-bold text-zinc-400 uppercase">Status</th>
-                        <th className="text-right py-3 px-2 text-xs font-bold text-zinc-400 uppercase">Value</th>
+                      <tr className="border-b border-border dark:border-zinc-800">
+                        <th className="text-left py-3 px-2 text-xs font-bold text-muted-foreground uppercase">Asset ID</th>
+                        <th className="text-left py-3 px-2 text-xs font-bold text-muted-foreground uppercase">Type</th>
+                        <th className="text-left py-3 px-2 text-xs font-bold text-muted-foreground uppercase">Status</th>
+                        <th className="text-right py-3 px-2 text-xs font-bold text-muted-foreground uppercase">Value</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1827,24 +1423,24 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                           viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                          className="border-b border-zinc-800/50 hover:bg-zinc-900/30 transition-colors"
+                          className="border-b border-border/50 dark:border-zinc-800/50 hover:bg-muted/30 dark:hover:bg-zinc-900/30 transition-colors"
                         >
-                          <td className="py-3 px-2 text-sm font-mono text-zinc-300">{row.id}</td>
-                          <td className="py-3 px-2 text-sm text-zinc-400">{row.type}</td>
+                          <td className="py-3 px-2 text-sm font-mono text-foreground">{row.id}</td>
+                          <td className="py-3 px-2 text-sm text-muted-foreground">{row.type}</td>
                           <td className="py-3 px-2">
                             <span className="flex items-center gap-2">
                               <span className={`w-2 h-2 rounded-full ${row.color}`} />
-                              <span className="text-xs text-zinc-400">{row.status}</span>
+                              <span className="text-xs text-muted-foreground">{row.status}</span>
                             </span>
                           </td>
-                          <td className="py-3 px-2 text-right text-sm font-semibold text-white">{row.value}</td>
+                          <td className="py-3 px-2 text-right text-sm font-semibold text-foreground">{row.value}</td>
                         </motion.tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-                <div className="mt-6 pt-4 border-t border-zinc-800 flex justify-between items-center">
-                  <div className="text-xs text-zinc-500">Total Fleet Value</div>
+                <div className="mt-6 pt-4 border-t border-border dark:border-zinc-800 flex justify-between items-center">
+                  <div className="text-xs text-muted-foreground">Total Fleet Value</div>
                   <div className="text-2xl font-bold text-[#70c82a]">$12.4M</div>
                   </div>
                 </div>
@@ -1860,8 +1456,8 @@ export default function LandingPage() {
               transition={{ duration: 0.8 }}
               className="order-2 lg:order-1 relative"
             >
-              <div className="p-8 rounded-2xl bg-zinc-950 border border-zinc-800">
-                <div className="text-white font-bold mb-6">Maintenance KPI Dashboard</div>
+              <div className="p-8 rounded-2xl bg-card dark:bg-zinc-950 border border-border dark:border-zinc-800">
+                <div className="text-foreground font-bold mb-6">Maintenance KPI Dashboard</div>
                 <div className="grid grid-cols-2 gap-4 mb-6">
                   {[
                     { label: "MTBF", value: "847h", trend: "+12%", icon: TrendingUp, color: "text-[#70c82a]" },
@@ -1875,14 +1471,14 @@ export default function LandingPage() {
                       whileInView={{ opacity: 1, scale: 1 }}
                       viewport={{ once: true }}
                       transition={{ delay: i * 0.1 }}
-                      className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800"
+                      className="p-4 rounded-xl bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800"
                     >
                       <div className="flex items-center justify-between mb-2">
                         <kpi.icon className={`w-5 h-5 ${kpi.color}`} />
                         <span className="text-xs font-bold text-[#70c82a]">{kpi.trend}</span>
                       </div>
-                      <div className="text-2xl font-bold text-white mb-1">{kpi.value}</div>
-                      <div className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">{kpi.label}</div>
+                      <div className="text-2xl font-bold text-foreground mb-1">{kpi.value}</div>
+                      <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{kpi.label}</div>
               </motion.div>
             ))}
                 </div>
@@ -1893,11 +1489,11 @@ export default function LandingPage() {
                     { label: "Emergency Responses", value: 12, max: 150 }
                   ].map((bar, i) => (
                     <div key={i}>
-                      <div className="flex justify-between text-xs text-zinc-400 mb-1">
+                      <div className="flex justify-between text-xs text-muted-foreground mb-1">
                         <span>{bar.label}</span>
-                        <span className="font-bold text-white">{bar.value}</span>
+                        <span className="font-bold text-foreground">{bar.value}</span>
                       </div>
-                      <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
+                      <div className="h-2 bg-muted dark:bg-zinc-800 rounded-full overflow-hidden">
                         <motion.div
                           initial={{ width: 0 }}
                           whileInView={{ width: `${(bar.value / bar.max) * 100}%` }}
@@ -1925,33 +1521,44 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <div className="text-xs text-[#70c82a] font-bold uppercase tracking-wider mb-1">Module 02</div>
-                  <h3 className="text-3xl font-bold text-white">Maintenance Management</h3>
+                  <h3 className="text-3xl font-bold text-foreground">Maintenance & Work Order Management</h3>
                 </div>
               </div>
-              <p className="text-zinc-400 text-lg leading-relaxed">
-                Unified preventive and corrective maintenance system with automated scheduling, real-time technician tracking, and comprehensive failure analysis.
+              <p className="text-muted-foreground text-lg leading-relaxed mb-6">
+                Plan, assign, and track all maintenance work in one place.
               </p>
-              <div className="space-y-4">
-                {[
-                  "Preventive & Corrective Maintenance in one system",
-                  "Scheduled preventive maintenance",
-                  "Emergency & breakdown handling",
-                  "Work order planning & approvals",
-                  "Technician assignment & tracking",
-                  "Downtime and failure analysis"
-                ].map((item, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, x: 20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.08 }}
-                    className="flex items-center gap-3 text-zinc-300"
-                  >
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#70c82a]" />
-                    <span className="text-sm">{item}</span>
-                  </motion.div>
-                ))}
+              <div className="mb-8">
+                <h4 className="text-foreground font-semibold mb-4">What this module does</h4>
+                <div className="space-y-3">
+                  {[
+                    "Creates preventive maintenance schedules",
+                    "Handles breakdown and emergency repairs",
+                    "Automatically generates work orders",
+                    "Tracks work order status from start to finish",
+                    "Records downtime and failure reasons"
+                  ].map((item, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, x: 20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: i * 0.08 }}
+                      className="flex items-center gap-3 text-foreground"
+                    >
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#70c82a]" />
+                      <span className="text-sm">{item}</span>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+              <div className="p-6 rounded-xl bg-[#70c82a]/5 border border-[#70c82a]/20">
+                <h4 className="text-foreground font-semibold mb-3">ECWC Scenario</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  A bulldozer reaches its scheduled service hours.
+                  The system automatically creates a work order and notifies the workshop supervisor.
+                  Tasks and safety checks are already listed, so the technician knows exactly what to do.
+                  Maintenance is completed on time, preventing an unexpected breakdown on site.
+                </p>
               </div>
       </motion.div>
     </div>
@@ -1971,32 +1578,43 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <div className="text-xs text-[#70c82a] font-bold uppercase tracking-wider mb-1">Module 03</div>
-                  <h3 className="text-3xl font-bold text-white">Workforce & Time Sheet Management</h3>
+                  <h3 className="text-3xl font-bold text-foreground">Workforce & Time Management</h3>
                 </div>
               </div>
-              <p className="text-zinc-400 text-lg leading-relaxed">
-                Comprehensive labor management system tracking technician performance, overtime, and productivity with automated payroll integration.
+              <p className="text-muted-foreground text-lg leading-relaxed mb-6">
+                Track technician work time, productivity, and labor cost.
               </p>
-              <div className="space-y-4">
-                {[
-                  "Technician time tracking per job",
-                  "Labor cost calculation",
-                  "Shift & overtime control",
-                  "Productivity monitoring",
-                  "Payroll-ready data"
-                ].map((item, i) => (
-                  <motion.div
-                    key={i}
+              <div className="mb-8">
+                <h4 className="text-foreground font-semibold mb-4">What this module does</h4>
+                <div className="space-y-3">
+                  {[
+                    "Records technician working hours per job",
+                    "Tracks shifts and overtime",
+                    "Calculates labor cost automatically",
+                    "Monitors technician productivity",
+                    "Generates payroll-ready reports"
+                  ].map((item, i) => (
+                    <motion.div
+                      key={i}
         initial={{ opacity: 0, x: -20 }}
         whileInView={{ opacity: 1, x: 0 }}
         viewport={{ once: true }}
-                    transition={{ delay: i * 0.08 }}
-                    className="flex items-center gap-3 text-zinc-300"
-                  >
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#70c82a]" />
-                    <span className="text-sm">{item}</span>
-                  </motion.div>
-                ))}
+                      transition={{ delay: i * 0.08 }}
+                      className="flex items-center gap-3 text-foreground"
+                    >
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#70c82a]" />
+                      <span className="text-sm">{item}</span>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+              <div className="p-6 rounded-xl bg-[#70c82a]/5 border border-[#70c82a]/20">
+                <h4 className="text-foreground font-semibold mb-3">ECWC Scenario</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  A technician repairs a loader and records start and end time using a mobile phone.
+                  The system calculates labor hours and cost automatically.
+                  At the end of the week, the manager sees who worked overtime and which jobs took longer than planned.
+                </p>
               </div>
             </motion.div>
 
@@ -2007,8 +1625,8 @@ export default function LandingPage() {
               transition={{ duration: 0.8 }}
               className="relative"
             >
-              <div className="p-8 rounded-2xl bg-zinc-950 border border-zinc-800">
-                <div className="text-white font-bold mb-6">Weekly Workforce Analytics</div>
+              <div className="p-8 rounded-2xl bg-card dark:bg-zinc-950 border border-border dark:border-zinc-800">
+                <div className="text-foreground font-bold mb-6">Weekly Workforce Analytics</div>
                 <div className="grid grid-cols-3 gap-4 mb-6">
                   {[
                     { label: "Total Hours", value: "1,247", icon: Clock, color: "text-[#70c82a]" },
@@ -2021,28 +1639,28 @@ export default function LandingPage() {
                   whileInView={{ opacity: 1, scale: 1 }}
                       viewport={{ once: true }}
                   transition={{ delay: i * 0.1 }}
-                      className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 text-center"
+                      className="p-4 rounded-xl bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800 text-center"
                     >
                       <stat.icon className={`w-5 h-5 ${stat.color} mx-auto mb-2`} />
-                      <div className="text-2xl font-bold text-white mb-1">{stat.value}</div>
-                      <div className="text-[10px] text-zinc-500 uppercase font-bold">{stat.label}</div>
+                      <div className="text-2xl font-bold text-foreground mb-1">{stat.value}</div>
+                      <div className="text-[10px] text-muted-foreground uppercase font-bold">{stat.label}</div>
                     </motion.div>
                   ))}
                 </div>
                 <div className="space-y-3 mb-6">
-                  <div className="text-sm text-zinc-400 mb-2">Productivity by Shift</div>
+                  <div className="text-sm text-muted-foreground mb-2">Productivity by Shift</div>
                   {[
                     { shift: "Morning Shift", hours: 428, productivity: 96, color: "bg-[#70c82a]" },
                     { shift: "Day Shift", hours: 512, productivity: 88, color: "bg-blue-500" },
                     { shift: "Night Shift", hours: 307, productivity: 82, color: "bg-amber-500" }
                   ].map((shift, i) => (
-                    <div key={i} className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
+                    <div key={i} className="p-4 rounded-xl bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800">
                       <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm text-white font-semibold">{shift.shift}</span>
-                        <span className="text-xs text-zinc-400">{shift.hours}h</span>
+                        <span className="text-sm text-foreground font-semibold">{shift.shift}</span>
+                        <span className="text-xs text-muted-foreground">{shift.hours}h</span>
                       </div>
                       <div className="flex items-center gap-3">
-                        <div className="flex-1 h-2 bg-zinc-800 rounded-full overflow-hidden">
+                        <div className="flex-1 h-2 bg-muted dark:bg-zinc-800 rounded-full overflow-hidden">
                           <motion.div
                             initial={{ width: 0 }}
                             whileInView={{ width: `${shift.productivity}%` }}
@@ -2051,13 +1669,13 @@ export default function LandingPage() {
                             className={`h-full ${shift.color} rounded-full`}
                           />
                         </div>
-                        <span className="text-xs font-bold text-white">{shift.productivity}%</span>
+                        <span className="text-xs font-bold text-foreground">{shift.productivity}%</span>
                       </div>
                     </div>
                   ))}
                 </div>
-                <div className="pt-4 border-t border-zinc-800 flex justify-between items-center">
-                  <div className="text-xs text-zinc-500">Total Labor Cost This Week</div>
+                <div className="pt-4 border-t border-border dark:border-zinc-800 flex justify-between items-center">
+                  <div className="text-xs text-muted-foreground">Total Labor Cost This Week</div>
                   <div className="text-2xl font-bold text-[#70c82a]">$47,850</div>
                 </div>
                   </div>
@@ -2073,8 +1691,8 @@ export default function LandingPage() {
               transition={{ duration: 0.8 }}
               className="order-2 lg:order-1 relative"
             >
-              <div className="p-8 rounded-2xl bg-zinc-950 border border-zinc-800">
-                <div className="text-white font-bold mb-6">Inventory Status Overview</div>
+              <div className="p-8 rounded-2xl bg-card dark:bg-zinc-950 border border-border dark:border-zinc-800">
+                <div className="text-foreground font-bold mb-6">Inventory Status Overview</div>
                 <div className="grid grid-cols-2 gap-4 mb-6">
                   {[
                     { label: "Total SKUs", value: "2,847", trend: "+12", color: "text-[#70c82a]" },
@@ -2088,18 +1706,18 @@ export default function LandingPage() {
                       whileInView={{ opacity: 1, scale: 1 }}
                       viewport={{ once: true }}
                       transition={{ delay: i * 0.1 }}
-                      className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800"
+                      className="p-4 rounded-xl bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800"
                     >
                       <div className="flex justify-between items-center mb-2">
                         <div className={`text-2xl font-bold ${stat.color}`}>{stat.value}</div>
-                        <span className="text-xs font-bold text-zinc-500">{stat.trend}</span>
+                        <span className="text-xs font-bold text-muted-foreground">{stat.trend}</span>
                       </div>
-                      <div className="text-[10px] text-zinc-500 uppercase font-bold">{stat.label}</div>
+                      <div className="text-[10px] text-muted-foreground uppercase font-bold">{stat.label}</div>
                 </motion.div>
               ))}
             </div>
                 <div className="mb-6">
-                  <div className="text-sm text-zinc-400 mb-3">Recent Parts Issued</div>
+                  <div className="text-sm text-muted-foreground mb-3">Recent Parts Issued</div>
                   <div className="space-y-2">
                     {[
                       { part: "Hydraulic Filter HF-208", qty: "12", wo: "WO-2847", cost: "$1,240" },
@@ -2107,18 +1725,18 @@ export default function LandingPage() {
                       { part: "Air Filter Element AF-501", qty: "24", wo: "WO-2856", cost: "$960" },
                       { part: "Brake Pad Set BP-410", qty: "6", wo: "WO-2859", cost: "$1,440" }
                     ].map((issue, i) => (
-                      <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-zinc-900/30 border border-zinc-800 text-xs">
+                      <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-card/30 dark:bg-zinc-900/30 border border-border dark:border-zinc-800 text-xs">
                         <div className="flex-1">
-                          <div className="text-white font-semibold mb-1">{issue.part}</div>
-                          <div className="text-zinc-500">QTY: {issue.qty} • {issue.wo}</div>
+                          <div className="text-foreground font-semibold mb-1">{issue.part}</div>
+                          <div className="text-muted-foreground">QTY: {issue.qty} • {issue.wo}</div>
                         </div>
-                        <div className="text-white font-bold">{issue.cost}</div>
+                        <div className="text-foreground font-bold">{issue.cost}</div>
                       </div>
                     ))}
                   </div>
                 </div>
-                <div className="pt-4 border-t border-zinc-800 flex justify-between items-center">
-                  <div className="text-xs text-zinc-500">Total Inventory Value</div>
+                <div className="pt-4 border-t border-border dark:border-zinc-800 flex justify-between items-center">
+                  <div className="text-xs text-muted-foreground">Total Inventory Value</div>
                   <div className="text-2xl font-bold text-[#70c82a]">$1.8M</div>
                 </div>
               </div>
@@ -2137,33 +1755,45 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <div className="text-xs text-[#70c82a] font-bold uppercase tracking-wider mb-1">Module 04</div>
-                  <h3 className="text-3xl font-bold text-white">Spare Parts & Inventory Control</h3>
+                  <h3 className="text-3xl font-bold text-foreground">Spare Parts & Inventory Management</h3>
                 </div>
               </div>
-              <p className="text-zinc-400 text-lg leading-relaxed">
-                Real-time inventory management across multiple warehouses with automated minimum stock alerts and comprehensive consumption tracking.
+              <p className="text-muted-foreground text-lg leading-relaxed mb-6">
+                Always know what spare parts you have and what you need.
               </p>
-              <div className="space-y-4">
-                {[
-                  "Real-time spare parts availability",
-                  "Multi-store & warehouse control",
-                  "Minimum stock alerts",
-                  "Parts issued per work order",
-                  "Consumption & wastage analysis"
-                ].map((item, i) => (
-                  <motion.div
-                    key={i}
+              <div className="mb-8">
+                <h4 className="text-foreground font-semibold mb-4">What this module does</h4>
+                <div className="space-y-3">
+                  {[
+                    "Shows real-time spare parts availability",
+                    "Manages multiple stores and warehouses",
+                    "Sends alerts when stock is low",
+                    "Tracks parts issued per work order",
+                    "Calculates inventory value"
+                  ].map((item, i) => (
+                    <motion.div
+                      key={i}
         initial={{ opacity: 0, x: 20 }}
         whileInView={{ opacity: 1, x: 0 }}
         viewport={{ once: true }}
-                    transition={{ delay: i * 0.08 }}
-                    className="flex items-center gap-3 text-zinc-300"
-                  >
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#70c82a]" />
-                    <span className="text-sm">{item}</span>
-                  </motion.div>
-                ))}
-        </div>
+                      transition={{ delay: i * 0.08 }}
+                      className="flex items-center gap-3 text-foreground"
+                    >
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#70c82a]" />
+                      <span className="text-sm">{item}</span>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+              <div className="p-6 rounded-xl bg-[#70c82a]/5 border border-[#70c82a]/20">
+                <h4 className="text-foreground font-semibold mb-3">ECWC Scenario</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  A work order requires hydraulic filters.
+                  Before maintenance starts, the system checks the store and reserves the parts.
+                  When stock goes below minimum, the storekeeper receives an alert to reorder.
+                  This prevents delays and emergency purchases.
+                </p>
+              </div>
             </motion.div>
           </div>
 
@@ -2182,19 +1812,21 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <div className="text-xs text-[#70c82a] font-bold uppercase tracking-wider mb-1">Module 05</div>
-                  <h3 className="text-3xl font-bold text-white">Cost Control & Budget Monitoring</h3>
+                  <h3 className="text-3xl font-bold text-foreground">Cost Control & Budget Management</h3>
                 </div>
               </div>
-              <p className="text-zinc-400 text-lg leading-relaxed">
-                Comprehensive financial oversight tracking maintenance costs, labor expenses, and budget performance across all sites and projects.
+              <p className="text-muted-foreground text-lg leading-relaxed mb-6">
+                Understand where maintenance money is going.
               </p>
-              <div className="space-y-4">
-                {[
-                  "Maintenance cost per equipment",
-                  "Labor, spare parts & external service costs",
-                  "Budget vs actual monitoring",
-                  "Cost comparison by site & project",
-                  "Identification of high-cost assets"
+              <div className="mb-8">
+                <h4 className="text-foreground font-semibold mb-4">What this module does</h4>
+                <div className="space-y-3">
+                  {[
+                    "Calculates maintenance cost per equipment",
+                    "Tracks labor, spare parts, and external service costs",
+                    "Compares budget vs actual spending",
+                    "Identifies high-cost equipment",
+                    "Supports cost analysis by site or project"
           ].map((item, i) => (
                   <motion.div
               key={i} 
@@ -2202,12 +1834,21 @@ export default function LandingPage() {
               whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: i * 0.08 }}
-                    className="flex items-center gap-3 text-zinc-300"
+                    className="flex items-center gap-3 text-foreground"
                   >
                     <div className="w-1.5 h-1.5 rounded-full bg-[#70c82a]" />
                     <span className="text-sm">{item}</span>
                   </motion.div>
                 ))}
+                </div>
+              </div>
+              <div className="p-6 rounded-xl bg-[#70c82a]/5 border border-[#70c82a]/20">
+                <h4 className="text-foreground font-semibold mb-3">ECWC Scenario</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  A manager notices that one excavator has very high maintenance costs compared to others.
+                  Using the system, they review its history and decide whether to repair, overhaul, or replace it.
+                  This helps ECWC avoid wasting money on inefficient equipment.
+                </p>
               </div>
             </motion.div>
 
@@ -2218,8 +1859,8 @@ export default function LandingPage() {
               transition={{ duration: 0.8 }}
               className="relative"
             >
-              <div className="p-8 rounded-2xl bg-zinc-950 border border-zinc-800">
-                <div className="text-white font-bold mb-6">Monthly Cost Analysis</div>
+              <div className="p-8 rounded-2xl bg-card dark:bg-zinc-950 border border-border dark:border-zinc-800">
+                <div className="text-foreground font-bold mb-6">Monthly Cost Analysis</div>
                 <div className="grid grid-cols-3 gap-4 mb-6">
                   {[
                     { label: "Budget", value: "$285K", icon: Target },
@@ -2232,29 +1873,29 @@ export default function LandingPage() {
                       whileInView={{ opacity: 1, scale: 1 }}
                       viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-                      className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800 text-center"
+                      className="p-4 rounded-xl bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800 text-center"
                     >
                       <stat.icon className="w-5 h-5 text-[#70c82a] mx-auto mb-2" />
-                      <div className="text-xl font-bold text-white mb-1">{stat.value}</div>
-                      <div className="text-[10px] text-zinc-500 uppercase font-bold">{stat.label}</div>
+                      <div className="text-xl font-bold text-foreground mb-1">{stat.value}</div>
+                      <div className="text-[10px] text-muted-foreground uppercase font-bold">{stat.label}</div>
                     </motion.div>
                   ))}
               </div>
                 <div className="space-y-3 mb-6">
-                  <div className="text-sm text-zinc-400 mb-2">Cost Breakdown</div>
+                  <div className="text-sm text-muted-foreground mb-2">Cost Breakdown</div>
                   {[
                     { category: "Labor Costs", amount: "$112K", percent: 42, color: "bg-[#70c82a]" },
                     { category: "Spare Parts", amount: "$89K", percent: 33, color: "bg-blue-500" },
                     { category: "External Services", amount: "$47K", percent: 18, color: "bg-amber-500" },
                     { category: "Other Expenses", amount: "$19K", percent: 7, color: "bg-zinc-600" }
                   ].map((item, i) => (
-                    <div key={i} className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
+                    <div key={i} className="p-4 rounded-xl bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800">
                       <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm text-white font-semibold">{item.category}</span>
-                        <span className="text-sm text-white font-bold">{item.amount}</span>
+                        <span className="text-sm text-foreground font-semibold">{item.category}</span>
+                        <span className="text-sm text-foreground font-bold">{item.amount}</span>
                       </div>
                       <div className="flex items-center gap-3">
-                        <div className="flex-1 h-2 bg-zinc-800 rounded-full overflow-hidden">
+                        <div className="flex-1 h-2 bg-muted dark:bg-zinc-800 rounded-full overflow-hidden">
                           <motion.div
                             initial={{ width: 0 }}
                             whileInView={{ width: `${item.percent}%` }}
@@ -2263,7 +1904,7 @@ export default function LandingPage() {
                             className={`h-full ${item.color} rounded-full`}
                           />
                         </div>
-                        <span className="text-xs font-bold text-zinc-400">{item.percent}%</span>
+                        <span className="text-xs font-bold text-muted-foreground">{item.percent}%</span>
                       </div>
                     </div>
                   ))}
@@ -2271,7 +1912,7 @@ export default function LandingPage() {
                 <div className="p-4 rounded-xl bg-[#70c82a]/5 border border-[#70c82a]/20">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-xs text-zinc-500 mb-1">Under Budget</div>
+                      <div className="text-xs text-muted-foreground mb-1">Under Budget</div>
                       <div className="text-2xl font-bold text-[#70c82a]">$18,000</div>
                     </div>
                     <CheckCircle className="w-8 h-8 text-[#70c82a]" />
@@ -2290,37 +1931,17 @@ export default function LandingPage() {
               transition={{ duration: 0.8 }}
               className="order-2 lg:order-1 relative"
             >
-              <div className="p-8 rounded-2xl bg-gradient-to-br from-[#70c82a]/5 via-zinc-950 to-zinc-950 border border-[#70c82a]/20">
-                <div className="text-white font-bold mb-6">Executive Command Center</div>
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  {[
-                    { metric: "Uptime", value: "94.3%", trend: "+2.1%", color: "text-[#70c82a]" },
-                    { metric: "MTBF", value: "847h", trend: "+12%", color: "text-[#70c82a]" },
-                    { metric: "MTTR", value: "4.2h", trend: "-8%", color: "text-[#70c82a]" },
-                    { metric: "Efficiency", value: "91.7%", trend: "+3.5%", color: "text-[#70c82a]" }
-                  ].map((kpi, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      whileInView={{ opacity: 1, scale: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: i * 0.1 }}
-                      className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800"
-                    >
-                      <div className="text-xs text-zinc-500 mb-1">{kpi.metric}</div>
-                      <div className={`text-2xl font-bold ${kpi.color} mb-1`}>{kpi.value}</div>
-                      <div className="text-xs font-bold text-[#70c82a]">{kpi.trend}</div>
-                    </motion.div>
-                  ))}
-                </div>
+              <div className="p-8 rounded-2xl bg-gradient-to-br from-[#70c82a]/5 via-card to-card dark:via-zinc-950 dark:to-zinc-950 border border-[#70c82a]/20">
+                <div className="text-foreground font-bold mb-6">Executive Command Center</div>
+                
                 <div className="space-y-3 mb-6">
                   {[
                     { label: "Site Performance Comparison", sites: ["Addis Ababa", "Dire Dawa", "Bahir Dar"], values: [94, 87, 91] },
                     { label: "Monthly Cost Trends", sites: ["Jan", "Feb", "Mar"], values: [85, 92, 88] },
                     { label: "Inventory Valuation", sites: ["Q1", "Q2", "Q3"], values: [78, 85, 92] }
                   ].map((chart, i) => (
-                    <div key={i} className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800">
-                      <div className="text-xs text-zinc-400 mb-3">{chart.label}</div>
+                    <div key={i} className="p-4 rounded-xl bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800">
+                      <div className="text-xs text-muted-foreground mb-3">{chart.label}</div>
                       <div className="flex items-end gap-2 h-20">
                         {chart.values.map((val, j) => (
                           <div key={j} className="flex-1 flex flex-col items-center gap-1">
@@ -2331,17 +1952,14 @@ export default function LandingPage() {
                               transition={{ duration: 1, delay: i * 0.2 + j * 0.1 }}
                               className="w-full bg-gradient-to-t from-[#70c82a] to-emerald-400 rounded-t"
                             />
-                            <span className="text-[10px] text-zinc-500">{chart.sites[j]}</span>
+                            <span className="text-[10px] text-muted-foreground">{chart.sites[j]}</span>
             </div>
           ))}
                       </div>
                     </div>
                   ))}
                 </div>
-                <div className="text-center p-4 rounded-xl bg-zinc-900/30 border border-zinc-800">
-                  <div className="text-2xl font-bold text-white mb-1">One dashboard. <span className="text-[#70c82a]">One glance.</span></div>
-                  <div className="text-sm text-zinc-500">Full control.</div>
-                </div>
+               
               </div>
         </motion.div>
 
@@ -2358,33 +1976,44 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <div className="text-xs text-[#70c82a] font-bold uppercase tracking-wider mb-1">Module 06</div>
-                  <h3 className="text-3xl font-bold text-white">Executive Dashboards & Reports</h3>
+                  <h3 className="text-3xl font-bold text-foreground">Executive Dashboard & Reporting</h3>
                 </div>
               </div>
-              <p className="text-zinc-400 text-lg leading-relaxed">
-                Comprehensive executive-level visibility with real-time KPIs, site performance comparisons, and strategic cost analytics for leadership decision-making.
+              <p className="text-muted-foreground text-lg leading-relaxed mb-6">
+                See the full operation at a glance.
               </p>
-              <div className="space-y-4">
-                {[
-                  "Equipment uptime & downtime",
-                  "Maintenance KPIs (MTBF, MTTR)",
-                  "Monthly & annual cost reports",
-                  "Inventory valuation",
-                  "Site & project performance comparison"
-                ].map((item, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, x: 20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.08 }}
-                    className="flex items-center gap-3 text-zinc-300"
-                  >
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#70c82a]" />
-                    <span className="text-sm">{item}</span>
+              <div className="mb-8">
+                <h4 className="text-foreground font-semibold mb-4">What this module does</h4>
+                <div className="space-y-3">
+                  {[
+                    "Shows fleet availability and uptime",
+                    "Displays key maintenance KPIs (MTBF, MTTR)",
+                    "Highlights critical alerts and risks",
+                    "Compares performance across sites",
+                    "Provides clear reports for leadership"
+                  ].map((item, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, x: 20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: i * 0.08 }}
+                      className="flex items-center gap-3 text-foreground"
+                    >
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#70c82a]" />
+                      <span className="text-sm">{item}</span>
       </motion.div>
-                ))}
-    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="p-6 rounded-xl bg-[#70c82a]/5 border border-[#70c82a]/20">
+                <h4 className="text-foreground font-semibold mb-3">ECWC Scenario</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  An ECWC executive opens the dashboard in the morning.
+                  They immediately see fleet availability, equipment under maintenance, and critical alerts.
+                  Without asking for reports, they know where attention is needed and can take action quickly.
+                </p>
+              </div>
             </motion.div>
           </div>
 
@@ -2395,12 +2024,7 @@ export default function LandingPage() {
             viewport={{ once: true }}
             className="mt-32"
           >
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-5xl font-bold text-white mb-4">ECWC Management Dashboard</h2>
-              <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
-                Real-time insights and control over ECWC's entire equipment fleet
-              </p>
-            </div>
+          
 
             <div className="p-8 rounded-2xl bg-zinc-950 border border-zinc-800">
               {/* Stats Grid */}
@@ -2517,8 +2141,8 @@ export default function LandingPage() {
       </section>
 
       {/* AI-Powered Decision Support - Professional Analytics */}
-      <section className="py-32 bg-zinc-950 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-black via-zinc-950 to-black" />
+      <section className="py-32 bg-background dark:bg-zinc-950 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-muted/30 to-background dark:from-black dark:via-zinc-950 dark:to-black" />
         <div className="container mx-auto px-4 lg:px-8 relative z-10">
     <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -2533,10 +2157,10 @@ export default function LandingPage() {
               </span>
               High-Impact Feature
             </div>
-            <h2 className="text-4xl md:text-6xl font-bold text-white mb-4">
+            <h2 className="text-4xl md:text-6xl font-bold text-foreground mb-4">
               AI-Powered <span className="text-[#70c82a]">Decision Support</span>
             </h2>
-            <p className="text-zinc-400 text-lg max-w-3xl mx-auto">
+            <p className="text-muted-foreground text-lg max-w-3xl mx-auto">
               Transform from reactive maintenance to predictive leadership with advanced machine intelligence
             </p>
           </motion.div>
@@ -2572,19 +2196,19 @@ export default function LandingPage() {
           whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.15 }}
-                className="p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800 hover:border-[#70c82a]/30 transition-all group"
+                className="p-6 rounded-2xl bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800 hover:border-[#70c82a]/30 transition-all group"
         >
                 <div className="flex items-center justify-between mb-6">
                   <div className="w-12 h-12 rounded-xl bg-[#70c82a]/10 flex items-center justify-center border border-[#70c82a]/20">
                     <card.icon className="w-6 h-6 text-[#70c82a]" />
           </div>
                   <div className="text-right">
-                    <div className="text-3xl font-bold text-white">{card.metric}</div>
-                    <div className="text-[10px] text-zinc-500 uppercase font-bold">{card.label}</div>
+                    <div className="text-3xl font-bold text-foreground">{card.metric}</div>
+                    <div className="text-[10px] text-muted-foreground uppercase font-bold">{card.label}</div>
                   </div>
                 </div>
-                <h4 className="text-white font-bold text-lg mb-3">{card.title}</h4>
-                <p className="text-sm text-zinc-400 leading-relaxed">{card.desc}</p>
+                <h4 className="text-foreground font-bold text-lg mb-3">{card.title}</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">{card.desc}</p>
         </motion.div>
       ))}
     </div>
@@ -2594,15 +2218,15 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="p-8 rounded-2xl bg-zinc-900/50 border border-zinc-800"
+            className="p-8 rounded-2xl bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800"
           >
             <div className="flex items-center justify-between mb-8">
               <div>
                 <div className="flex items-center gap-3 mb-2">
                   <Cpu className="w-6 h-6 text-[#70c82a]" />
-                  <h3 className="text-2xl font-bold text-white">Smart Maintenance Intelligence</h3>
+                  <h3 className="text-2xl font-bold text-foreground">Smart Maintenance Intelligence</h3>
                 </div>
-                <p className="text-zinc-400">Real-time predictive analytics and asset health monitoring</p>
+                <p className="text-muted-foreground">Real-time predictive analytics and asset health monitoring</p>
               </div>
               <Badge className="bg-[#70c82a] text-black font-bold">LIVE</Badge>
             </div>
@@ -2641,7 +2265,7 @@ export default function LandingPage() {
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: i * 0.1 }}
-                    className="p-5 rounded-xl bg-zinc-950 border border-zinc-800 hover:border-[#70c82a]/30 transition-all"
+                    className="p-5 rounded-xl bg-card dark:bg-zinc-950 border border-border dark:border-zinc-800 hover:border-[#70c82a]/30 transition-all"
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div>
@@ -2653,14 +2277,14 @@ export default function LandingPage() {
                           }`}>
                             {alert.priority}
                           </span>
-                          <span className="text-xs font-mono text-zinc-400">{alert.asset}</span>
+                          <span className="text-xs font-mono text-muted-foreground">{alert.asset}</span>
                         </div>
-                        <p className="text-sm text-white mb-2">{alert.alert}</p>
+                        <p className="text-sm text-foreground mb-2">{alert.alert}</p>
                         <p className="text-xs text-[#70c82a]">→ {alert.action}</p>
                       </div>
                       <div className="text-right">
-                        <div className="text-xs text-zinc-500 mb-1">Est. Cost Avoided</div>
-                        <div className="text-lg font-bold text-white">{alert.cost}</div>
+                        <div className="text-xs text-muted-foreground mb-1">Est. Cost Avoided</div>
+                        <div className="text-lg font-bold text-foreground">{alert.cost}</div>
                       </div>
                     </div>
     </motion.div>
@@ -2668,10 +2292,10 @@ export default function LandingPage() {
   </div>
 
               <div className="space-y-4">
-                <div className="p-6 rounded-xl bg-zinc-950 border border-zinc-800">
-                  <div className="text-zinc-400 text-xs mb-2">Predictive Health Score</div>
+                <div className="p-6 rounded-xl bg-card dark:bg-zinc-950 border border-border dark:border-zinc-800">
+                  <div className="text-muted-foreground text-xs mb-2">Predictive Health Score</div>
                   <div className="text-5xl font-bold text-[#70c82a] mb-4">94%</div>
-                  <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
+                  <div className="h-2 bg-muted dark:bg-zinc-800 rounded-full overflow-hidden">
                     <motion.div
                       initial={{ width: 0 }}
                       whileInView={{ width: "94%" }}
@@ -2682,222 +2306,331 @@ export default function LandingPage() {
                   </div>
                 </div>
 
-                <div className="p-6 rounded-xl bg-zinc-950 border border-zinc-800">
-                  <div className="text-zinc-400 text-xs mb-2">Underperforming Assets</div>
+                <div className="p-6 rounded-xl bg-card dark:bg-zinc-950 border border-border dark:border-zinc-800">
+                  <div className="text-muted-foreground text-xs mb-2">Underperforming Assets</div>
                   <div className="text-5xl font-bold text-amber-500 mb-2">03</div>
-                  <div className="text-xs text-zinc-500">Requiring immediate attention</div>
+                  <div className="text-xs text-muted-foreground">Requiring immediate attention</div>
                 </div>
 
-                <div className="p-6 rounded-xl bg-zinc-950 border border-zinc-800">
-                  <div className="text-zinc-400 text-xs mb-2">Cost Optimization</div>
+                <div className="p-6 rounded-xl bg-card dark:bg-zinc-950 border border-border dark:border-zinc-800">
+                  <div className="text-muted-foreground text-xs mb-2">Cost Optimization</div>
                   <div className="text-5xl font-bold text-[#70c82a] mb-2">12.5%</div>
-                  <div className="text-xs text-zinc-500">Potential monthly savings</div>
+                  <div className="text-xs text-muted-foreground">Potential monthly savings</div>
                 </div>
               </div>
             </div>
 
             <div className="p-4 rounded-xl bg-[#70c82a]/5 border border-[#70c82a]/20 text-center">
-              <p className="text-sm text-zinc-300 italic">
+              <p className="text-sm text-foreground/80 dark:text-zinc-300 italic">
                 <span className="text-[#70c82a] font-bold">From reactive maintenance to predictive leadership.</span> AI-powered insights enable proactive decision-making across the entire ECWC fleet.
               </p>
             </div>
           </motion.div>
+
+          {/* AI Chat Assistant - ChatGPT Style */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mt-16"
+          >
+            <div className="max-w-4xl mx-auto bg-background dark:bg-zinc-950 rounded-2xl border border-border dark:border-zinc-800 overflow-hidden shadow-2xl">
+              {/* Chat Header */}
+              <div className="bg-gradient-to-r from-[#70c82a]/10 to-[#70c82a]/5 border-b border-border dark:border-zinc-800 px-4 sm:px-6 py-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#70c82a]/20 flex items-center justify-center border-2 border-[#70c82a]/30 flex-shrink-0">
+                    <Cpu className="w-5 h-5 text-[#70c82a]" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-lg text-foreground truncate">ECWC AI Assistant</h3>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <span className="w-2 h-2 rounded-full bg-[#70c82a] animate-pulse flex-shrink-0"></span>
+                      <span className="truncate">Online • Ready to help</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Chat Messages Container */}
+              <div className="h-[600px] overflow-y-auto overflow-x-hidden bg-gradient-to-b from-background to-muted/20">
+                <div className="divide-y divide-border dark:divide-zinc-800">
+                {[
+                  {
+                    question: "Which site has the highest maintenance cost this month?",
+                    answer: "Addis Ababa Site — $82,400. Main drivers: high emergency work orders, heavy spare-part consumption for excavators, and increased overtime labor hours."
+                  },
+                  {
+                    question: "What are the main maintenance issues this month and their impact?",
+                    answer: {
+                      main: "Three primary issues are driving higher costs and equipment downtime:",
+                      details: [
+                        {
+                          issue: "Hydraulic system failures",
+                          percentage: "38%",
+                          impact: "This is the leading cause of downtime, affecting multiple excavators and loaders. Most failures occur due to seal degradation and contamination from harsh operating conditions.",
+                          cost: "Estimated monthly cost: $42,000 in repairs and lost productivity"
+                        },
+                        {
+                          issue: "Engine overheating",
+                          percentage: "27%",
+                          impact: "Primarily affecting older equipment and those operating in high-temperature conditions. Coolant system failures and radiator blockages are common causes.",
+                          cost: "Estimated monthly cost: $28,500 including engine repairs and preventive measures"
+                        },
+                        {
+                          issue: "Delayed spare-part availability",
+                          percentage: "19%",
+                          impact: "Critical parts often take 3-5 days to arrive, extending equipment downtime. This is compounded by insufficient inventory levels for commonly failing components.",
+                          cost: "Estimated monthly cost: $19,800 in extended downtime and emergency shipping fees"
+                        }
+                      ],
+                      recommendation: "Immediate actions: (1) Implement preventive seal replacement program, (2) Upgrade cooling systems on high-risk equipment, (3) Increase critical spare parts inventory by 40% to reduce delays.",
+                      total: "Combined monthly impact: ~$90,300 in direct costs and productivity losses."
+                    }
+                  }
+                ].map((qa, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.1 }}
+                    className="group"
+                  >
+                    {/* User Question - Right Side */}
+                    <div className="bg-muted/30 dark:bg-zinc-900/50 px-4 sm:px-6 py-4">
+                      <div className="flex gap-3 sm:gap-4 justify-end items-start">
+                        <div className="flex-1 min-w-0 flex justify-end">
+                          <p className="text-sm font-medium text-foreground leading-relaxed whitespace-pre-wrap text-right max-w-full sm:max-w-[85%] break-words">{qa.question}</p>
+                        </div>
+                        <div className="w-8 h-8 rounded-full bg-[#70c82a] dark:bg-[#70c82a] flex items-center justify-center flex-shrink-0 mt-1">
+                          <User className="w-4 h-4 text-white" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* AI Answer - Left Side */}
+                    <div className="bg-background dark:bg-zinc-950 px-4 sm:px-6 py-4">
+                      <div className="flex gap-3 sm:gap-4 items-start">
+                        <div className="w-8 h-8 rounded-full bg-[#70c82a]/20 dark:bg-[#70c82a]/20 flex items-center justify-center flex-shrink-0 mt-1 border border-[#70c82a]/30">
+                          <Cpu className="w-4 h-4 text-[#70c82a]" />
+                        </div>
+                        <div className="flex-1 min-w-0 pt-1">
+                          {typeof qa.answer === 'string' ? (
+                            <div className="prose prose-sm dark:prose-invert max-w-none">
+                              <p className="text-foreground leading-relaxed whitespace-pre-wrap break-words">{qa.answer}</p>
+                            </div>
+                          ) : (
+                            <div className="space-y-4">
+                              <p className="text-foreground leading-relaxed break-words">{qa.answer.main}</p>
+                              
+                              <div className="space-y-6">
+                                {qa.answer.details.map((detail: any, idx: number) => (
+                                  <div key={idx} className="border-l-2 border-[#70c82a]/30 pl-4 space-y-2">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <h4 className="text-base font-semibold text-foreground break-words">{detail.issue}</h4>
+                                      <span className="px-2 py-0.5 rounded bg-[#70c82a]/10 text-[#70c82a] text-xs font-bold flex-shrink-0">{detail.percentage}</span>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground leading-relaxed break-words">{detail.impact}</p>
+                                    <p className="text-xs text-[#70c82a] font-medium break-words">{detail.cost}</p>
+                                  </div>
+                                ))}
+                              </div>
+
+                              {qa.answer.recommendation && (
+                                <div className="mt-6 p-4 bg-[#70c82a]/5 dark:bg-[#70c82a]/10 rounded-lg border border-[#70c82a]/20">
+                                  <p className="text-sm font-semibold text-foreground mb-2">Recommended Actions:</p>
+                                  <p className="text-sm text-muted-foreground leading-relaxed break-words">{qa.answer.recommendation}</p>
+                                </div>
+                              )}
+
+                              {qa.answer.total && (
+                                <div className="mt-4 pt-4 border-t border-border dark:border-zinc-800">
+                                  <p className="text-sm font-bold text-foreground break-words">{qa.answer.total}</p>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+                </div>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* Design 4: Particle Flow System */}
-      <section className="relative py-32 bg-black overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(112,200,42,0.02),transparent_70%)]" />
+      {/* CMMS Benefits - Before & After */}
+      <section className="py-32 bg-gradient-to-b from-background to-muted/30 dark:from-black dark:to-zinc-950 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(112,200,42,0.05),transparent_70%)]" />
         <div className="container mx-auto px-4 lg:px-8 relative z-10">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#70c82a]/10 text-[#70c82a] text-xs font-bold uppercase tracking-widest mb-6 border border-[#70c82a]/20">
-              <Zap className="w-4 h-4" />
-              Data Flow
-            </div>
-            <h2 className="text-4xl md:text-6xl font-bold text-white mb-4">
-              <span className="text-[#70c82a]">Particle Flow</span> System
+            <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+              Why CMMS Transforms Maintenance Operations
             </h2>
-            <p className="text-zinc-400 text-lg max-w-3xl mx-auto">
-              Watch data flow like particles through our system, connecting modules in real-time with intelligent routing and seamless transmission.
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              See how ECWC's CMMS solves critical challenges and delivers measurable results
             </p>
           </motion.div>
 
-          <div className="grid lg:grid-cols-3 gap-8 mb-12">
-            {[
-              { label: "Inventory", icon: Warehouse, color: "#70c82a", x: 100, y: 150 },
-              { label: "Work Orders", icon: ClipboardList, color: "#3b82f6", x: 500, y: 150 },
-              { label: "Maintenance", icon: Wrench, color: "#f59e0b", x: 900, y: 150 },
-              { label: "Reports", icon: BarChart3, color: "#8b5cf6", x: 100, y: 400 },
-              { label: "Analytics", icon: Activity, color: "#ec4899", x: 500, y: 400 },
-              { label: "Dashboard", icon: Target, color: "#70c82a", x: 900, y: 400 }
-            ].map((module, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, scale: 0.8 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.1 }}
-                className="relative p-6 rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-[#70c82a]/30 transition-all group"
-              >
-                <div className="flex flex-col items-center text-center">
-                  <div 
-                    className="w-16 h-16 rounded-xl bg-[#70c82a]/10 flex items-center justify-center mb-4 border border-[#70c82a]/20 group-hover:scale-110 transition-transform"
-                    style={{ backgroundColor: `${module.color}20`, borderColor: `${module.color}40` }}
-                  >
-                    <module.icon className="w-8 h-8" style={{ color: module.color }} />
+          <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+            {/* Before - Problems */}
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="space-y-6"
+            >
+              <div className="bg-red-500/10 dark:bg-red-500/5 border-2 border-red-500/20 rounded-2xl p-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center border-2 border-red-500/30">
+                    <AlertTriangle className="w-6 h-6 text-red-500" />
                   </div>
-                  <h3 className="text-white font-bold text-lg">{module.label}</h3>
+                  <h3 className="text-2xl font-bold text-foreground">Before CMMS</h3>
                 </div>
-              </motion.div>
-            ))}
+                <div className="space-y-4">
+                  {[
+                    {
+                      title: "Reactive Maintenance",
+                      desc: "Equipment breaks down unexpectedly, causing costly emergency repairs and production delays."
+                    },
+                    {
+                      title: "Manual Paperwork",
+                      desc: "Maintenance records scattered across spreadsheets and paper files, making tracking impossible."
+                    },
+                    {
+                      title: "No Visibility",
+                      desc: "Managers can't see equipment status, maintenance history, or costs in real-time."
+                    },
+                    {
+                      title: "Inventory Chaos",
+                      desc: "Spare parts inventory unknown, leading to stockouts, delays, and emergency purchases."
+                    },
+                    {
+                      title: "Cost Overruns",
+                      desc: "No budget tracking or cost analysis, making it impossible to control maintenance spending."
+                    },
+                    {
+                      title: "Scheduling Nightmare",
+                      desc: "Work orders managed manually, causing missed maintenance, double-booking, and confusion."
+                    }
+                  ].map((problem, i) => (
+                    <div key={i} className="flex gap-3 p-4 rounded-lg bg-background/50 dark:bg-zinc-900/50 border border-red-500/10">
+                      <X className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <h4 className="font-semibold text-foreground mb-1">{problem.title}</h4>
+                        <p className="text-sm text-muted-foreground">{problem.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+
+            {/* After - Solutions */}
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="space-y-6"
+            >
+              <div className="bg-[#70c82a]/10 dark:bg-[#70c82a]/5 border-2 border-[#70c82a]/30 rounded-2xl p-8">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-12 h-12 rounded-full bg-[#70c82a]/20 flex items-center justify-center border-2 border-[#70c82a]/30">
+                    <CheckCircle className="w-6 h-6 text-[#70c82a]" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-foreground">With ECWC CMMS</h3>
+                </div>
+                <div className="space-y-4">
+                  {[
+                    {
+                      title: "Predictive Maintenance",
+                      desc: "AI-powered alerts predict failures before they happen, reducing downtime by up to 50% and extending equipment life."
+                    },
+                    {
+                      title: "Digital Records",
+                      desc: "Complete maintenance history, work orders, and costs stored in one centralized system, accessible from anywhere."
+                    },
+                    {
+                      title: "Real-Time Dashboard",
+                      desc: "Executive dashboard shows fleet availability, KPIs, alerts, and costs instantly - no reports needed."
+                    },
+                    {
+                      title: "Smart Inventory",
+                      desc: "Real-time stock levels, automatic reorder alerts, and parts tracking per work order prevent delays."
+                    },
+                    {
+                      title: "Cost Control",
+                      desc: "Track maintenance costs per equipment, compare budget vs actual, and identify high-cost assets for optimization."
+                    },
+                    {
+                      title: "Automated Scheduling",
+                      desc: "System automatically creates work orders, assigns technicians, and tracks progress from start to finish."
+                    }
+                  ].map((solution, i) => (
+                    <div key={i} className="flex gap-3 p-4 rounded-lg bg-background/50 dark:bg-zinc-900/50 border border-[#70c82a]/20">
+                      <CheckCircle className="w-5 h-5 text-[#70c82a] flex-shrink-0 mt-0.5" />
+                      <div>
+                        <h4 className="font-semibold text-foreground mb-1">{solution.title}</h4>
+                        <p className="text-sm text-muted-foreground">{solution.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
           </div>
 
-          {/* Particle Canvas Container */}
-          <div className="relative h-[400px] w-full rounded-2xl bg-zinc-950 border border-zinc-800 overflow-hidden">
-            <canvas
-              id="particleCanvas"
-              className="absolute inset-0 w-full h-full"
-              style={{ background: 'transparent' }}
-            />
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="text-center">
-                <div className="text-4xl font-bold text-white mb-2">Real-Time Data Flow</div>
-                <div className="text-zinc-400">Particles represent data streams between modules</div>
+          {/* Key Results */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mt-16 max-w-4xl mx-auto"
+          >
+            <div className="bg-gradient-to-r from-[#70c82a]/10 to-[#70c82a]/5 border-2 border-[#70c82a]/20 rounded-2xl p-8">
+              <h3 className="text-2xl font-bold text-foreground mb-6 text-center">Measurable Results</h3>
+              <div className="grid md:grid-cols-3 gap-6">
+                {[
+                  { metric: "50%", label: "Reduction in Downtime", icon: TrendingUp },
+                  { metric: "35%", label: "Cost Savings", icon: DollarSign },
+                  { metric: "90%", label: "Faster Work Orders", icon: Zap }
+                ].map((result, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.1 }}
+                    className="text-center p-6 rounded-xl bg-background/50 dark:bg-zinc-900/50 border border-[#70c82a]/10"
+                  >
+                    <result.icon className="w-8 h-8 text-[#70c82a] mx-auto mb-3" />
+                    <div className="text-3xl font-bold text-[#70c82a] mb-2">{result.metric}</div>
+                    <div className="text-sm text-muted-foreground">{result.label}</div>
+                  </motion.div>
+                ))}
               </div>
             </div>
-          </div>
-
-          {/* Particle System Script */}
-          <script
-            dangerouslySetInnerHTML={{
-              __html: `
-                (function() {
-                  const canvas = document.getElementById('particleCanvas');
-                  if (!canvas) return;
-                  const ctx = canvas.getContext('2d');
-                  canvas.width = canvas.offsetWidth;
-                  canvas.height = canvas.offsetHeight;
-
-                  const particles = [];
-                  const connections = [
-                    { from: { x: canvas.width * 0.15, y: canvas.height * 0.3 }, to: { x: canvas.width * 0.5, y: canvas.height * 0.3 }, color: '#70c82a' },
-                    { from: { x: canvas.width * 0.5, y: canvas.height * 0.3 }, to: { x: canvas.width * 0.85, y: canvas.height * 0.3 }, color: '#3b82f6' },
-                    { from: { x: canvas.width * 0.15, y: canvas.height * 0.7 }, to: { x: canvas.width * 0.5, y: canvas.height * 0.7 }, color: '#8b5cf6' },
-                    { from: { x: canvas.width * 0.5, y: canvas.height * 0.7 }, to: { x: canvas.width * 0.85, y: canvas.height * 0.7 }, color: '#ec4899' },
-                    { from: { x: canvas.width * 0.15, y: canvas.height * 0.3 }, to: { x: canvas.width * 0.15, y: canvas.height * 0.7 }, color: '#70c82a' },
-                    { from: { x: canvas.width * 0.5, y: canvas.height * 0.3 }, to: { x: canvas.width * 0.5, y: canvas.height * 0.7 }, color: '#f59e0b' },
-                    { from: { x: canvas.width * 0.85, y: canvas.height * 0.3 }, to: { x: canvas.width * 0.85, y: canvas.height * 0.7 }, color: '#3b82f6' }
-                  ];
-
-                  class Particle {
-                    constructor(connection, progress = 0) {
-                      this.connection = connection;
-                      this.progress = progress;
-                      this.speed = 0.005 + Math.random() * 0.005;
-                    }
-
-                    update() {
-                      this.progress += this.speed;
-                      if (this.progress > 1) {
-                        this.progress = 0;
-                        this.speed = 0.005 + Math.random() * 0.005;
-                      }
-                    }
-
-                    draw() {
-                      const x = this.connection.from.x + (this.connection.to.x - this.connection.from.x) * this.progress;
-                      const y = this.connection.from.y + (this.connection.to.y - this.connection.from.y) * this.progress;
-                      
-                      ctx.beginPath();
-                      ctx.arc(x, y, 3, 0, Math.PI * 2);
-                      ctx.fillStyle = this.connection.color;
-                      ctx.shadowBlur = 10;
-                      ctx.shadowColor = this.connection.color;
-                      ctx.fill();
-                      ctx.shadowBlur = 0;
-                    }
-                  }
-
-                  connections.forEach(conn => {
-                    for (let i = 0; i < 3; i++) {
-                      particles.push(new Particle(conn, Math.random()));
-                    }
-                  });
-
-                  function animate() {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    
-                    // Draw connections
-                    connections.forEach(conn => {
-                      ctx.beginPath();
-                      ctx.moveTo(conn.from.x, conn.from.y);
-                      ctx.lineTo(conn.to.x, conn.to.y);
-                      ctx.strokeStyle = conn.color + '30';
-                      ctx.lineWidth = 2;
-                      ctx.stroke();
-                    });
-
-                    // Update and draw particles
-                    particles.forEach(particle => {
-                      particle.update();
-                      particle.draw();
-                    });
-
-                    requestAnimationFrame(animate);
-                  }
-
-                  // Start animation when in view
-                  const observer = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                      if (entry.isIntersecting) {
-                        animate();
-                        observer.disconnect();
-                      }
-                    });
-                  }, { threshold: 0.1 });
-
-                  if (canvas) observer.observe(canvas);
-                })();
-              `
-            }}
-          />
+          </motion.div>
         </div>
       </section>
 
       {/* Governance, Security & Audit - Enterprise Standard */}
-      <section className="py-32 bg-black relative overflow-hidden">
+      <section className="py-32 bg-background dark:bg-black relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(112,200,42,0.03),transparent_70%)]" />
         <div className="container mx-auto px-4 lg:px-8 relative z-10">
-          {/* Two Column Layout: Content Left, 4 Quadrants Right */}
+          {/* Two Column Layout: Security Cards Left, Content Right */}
           <div className="grid lg:grid-cols-2 gap-12 items-center mb-16">
-            {/* Left Side - Content */}
+            {/* Left Side - 4 Quadrants Grid */}
             <motion.div
               initial={{ opacity: 0, x: -50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="space-y-6"
-            >
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-800/50 text-zinc-400 text-xs font-bold uppercase tracking-widest border border-zinc-800">
-                <Shield className="w-4 h-4" />
-                Compliance & Security
-              </div>
-              <h2 className="text-4xl md:text-5xl font-bold text-white">
-                Built for <span className="text-[#70c82a]">Government & Corporate</span> Standards
-              </h2>
-              <p className="text-zinc-400 text-lg leading-relaxed">
-                Enterprise-grade security architecture with full audit compliance and multi-level access control
-              </p>
-            </motion.div>
-
-            {/* Right Side - 4 Quadrants Grid */}
-            <motion.div
-              initial={{ opacity: 0, x: 50 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
@@ -2915,16 +2648,36 @@ export default function LandingPage() {
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1 }}
-                  className="p-6 rounded-2xl bg-zinc-950 border border-zinc-800 hover:border-[#70c82a]/30 transition-all group"
+                  className="p-6 rounded-2xl bg-card dark:bg-zinc-950 border border-border dark:border-zinc-800 hover:border-[#70c82a]/30 transition-all group"
                 >
                   <div className="w-12 h-12 rounded-xl bg-[#70c82a]/10 flex items-center justify-center mb-4 border border-[#70c82a]/20 group-hover:scale-110 transition-transform">
                     <item.icon className="w-6 h-6 text-[#70c82a]" />
                   </div>
-                  <h4 className="text-white font-bold text-base mb-2">{item.title}</h4>
-                  <p className="text-zinc-500 text-sm mb-3">{item.desc}</p>
+                  <h4 className="text-foreground font-bold text-base mb-2">{item.title}</h4>
+                  <p className="text-muted-foreground text-sm mb-3">{item.desc}</p>
                   <div className="text-[#70c82a] text-xs font-bold">{item.stat}</div>
                 </motion.div>
               ))}
+            </motion.div>
+
+            {/* Right Side - Content */}
+            <motion.div
+              initial={{ opacity: 0, x: 50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+              className="space-y-6"
+            >
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-muted/50 dark:bg-zinc-800/50 text-muted-foreground dark:text-zinc-400 text-xs font-bold uppercase tracking-widest border border-border dark:border-zinc-800">
+                <Shield className="w-4 h-4" />
+                Compliance & Security
+              </div>
+              <h2 className="text-4xl md:text-5xl font-bold text-foreground">
+                Built for <span className="text-[#70c82a]">Government & Corporate</span> Standards
+              </h2>
+              <p className="text-muted-foreground text-lg leading-relaxed">
+                Enterprise-grade security architecture with full audit compliance and multi-level access control
+              </p>
             </motion.div>
           </div>
 
@@ -2936,8 +2689,8 @@ export default function LandingPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
             >
-              <h3 className="text-3xl font-bold text-white mb-6">Multi-Site & Scalable Architecture</h3>
-              <p className="text-zinc-400 text-lg mb-8 leading-relaxed">
+              <h3 className="text-3xl font-bold text-foreground mb-6">Multi-Site & Scalable Architecture</h3>
+              <p className="text-muted-foreground text-lg mb-8 leading-relaxed">
                 Unified platform architecture designed to scale from Head Office oversight down to project-site level operations across all ECWC locations nationwide.
               </p>
               <div className="space-y-4">
@@ -2954,14 +2707,14 @@ export default function LandingPage() {
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: i * 0.1 }}
-                    className="flex items-start gap-4 p-4 rounded-xl bg-zinc-950 border border-zinc-800 hover:border-[#70c82a]/30 transition-all group"
+                    className="flex items-start gap-4 p-4 rounded-xl bg-card dark:bg-zinc-950 border border-border dark:border-zinc-800 hover:border-[#70c82a]/30 transition-all group"
                   >
                     <div className="w-10 h-10 rounded-lg bg-[#70c82a]/10 flex items-center justify-center border border-[#70c82a]/20 flex-shrink-0">
                       <item.icon className="w-5 h-5 text-[#70c82a]" />
                     </div>
                     <div>
-                      <h5 className="text-white font-bold mb-1">{item.title}</h5>
-                      <p className="text-sm text-zinc-500">{item.desc}</p>
+                      <h5 className="text-foreground font-bold mb-1">{item.title}</h5>
+                      <p className="text-sm text-muted-foreground">{item.desc}</p>
                     </div>
                   </motion.div>
                 ))}
@@ -2975,8 +2728,8 @@ export default function LandingPage() {
               transition={{ duration: 0.8 }}
               className="relative"
             >
-              <div className="p-8 rounded-2xl bg-zinc-950 border border-zinc-800">
-                <div className="text-white font-bold mb-6">System Architecture Overview</div>
+              <div className="p-8 rounded-2xl bg-card dark:bg-zinc-950 border border-border dark:border-zinc-800">
+                <div className="text-foreground font-bold mb-6">System Architecture Overview</div>
                 <div className="space-y-6">
                   {[
                     { level: "Head Office", sites: "1", users: "45", color: "bg-[#70c82a]" },
@@ -2987,11 +2740,11 @@ export default function LandingPage() {
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-3">
                           <div className={`w-3 h-3 rounded-full ${tier.color}`} />
-                          <span className="text-white font-semibold">{tier.level}</span>
+                          <span className="text-foreground font-semibold">{tier.level}</span>
                         </div>
-                        <div className="text-xs text-zinc-500">{tier.sites} locations • {tier.users} users</div>
+                        <div className="text-xs text-muted-foreground">{tier.sites} locations • {tier.users} users</div>
                       </div>
-                      <div className="h-12 bg-zinc-900 rounded-lg p-3 flex items-center justify-between">
+                      <div className="h-12 bg-muted dark:bg-zinc-900 rounded-lg p-3 flex items-center justify-between">
                         <div className="flex gap-1">
                           {[...Array(parseInt(tier.sites))].map((_, j) => (
                     <motion.div 
@@ -3004,283 +2757,43 @@ export default function LandingPage() {
                             />
                           ))}
                         </div>
-                        <div className="text-xs text-zinc-400">Real-time Sync</div>
+                        <div className="text-xs text-muted-foreground">Real-time Sync</div>
                       </div>
                     </div>
                   ))}
                 </div>
-                <div className="mt-6 pt-6 border-t border-zinc-800 grid grid-cols-3 gap-4 text-center">
+                <div className="mt-6 pt-6 border-t border-border dark:border-zinc-800 grid grid-cols-3 gap-4 text-center">
                         <div>
-                    <div className="text-2xl font-bold text-white mb-1">31</div>
-                    <div className="text-[10px] text-zinc-500 uppercase font-bold">Total Sites</div>
+                    <div className="text-2xl font-bold text-foreground mb-1">31</div>
+                    <div className="text-[10px] text-muted-foreground uppercase font-bold">Total Sites</div>
                         </div>
                   <div>
                     <div className="text-2xl font-bold text-[#70c82a] mb-1">585</div>
-                    <div className="text-[10px] text-zinc-500 uppercase font-bold">Active Users</div>
+                    <div className="text-[10px] text-muted-foreground uppercase font-bold">Active Users</div>
                       </div>
                   <div>
-                    <div className="text-2xl font-bold text-white mb-1">99.8%</div>
-                    <div className="text-[10px] text-zinc-500 uppercase font-bold">Uptime</div>
+                    <div className="text-2xl font-bold text-foreground mb-1">99.8%</div>
+                    <div className="text-[10px] text-muted-foreground uppercase font-bold">Uptime</div>
                   </div>
                 </div>
               </div>
                     </motion.div>
           </div>
 
-          {/* Compliance Ready Section - Modern Grid Design */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mt-16"
-          >
-            <div className="grid lg:grid-cols-2 gap-12 items-start">
-              {/* Left: Content */}
-              <motion.div
-                initial={{ opacity: 0, x: -50 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8 }}
-                className="space-y-6"
-              >
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-16 h-16 rounded-2xl bg-[#70c82a]/10 flex items-center justify-center border border-[#70c82a]/20">
-                    <Award className="w-8 h-8 text-[#70c82a]" />
-                  </div>
-                  <div>
-                    <div className="text-xs text-[#70c82a] font-bold uppercase tracking-wider mb-1">Compliance & Standards</div>
-                    <h3 className="text-3xl font-bold text-white">Compliance-Ready Reporting</h3>
-                  </div>
-                </div>
-                <p className="text-zinc-400 text-lg leading-relaxed">
-                  Built to support government reporting needs and international audit standards with comprehensive approval workflows and secure data storage.
-                </p>
-                <div className="space-y-3 pt-4">
-                  {[
-                    "Full audit trail for all system activities",
-                    "Role-based access with approval workflows",
-                    "Secure data encryption and storage",
-                    "Government and international standard compliance"
-                  ].map((item, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, x: -20 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: i * 0.1 }}
-                      className="flex items-center gap-3 text-zinc-300"
-                    >
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#70c82a]" />
-                      <span className="text-sm">{item}</span>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
-
-              {/* Right: Compliance Badges Grid */}
-              <motion.div
-                initial={{ opacity: 0, x: 50 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8 }}
-                className="relative"
-              >
-                <div className="p-8 rounded-2xl bg-zinc-950 border border-zinc-800">
-                  <div className="text-white font-bold mb-6 text-lg">Certifications & Standards</div>
-                  <div className="grid grid-cols-2 gap-4">
-                    {[
-                      { name: "ISO 27001", desc: "Compatible", icon: Shield, color: "bg-[#70c82a]/10 border-[#70c82a]/20 text-[#70c82a]" },
-                      { name: "GDPR", desc: "Compliant", icon: Lock, color: "bg-blue-500/10 border-blue-500/20 text-blue-400" },
-                      { name: "SOC 2", desc: "Type II", icon: CheckCircle, color: "bg-amber-500/10 border-amber-500/20 text-amber-400" },
-                      { name: "Government", desc: "Audit Ready", icon: Award, color: "bg-[#70c82a]/10 border-[#70c82a]/20 text-[#70c82a]" },
-                      { name: "International", desc: "Standards", icon: Globe, color: "bg-purple-500/10 border-purple-500/20 text-purple-400", colSpan: "col-span-2" }
-                    ].map((badge, i) => (
-                      <motion.div
-                        key={i}
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: i * 0.1 }}
-                        className={`p-5 rounded-xl border ${badge.color} hover:scale-105 transition-all group ${badge.colSpan || ''}`}
-                      >
-                        <div className="flex items-start gap-3 mb-3">
-                          <badge.icon className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                          <div className="flex-1">
-                            <div className="font-bold text-white text-sm mb-1">{badge.name}</div>
-                            <div className="text-xs opacity-80">{badge.desc}</div>
-                          </div>
-                        </div>
-                        <div className="h-1 bg-zinc-800 rounded-full overflow-hidden">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            whileInView={{ width: "100%" }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 1, delay: i * 0.1 + 0.3 }}
-                            className="h-full bg-gradient-to-r from-[#70c82a] to-emerald-400"
-                          />
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          </motion.div>
         </div>
       </section>
 
-      {/* Design 5: Hexagonal Grid Network */}
-      <section className="relative py-32 bg-zinc-950 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(112,200,42,0.02),transparent_70%)]" />
-        <div className="container mx-auto px-4 lg:px-8 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#70c82a]/10 text-[#70c82a] text-xs font-bold uppercase tracking-widest mb-6 border border-[#70c82a]/20">
-              <Server className="w-4 h-4" />
-              Network Architecture
-            </div>
-            <h2 className="text-4xl md:text-6xl font-bold text-white mb-4">
-              <span className="text-[#70c82a]">Hexagonal Grid</span> Network
-            </h2>
-            <p className="text-zinc-400 text-lg max-w-3xl mx-auto">
-              Modern honeycomb architecture where each hexagon represents a system module, connected in an intelligent network pattern.
-            </p>
-          </motion.div>
 
-          <div className="relative flex items-center justify-center min-h-[600px]">
-            <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 max-w-5xl mx-auto">
-              {[
-                { label: "Inventory", icon: Warehouse, color: "#70c82a", delay: 0 },
-                { label: "Work Orders", icon: ClipboardList, color: "#3b82f6", delay: 0.1 },
-                { label: "Maintenance", icon: Wrench, color: "#f59e0b", delay: 0.2 },
-                { label: "Reports", icon: BarChart3, color: "#8b5cf6", delay: 0.3 },
-                { label: "Analytics", icon: Activity, color: "#ec4899", delay: 0.4 },
-                { label: "Dashboard", icon: Target, color: "#70c82a", delay: 0.5 },
-                { label: "Users", icon: Users, color: "#10b981", delay: 0.6 },
-                { label: "Settings", icon: Settings, color: "#6366f1", delay: 0.7 },
-                { label: "Security", icon: Shield, color: "#ef4444", delay: 0.8 },
-                { label: "API", icon: Server, color: "#70c82a", delay: 0.9 },
-                { label: "Database", icon: Database, color: "#f59e0b", delay: 1.0 },
-                { label: "Backup", icon: RotateCcw, color: "#8b5cf6", delay: 1.1 }
-              ].map((hex, i) => {
-                const isEvenRow = Math.floor(i / 6) % 2 === 0;
-                const offset = isEvenRow ? 0 : 60;
-                return (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, scale: 0, rotate: -180 }}
-                    whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ 
-                      duration: 0.6, 
-                      delay: hex.delay,
-                      type: "spring",
-                      stiffness: 200
-                    }}
-                    whileHover={{ 
-                      scale: 1.15,
-                      zIndex: 10,
-                      transition: { duration: 0.3 }
-                    }}
-                    className="relative group cursor-pointer"
-                    style={{ 
-                      clipPath: 'polygon(30% 0%, 70% 0%, 100% 50%, 70% 100%, 30% 100%, 0% 50%)',
-                      width: '120px',
-                      height: '104px',
-                      marginLeft: `${offset}px`
-                    }}
-                  >
-                    <div
-                      className="absolute inset-0 flex flex-col items-center justify-center p-4 rounded-lg border-2 transition-all"
-                      style={{
-                        backgroundColor: `${hex.color}15`,
-                        borderColor: `${hex.color}40`,
-                        boxShadow: `0 0 20px ${hex.color}30`
-                      }}
-                    >
-                      <hex.icon 
-                        className="w-8 h-8 mb-2 transition-transform group-hover:scale-110" 
-                        style={{ color: hex.color }}
-                      />
-                      <span className="text-white text-xs font-bold text-center">{hex.label}</span>
-                    </div>
-                    
-                    {/* Glow effect on hover */}
-                    <motion.div
-                      className="absolute inset-0 rounded-lg"
-                      style={{
-                        background: `radial-gradient(circle, ${hex.color}40, transparent 70%)`,
-                        opacity: 0
-                      }}
-                      whileHover={{ opacity: 1 }}
-                      transition={{ duration: 0.3 }}
-                    />
-                  </motion.div>
-                );
-              })}
-            </div>
-
-            {/* Connection Lines Animation */}
-            <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 1 }}>
-              <defs>
-                <linearGradient id="connectionGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#70c82a" stopOpacity="0" />
-                  <stop offset="50%" stopColor="#70c82a" stopOpacity="0.6" />
-                  <stop offset="100%" stopColor="#70c82a" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-              {[0, 1, 2, 3, 4, 5].map((i) => (
-                <motion.line
-                  key={i}
-                  x1={`${20 + i * 15}%`}
-                  y1="50%"
-                  x2={`${25 + i * 15}%`}
-                  y2="50%"
-                  stroke="url(#connectionGradient)"
-                  strokeWidth="2"
-                  initial={{ pathLength: 0, opacity: 0 }}
-                  whileInView={{ pathLength: 1, opacity: 0.3 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 1.5, delay: i * 0.2 }}
-                >
-                  <animate
-                    attributeName="opacity"
-                    values="0.1;0.4;0.1"
-                    dur="3s"
-                    repeatCount="indefinite"
-                  />
-                </motion.line>
-              ))}
-            </svg>
-          </div>
-
-          {/* Bottom Content */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mt-16 text-center"
-          >
-            <p className="text-zinc-400 text-lg max-w-2xl mx-auto">
-              Each hexagon is a module, each connection is a pathway. Together they form a resilient, scalable network architecture.
-            </p>
-          </motion.div>
-        </div>
-      </section>
 
     {/* Footer */}
-<footer className="bg-black py-12">
-  <div className="container mx-auto px-4 lg:px-8 text-white">
+<footer className="bg-muted dark:bg-black py-12">
+  <div className="container mx-auto px-4 lg:px-8 text-foreground">
     <div className="grid md:grid-cols-4 gap-8 mb-8">
       <div className="space-y-4">
         <div className="flex items-center gap-3">
          <div className="relative">
   <Image
-    src="/ECWC-Official-Logo.png"
+    src="/ecwc png logo.png"
     alt="ECWC Logo"
     width={80}
     height={80}
@@ -3292,11 +2805,11 @@ export default function LandingPage() {
 </div>
 
           <div>
-            <div className="font-bold text-white">ECWC Equipment Manager</div>
-            <div className="text-sm text-gray-400">Internal System</div>
+            <div className="font-bold text-foreground">ECWC Equipment Manager</div>
+            <div className="text-sm text-muted-foreground">Internal System</div>
           </div>
         </div>
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-muted-foreground">
           Enterprise equipment management platform designed specifically for ECWC construction operations.
         </p>
       </div>
@@ -3316,11 +2829,11 @@ export default function LandingPage() {
         }
       ].map((section, i) => (
         <div key={i} className="space-y-4">
-          <h4 className="font-semibold text-white">{section.title}</h4>
+          <h4 className="font-semibold text-foreground">{section.title}</h4>
           <ul className="space-y-2">
             {section.links.map((link, j) => (
               <li key={j}>
-                <Link href="#" className="text-sm text-gray-400 hover:text-white transition-colors">
+                <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                   {link}
                 </Link>
               </li>
@@ -3330,16 +2843,16 @@ export default function LandingPage() {
       ))}
     </div>
 
-    <div className="pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4">
-      <p className="text-sm text-gray-400">
+    <div className="pt-8 border-t border-border dark:border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4">
+      <p className="text-sm text-muted-foreground">
         © 2025 ECWC Equipment Management System. Internal use only.
       </p>
       <div className="flex items-center gap-4">
         <ThemeToggle />
-        <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
+        <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
           Privacy Policy
         </Button>
-        <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
+        <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
           Terms of Service
         </Button>
       </div>

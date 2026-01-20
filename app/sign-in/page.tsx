@@ -72,8 +72,8 @@ export default function SignInPage() {
             <ArrowLeft className="h-5 w-5" />
             <div className="flex items-center gap-3">
               <Image
-                src="/ECWC-Official-Logo.png"
-                alt="Ethiopia Engineering Corporation"
+                src="/ecwc png logo.png"
+                alt="ECWC"
                 width={64}
                 height={64}
                 className="h-16 w-auto object-contain"
@@ -83,7 +83,7 @@ export default function SignInPage() {
               />
               <div className="flex flex-col">
                 <span className="text-sm font-bold bg-gradient-to-r from-cyan-600 to-teal-500 bg-clip-text text-transparent">
-                  Ethiopia Engineering Corporation (EEC)
+                   ECWC
                 </span>
                 <span className="text-xs text-muted-foreground font-medium">Internal Management System</span>
               </div>

@@ -103,7 +103,7 @@ To connect to a backend:
 ## Customization
 
 ### Logo
-- Place your logo at `public/ECWC-Official-Logo.png`
+- Place your logo at `public/ecwc png logo.png`
 - Or update the icon components in `components/Sidebar.tsx` and pages
 
 ### Colors
