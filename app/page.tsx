@@ -64,9 +64,10 @@ import {
   DollarSign,
   Activity,
   History,
-  X
+  X,
+  Menu
 }  from "lucide-react"
-import { motion, useScroll, useTransform } from "framer-motion"
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import { ThemeToggle } from "@/components/theme-toggle"
 import Image from "next/image"
 
@@ -802,11 +803,24 @@ const AnimatedEquipmentProgress = ({
 
 export default function LandingPage() {
   const [isLoading, setIsLoading] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   // Set dark mode as default
   useEffect(() => {
     document.documentElement.classList.add('dark')
   }, [])
+
+  // Close mobile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      if (mobileMenuOpen && !target.closest('nav') && !target.closest('button[aria-label="Toggle menu"]')) {
+        setMobileMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [mobileMenuOpen])
 
   return (
     <div className="min-h-screen bg-background">
@@ -815,74 +829,147 @@ export default function LandingPage() {
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
-        className="border-b bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 sticky top-0 z-50"
+        className="border-b border-[#70c82a]/20 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 sticky top-0 z-50 shadow-sm"
       >
         <div className="container mx-auto px-4 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
+          <div className="flex h-16 md:h-20 items-center justify-between">
+            {/* Logo Section */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
-              className="flex items-center gap-3"
+              className="flex items-center gap-2 md:gap-3 flex-shrink-0"
             >
               <motion.div
                 whileHover={{ scale: 1.05 }}
-                className="flex items-center justify-center"
+                className="flex items-center justify-center relative"
               >
+                <div className="absolute inset-0 bg-[#70c82a]/10 rounded-full blur-xl"></div>
                 <Image
                   src="/ecwc png logo.png"
                   alt="ECWC Logo"
-                  width={80}
-                  height={80}
-                  className="object-contain"
+                  width={60}
+                  height={60}
+                  className="object-contain relative z-10 md:w-16 md:h-16 w-12 h-12"
                   quality={100}
                   unoptimized
                   priority
+                  style={{ filter: 'drop-shadow(0 0 8px rgba(112, 200, 42, 0.3))' }}
                 />
               </motion.div>
 
-              <div className="flex flex-col">
-                <span className="text-sm font-bold bg-gradient-to-r from-cyan-600 to-teal-500 bg-clip-text text-transparent">
-                ETHIOPIAN CONSTRUCTION WORKS CORPORATION
+              <div className="hidden sm:flex flex-col">
+                <span className="text-xs md:text-sm font-bold bg-gradient-to-r from-[#70c82a] to-[#5aa022] bg-clip-text text-transparent leading-tight">
+                  ETHIOPIAN CONSTRUCTION WORKS CORPORATION
                 </span>
-                <span className="text-xs text-muted-foreground font-medium">የኢትዮጵያ ኮንስትራክሽን ሥራዎች ኮርፖሬሽን</span>
+                <span className="text-[10px] md:text-xs text-muted-foreground font-medium leading-tight">የኢትዮጵያ ኮንስትራክሽን ሥራዎች ኮርፖሬሽን</span>
               </div>
             </motion.div>
 
-            <nav className="hidden md:flex items-center gap-8">
-              {["Features", "Equipment", "Dashboard", "Support"].map((item, i) => (
-                <motion.div
-                  key={item}
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 + i * 0.1 }}
-                >
-                  <Link
-                    href={`#${item.toLowerCase()}`}
-                    className="text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors relative group"
+            {/* Desktop Navigation */}
+            <nav className="hidden lg:flex items-center gap-4 xl:gap-6">
+              {["Overview", "Video", "Module Architecture", "Multi-Site & Scalable Architecture"].map((item, i) => {
+                const href = item === "Multi-Site & Scalable Architecture" 
+                  ? "#multi-site-architecture" 
+                  : `#${item.toLowerCase().replace(/\s+/g, '-')}`
+                return (
+                  <motion.div
+                    key={item}
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 + i * 0.1 }}
                   >
-                    {item}
-                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-cyan-500 transition-all group-hover:w-full" />
-                  </Link>
-                </motion.div>
-              ))}
+                    <Link
+                      href={href}
+                      className="text-xs xl:text-sm font-semibold text-muted-foreground hover:text-[#70c82a] transition-colors relative group px-2 py-1 whitespace-nowrap"
+                    >
+                      {item}
+                      <span className="absolute -bottom-1 left-2 right-2 h-0.5 bg-[#70c82a] scale-x-0 transition-transform group-hover:scale-x-100 rounded-full" />
+                    </Link>
+                  </motion.div>
+                )
+              })}
             </nav>
 
+            {/* Desktop Actions */}
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.7 }}
-              className="flex items-center gap-3"
+              className="hidden lg:flex items-center gap-3"
             >
-              <Button variant="outline" size="sm" asChild>
+              <Button variant="outline" size="sm" asChild className="border-[#70c82a]/30 hover:border-[#70c82a] hover:text-[#70c82a]">
                 <Link href="/sign-in">Sign In</Link>
               </Button>
-              <Button size="sm" className="bg-cyan-600 hover:bg-cyan-700" asChild>
+              <Button size="sm" className="bg-[#70c82a] hover:bg-[#5aa022] text-white shadow-lg shadow-[#70c82a]/20" asChild>
                 <Link href="/sign-up">Sign Up</Link>
               </Button>
               <ThemeToggle />
             </motion.div>
+
+            {/* Mobile Menu Button */}
+            <div className="flex lg:hidden items-center gap-2">
+              <ThemeToggle />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="lg:hidden"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                aria-label="Toggle menu"
+              >
+                {mobileMenuOpen ? (
+                  <X className="h-5 w-5 text-[#70c82a]" />
+                ) : (
+                  <Menu className="h-5 w-5 text-[#70c82a]" />
+                )}
+              </Button>
+            </div>
           </div>
+
+          {/* Mobile Navigation Menu */}
+          <AnimatePresence>
+            {mobileMenuOpen && (
+              <motion.nav
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+                className="lg:hidden border-t border-[#70c82a]/20 overflow-hidden"
+              >
+                <div className="py-4 space-y-3">
+                  {["Overview", "Video", "Module Architecture", "Multi-Site & Scalable Architecture"].map((item, i) => {
+                    const href = item === "Multi-Site & Scalable Architecture" 
+                      ? "#multi-site-architecture" 
+                      : `#${item.toLowerCase().replace(/\s+/g, '-')}`
+                    return (
+                      <motion.div
+                        key={item}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.1 }}
+                      >
+                        <Link
+                          href={href}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="block px-4 py-2 text-sm font-semibold text-muted-foreground hover:text-[#70c82a] hover:bg-[#70c82a]/5 rounded-lg transition-colors"
+                        >
+                          {item}
+                        </Link>
+                      </motion.div>
+                    )
+                  })}
+                  <div className="pt-2 px-4 space-y-2 border-t border-[#70c82a]/10 mt-2">
+                    <Button variant="outline" size="sm" className="w-full border-[#70c82a]/30 hover:border-[#70c82a] hover:text-[#70c82a]" asChild>
+                      <Link href="/sign-in" onClick={() => setMobileMenuOpen(false)}>Sign In</Link>
+                    </Button>
+                    <Button size="sm" className="w-full bg-[#70c82a] hover:bg-[#5aa022] text-white" asChild>
+                      <Link href="/sign-up" onClick={() => setMobileMenuOpen(false)}>Sign Up</Link>
+                    </Button>
+                  </div>
+                </div>
+              </motion.nav>
+            )}
+          </AnimatePresence>
         </div>
       </motion.header>
 
@@ -1023,8 +1110,36 @@ export default function LandingPage() {
                     fontFamily: 'var(--font-dm-sans), "DM Sans", sans-serif'
                   }}
                 >
-                  Built for Ethiopian Construction Works Corporation to track assets, plan maintenance, control inventory, and monitor performance all in real time.
+                  A comprehensive enterprise resource planning system built for Ethiopian Construction Works Corporation. Our modular architecture enables multi-site scalability, real-time equipment tracking, maintenance management, inventory control, and performance monitoring across all construction sites.
                 </motion.p>
+
+                {/* Key Features Overview */}
+                <motion.div
+                  variants={fadeInUp}
+                  className="space-y-3 pt-4"
+                >
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="w-5 h-5 text-[#70c82a] flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-1">Multi-Site & Scalable Architecture</h3>
+                      <p className="text-sm text-muted-foreground">Designed to manage multiple construction sites simultaneously with centralized control and distributed operations.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="w-5 h-5 text-[#70c82a] flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-1">Modular System Design</h3>
+                      <p className="text-sm text-muted-foreground">Flexible module architecture allowing customization and integration of equipment management, maintenance, inventory, and reporting modules.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="w-5 h-5 text-[#70c82a] flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-1">Real-Time Video Monitoring</h3>
+                      <p className="text-sm text-muted-foreground">Integrated video features for live equipment monitoring and site surveillance across all locations.</p>
+                    </div>
+                  </div>
+                </motion.div>
 
                 {/* Stats */}
                 <motion.div variants={fadeInUp} className="grid grid-cols-3 gap-6 pt-4">
@@ -1411,11 +1526,11 @@ export default function LandingPage() {
                     </thead>
                     <tbody>
                       {[
-                        { id: "ECWC-B-042", type: "Dozer", status: "Active", value: "$124.5K", color: "bg-[#70c82a]" },
-                        { id: "ECWC-E-108", type: "Excavator", status: "Maint.", value: "$89.2K", color: "bg-amber-500" },
-                        { id: "ECWC-G-056", type: "Grader", status: "Active", value: "$156K", color: "bg-[#70c82a]" },
-                        { id: "ECWC-L-023", type: "Loader", status: "Critical", value: "$210.4K", color: "bg-red-500" },
-                        { id: "ECWC-T-091", type: "Truck", status: "Active", value: "$78.3K", color: "bg-[#70c82a]" }
+                        { id: "ECWC-B-042", type: "Dozer", status: "Active", value: "Br 124.5K", color: "bg-[#70c82a]" },
+                        { id: "ECWC-E-108", type: "Excavator", status: "Maint.", value: "Br 89.2K", color: "bg-amber-500" },
+                        { id: "ECWC-G-056", type: "Grader", status: "Active", value: "Br 156K", color: "bg-[#70c82a]" },
+                        { id: "ECWC-L-023", type: "Loader", status: "Critical", value: "Br 210.4K", color: "bg-red-500" },
+                        { id: "ECWC-T-091", type: "Truck", status: "Active", value: "Br 78.3K", color: "bg-[#70c82a]" }
                       ].map((row, i) => (
                         <motion.tr 
                 key={i}
@@ -1441,7 +1556,7 @@ export default function LandingPage() {
                 </div>
                 <div className="mt-6 pt-4 border-t border-border dark:border-zinc-800 flex justify-between items-center">
                   <div className="text-xs text-muted-foreground">Total Fleet Value</div>
-                  <div className="text-2xl font-bold text-[#70c82a]">$12.4M</div>
+                  <div className="text-2xl font-bold text-[#70c82a]">Br 12.4M</div>
                   </div>
                 </div>
             </motion.div>
@@ -1676,7 +1791,7 @@ export default function LandingPage() {
                 </div>
                 <div className="pt-4 border-t border-border dark:border-zinc-800 flex justify-between items-center">
                   <div className="text-xs text-muted-foreground">Total Labor Cost This Week</div>
-                  <div className="text-2xl font-bold text-[#70c82a]">$47,850</div>
+                  <div className="text-2xl font-bold text-[#70c82a]">Br 47,850</div>
                 </div>
                   </div>
             </motion.div>
@@ -1720,10 +1835,10 @@ export default function LandingPage() {
                   <div className="text-sm text-muted-foreground mb-3">Recent Parts Issued</div>
                   <div className="space-y-2">
                     {[
-                      { part: "Hydraulic Filter HF-208", qty: "12", wo: "WO-2847", cost: "$1,240" },
-                      { part: "Engine Oil 15W-40 (Drum)", qty: "8", wo: "WO-2851", cost: "$2,880" },
-                      { part: "Air Filter Element AF-501", qty: "24", wo: "WO-2856", cost: "$960" },
-                      { part: "Brake Pad Set BP-410", qty: "6", wo: "WO-2859", cost: "$1,440" }
+                      { part: "Hydraulic Filter HF-208", qty: "12", wo: "WO-2847", cost: "Br 1,240" },
+                      { part: "Engine Oil 15W-40 (Drum)", qty: "8", wo: "WO-2851", cost: "Br 2,880" },
+                      { part: "Air Filter Element AF-501", qty: "24", wo: "WO-2856", cost: "Br 960" },
+                      { part: "Brake Pad Set BP-410", qty: "6", wo: "WO-2859", cost: "Br 1,440" }
                     ].map((issue, i) => (
                       <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-card/30 dark:bg-zinc-900/30 border border-border dark:border-zinc-800 text-xs">
                         <div className="flex-1">
@@ -1737,7 +1852,7 @@ export default function LandingPage() {
                 </div>
                 <div className="pt-4 border-t border-border dark:border-zinc-800 flex justify-between items-center">
                   <div className="text-xs text-muted-foreground">Total Inventory Value</div>
-                  <div className="text-2xl font-bold text-[#70c82a]">$1.8M</div>
+                  <div className="text-2xl font-bold text-[#70c82a]">Br 1.8M</div>
                 </div>
               </div>
       </motion.div>
@@ -1863,8 +1978,8 @@ export default function LandingPage() {
                 <div className="text-foreground font-bold mb-6">Monthly Cost Analysis</div>
                 <div className="grid grid-cols-3 gap-4 mb-6">
                   {[
-                    { label: "Budget", value: "$285K", icon: Target },
-                    { label: "Actual", value: "$267K", icon: DollarSign },
+                    { label: "Budget", value: "Br 285K", icon: Target },
+                    { label: "Actual", value: "Br 267K", icon: DollarSign },
                     { label: "Variance", value: "-6.3%", icon: TrendingUp }
                   ].map((stat, i) => (
                     <motion.div
@@ -1884,10 +1999,10 @@ export default function LandingPage() {
                 <div className="space-y-3 mb-6">
                   <div className="text-sm text-muted-foreground mb-2">Cost Breakdown</div>
                   {[
-                    { category: "Labor Costs", amount: "$112K", percent: 42, color: "bg-[#70c82a]" },
-                    { category: "Spare Parts", amount: "$89K", percent: 33, color: "bg-blue-500" },
-                    { category: "External Services", amount: "$47K", percent: 18, color: "bg-amber-500" },
-                    { category: "Other Expenses", amount: "$19K", percent: 7, color: "bg-zinc-600" }
+                    { category: "Labor Costs", amount: "Br 112K", percent: 42, color: "bg-[#70c82a]" },
+                    { category: "Spare Parts", amount: "Br 89K", percent: 33, color: "bg-blue-500" },
+                    { category: "External Services", amount: "Br 47K", percent: 18, color: "bg-amber-500" },
+                    { category: "Other Expenses", amount: "Br 19K", percent: 7, color: "bg-zinc-600" }
                   ].map((item, i) => (
                     <div key={i} className="p-4 rounded-xl bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800">
                       <div className="flex justify-between items-center mb-2">
@@ -1913,7 +2028,7 @@ export default function LandingPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="text-xs text-muted-foreground mb-1">Under Budget</div>
-                      <div className="text-2xl font-bold text-[#70c82a]">$18,000</div>
+                      <div className="text-2xl font-bold text-[#70c82a]">Br 18,000</div>
                     </div>
                     <CheckCircle className="w-8 h-8 text-[#70c82a]" />
                   </div>
@@ -2185,7 +2300,7 @@ export default function LandingPage() {
               {
                 icon: AlertTriangle,
                 title: "Identify abnormal maintenance spending",
-                metric: "$47K",
+                metric: "Br 47K",
                 label: "Cost Saved/Month",
                 desc: "Real-time anomaly detection flags unusual spending patterns and asset wear, enabling immediate corrective action."
               }
@@ -2238,7 +2353,7 @@ export default function LandingPage() {
                     asset: "ECWC-E-108 (Excavator)", 
                     alert: "Abnormal vibration detected - Hydraulic seal failure probability: 87%",
                     action: "Schedule inspection within 48h",
-                    cost: "$12,000",
+                    cost: "Br 12,000",
                     priority: "Critical",
                     color: "red"
                   },
@@ -2246,7 +2361,7 @@ export default function LandingPage() {
                     asset: "ECWC-B-042 (Dozer)", 
                     alert: "Engine oil degradation - Service interval approaching",
                     action: "Schedule maintenance in 72h",
-                    cost: "$3,200",
+                    cost: "Br 3,200",
                     priority: "Medium",
                     color: "amber"
                   },
@@ -2254,7 +2369,7 @@ export default function LandingPage() {
                     asset: "ECWC-L-023 (Loader)", 
                     alert: "Tire wear pattern suggests alignment issue",
                     action: "Inspection recommended next scheduled maintenance",
-                    cost: "$5,800",
+                    cost: "Br 5,800",
                     priority: "Low",
                     color: "blue"
                   }
@@ -2357,7 +2472,7 @@ export default function LandingPage() {
                 {[
                   {
                     question: "Which site has the highest maintenance cost this month?",
-                    answer: "Addis Ababa Site — $82,400. Main drivers: high emergency work orders, heavy spare-part consumption for excavators, and increased overtime labor hours."
+                    answer: "Addis Ababa Site — Br 82,400. Main drivers: high emergency work orders, heavy spare-part consumption for excavators, and increased overtime labor hours."
                   },
                   {
                     question: "What are the main maintenance issues this month and their impact?",
@@ -2368,23 +2483,23 @@ export default function LandingPage() {
                           issue: "Hydraulic system failures",
                           percentage: "38%",
                           impact: "This is the leading cause of downtime, affecting multiple excavators and loaders. Most failures occur due to seal degradation and contamination from harsh operating conditions.",
-                          cost: "Estimated monthly cost: $42,000 in repairs and lost productivity"
+                          cost: "Estimated monthly cost: Br 42,000 in repairs and lost productivity"
                         },
                         {
                           issue: "Engine overheating",
                           percentage: "27%",
                           impact: "Primarily affecting older equipment and those operating in high-temperature conditions. Coolant system failures and radiator blockages are common causes.",
-                          cost: "Estimated monthly cost: $28,500 including engine repairs and preventive measures"
+                          cost: "Estimated monthly cost: Br 28,500 including engine repairs and preventive measures"
                         },
                         {
                           issue: "Delayed spare-part availability",
                           percentage: "19%",
                           impact: "Critical parts often take 3-5 days to arrive, extending equipment downtime. This is compounded by insufficient inventory levels for commonly failing components.",
-                          cost: "Estimated monthly cost: $19,800 in extended downtime and emergency shipping fees"
+                          cost: "Estimated monthly cost: Br 19,800 in extended downtime and emergency shipping fees"
                         }
                       ],
                       recommendation: "Immediate actions: (1) Implement preventive seal replacement program, (2) Upgrade cooling systems on high-risk equipment, (3) Increase critical spare parts inventory by 40% to reduce delays.",
-                      total: "Combined monthly impact: ~$90,300 in direct costs and productivity losses."
+                      total: "Combined monthly impact: ~Br 90,300 in direct costs and productivity losses."
                     }
                   }
                 ].map((qa, i) => (
