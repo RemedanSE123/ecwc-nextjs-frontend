@@ -48,9 +48,8 @@ export default function SignInPage() {
     setError("")
     setIsLoading(true)
 
-    // Simulate API call for demo purposes
+    // Frontend-only template - no backend validation
     setTimeout(() => {
-      // Frontend-only template - no actual authentication
       console.log('Login attempt:', formData)
       setIsLoading(false)
       // Redirect to dashboard (frontend template - no actual auth)

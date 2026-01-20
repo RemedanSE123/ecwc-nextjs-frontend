@@ -50,15 +50,13 @@ const config: Config = {
           "4": "var(--chart-4)",
           "5": "var(--chart-5)",
         },
+        "ecwc-green": "#2d5016",
+        "ecwc-green-dark": "#1a3009",
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
-      },
-      colors: {
-        "ecwc-green": "#2d5016",
-        "ecwc-green-dark": "#1a3009",
       },
     },
   },

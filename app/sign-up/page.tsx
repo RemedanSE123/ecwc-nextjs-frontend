@@ -178,9 +178,8 @@ export default function SignUpPage() {
   }
 
   const nextStep = () => {
-    if (validateStep(currentStep)) {
-      setCurrentStep(prev => Math.min(prev + 1, 3))
-    }
+    // Validation removed - no backend connection
+    setCurrentStep(prev => Math.min(prev + 1, 3))
   }
 
   const prevStep = () => {
@@ -188,64 +187,21 @@ export default function SignUpPage() {
   }
 
   const validateStep = (step: number): boolean => {
-    setError("")
-    
-    switch (step) {
-      case 1:
-        if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone) {
-          setError("Please fill in all required personal information")
-          return false
-        }
-        if (!/\S+@\S+\.\S+/.test(formData.email)) {
-          setError("Please enter a valid email address")
-          return false
-        }
-        return true
-        
-      case 2:
-        if (!formData.department || !formData.position || !formData.workLocation) {
-          setError("Please fill in all required company information")
-          return false
-        }
-        return true
-        
-      case 3:
-        const { strength } = checkPasswordStrength(formData.password)
-        if (strength < 3) {
-          setError("Please choose a stronger password")
-          return false
-        }
-        if (formData.password !== formData.confirmPassword) {
-          setError("Passwords do not match")
-          return false
-        }
-        if (!agreedToTerms) {
-          setError("Please agree to the terms and conditions")
-          return false
-        }
-        return true
-        
-      default:
-        return true
-    }
+    // Validation removed - no backend connection
+    return true
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
 
-    if (!validateStep(3)) return
-
     setIsLoading(true)
 
-    // Simulate API call for demo purposes
+    // Frontend-only template - no backend validation
     setTimeout(() => {
-      // Frontend-only template - no actual registration
       console.log('Registration attempt:', { ...formData, profileImage, agreedToTerms })
       setIsLoading(false)
-      // For demo: show success message
       alert('This is a frontend template. No actual registration is performed.')
-      // Uncomment below to simulate redirect
       // router.push('/sign-up/success')
     }, 1000)
   }
@@ -612,7 +568,7 @@ export default function SignUpPage() {
               <Checkbox
                 id="terms"
                 checked={agreedToTerms}
-                onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
+                onChange={(e) => setAgreedToTerms(e.target.checked)}
                 disabled={isLoading}
               />
               <label
