@@ -65,7 +65,10 @@ import {
   Activity,
   History,
   X,
-  Menu
+  Menu,
+  Facebook,
+  Twitter,
+  Linkedin
 }  from "lucide-react"
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -127,12 +130,12 @@ const getEquipmentDescription = (name: string): string => {
 
 // --- Equipment Command Center Data - Aggregated by Category ---
 const equipmentCategories = [
-  { id: 1, name: "Dozer, Chain", op: 19, idle: 1, ur: 11, down: 2, hr: 16, ui: 0, rfd: 0, afd: 3, totalQty: 52, image: "/dozer.jpg" },
-  { id: 2, name: "Motor Grader", op: 13, idle: 2, ur: 8, down: 0, hr: 6, ui: 0, rfd: 0, afd: 2, totalQty: 31, image: "/Grader-ECWC.png" },
-  { id: 3, name: "Excavator, Chain", op: 28, idle: 1, ur: 13, down: 5, hr: 13, ui: 0, rfd: 1, afd: 1, totalQty: 62, image: "/dozer.jpg" },
+  { id: 1, name: "Dozer, Chain", op: 19, idle: 1, ur: 11, down: 2, hr: 16, ui: 0, rfd: 0, afd: 3, totalQty: 52, image: "/D.Truck-Beiben WEB.webp"},
+  { id: 2, name: "Motor Grader", op: 13, idle: 2, ur: 8, down: 0, hr: 6, ui: 0, rfd: 0, afd: 2, totalQty: 31, image: "/D.Truck-Beiben WEB.webp"},
+  { id: 3, name: "Excavator, Chain", op: 28, idle: 1, ur: 13, down: 5, hr: 13, ui: 0, rfd: 1, afd: 1, totalQty: 62, image: "/D.Truck-Beiben WEB.webp"},
   { id: 4, name: "Excavator, Wheel", op: 1, idle: 0, ur: 4, down: 2, hr: 4, ui: 0, rfd: 0, afd: 1, totalQty: 12, image: "/dozer.jpg" },
   { id: 5, name: "Loader, Chain", op: 1, idle: 0, ur: 2, down: 0, hr: 2, ui: 0, rfd: 0, afd: 0, totalQty: 5, image: "/dozer.jpg" },
-  { id: 6, name: "Loader, Wheel", op: 17, idle: 1, ur: 13, down: 3, hr: 25, ui: 0, rfd: 1, afd: 7, totalQty: 67, image: "/dozer.jpg" },
+  { id: 6, name: "Loader, Wheel", op: 17, idle: 1, ur: 13, down: 3, hr: 25, ui: 0, rfd: 1, afd: 7, totalQty: 67, image: "/D.Truck-Beiben WEB.webp"},
   { id: 7, name: "Backhoe Loader", op: 3, idle: 0, ur: 0, down: 0, hr: 0, ui: 0, rfd: 1, afd: 0, totalQty: 4, image: "/dozer.jpg" },
   { id: 8, name: "Roller D/Drum", op: 15, idle: 2, ur: 4, down: 0, hr: 5, ui: 0, rfd: 0, afd: 2, totalQty: 28, image: "/dozer.jpg" },
   { id: 9, name: "Roller S/Drum", op: 6, idle: 2, ur: 3, down: 2, hr: 7, ui: 0, rfd: 0, afd: 0, totalQty: 20, image: "/dozer.jpg" },
@@ -147,7 +150,7 @@ const equipmentCategories = [
   { id: 18, name: "Asphalt Milling machine", op: 1, idle: 0, ur: 0, down: 0, hr: 0, ui: 0, rfd: 0, afd: 0, totalQty: 1, image: "/dozer.jpg" },
   { id: 19, name: "Chip Spreader", op: 1, idle: 0, ur: 0, down: 0, hr: 0, ui: 0, rfd: 0, afd: 0, totalQty: 1, image: "/dozer.jpg" },
   { id: 20, name: "Power Curber", op: 1, idle: 0, ur: 0, down: 0, hr: 0, ui: 0, rfd: 0, afd: 0, totalQty: 1, image: "/dozer.jpg" },
-  { id: 21, name: "D/Truck Beiben", op: 43, idle: 3, ur: 11, down: 23, hr: 17, ui: 3, rfd: 0, afd: 0, totalQty: 100, image: "/dozer.jpg" },
+  { id: 21, name: "D/Truck Beiben", op: 43, idle: 3, ur: 11, down: 23, hr: 17, ui: 3, rfd: 0, afd: 0, totalQty: 100, image: "/D.Truck-Beiben.png" },
   { id: 22, name: "D/Truck Daewoo", op: 22, idle: 0, ur: 12, down: 1, hr: 1, ui: 3, rfd: 0, afd: 1, totalQty: 40, image: "/dz.png" },
   { id: 23, name: "D/Truck Faw", op: 26, idle: 1, ur: 35, down: 29, hr: 7, ui: 8, rfd: 0, afd: 0, totalQty: 106, image: "/dozer.jpg" },
   { id: 24, name: "D/Truck Nissan", op: 20, idle: 4, ur: 31, down: 32, hr: 6, ui: 7, rfd: 2, afd: 7, totalQty: 109, image: "/dozer.jpg" },
@@ -651,7 +654,7 @@ const scaleIn = {
 }
 
 // Animated Counter Component
-const AnimatedCounter = ({ value, duration = 2000 }: { value: number; duration?: number }) => {
+const AnimatedCounter = ({ value, duration = 2000, showPlus = true }: { value: number; duration?: number; showPlus?: boolean }) => {
   const [count, setCount] = useState(0)
   const ref = useRef(null)
 
@@ -683,7 +686,7 @@ const AnimatedCounter = ({ value, duration = 2000 }: { value: number; duration?:
     return () => observer.disconnect()
   }, [value, duration])
 
-  return <span ref={ref}>{count}+</span>
+  return <span ref={ref}>{count}{showPlus ? '+' : ''}</span>
 }
 
 // Animated Progress Component
@@ -832,7 +835,7 @@ export default function LandingPage() {
         className="border-b border-[#70c82a]/20 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 sticky top-0 z-50 shadow-sm"
       >
         <div className="container mx-auto px-4 lg:px-8">
-          <div className="flex h-16 md:h-20 items-center justify-between">
+          <div className="flex h-14 items-center justify-between">
             {/* Logo Section */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
@@ -848,9 +851,9 @@ export default function LandingPage() {
                 <Image
                   src="/ecwc png logo.png"
                   alt="ECWC Logo"
-                  width={60}
-                  height={60}
-                  className="object-contain relative z-10 md:w-16 md:h-16 w-12 h-12"
+                  width={48}
+                  height={48}
+                  className="object-contain relative z-10 w-10 h-10 md:w-12 md:h-12"
                   quality={100}
                   unoptimized
                   priority
@@ -859,19 +862,26 @@ export default function LandingPage() {
               </motion.div>
 
               <div className="hidden sm:flex flex-col">
-                <span className="text-xs md:text-sm font-bold bg-gradient-to-r from-[#70c82a] to-[#5aa022] bg-clip-text text-transparent leading-tight">
+                <span className="text-[10px] md:text-xs font-bold bg-gradient-to-r from-[#70c82a] to-[#5aa022] bg-clip-text text-transparent leading-tight">
                   ETHIOPIAN CONSTRUCTION WORKS CORPORATION
                 </span>
-                <span className="text-[10px] md:text-xs text-muted-foreground font-medium leading-tight">የኢትዮጵያ ኮንስትራክሽን ሥራዎች ኮርፖሬሽን</span>
+                <span className="text-[9px] md:text-[10px] text-muted-foreground font-medium leading-tight">የኢትዮጵያ ኮንስትራክሽን ሥራዎች ኮርፖሬሽን</span>
               </div>
             </motion.div>
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center gap-4 xl:gap-6">
-              {["Overview", "Video", "Module Architecture", "Multi-Site & Scalable Architecture"].map((item, i) => {
-                const href = item === "Multi-Site & Scalable Architecture" 
-                  ? "#multi-site-architecture" 
-                  : `#${item.toLowerCase().replace(/\s+/g, '-')}`
+              {["Overview", "Video", "Features ", "AI Support"].map((item, i) => {
+                let href = "#overview"
+                if (item === "Video") {
+                  href = "#system-overview"
+                } else if (item === "Features ") {
+                  href = "#features"
+                } else if (item === "AI Support") {
+                  href = "#ai-support"
+                } else if (item === "Overview") {
+                  href = "#overview"
+                }
                 return (
                   <motion.div
                     key={item}
@@ -937,10 +947,17 @@ export default function LandingPage() {
                 className="lg:hidden border-t border-[#70c82a]/20 overflow-hidden"
               >
                 <div className="py-4 space-y-3">
-                  {["Overview", "Video", "Module Architecture", "Multi-Site & Scalable Architecture"].map((item, i) => {
-                    const href = item === "Multi-Site & Scalable Architecture" 
-                      ? "#multi-site-architecture" 
-                      : `#${item.toLowerCase().replace(/\s+/g, '-')}`
+                  {["Overview", "Video", "Features", "AI Support  "].map((item, i) => {
+                    let href = "#overview"
+                    if (item === "Video") {
+                      href = "#system-overview"
+                    } else if (item === "Features") {
+                      href = "#features"
+                    } else if (item === "AI Support  ") {
+                      href = "#ai-support"
+                    } else if (item === "Overview") {
+                      href = "#overview"
+                    }
                     return (
                       <motion.div
                         key={item}
@@ -993,10 +1010,10 @@ export default function LandingPage() {
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               {/* Left Content */}
               <motion.div variants={fadeInUp} className="space-y-8">
-                {/* CMMS Acronym with Explanations */}
+                {/* PMMS Acronym with Explanations */}
                 <div className="relative">
-                  {/* Vertical Connecting Line */}
-                  <div className="absolute left-3 top-0 bottom-0 w-0.5 bg-black/40 dark:bg-white/40 rounded-full">
+                  {/* Vertical Connecting Line - starts after first circle, ends before last circle */}
+                  <div className="absolute left-3 top-6 bottom-6 w-0.5 bg-black/40 dark:bg-white/40 rounded-full">
                     <motion.div
                       initial={{ scaleY: 0 }}
                       animate={{ scaleY: 1 }}
@@ -1008,7 +1025,7 @@ export default function LandingPage() {
                   {/* CMMS Letters with Full Words */}
                   <div className="flex flex-col gap-5">
                     {[
-                      { letter: "C", word: "Computerized" },
+                      { letter: "P", word: "Plant " },
                       { letter: "M", word: "Maintenance" },
                       { letter: "M", word: "Management" },
                       { letter: "S", word: "System" }
@@ -1046,11 +1063,11 @@ export default function LandingPage() {
 
                         {/* Large Letter */}
                         <div
-                          className="text-3xl md:text-4xl lg:text-5xl font-black text-foreground flex-shrink-0"
+                          className="text-2xl md:text-3xl lg:text-4xl font-black text-foreground flex-shrink-0"
                           style={{ 
                             fontFamily: 'var(--font-dm-sans), "DM Sans", sans-serif',
                             lineHeight: 1,
-                            width: '40px'
+                            width: '32px'
                           }}
                         >
                           {item.letter}
@@ -1075,7 +1092,7 @@ export default function LandingPage() {
                         
                         {/* Full Word */}
                         <h1
-                          className="text-xl md:text-2xl lg:text-3xl font-bold tracking-tight text-foreground"
+                          className="text-lg md:text-xl lg:text-2xl font-bold tracking-tight text-foreground"
                           style={{ 
                             fontFamily: 'var(--font-dm-sans), "DM Sans", sans-serif',
                             letterSpacing: '-0.01em',
@@ -1103,72 +1120,35 @@ export default function LandingPage() {
                
                 </motion.div>
 
-                <motion.p
-                  variants={fadeInUp}
-                  className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-2xl"
-                  style={{ 
-                    fontFamily: 'var(--font-dm-sans), "DM Sans", sans-serif'
-                  }}
-                >
-                  A comprehensive enterprise resource planning system built for Ethiopian Construction Works Corporation. Our modular architecture enables multi-site scalability, real-time equipment tracking, maintenance management, inventory control, and performance monitoring across all construction sites.
-                </motion.p>
-
+                
                 {/* Key Features Overview */}
                 <motion.div
                   variants={fadeInUp}
-                  className="space-y-3 pt-4"
+                  className="space-y-4 pt-4"
                 >
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="w-5 h-5 text-[#70c82a] flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h3 className="font-semibold text-foreground mb-1">Real-Time Monitoring</h3>
+                      <p className="text-sm text-muted-foreground">View live equipment status and site activity across all locations.</p>
+                    </div>
+                  </div>
                   <div className="flex items-start gap-3">
                     <CheckCircle className="w-5 h-5 text-[#70c82a] flex-shrink-0 mt-0.5" />
                     <div>
                       <h3 className="font-semibold text-foreground mb-1">Multi-Site & Scalable Architecture</h3>
-                      <p className="text-sm text-muted-foreground">Designed to manage multiple construction sites simultaneously with centralized control and distributed operations.</p>
+                      <p className="text-sm text-muted-foreground">Manage multiple construction sites from one centralized system.</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <CheckCircle className="w-5 h-5 text-[#70c82a] flex-shrink-0 mt-0.5" />
                     <div>
-                      <h3 className="font-semibold text-foreground mb-1">Modular System Design</h3>
-                      <p className="text-sm text-muted-foreground">Flexible module architecture allowing customization and integration of equipment management, maintenance, inventory, and reporting modules.</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-[#70c82a] flex-shrink-0 mt-0.5" />
-                    <div>
-                      <h3 className="font-semibold text-foreground mb-1">Real-Time Video Monitoring</h3>
-                      <p className="text-sm text-muted-foreground">Integrated video features for live equipment monitoring and site surveillance across all locations.</p>
+                      <h3 className="font-semibold text-foreground mb-1">Flexible System Design</h3>
+                      <p className="text-sm text-muted-foreground">Easily manage assets, maintenance, inventory, and reporting.</p>
                     </div>
                   </div>
                 </motion.div>
 
-                {/* Stats */}
-                <motion.div variants={fadeInUp} className="grid grid-cols-3 gap-6 pt-4">
-                  {[
-                    { value: 150, label: "Equipment", suffix: "" },
-                    { value: 98, label: "Uptime", suffix: "%" },
-                    { value: 24, label: "Monitoring", suffix: "/7" }
-                  ].map((stat, i) => (
-                    <div key={i} className="text-center">
-                      <div 
-                        className="text-3xl md:text-4xl font-bold text-[#70c82a] mb-1"
-                        style={{ 
-                          fontFamily: 'var(--font-dm-sans), "DM Sans", sans-serif'
-                        }}
-                      >
-                        <AnimatedCounter value={stat.value} />
-                        {stat.suffix && <span className="text-2xl md:text-3xl">{stat.suffix}</span>}
-                      </div>
-                      <div 
-                        className="text-xs text-muted-foreground font-semibold uppercase tracking-wider"
-                        style={{ 
-                          fontFamily: 'var(--font-dm-sans), "DM Sans", sans-serif'
-                        }}
-                      >
-                        {stat.label}
-                      </div>
-                    </div>
-                  ))}
-                </motion.div>
               </motion.div>
 
               {/* Right Content - Dashboard Preview */}
@@ -1252,6 +1232,7 @@ export default function LandingPage() {
                   </div>
                 </div>
 
+
                 {/* Floating Animation Elements */}
                 <motion.div
                   className="absolute -top-4 -right-4 w-8 h-8 bg-[#70c82a] rounded-full opacity-20"
@@ -1285,7 +1266,7 @@ export default function LandingPage() {
       </section>
 
       {/* ECWC System Overview Video Section */}
-      <section className="relative py-20 lg:py-32 bg-gradient-to-b from-background via-muted/30 to-background dark:from-background dark:via-zinc-950 dark:to-black overflow-hidden">
+      <section id="system-overview" className="relative py-20 lg:py-32 bg-gradient-to-b from-background via-muted/30 to-background dark:from-background dark:via-zinc-950 dark:to-black overflow-hidden">
         {/* Animated Background */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(112,200,42,0.05),transparent_70%)]" />
         <motion.div 
@@ -1333,7 +1314,7 @@ export default function LandingPage() {
                   controls
                   playsInline
                   className="w-full h-full object-cover"
-                  poster="/tn.jpeg"
+                  poster="/ps.jpg"
                 >
                   <source src="/erp video.mp4" type="video/mp4" />
                   Your browser does not support the video tag.
@@ -2047,32 +2028,203 @@ export default function LandingPage() {
               className="order-2 lg:order-1 relative"
             >
               <div className="p-8 rounded-2xl bg-gradient-to-br from-[#70c82a]/5 via-card to-card dark:via-zinc-950 dark:to-zinc-950 border border-[#70c82a]/20">
-                <div className="text-foreground font-bold mb-6">Executive Command Center</div>
+                <div className="text-foreground font-bold mb-6 text-lg">Executive Command Center</div>
                 
-                <div className="space-y-3 mb-6">
-                  {[
-                    { label: "Site Performance Comparison", sites: ["Addis Ababa", "Dire Dawa", "Bahir Dar"], values: [94, 87, 91] },
-                    { label: "Monthly Cost Trends", sites: ["Jan", "Feb", "Mar"], values: [85, 92, 88] },
-                    { label: "Inventory Valuation", sites: ["Q1", "Q2", "Q3"], values: [78, 85, 92] }
-                  ].map((chart, i) => (
-                    <div key={i} className="p-4 rounded-xl bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800">
-                      <div className="text-xs text-muted-foreground mb-3">{chart.label}</div>
-                      <div className="flex items-end gap-2 h-20">
-                        {chart.values.map((val, j) => (
-                          <div key={j} className="flex-1 flex flex-col items-center gap-1">
+                <div className="space-y-4">
+                  {/* Site Performance Comparison - Vertical Bar Chart */}
+                  <div className="p-4 rounded-xl bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800">
+                    <div className="text-xs font-semibold text-foreground mb-4">Site Performance Comparison</div>
+                    <div className="flex items-end justify-center gap-6 h-16">
+                      {[
+                        { site: "Addis Ababa", value: 94 },
+                        { site: "Dire Dawa", value: 87 },
+                        { site: "Bahir Dar", value: 91 }
+                      ].map((item, j) => (
+                        <div key={j} className="flex flex-col items-center gap-2" style={{ width: '22%' }}>
+                          <div className="relative w-full h-16 flex items-end">
                             <motion.div
                               initial={{ height: 0 }}
-                              whileInView={{ height: `${val}%` }}
+                              whileInView={{ height: `${item.value}%` }}
                               viewport={{ once: true }}
-                              transition={{ duration: 1, delay: i * 0.2 + j * 0.1 }}
-                              className="w-full bg-gradient-to-t from-[#70c82a] to-emerald-400 rounded-t"
-                            />
-                            <span className="text-[10px] text-muted-foreground">{chart.sites[j]}</span>
-            </div>
-          ))}
+                              transition={{ duration: 0.8, delay: j * 0.15 }}
+                              className="w-full bg-gradient-to-t from-[#70c82a] via-[#70c82a]/80 to-emerald-400 rounded-t-md relative group shadow-lg shadow-[#70c82a]/20"
+                              style={{ height: `${item.value}%`, minHeight: '10px' }}
+                            >
+                              <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 text-[10px] font-bold text-[#70c82a] whitespace-nowrap">
+                                {item.value}%
+                              </div>
+                            </motion.div>
+                          </div>
+                          <span className="text-sm text-foreground font-semibold text-center">{item.site}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Monthly Cost Trends - Line Chart */}
+                  <div className="p-4 rounded-xl bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800">
+                    <div className="text-xs font-semibold text-foreground mb-4">Monthly Cost Trends</div>
+                    <div className="relative h-24">
+                      <svg className="w-full h-full" viewBox="0 0 200 80" preserveAspectRatio="none">
+                        <defs>
+                          <linearGradient id="lineGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stopColor="#70c82a" stopOpacity="0.3" />
+                            <stop offset="100%" stopColor="#70c82a" stopOpacity="0" />
+                          </linearGradient>
+                        </defs>
+                        {/* Grid lines */}
+                        {[0, 20, 40, 60, 80, 100].map((y) => (
+                          <line key={y} x1="0" y1={80 - y * 0.8} x2="200" y2={80 - y * 0.8} stroke="currentColor" strokeWidth="0.5" className="text-border opacity-20" />
+                        ))}
+                        {/* Area under line */}
+                        <motion.path
+                          initial={{ pathLength: 0 }}
+                          whileInView={{ pathLength: 1 }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 1.2 }}
+                          d="M 10 40 L 70 20 L 130 30 L 190 25 L 190 80 L 10 80 Z"
+                          fill="url(#lineGradient)"
+                        />
+                        {/* Line */}
+                        <motion.path
+                          initial={{ pathLength: 0 }}
+                          whileInView={{ pathLength: 1 }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 1.2 }}
+                          d="M 10 40 L 70 20 L 130 30 L 190 25"
+                          stroke="#70c82a"
+                          strokeWidth="2"
+                          fill="none"
+                          strokeLinecap="round"
+                        />
+                        {/* Data points */}
+                        {[
+                          { x: 10, y: 40, month: "Jan" },
+                          { x: 70, y: 20, month: "Feb" },
+                          { x: 130, y: 30, month: "Mar" },
+                          { x: 190, y: 25, month: "Apr" }
+                        ].map((point, i) => (
+                          <motion.circle
+                            key={i}
+                            initial={{ scale: 0 }}
+                            whileInView={{ scale: 1 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.5 + i * 0.2 }}
+                            cx={point.x}
+                            cy={point.y}
+                            r="3"
+                            fill="#70c82a"
+                            stroke="white"
+                            strokeWidth="2"
+                          />
+                        ))}
+                      </svg>
+                      <div className="absolute bottom-0 left-0 right-0 flex justify-between text-[10px] text-muted-foreground px-2">
+                        <span>Jan</span>
+                        <span>Feb</span>
+                        <span>Mar</span>
+                        <span>Apr</span>
                       </div>
                     </div>
-                  ))}
+                  </div>
+
+                  {/* Inventory Valuation - Three Separate Pie Charts */}
+                  <div className="p-4 rounded-xl bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800">
+                    <div className="text-xs font-semibold text-foreground mb-4">Inventory Valuation</div>
+                    <div className="flex items-center justify-between gap-4 h-24">
+                      {[
+                        { quarter: "Q1", value: 78, color: "#70c82a" },
+                        { quarter: "Q2", value: 85, color: "#8dd63a" },
+                        { quarter: "Q3", value: 92, color: "#a8e55c" }
+                      ].map((item, j) => {
+                        // Calculate percentage for donut chart (value out of 100 for visual)
+                        const percentage = item.value;
+                        const circumference = 2 * Math.PI * 35; // radius 35
+                        const offset = circumference - (percentage / 100) * circumference;
+                        
+                        // Gradient IDs for each quarter
+                        const gradientId = `pieGradient${j}`;
+                        const shadowId = `pieShadow${j}`;
+                        
+                        return (
+                          <div key={j} className="flex flex-col items-center gap-3 flex-1 group">
+                            <div className="relative">
+                              <svg width="70" height="70" viewBox="0 0 100 100" style={{ display: 'block' }} className="drop-shadow-lg">
+                                <defs>
+                                  <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stopColor={item.color} stopOpacity="1" />
+                                    <stop offset="100%" stopColor={item.color} stopOpacity="0.7" />
+                                  </linearGradient>
+                                  <filter id={shadowId}>
+                                    <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
+                                    <feOffset dx="0" dy="2" result="offsetblur"/>
+                                    <feComponentTransfer>
+                                      <feFuncA type="linear" slope="0.3"/>
+                                    </feComponentTransfer>
+                                    <feMerge>
+                                      <feMergeNode/>
+                                      <feMergeNode in="SourceGraphic"/>
+                                    </feMerge>
+                                  </filter>
+                                </defs>
+                                {/* Background circle with glow */}
+                                <circle
+                                  cx="50"
+                                  cy="50"
+                                  r="35"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="10"
+                                  className="text-muted opacity-10"
+                                />
+                                {/* Value circle with gradient and shadow */}
+                                <motion.circle
+                                  cx="50"
+                                  cy="50"
+                                  r="35"
+                                  fill="none"
+                                  stroke={`url(#${gradientId})`}
+                                  strokeWidth="10"
+                                  strokeDasharray={circumference}
+                                  initial={{ strokeDashoffset: circumference, opacity: 0 }}
+                                  whileInView={{ strokeDashoffset: offset, opacity: 1 }}
+                                  viewport={{ once: true }}
+                                  transition={{ duration: 1.2, delay: j * 0.2, ease: "easeOut" }}
+                                  strokeLinecap="round"
+                                  transform="rotate(-90 50 50)"
+                                  filter={`url(#${shadowId})`}
+                                  className="group-hover:stroke-[12] transition-all"
+                                />
+                                {/* Center circle with gradient background */}
+                                <circle cx="50" cy="50" r="22" fill="white" className="dark:fill-zinc-950 opacity-90" />
+                                <circle cx="50" cy="50" r="22" fill={`url(#${gradientId})`} opacity="0.1" />
+                                {/* Center text */}
+                                <text x="50" y="47" textAnchor="middle" dominantBaseline="middle" className="text-[9px] font-bold fill-foreground">
+                                  {item.quarter}
+                                </text>
+                                <text x="50" y="57" textAnchor="middle" dominantBaseline="middle" className="text-[8px] font-semibold fill-[#70c82a]">
+                                  Br {item.value}K
+                                </text>
+                              </svg>
+                            </div>
+                            <span className="text-xs text-foreground font-semibold">{item.quarter}: Br {item.value}K</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Quick Stats Row */}
+                  <div className="grid grid-cols-2 gap-3 pt-2">
+                    <div className="p-3 rounded-lg bg-[#70c82a]/10 border border-[#70c82a]/20">
+                      <div className="text-[10px] text-muted-foreground mb-1">Fleet Availability</div>
+                      <div className="text-lg font-bold text-[#70c82a]">91%</div>
+                    </div>
+                    <div className="p-3 rounded-lg bg-[#70c82a]/10 border border-[#70c82a]/20">
+                      <div className="text-[10px] text-muted-foreground mb-1">MTBF</div>
+                      <div className="text-lg font-bold text-[#70c82a]">245h</div>
+                    </div>
+                  </div>
                 </div>
                
               </div>
@@ -2141,7 +2293,7 @@ export default function LandingPage() {
           >
           
 
-            <div className="p-8 rounded-2xl bg-zinc-950 border border-zinc-800">
+            <div className="p-8 rounded-2xl bg-white dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 shadow-lg dark:shadow-none">
               {/* Stats Grid */}
               <div className="grid lg:grid-cols-4 md:grid-cols-2 gap-6 mb-8">
                 {[
@@ -2156,7 +2308,7 @@ export default function LandingPage() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: i * 0.1 }}
-                    className="p-6 rounded-xl bg-zinc-900/50 border border-zinc-800 hover:border-[#70c82a]/30 transition-all"
+                    className="p-6 rounded-xl bg-gray-50 dark:bg-zinc-900/50 border border-gray-200 dark:border-zinc-800 hover:border-[#70c82a]/30 transition-all shadow-sm dark:shadow-none"
                   >
                     <div className="flex items-center justify-between mb-4">
                       <stat.icon className={`w-6 h-6 ${stat.color}`} />
@@ -2164,12 +2316,12 @@ export default function LandingPage() {
                         {stat.change}
                       </p>
                     </div>
-                    <p className="text-sm text-zinc-400 mb-2">{stat.label}</p>
+                    <p className="text-sm text-gray-600 dark:text-zinc-400 mb-2">{stat.label}</p>
                     <p className={`text-2xl font-bold ${stat.color}`}>
                       <AnimatedCounter value={stat.value} duration={1500} />
                       {stat.label.includes("Availability") && "%"}
                     </p>
-                    <p className="text-xs text-zinc-500 mt-1">from last month</p>
+                    <p className="text-xs text-gray-500 dark:text-zinc-500 mt-1">from last month</p>
                   </motion.div>
                 ))}
               </div>
@@ -2177,17 +2329,17 @@ export default function LandingPage() {
               {/* Alerts and Activity Grid */}
               <div className="grid lg:grid-cols-2 gap-8">
                 {/* Maintenance Alerts */}
-                <div className="p-6 rounded-xl bg-zinc-900/50 border border-zinc-800">
+                <div className="p-6 rounded-xl bg-gray-50 dark:bg-zinc-900/50 border border-gray-200 dark:border-zinc-800 shadow-sm dark:shadow-none">
                   <div className="mb-6">
-                    <h3 className="text-white font-bold text-lg mb-1">Maintenance Alerts</h3>
-                    <p className="text-sm text-zinc-500">Recent equipment requiring attention</p>
+                    <h3 className="text-gray-900 dark:text-white font-bold text-lg mb-1">Maintenance Alerts</h3>
+                    <p className="text-sm text-gray-600 dark:text-zinc-500">Recent equipment requiring attention</p>
                   </div>
                   <div className="space-y-4">
                     {[
-                      { equipment: "Excavator ECWC-EX-001", issue: "Engine oil change due", priority: "High", priorityColor: "bg-amber-500/20 text-amber-400 border-amber-500/30" },
-                      { equipment: "Bulldozer ECWC-BD-015", issue: "Hydraulic leak detected", priority: "Critical", priorityColor: "bg-red-500/20 text-red-400 border-red-500/30" },
-                      { equipment: "Loader ECWC-LD-023", issue: "Tire replacement needed", priority: "Medium", priorityColor: "bg-blue-500/20 text-blue-400 border-blue-500/30" },
-                      { equipment: "Crane ECWC-CR-008", issue: "Scheduled inspection", priority: "Low", priorityColor: "bg-zinc-700/50 text-zinc-400 border-zinc-700" }
+                      { equipment: "Excavator ECWC-EX-001", issue: "Engine oil change due", priority: "High", priorityColor: "bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-500/30" },
+                      { equipment: "Bulldozer ECWC-BD-015", issue: "Hydraulic leak detected", priority: "Critical", priorityColor: "bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400 border-red-300 dark:border-red-500/30" },
+                      { equipment: "Loader ECWC-LD-023", issue: "Tire replacement needed", priority: "Medium", priorityColor: "bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-500/30" },
+                      { equipment: "Crane ECWC-CR-008", issue: "Scheduled inspection", priority: "Low", priorityColor: "bg-gray-200 dark:bg-zinc-700/50 text-gray-700 dark:text-zinc-400 border-gray-300 dark:border-zinc-700" }
                     ].map((alert, i) => (
                       <motion.div
                         key={i}
@@ -2195,15 +2347,15 @@ export default function LandingPage() {
                         whileInView={{ opacity: 1, x: 0 }}
                         viewport={{ once: true }}
                         transition={{ delay: i * 0.1 }}
-                        className="flex items-center justify-between p-4 rounded-lg border border-zinc-800 hover:border-[#70c82a]/30 transition-all bg-zinc-950/50"
+                        className="flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-zinc-800 hover:border-[#70c82a]/30 transition-all bg-white dark:bg-zinc-950/50 shadow-sm dark:shadow-none"
                       >
                         <div className="flex items-center gap-3">
                           <div className={`p-2 rounded-lg ${alert.priorityColor} border`}>
                             <AlertTriangle className="h-4 w-4" />
                           </div>
                           <div>
-                            <p className="text-white font-semibold text-sm">{alert.equipment}</p>
-                            <p className="text-xs text-zinc-500">{alert.issue}</p>
+                            <p className="text-gray-900 dark:text-white font-semibold text-sm">{alert.equipment}</p>
+                            <p className="text-xs text-gray-600 dark:text-zinc-500">{alert.issue}</p>
                           </div>
                         </div>
                         <Badge className={`${alert.priorityColor} border text-xs font-bold`}>
@@ -2215,17 +2367,17 @@ export default function LandingPage() {
                 </div>
 
                 {/* Recent ECWC Activity */}
-                <div className="p-6 rounded-xl bg-zinc-900/50 border border-zinc-800">
+                <div className="p-6 rounded-xl bg-gray-50 dark:bg-zinc-900/50 border border-gray-200 dark:border-zinc-800 shadow-sm dark:shadow-none">
                   <div className="mb-6">
-                    <h3 className="text-white font-bold text-lg mb-1">Recent ECWC Activity</h3>
-                    <p className="text-sm text-zinc-500">Latest equipment operations and maintenance</p>
+                    <h3 className="text-gray-900 dark:text-white font-bold text-lg mb-1">Recent ECWC Activity</h3>
+                    <p className="text-sm text-gray-600 dark:text-zinc-500">Latest equipment operations and maintenance</p>
                   </div>
                   <div className="space-y-4">
                     {[
-                      { action: "Work order completed", equipment: "ECWC-EX-012", user: "Tech. Alemayehu", time: "10 min ago", type: "success", iconColor: "bg-[#70c82a]/20 text-[#70c82a] border-[#70c82a]/30" },
-                      { action: "Maintenance scheduled", equipment: "ECWC-BD-008", user: "Manager Sofia", time: "25 min ago", type: "info", iconColor: "bg-blue-500/20 text-blue-400 border-blue-500/30" },
-                      { action: "Fuel consumption report", equipment: "ECWC-TR-045", user: "System", time: "1 hour ago", type: "warning", iconColor: "bg-amber-500/20 text-amber-400 border-amber-500/30" },
-                      { action: "New equipment added", equipment: "ECWC-CR-009", user: "Admin Michael", time: "2 hours ago", type: "success", iconColor: "bg-[#70c82a]/20 text-[#70c82a] border-[#70c82a]/30" }
+                      { action: "Work order completed", equipment: "ECWC-EX-012", user: "Tech. Alemayehu", time: "10 min ago", type: "success", iconColor: "bg-green-100 dark:bg-[#70c82a]/20 text-green-700 dark:text-[#70c82a] border-green-300 dark:border-[#70c82a]/30" },
+                      { action: "Maintenance scheduled", equipment: "ECWC-BD-008", user: "Manager Sofia", time: "25 min ago", type: "info", iconColor: "bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-500/30" },
+                      { action: "Fuel consumption report", equipment: "ECWC-TR-045", user: "System", time: "1 hour ago", type: "warning", iconColor: "bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-500/30" },
+                      { action: "New equipment added", equipment: "ECWC-CR-009", user: "Admin Michael", time: "2 hours ago", type: "success", iconColor: "bg-green-100 dark:bg-[#70c82a]/20 text-green-700 dark:text-[#70c82a] border-green-300 dark:border-[#70c82a]/30" }
                     ].map((activity, i) => (
                       <motion.div
                         key={i}
@@ -2233,7 +2385,7 @@ export default function LandingPage() {
                         whileInView={{ opacity: 1, x: 0 }}
                         viewport={{ once: true }}
                         transition={{ delay: i * 0.1 }}
-                        className="flex items-center gap-3 p-4 rounded-lg border border-zinc-800 hover:border-[#70c82a]/30 transition-all bg-zinc-950/50"
+                        className="flex items-center gap-3 p-4 rounded-lg border border-gray-200 dark:border-zinc-800 hover:border-[#70c82a]/30 transition-all bg-white dark:bg-zinc-950/50 shadow-sm dark:shadow-none"
                       >
                         <div className={`p-2 rounded-lg ${activity.iconColor} border flex-shrink-0`}>
                           {activity.type === 'success' ? <CheckCircle className="h-4 w-4" /> :
@@ -2241,10 +2393,10 @@ export default function LandingPage() {
                            <AlertTriangle className="h-4 w-4" />}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-white font-semibold text-sm">{activity.action}</p>
-                          <p className="text-xs text-zinc-500 truncate">{activity.equipment} • {activity.user}</p>
+                          <p className="text-gray-900 dark:text-white font-semibold text-sm">{activity.action}</p>
+                          <p className="text-xs text-gray-600 dark:text-zinc-500 truncate">{activity.equipment} • {activity.user}</p>
                         </div>
-                        <span className="text-xs text-zinc-500 flex-shrink-0">{activity.time}</span>
+                        <span className="text-xs text-gray-500 dark:text-zinc-500 flex-shrink-0">{activity.time}</span>
                       </motion.div>
                     ))}
                   </div>
@@ -2256,7 +2408,7 @@ export default function LandingPage() {
       </section>
 
       {/* AI-Powered Decision Support - Professional Analytics */}
-      <section className="py-32 bg-background dark:bg-zinc-950 relative overflow-hidden">
+      <section id="ai-support" className="py-32 bg-background dark:bg-zinc-950 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-background via-muted/30 to-background dark:from-black dark:via-zinc-950 dark:to-black" />
         <div className="container mx-auto px-4 lg:px-8 relative z-10">
     <motion.div
@@ -2595,7 +2747,7 @@ export default function LandingPage() {
             </p>
           </motion.div>
 
-          <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+          <div className="relative grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
             {/* Before - Problems */}
             <motion.div
               initial={{ opacity: 0, x: -30 }}
@@ -2603,14 +2755,14 @@ export default function LandingPage() {
               viewport={{ once: true }}
               className="space-y-6"
             >
-              <div className="bg-red-500/10 dark:bg-red-500/5 border-2 border-red-500/20 rounded-2xl p-8">
+              <div className="p-8">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center border-2 border-red-500/30">
                     <AlertTriangle className="w-6 h-6 text-red-500" />
                   </div>
                   <h3 className="text-2xl font-bold text-foreground">Before CMMS</h3>
                 </div>
-                <div className="space-y-4">
+                <div className="space-y-2">
                   {[
                     {
                       title: "Reactive Maintenance",
@@ -2637,17 +2789,27 @@ export default function LandingPage() {
                       desc: "Work orders managed manually, causing missed maintenance, double-booking, and confusion."
                     }
                   ].map((problem, i) => (
-                    <div key={i} className="flex gap-3 p-4 rounded-lg bg-background/50 dark:bg-zinc-900/50 border border-red-500/10">
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: i * 0.1, duration: 0.4 }}
+                      className="flex gap-3 p-3 rounded-lg bg-background/50 dark:bg-zinc-900/50 border border-red-500/10"
+                    >
                       <X className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                       <div>
                         <h4 className="font-semibold text-foreground mb-1">{problem.title}</h4>
                         <p className="text-sm text-muted-foreground">{problem.desc}</p>
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               </div>
             </motion.div>
+
+            {/* Vertical Divider */}
+            <div className="hidden lg:block absolute left-1/2 top-0 bottom-0 w-px bg-border dark:bg-gray-700 transform -translate-x-1/2"></div>
 
             {/* After - Solutions */}
             <motion.div
@@ -2656,14 +2818,14 @@ export default function LandingPage() {
               viewport={{ once: true }}
               className="space-y-6"
             >
-              <div className="bg-[#70c82a]/10 dark:bg-[#70c82a]/5 border-2 border-[#70c82a]/30 rounded-2xl p-8">
+              <div className="p-8">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-12 h-12 rounded-full bg-[#70c82a]/20 flex items-center justify-center border-2 border-[#70c82a]/30">
                     <CheckCircle className="w-6 h-6 text-[#70c82a]" />
                   </div>
                   <h3 className="text-2xl font-bold text-foreground">With ECWC CMMS</h3>
                 </div>
-                <div className="space-y-4">
+                <div className="space-y-2">
                   {[
                     {
                       title: "Predictive Maintenance",
@@ -2690,221 +2852,95 @@ export default function LandingPage() {
                       desc: "System automatically creates work orders, assigns technicians, and tracks progress from start to finish."
                     }
                   ].map((solution, i) => (
-                    <div key={i} className="flex gap-3 p-4 rounded-lg bg-background/50 dark:bg-zinc-900/50 border border-[#70c82a]/20">
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: i * 0.1, duration: 0.4 }}
+                      className="flex gap-3 p-3 rounded-lg bg-background/50 dark:bg-zinc-900/50 border border-[#70c82a]/20"
+                    >
                       <CheckCircle className="w-5 h-5 text-[#70c82a] flex-shrink-0 mt-0.5" />
                       <div>
                         <h4 className="font-semibold text-foreground mb-1">{solution.title}</h4>
                         <p className="text-sm text-muted-foreground">{solution.desc}</p>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Key Results */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mt-16 max-w-4xl mx-auto"
-          >
-            <div className="bg-gradient-to-r from-[#70c82a]/10 to-[#70c82a]/5 border-2 border-[#70c82a]/20 rounded-2xl p-8">
-              <h3 className="text-2xl font-bold text-foreground mb-6 text-center">Measurable Results</h3>
-              <div className="grid md:grid-cols-3 gap-6">
-                {[
-                  { metric: "50%", label: "Reduction in Downtime", icon: TrendingUp },
-                  { metric: "35%", label: "Cost Savings", icon: DollarSign },
-                  { metric: "90%", label: "Faster Work Orders", icon: Zap }
-                ].map((result, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.1 }}
-                    className="text-center p-6 rounded-xl bg-background/50 dark:bg-zinc-900/50 border border-[#70c82a]/10"
-                  >
-                    <result.icon className="w-8 h-8 text-[#70c82a] mx-auto mb-3" />
-                    <div className="text-3xl font-bold text-[#70c82a] mb-2">{result.metric}</div>
-                    <div className="text-sm text-muted-foreground">{result.label}</div>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Governance, Security & Audit - Enterprise Standard */}
-      <section className="py-32 bg-background dark:bg-black relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(112,200,42,0.03),transparent_70%)]" />
-        <div className="container mx-auto px-4 lg:px-8 relative z-10">
-          {/* Two Column Layout: Security Cards Left, Content Right */}
-          <div className="grid lg:grid-cols-2 gap-12 items-center mb-16">
-            {/* Left Side - 4 Quadrants Grid */}
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="grid grid-cols-2 gap-4"
-            >
-              {[
-                { icon: Lock, title: "Role-Based Access Control", desc: "Strict permission control", stat: "12 Role Types" },
-                { icon: History, title: "Full Audit Trail", desc: "Every action logged", stat: "100% Coverage" },
-                { icon: Shield, title: "Data Security", desc: "Government-grade encryption", stat: "AES-256 Standard" },
-                { icon: RotateCcw, title: "Secure Backups", desc: "Disaster recovery ready", stat: "24h Recovery" }
-              ].map((item, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
-                  className="p-6 rounded-2xl bg-card dark:bg-zinc-950 border border-border dark:border-zinc-800 hover:border-[#70c82a]/30 transition-all group"
-                >
-                  <div className="w-12 h-12 rounded-xl bg-[#70c82a]/10 flex items-center justify-center mb-4 border border-[#70c82a]/20 group-hover:scale-110 transition-transform">
-                    <item.icon className="w-6 h-6 text-[#70c82a]" />
-                  </div>
-                  <h4 className="text-foreground font-bold text-base mb-2">{item.title}</h4>
-                  <p className="text-muted-foreground text-sm mb-3">{item.desc}</p>
-                  <div className="text-[#70c82a] text-xs font-bold">{item.stat}</div>
-                </motion.div>
-              ))}
-            </motion.div>
-
-            {/* Right Side - Content */}
-            <motion.div
-              initial={{ opacity: 0, x: 50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="space-y-6"
-            >
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-muted/50 dark:bg-zinc-800/50 text-muted-foreground dark:text-zinc-400 text-xs font-bold uppercase tracking-widest border border-border dark:border-zinc-800">
-                <Shield className="w-4 h-4" />
-                Compliance & Security
-              </div>
-              <h2 className="text-4xl md:text-5xl font-bold text-foreground">
-                Built for <span className="text-[#70c82a]">Government & Corporate</span> Standards
-              </h2>
-              <p className="text-muted-foreground text-lg leading-relaxed">
-                Enterprise-grade security architecture with full audit compliance and multi-level access control
-              </p>
-            </motion.div>
-          </div>
-
-          {/* Multi-Site Architecture */}
-          <div className="grid lg:grid-cols-2 gap-16 items-center mb-16">
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-            >
-              <h3 className="text-3xl font-bold text-foreground mb-6">Multi-Site & Scalable Architecture</h3>
-              <p className="text-muted-foreground text-lg mb-8 leading-relaxed">
-                Unified platform architecture designed to scale from Head Office oversight down to project-site level operations across all ECWC locations nationwide.
-              </p>
-              <div className="space-y-4">
-                {[
-                  { title: "Head Office oversight", desc: "Centralized control and executive dashboards", icon: Building },
-                  { title: "Regional office access", desc: "Distributed management and reporting", icon: MapPin },
-                  { title: "Project-site level operations", desc: "Field-level data capture and real-time sync", icon: HardHat },
-                  { title: "Scales with ECWC growth", desc: "Cloud-native architecture for unlimited expansion", icon: TrendingUp },
-                  { title: "Ready for future integrations", desc: "Finance, HR, and IoT systems compatibility", icon: Globe }
-                ].map((item, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.1 }}
-                    className="flex items-start gap-4 p-4 rounded-xl bg-card dark:bg-zinc-950 border border-border dark:border-zinc-800 hover:border-[#70c82a]/30 transition-all group"
-                  >
-                    <div className="w-10 h-10 rounded-lg bg-[#70c82a]/10 flex items-center justify-center border border-[#70c82a]/20 flex-shrink-0">
-                      <item.icon className="w-5 h-5 text-[#70c82a]" />
-                    </div>
-                    <div>
-                      <h5 className="text-foreground font-bold mb-1">{item.title}</h5>
-                      <p className="text-sm text-muted-foreground">{item.desc}</p>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: 50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="relative"
-            >
-              <div className="p-8 rounded-2xl bg-card dark:bg-zinc-950 border border-border dark:border-zinc-800">
-                <div className="text-foreground font-bold mb-6">System Architecture Overview</div>
-                <div className="space-y-6">
-                  {[
-                    { level: "Head Office", sites: "1", users: "45", color: "bg-[#70c82a]" },
-                    { level: "Regional Offices", sites: "6", users: "128", color: "bg-blue-500" },
-                    { level: "Project Sites", sites: "24", users: "412", color: "bg-amber-500" }
-                  ].map((tier, i) => (
-                    <div key={i} className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-3 h-3 rounded-full ${tier.color}`} />
-                          <span className="text-foreground font-semibold">{tier.level}</span>
-                        </div>
-                        <div className="text-xs text-muted-foreground">{tier.sites} locations • {tier.users} users</div>
-                      </div>
-                      <div className="h-12 bg-muted dark:bg-zinc-900 rounded-lg p-3 flex items-center justify-between">
-                        <div className="flex gap-1">
-                          {[...Array(parseInt(tier.sites))].map((_, j) => (
-                    <motion.div 
-                              key={j}
-                              initial={{ scale: 0 }}
-                              whileInView={{ scale: 1 }}
-                              viewport={{ once: true }}
-                              transition={{ delay: i * 0.2 + j * 0.05 }}
-                              className={`w-2 h-6 rounded ${tier.color}`}
-                            />
-                          ))}
-                        </div>
-                        <div className="text-xs text-muted-foreground">Real-time Sync</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-6 pt-6 border-t border-border dark:border-zinc-800 grid grid-cols-3 gap-4 text-center">
-                        <div>
-                    <div className="text-2xl font-bold text-foreground mb-1">31</div>
-                    <div className="text-[10px] text-muted-foreground uppercase font-bold">Total Sites</div>
-                        </div>
-                  <div>
-                    <div className="text-2xl font-bold text-[#70c82a] mb-1">585</div>
-                    <div className="text-[10px] text-muted-foreground uppercase font-bold">Active Users</div>
-                      </div>
-                  <div>
-                    <div className="text-2xl font-bold text-foreground mb-1">99.8%</div>
-                    <div className="text-[10px] text-muted-foreground uppercase font-bold">Uptime</div>
-                  </div>
-                </div>
-              </div>
                     </motion.div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
           </div>
 
+         
         </div>
       </section>
 
+      {/* Motto Section with Dual-Row Auto-Scroll */}
+      <section className="py-6 md:py-8 mb-16 md:mb-24 bg-gradient-to-b from-[#70c82a]/5 via-background to-[#70c82a]/5 dark:from-[#70c82a]/3 dark:via-background dark:to-[#70c82a]/3 overflow-hidden relative w-full">
+        <div className="relative w-full space-y-4">
+          {/* English Row - Left to Right */}
+          <div className="relative w-full overflow-hidden">
+            <div className="flex animate-scroll whitespace-nowrap will-change-transform">
+              {/* Multiple sets for seamless scrolling */}
+              {[...Array(4)].map((_, setIndex) => (
+                <div key={setIndex} className="flex items-center gap-4 md:gap-6 shrink-0">
+                  <span className="text-base md:text-lg lg:text-xl font-bold text-[#70c82a]">
+                    We Build a Better Tomorrow!
+                  </span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#70c82a]/40"></div>
+                  <span className="text-base md:text-lg lg:text-xl font-bold text-[#70c82a]">
+                    We Build a Better Tomorrow!
+                  </span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#70c82a]/40"></div>
+                  <span className="text-base md:text-lg lg:text-xl font-bold text-[#70c82a]">
+                    We Build a Better Tomorrow!
+                  </span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#70c82a]/40"></div>
+                  <span className="text-base md:text-lg lg:text-xl font-bold text-[#70c82a]">
+                    We Build a Better Tomorrow!
+                  </span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#70c82a]/40"></div>
+                </div>
+              ))}
+            </div>
+          </div>
 
+          {/* Amharic Row - Right to Left */}
+          <div className="relative w-full overflow-hidden">
+            <div className="flex animate-scroll-reverse whitespace-nowrap will-change-transform">
+              {/* Multiple sets for seamless scrolling */}
+              {[...Array(4)].map((_, setIndex) => (
+                <div key={setIndex} className="flex items-center gap-4 md:gap-6 shrink-0">
+                  <span className="text-base md:text-lg lg:text-xl font-bold text-[#70c82a]">
+                    የተሻለ ነገን እንገነባለን!
+                  </span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#70c82a]/40"></div>
+                  <span className="text-base md:text-lg lg:text-xl font-bold text-[#70c82a]">
+                    የተሻለ ነገን እንገነባለን!
+                  </span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#70c82a]/40"></div>
+                  <span className="text-base md:text-lg lg:text-xl font-bold text-[#70c82a]">
+                    የተሻለ ነገን እንገነባለን!
+                  </span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#70c82a]/40"></div>
+                  <span className="text-base md:text-lg lg:text-xl font-bold text-[#70c82a]">
+                    የተሻለ ነገን እንገነባለን!
+                  </span>
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#70c82a]/40"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
 
     {/* Footer */}
 <footer className="bg-muted dark:bg-black py-12">
   <div className="container mx-auto px-4 lg:px-8 text-foreground">
-    <div className="grid md:grid-cols-4 gap-8 mb-8">
-      <div className="space-y-4">
+    <div className="grid grid-cols-1 md:grid-cols-5 gap-8 mb-8">
+      {/* Logo Section */}
+      <div className="space-y-4 md:col-span-1">
         <div className="flex items-center gap-3">
          <div className="relative">
   <Image
@@ -2920,8 +2956,8 @@ export default function LandingPage() {
 </div>
 
           <div>
-            <div className="font-bold text-foreground">ECWC Equipment Manager</div>
-            <div className="text-sm text-muted-foreground">Internal System</div>
+            <div className="font-bold text-foreground">ECWC  </div>
+        
           </div>
         </div>
         <p className="text-sm text-muted-foreground">
@@ -2929,24 +2965,13 @@ export default function LandingPage() {
         </p>
       </div>
 
-      {[
-        {
-          title: "System",
-          links: ["Dashboard", "Equipment", "Work Orders", "Reports", "Inventory"]
-        },
-        {
-          title: "Support",
-          links: ["IT Help Desk", "User Manual", "Training", "System Status", "Contact"]
-        },
-        {
-          title: "Company",
-          links: ["About ECWC", "Departments", "Policies", "Careers", "Contact"]
-        }
-      ].map((section, i) => (
-        <div key={i} className="space-y-4">
-          <h4 className="font-semibold text-foreground">{section.title}</h4>
+      {/* Footer Links - Mobile: 2 rows with 2 columns each, Desktop: 4 columns */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:col-span-4">
+        {/* Row 1: System and Support */}
+        <div className="space-y-4">
+          <h4 className="font-semibold text-foreground">System</h4>
           <ul className="space-y-2">
-            {section.links.map((link, j) => (
+            {["Dashboard", "Equipment", "Work Orders", "Reports", "Inventory"].map((link, j) => (
               <li key={j}>
                 <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                   {link}
@@ -2955,7 +2980,55 @@ export default function LandingPage() {
             ))}
           </ul>
         </div>
-      ))}
+        <div className="space-y-4">
+          <h4 className="font-semibold text-foreground">Support</h4>
+          <ul className="space-y-2">
+            {["IT Help Desk", "User Manual", "Training", "System Status", "Contact"].map((link, j) => (
+              <li key={j}>
+                <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  {link}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Row 2: Company and Follow Us */}
+        <div className="space-y-4">
+          <h4 className="font-semibold text-foreground">Company</h4>
+          <ul className="space-y-2">
+            {["About ECWC", "Departments", "Policies", "Careers", "Contact"].map((link, j) => (
+              <li key={j}>
+                <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  {link}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="space-y-4">
+          <h4 className="font-semibold text-foreground">Follow Us</h4>
+          <div className="space-y-2">
+            {[
+              { name: "Facebook", icon: Facebook, href: "#" },
+              { name: "Twitter", icon: Twitter, href: "#" },
+              { name: "LinkedIn", icon: Linkedin, href: "#" },
+              { name: "Website", icon: Globe, href: "#" }
+            ].map((social, i) => (
+              <Link
+                key={i}
+                href={social.href}
+                className="flex items-center gap-3 text-sm text-muted-foreground hover:text-[#70c82a] transition-colors group"
+              >
+                <div className="w-8 h-8 rounded-lg bg-[#70c82a]/10 dark:bg-[#70c82a]/20 flex items-center justify-center group-hover:bg-[#70c82a]/20 dark:group-hover:bg-[#70c82a]/30 transition-colors border border-[#70c82a]/20">
+                  <social.icon className="w-4 h-4 text-[#70c82a]" />
+                </div>
+                <span>{social.name}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
 
     <div className="pt-8 border-t border-border dark:border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4">
