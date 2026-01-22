@@ -233,7 +233,13 @@ export default function SignUpPage() {
 
     // Registration submission
     setTimeout(() => {
-      console.log('Registration attempt:', { ...formData, profileImage, agreedToTerms })
+      const fullPhoneNumber = formData.phone ? `+251${formData.phone.replace(/\s/g, '')}` : ''
+      console.log('Registration attempt:', { 
+        ...formData, 
+        phone: fullPhoneNumber,
+        profileImage, 
+        agreedToTerms 
+      })
       setIsLoading(false)
       router.push('/sign-in')
     }, 1000)
@@ -283,11 +289,11 @@ export default function SignUpPage() {
             exit="exit"
             className="space-y-3"
           >
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-5 items-start">
               {/* Left Section - Profile Picture Upload */}
-              <div className="flex flex-col items-center lg:items-start w-full lg:max-w-xs">
+              <div className="flex flex-col items-center lg:items-center w-full lg:max-w-xs lg:pl-8">
                 <div className="relative mb-4">
-                  <div className="w-32 h-32 rounded-full bg-muted flex items-center justify-center overflow-hidden border-4 border-[#70c82a]/20 dark:border-[#70c82a]/30 shadow-lg">
+                  <div className="w-28 h-28 rounded-full bg-muted flex items-center justify-center overflow-hidden border-4 border-[#70c82a]/20 dark:border-[#70c82a]/30 shadow-lg">
                     {profileImage ? (
                       <img
                         src={profileImage}
@@ -295,7 +301,7 @@ export default function SignUpPage() {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <User className="h-20 w-20 text-muted-foreground" />
+                      <User className="text-muted-foreground" style={{ width: '4.5rem', height: '4.5rem' }} />
                     )}
                   </div>
                   <label htmlFor="profileImage" className="absolute bottom-0 right-0 bg-[#70c82a] text-white p-2.5 rounded-full cursor-pointer hover:bg-[#5aa022] transition-colors shadow-lg z-10">
@@ -309,7 +315,7 @@ export default function SignUpPage() {
                     <ChevronRight className="h-5 w-5" />
                   </label>
                 </div>
-                <div className="text-center lg:text-left space-y-1 w-full">
+                <div className="text-center space-y-1 w-full">
                   <p className="text-lg font-semibold text-foreground">Upload Profile Picture</p>
                 </div>
               </div>
@@ -356,17 +362,22 @@ export default function SignUpPage() {
                     <Phone className="h-3.5 w-3.5 text-[#70c82a]" />
                     Phone Number *
                   </Label>
-                  <Input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    placeholder="+251 91 234 5678"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    required
-                    disabled={isLoading}
-                    className="bg-background/50 h-9 text-sm"
-                  />
+                  <div className="flex items-center">
+                    <div className="flex items-center justify-center px-3 h-9 bg-muted border border-r-0 rounded-l-md text-sm font-medium text-foreground">
+                      +251
+                    </div>
+                    <Input
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      placeholder="91 234 5678"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      required
+                      disabled={isLoading}
+                      className="bg-background/50 h-9 text-sm rounded-l-none"
+                    />
+                  </div>
                 </div>
 
               </div>
@@ -635,7 +646,7 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="h-screen bg-background flex flex-col overflow-hidden">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Back to Home Button */}
       <div className="absolute top-4 left-4 z-50">
         <Link 
@@ -648,7 +659,7 @@ export default function SignUpPage() {
       </div>
 
       {/* Sign Up Form */}
-      <div className="flex-1 flex items-center justify-center px-4 py-4 bg-gradient-to-br from-[#70c82a]/5 via-background to-background dark:from-[#70c82a]/10 overflow-y-auto">
+      <div className="flex-1 flex items-center justify-center px-4 py-8 bg-gradient-to-br from-[#70c82a]/5 via-background to-background dark:from-[#70c82a]/10 overflow-y-auto">
         <motion.div
           initial="initial"
           animate="animate"
@@ -670,9 +681,9 @@ export default function SignUpPage() {
                     <Image
                       src="/ecwc png logo.png"
                       alt="ECWC Logo"
-                      width={80}
-                      height={80}
-                      className="h-16 w-auto object-contain relative z-10 drop-shadow-lg"
+                      width={70}
+                      height={70}
+                      className="h-14 w-auto object-contain relative z-10 drop-shadow-lg"
                       quality={100}
                       unoptimized
                       priority
@@ -683,12 +694,12 @@ export default function SignUpPage() {
                 {/* Right Section - Title and Description */}
                 <div className="text-center md:text-left space-y-3 relative">
                   <div className="space-y-2">
-                    <CardTitle className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-[#70c82a] via-[#5aa022] to-[#70c82a] bg-clip-text text-transparent">
+                    <CardTitle className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-[#70c82a] via-[#5aa022] to-[#70c82a] bg-clip-text text-transparent">
                       Sign Up
                     </CardTitle>
                     {currentStep !== 3 && (
                       <p className="text-sm text-muted-foreground leading-relaxed">
-                        Create your account to access the Plant Equipment Management System and streamline your operations
+                        Create your account to access the PEMS
                       </p>
                     )}
                   </div>
@@ -699,7 +710,7 @@ export default function SignUpPage() {
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="relative z-10 py-4">
+            <CardContent className="relative z-10 py-3 pb-4">
               {renderStepIndicator()}
               
               <form onSubmit={(e) => {
@@ -728,7 +739,7 @@ export default function SignUpPage() {
                   {renderStepContent()}
                 </AnimatePresence>
 
-                <div className="flex justify-between mt-3">
+                <div className="flex justify-between mt-4">
                   <Button
                     type="button"
                     variant="outline"
@@ -769,7 +780,7 @@ export default function SignUpPage() {
                 </div>
               </form>
             </CardContent>
-            <CardFooter className="flex flex-col space-y-2 relative z-10 pt-4">
+            <CardFooter className="flex flex-col space-y-2 relative z-10 pt-4 pb-5">
               <div className="text-sm text-muted-foreground text-center">
                 Already have an account?{" "}
                 <Link href="/sign-in" className="text-[#70c82a] hover:underline font-medium">

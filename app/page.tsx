@@ -1302,26 +1302,29 @@ export default function LandingPage() {
             viewport={{ once: true }}
             transition={{ duration: 1, delay: 0.2 }}
             className="max-w-6xl mx-auto relative group"
+            style={{ zIndex: 10 }}
           >
             {/* Glowing Border Effect */}
             <div className="absolute -inset-1 bg-gradient-to-r from-[#70c82a] via-emerald-500 to-teal-500 rounded-3xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500" />
             
             {/* Video Frame */}
-            <div className="relative rounded-2xl overflow-hidden border border-border dark:border-zinc-800 bg-card dark:bg-zinc-950 shadow-2xl">
+            <div className="relative rounded-2xl overflow-hidden border border-border dark:border-zinc-800 bg-card dark:bg-zinc-950 shadow-2xl" style={{ zIndex: 15 }}>
               {/* Video Player */}
               <div className="relative aspect-video bg-black">
                 <video
                   controls
                   playsInline
+                  preload="metadata"
                   className="w-full h-full object-cover"
                   poster="/ps.jpg"
+                  style={{ pointerEvents: 'auto' }}
                 >
-                  <source src="/erp video.mp4" type="video/mp4" />
+                  <source src="/erp.mp4" type="video/mp4" />
                   Your browser does not support the video tag.
                 </video>
                 
                 {/* Video Overlay Stats */}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6">
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6 pointer-events-none">
                   <div className="grid grid-cols-3 gap-4 text-center">
                     <div>
                       <div className="text-2xl font-bold text-white">156</div>
@@ -1347,14 +1350,30 @@ export default function LandingPage() {
                     <p className="text-muted-foreground text-sm">Comprehensive overview of features, capabilities, and operational excellence</p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <Button variant="outline" size="sm" className="gap-2 border-border hover:border-[#70c82a]">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="gap-2 border-border hover:border-[#70c82a]"
+                      onClick={() => {
+                        // Add brochure download functionality
+                        const link = document.createElement('a');
+                        link.href = '/brochure.pdf'; // Update with actual brochure path
+                        link.download = 'ECWC-PEMS-Brochure.pdf';
+                        link.click();
+                      }}
+                    >
                       <Download className="w-4 h-4" />
                       Brochure
                     </Button>
-                    <Button size="sm" className="gap-2 bg-[#70c82a] hover:bg-[#5fa822] text-black font-semibold">
-                      Request Demo
-                      <ArrowRight className="w-4 h-4" />
-                    </Button>
+                    <Link href="/sign-up">
+                      <Button 
+                        size="sm" 
+                        className="gap-2 bg-[#70c82a] hover:bg-[#5fa822] text-black font-semibold"
+                      >
+                        Request Demo
+                        <ArrowRight className="w-4 h-4" />
+                      </Button>
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -1366,7 +1385,8 @@ export default function LandingPage() {
         whileInView={{ opacity: 1, x: 0 }} 
         viewport={{ once: true }}
               transition={{ duration: 0.8, delay: 0.5 }}
-              className="hidden lg:block absolute -left-12 top-1/4 w-64 p-4 rounded-xl bg-card dark:bg-zinc-900 border border-border dark:border-zinc-800 shadow-xl"
+              className="hidden lg:block absolute -left-12 top-1/4 w-64 p-4 rounded-xl bg-card dark:bg-zinc-900 border border-border dark:border-zinc-800 shadow-xl z-20"
+              style={{ pointerEvents: 'auto' }}
             >
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-10 h-10 rounded-lg bg-[#70c82a]/10 flex items-center justify-center">
@@ -1384,7 +1404,8 @@ export default function LandingPage() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8, delay: 0.7 }}
-              className="hidden lg:block absolute -right-12 bottom-1/4 w-64 p-4 rounded-xl bg-card dark:bg-zinc-900 border border-border dark:border-zinc-800 shadow-xl"
+              className="hidden lg:block absolute -right-12 bottom-1/4 w-64 p-4 rounded-xl bg-card dark:bg-zinc-900 border border-border dark:border-zinc-800 shadow-xl z-20"
+              style={{ pointerEvents: 'auto' }}
             >
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-10 h-10 rounded-lg bg-[#70c82a]/10 flex items-center justify-center">
