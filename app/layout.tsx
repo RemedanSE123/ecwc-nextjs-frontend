@@ -10,9 +10,12 @@ export const metadata: Metadata = {
   title: "ECWC PEMS",
   description: "Internal Management System for ECWC",
   icons: {
-    icon: "/PEMS-Web-tag.png",
-    shortcut: "/PEMS-Web-tag.png",
-    apple: "/PEMS-Web-tag.png",
+    icon: [
+      { url: "/PEMS-Web-tag-FINAL.png", media: "(prefers-color-scheme: light)" },
+      { url: "/PEMS-Web-tag-FINAL.png", media: "(prefers-color-scheme: dark)" }
+    ],
+    shortcut: "/PEMS-Web-tag-FINAL.png",
+    apple: "/PEMS-Web-tag-FINAL.png",
   },
 };
 

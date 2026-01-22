@@ -808,9 +808,9 @@ export default function LandingPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  // Set dark mode as default
+  // Set light mode as default
   useEffect(() => {
-    document.documentElement.classList.add('dark')
+    document.documentElement.classList.remove('dark')
   }, [])
 
   // Close mobile menu when clicking outside

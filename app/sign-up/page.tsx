@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/select"
 import Image from "next/image"
 import { 
-  ArrowLeft, 
   Loader2, 
   Eye, 
   EyeOff, 
@@ -30,7 +29,9 @@ import {
   CheckCircle,
   XCircle,
   ChevronRight,
-  ChevronLeft
+  ChevronLeft,
+  Badge,
+  Home
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 
@@ -92,8 +93,7 @@ export default function SignUpPage() {
   const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState({
     // Step 1: Personal Information
-    firstName: "",
-    lastName: "",
+    fullName: "",
     email: "",
     phone: "",
     employeeId: "",
@@ -102,6 +102,7 @@ export default function SignUpPage() {
     department: "",
     position: "",
     workLocation: "",
+    location: "",
     supervisor: "",
     
     // Step 3: Account Security
@@ -120,9 +121,14 @@ export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
-  // Mock reference data for frontend template
+  // Always light mode on sign-up (ignore landing page theme)
   useEffect(() => {
-    // Frontend-only template - using mock data
+    document.documentElement.classList.remove("dark")
+  }, [])
+
+  // Reference data
+  useEffect(() => {
+    // Using mock data
     setReferenceData({
       departments: [
         { id: '1', name: 'Equipment Department', code: 'EQP' },
@@ -142,12 +148,15 @@ export default function SignUpPage() {
     })
   }, [])
 
-  // Get positions filtered by selected department
+  // Get all positions
   const getFilteredPositions = () => {
-    if (!formData.department) return []
-    return referenceData.positions.filter(position => 
-      position.department_id === formData.department
-    )
+    return referenceData.positions
+  }
+
+  // Check if Site Office is selected
+  const isSiteSelected = () => {
+    const selectedLocation = referenceData.workLocations.find(loc => loc.id === formData.workLocation)
+    return selectedLocation?.name === 'Site Office' || selectedLocation?.name?.toLowerCase().includes('site')
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -191,18 +200,42 @@ export default function SignUpPage() {
     return true
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+    
+    // Only submit if we're on step 3
+    if (currentStep !== 3) {
+      return
+    }
+
     setError("")
+
+    // Validate that passwords are filled
+    if (!formData.password || !formData.confirmPassword) {
+      setError("Please fill in both password fields")
+      return
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match")
+      return
+    }
+
+    if (!agreedToTerms) {
+      setError("Please agree to the terms and conditions")
+      return
+    }
 
     setIsLoading(true)
 
-    // Frontend-only template - no backend validation
+    // Registration submission
     setTimeout(() => {
       console.log('Registration attempt:', { ...formData, profileImage, agreedToTerms })
       setIsLoading(false)
-      alert('This is a frontend template. No actual registration is performed.')
-      // router.push('/sign-up/success')
+      router.push('/sign-in')
     }, 1000)
   }
 
@@ -216,21 +249,21 @@ export default function SignUpPage() {
   ]
 
   const renderStepIndicator = () => (
-    <div className="flex items-center justify-center mb-8">
+    <div className="flex items-center justify-center mb-4">
       {[1, 2, 3].map((step) => (
         <div key={step} className="flex items-center">
-          <div className={`flex items-center justify-center w-8 h-8 rounded-full border-2 ${
+          <div className={`flex items-center justify-center w-5 h-5 rounded-full border text-xs ${
             step === currentStep 
-              ? "bg-cyan-600 border-cyan-600 text-white" 
+              ? "bg-[#70c82a] border-[#70c82a] text-white" 
               : step < currentStep 
-                ? "bg-green-500 border-green-500 text-white"
+                ? "bg-[#70c82a] border-[#70c82a] text-white"
                 : "border-muted-foreground text-muted-foreground"
           }`}>
-            {step < currentStep ? <CheckCircle className="h-4 w-4" /> : step}
+            {step < currentStep ? <CheckCircle className="h-2.5 w-2.5" /> : step}
           </div>
           {step < 3 && (
-            <div className={`w-12 h-0.5 mx-2 ${
-              step < currentStep ? "bg-green-500" : "bg-muted"
+            <div className={`w-6 h-0.5 mx-1 ${
+              step < currentStep ? "bg-[#70c82a]" : "bg-muted"
             }`} />
           )}
         </div>
@@ -248,114 +281,94 @@ export default function SignUpPage() {
             initial="enter"
             animate="center"
             exit="exit"
-            className="space-y-4"
+            className="space-y-3"
           >
-            <div className="flex flex-col items-center mb-6">
-              <div className="relative">
-                <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center overflow-hidden border-4 border-cyan-100 dark:border-cyan-900">
-                  {profileImage ? (
-                    <img
-                      src={profileImage}
-                      alt="Profile"
-                      className="w-full h-full object-cover"
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 items-start">
+              {/* Left Section - Profile Picture Upload */}
+              <div className="flex flex-col items-center lg:items-start w-full lg:max-w-xs">
+                <div className="relative mb-4">
+                  <div className="w-32 h-32 rounded-full bg-muted flex items-center justify-center overflow-hidden border-4 border-[#70c82a]/20 dark:border-[#70c82a]/30 shadow-lg">
+                    {profileImage ? (
+                      <img
+                        src={profileImage}
+                        alt="Profile"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User className="h-20 w-20 text-muted-foreground" />
+                    )}
+                  </div>
+                  <label htmlFor="profileImage" className="absolute bottom-0 right-0 bg-[#70c82a] text-white p-2.5 rounded-full cursor-pointer hover:bg-[#5aa022] transition-colors shadow-lg z-10">
+                    <input
+                      type="file"
+                      id="profileImage"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
                     />
-                  ) : (
-                    <User className="h-12 w-12 text-muted-foreground" />
-                  )}
+                    <ChevronRight className="h-5 w-5" />
+                  </label>
                 </div>
-                <label htmlFor="profileImage" className="absolute bottom-0 right-0 bg-cyan-600 text-white p-1 rounded-full cursor-pointer hover:bg-cyan-700 transition-colors">
-                  <input
-                    type="file"
-                    id="profileImage"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
+                <div className="text-center lg:text-left space-y-1 w-full">
+                  <p className="text-lg font-semibold text-foreground">Upload Profile Picture</p>
+                </div>
+              </div>
+
+              {/* Right Section - Form Fields */}
+              <div className="space-y-2.5 w-full">
+                <div className="space-y-1.5">
+                  <Label htmlFor="fullName" className="flex items-center gap-2 text-sm">
+                    <User className="h-3.5 w-3.5 text-[#70c82a]" />
+                    Full Name *
+                  </Label>
+                  <Input
+                    id="fullName"
+                    name="fullName"
+                    placeholder="John Doe"
+                    value={formData.fullName}
+                    onChange={handleChange}
+                    required
+                    disabled={isLoading}
+                    className="bg-background/50 h-9 text-sm"
                   />
-                  <ChevronRight className="h-4 w-4" />
-                </label>
-              </div>
-              <p className="text-sm text-muted-foreground mt-2">Upload profile picture</p>
-            </div>
+                </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName" className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-cyan-600" />
-                  First Name *
-                </Label>
-                <Input
-                  id="firstName"
-                  name="firstName"
-                  placeholder="John"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  required
-                  disabled={isLoading}
-                  className="bg-background/50"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name *</Label>
-                <Input
-                  id="lastName"
-                  name="lastName"
-                  placeholder="Doe"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  required
-                  disabled={isLoading}
-                  className="bg-background/50"
-                />
-              </div>
-            </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="email" className="flex items-center gap-2 text-sm">
+                    <Mail className="h-3.5 w-3.5 text-[#70c82a]" />
+                    Email Address *
+                  </Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    placeholder="john.doe@ecwc.gov.et"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                    disabled={isLoading}
+                    className="bg-background/50 h-9 text-sm"
+                  />
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="email" className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-cyan-600" />
-                Email Address *
-              </Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="john.doe@eec.gov.et"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                disabled={isLoading}
-                className="bg-background/50"
-              />
-            </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="phone" className="flex items-center gap-2 text-sm">
+                    <Phone className="h-3.5 w-3.5 text-[#70c82a]" />
+                    Phone Number *
+                  </Label>
+                  <Input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    placeholder="+251 91 234 5678"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    required
+                    disabled={isLoading}
+                    className="bg-background/50 h-9 text-sm"
+                  />
+                </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="phone" className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-cyan-600" />
-                  Phone Number *
-                </Label>
-                <Input
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  placeholder="+251 91 234 5678"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  required
-                  disabled={isLoading}
-                  className="bg-background/50"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="employeeId">Employee ID</Label>
-                <Input
-                  id="employeeId"
-                  name="employeeId"
-                  placeholder="EEC-2024-001"
-                  value={formData.employeeId}
-                  onChange={handleChange}
-                  disabled={isLoading}
-                  className="bg-background/50"
-                />
               </div>
             </div>
           </motion.div>
@@ -369,77 +382,100 @@ export default function SignUpPage() {
             initial="enter"
             animate="center"
             exit="exit"
-            className="space-y-4"
+            className="space-y-3"
           >
-            <div className="space-y-2">
-              <Label htmlFor="department" className="flex items-center gap-2">
-                <Building className="h-4 w-4 text-cyan-600" />
-                Department *
-              </Label>
-              <Select
-                value={formData.department}
-                onValueChange={(value) => handleSelectChange('department', value)}
-                disabled={isLoading}
-                className="bg-background/50"
-              >
-                {referenceData.departments.map((dept) => (
-                  <SelectItem key={dept.id} value={dept.id}>
-                    {dept.name}
-                  </SelectItem>
-                ))}
-              </Select>
+            {/* Row 1: Work Location and Position/Role */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="workLocation" className="flex items-center gap-2 text-sm">
+                  <MapPin className="h-3.5 w-3.5 text-[#70c82a]" />
+                  Work Location *
+                </Label>
+                <Select
+                  value={formData.workLocation}
+                  onValueChange={(value) => handleSelectChange('workLocation', value)}
+                  disabled={isLoading}
+                  className="bg-background/50 h-9 text-sm"
+                >
+                  {referenceData.workLocations.map((location) => (
+                    <SelectItem key={location.id} value={location.id}>
+                      {location.name} {location.city && `- ${location.city}`}
+                    </SelectItem>
+                  ))}
+                </Select>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="position" className="flex items-center gap-2 text-sm">
+                  <Briefcase className="h-3.5 w-3.5 text-[#70c82a]" />
+                  Position/Role *
+                </Label>
+                <Select
+                  value={formData.position}
+                  onValueChange={(value) => handleSelectChange('position', value)}
+                  disabled={isLoading}
+                  className="bg-background/50 h-9 text-sm"
+                >
+                  {getFilteredPositions().map((position) => (
+                    <SelectItem key={position.id} value={position.id}>
+                      {position.title}
+                    </SelectItem>
+                  ))}
+                </Select>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="position" className="flex items-center gap-2">
-                <Briefcase className="h-4 w-4 text-cyan-600" />
-                Position/Role *
-              </Label>
-              <Select
-                value={formData.position}
-                onValueChange={(value) => handleSelectChange('position', value)}
-                disabled={isLoading || !formData.department}
-                className="bg-background/50"
-              >
-                {getFilteredPositions().map((position) => (
-                  <SelectItem key={position.id} value={position.id}>
-                    {position.title}
-                  </SelectItem>
-                ))}
-              </Select>
+            {/* Row 2: Employee ID and Supervisor */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="employeeId" className="flex items-center gap-2 text-sm">
+                  <Badge className="h-3.5 w-3.5 text-[#70c82a]" />
+                  Employee ID
+                </Label>
+                <Input
+                  id="employeeId"
+                  name="employeeId"
+                  placeholder="ECWC-2024-001"
+                  value={formData.employeeId}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  className="bg-background/50 h-9 text-sm"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="supervisor" className="text-sm">Supervisor/Manager</Label>
+                <Input
+                  id="supervisor"
+                  name="supervisor"
+                  placeholder="Manager Name"
+                  value={formData.supervisor}
+                  onChange={handleChange}
+                  disabled={isLoading}
+                  className="bg-background/50 h-9 text-sm"
+                />
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="workLocation" className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-cyan-600" />
-                Work Location *
-              </Label>
-              <Select
-                value={formData.workLocation}
-                onValueChange={(value) => handleSelectChange('workLocation', value)}
-                disabled={isLoading}
-                className="bg-background/50"
-              >
-                {referenceData.workLocations.map((location) => (
-                  <SelectItem key={location.id} value={location.id}>
-                    {location.name} {location.city && `- ${location.city}`}
-                  </SelectItem>
-                ))}
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="supervisor">Supervisor/Manager</Label>
-              <Input
-                id="supervisor"
-                name="supervisor"
-                placeholder="Manager Name"
-                value={formData.supervisor}
-                onChange={handleChange}
-                disabled={isLoading}
-                className="bg-background/50"
-              />
-            </div>
+            {/* Conditional Location field - Only show when Site is selected */}
+            {isSiteSelected() && (
+              <div className="space-y-1.5">
+                <Label htmlFor="location" className="flex items-center gap-2 text-sm">
+                  <MapPin className="h-3.5 w-3.5 text-[#70c82a]" />
+                  Location *
+                </Label>
+                <Input
+                  id="location"
+                  name="location"
+                  placeholder="Enter specific site location"
+                  value={formData.location}
+                  onChange={handleChange}
+                  required
+                  disabled={isLoading}
+                  className="bg-background/50 h-9 text-sm"
+                />
+              </div>
+            )}
           </motion.div>
         )
 
@@ -455,7 +491,7 @@ export default function SignUpPage() {
           >
             <div className="space-y-2">
               <Label htmlFor="password" className="flex items-center gap-2">
-                <Lock className="h-4 w-4 text-cyan-600" />
+                <Lock className="h-4 w-4 text-[#70c82a]" />
                 Password *
               </Label>
               <div className="relative">
@@ -536,7 +572,12 @@ export default function SignUpPage() {
                   onChange={handleChange}
                   required
                   disabled={isLoading}
-                  className="bg-background/50 pr-10"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !agreedToTerms) {
+                      e.preventDefault()
+                    }
+                  }}
+                  className="bg-background/50 pr-10 h-9 text-sm"
                 />
                 <Button
                   type="button"
@@ -576,11 +617,11 @@ export default function SignUpPage() {
                 className="text-sm text-muted-foreground leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
               >
                 I agree to the{" "}
-                <Link href="/terms" className="text-cyan-600 hover:underline">
+                <Link href="/terms" className="text-[#70c82a] hover:underline">
                   Terms of Service
                 </Link>{" "}
                 and{" "}
-                <Link href="/privacy" className="text-cyan-600 hover:underline">
+                <Link href="/privacy" className="text-[#70c82a] hover:underline">
                   Privacy Policy
                 </Link>
               </label>
@@ -594,59 +635,83 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <motion.header
-        initial={{ y: -100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="border-b bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80"
-      >
-        <div className="container mx-auto px-4 py-4">
-          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity w-fit">
-            <ArrowLeft className="h-5 w-5" />
-            <div className="flex items-center gap-3">
-              <Image
-                src="/ecwc png logo.png"
-                alt="ECWC"
-                width={64}
-                height={64}
-                className="h-16 w-auto object-contain"
-                quality={100}
-                unoptimized
-                priority
-              />
-              <div className="flex flex-col">
-                <span className="text-sm font-bold bg-gradient-to-r from-cyan-600 to-teal-500 bg-clip-text text-transparent">
-                  ECWC
-                </span>
-                <span className="text-xs text-muted-foreground font-medium">Internal Management System</span>
-              </div>
-            </div>
-          </Link>
-        </div>
-      </motion.header>
+    <div className="h-screen bg-background flex flex-col overflow-hidden">
+      {/* Back to Home Button */}
+      <div className="absolute top-4 left-4 z-50">
+        <Link 
+          href="/" 
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-background/80 dark:bg-zinc-900/80 border border-[#70c82a]/20 hover:border-[#70c82a] hover:bg-[#70c82a]/5 transition-all backdrop-blur-sm"
+        >
+          <Home className="h-4 w-4 text-[#70c82a]" />
+          <span className="text-sm font-medium text-foreground">Back to Home</span>
+        </Link>
+      </div>
 
       {/* Sign Up Form */}
-      <div className="flex-1 flex items-center justify-center px-4 py-12 bg-gradient-to-br from-cyan-50/50 via-background to-background dark:from-cyan-950/20">
+      <div className="flex-1 flex items-center justify-center px-4 py-4 bg-gradient-to-br from-[#70c82a]/5 via-background to-background dark:from-[#70c82a]/10 overflow-y-auto">
         <motion.div
           initial="initial"
           animate="animate"
           variants={fadeInUp}
-          className="w-full max-w-2xl"
+          className={`w-full transition-all duration-300 ${
+            currentStep === 3 ? 'max-w-xl' : 'max-w-3xl'
+          }`}
         >
-          <Card className="border-0 shadow-2xl bg-gradient-to-br from-background to-muted/50 relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-teal-500/5" />
-            <CardHeader className="space-y-1 relative z-10">
-              <CardTitle className="text-2xl font-bold text-center">Join EEC Management System</CardTitle>
-              <CardDescription className="text-center">
-                Create your account to access the internal management platform
-              </CardDescription>
+          <Card className="border-0 shadow-2xl bg-gradient-to-br from-background/95 via-background/90 to-muted/30 dark:from-zinc-950/95 dark:via-zinc-950/90 dark:to-zinc-900/30 relative overflow-hidden border border-[#70c82a]/20 backdrop-blur-xl">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#70c82a]/10 via-[#70c82a]/5 to-[#5aa022]/10 dark:from-[#70c82a]/15 dark:via-[#70c82a]/10 dark:to-[#5aa022]/15" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[#70c82a]/5 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#5aa022]/5 rounded-full blur-3xl"></div>
+            <CardHeader className="space-y-2 relative z-10 pb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                {/* Left Section - Logo */}
+                <div className="flex justify-center md:justify-start">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-[#70c82a]/10 rounded-full blur-xl"></div>
+                    <Image
+                      src="/ecwc png logo.png"
+                      alt="ECWC Logo"
+                      width={80}
+                      height={80}
+                      className="h-16 w-auto object-contain relative z-10 drop-shadow-lg"
+                      quality={100}
+                      unoptimized
+                      priority
+                    />
+                  </div>
+                </div>
+                
+                {/* Right Section - Title and Description */}
+                <div className="text-center md:text-left space-y-3 relative">
+                  <div className="space-y-2">
+                    <CardTitle className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-[#70c82a] via-[#5aa022] to-[#70c82a] bg-clip-text text-transparent">
+                      Sign Up
+                    </CardTitle>
+                    {currentStep !== 3 && (
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        Create your account to access the Plant Equipment Management System and streamline your operations
+                      </p>
+                    )}
+                  </div>
+                  {/* Decorative horizontal line - left to right */}
+                  <div className="relative mt-4 pt-4">
+                    <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#70c82a] via-[#5aa022] to-[#70c82a]"></div>
+                  </div>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent className="relative z-10">
+            <CardContent className="relative z-10 py-4">
               {renderStepIndicator()}
               
-              <form onSubmit={handleSubmit}>
+              <form onSubmit={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+              }} onKeyDown={(e) => {
+                // Prevent form submission on Enter key
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  e.stopPropagation()
+                }
+              }}>
                 {error && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
@@ -663,7 +728,7 @@ export default function SignUpPage() {
                   {renderStepContent()}
                 </AnimatePresence>
 
-                <div className="flex justify-between mt-8">
+                <div className="flex justify-between mt-3">
                   <Button
                     type="button"
                     variant="outline"
@@ -679,15 +744,16 @@ export default function SignUpPage() {
                     <Button
                       type="button"
                       onClick={nextStep}
-                      className="bg-cyan-600 hover:bg-cyan-700 flex items-center gap-2"
+                      className="bg-[#70c82a] hover:bg-[#5aa022] text-white flex items-center gap-2"
                     >
                       Next
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   ) : (
                     <Button 
-                      type="submit" 
-                      className="bg-cyan-600 hover:bg-cyan-700 w-32" 
+                      type="button"
+                      onClick={handleSubmit}
+                      className="bg-[#70c82a] hover:bg-[#5aa022] text-white w-32" 
                       disabled={isLoading}
                     >
                       {isLoading ? (
@@ -703,10 +769,10 @@ export default function SignUpPage() {
                 </div>
               </form>
             </CardContent>
-            <CardFooter className="flex flex-col space-y-4 relative z-10">
+            <CardFooter className="flex flex-col space-y-2 relative z-10 pt-4">
               <div className="text-sm text-muted-foreground text-center">
                 Already have an account?{" "}
-                <Link href="/sign-in" className="text-cyan-600 hover:underline font-medium">
+                <Link href="/sign-in" className="text-[#70c82a] hover:underline font-medium">
                   Sign in
                 </Link>
               </div>

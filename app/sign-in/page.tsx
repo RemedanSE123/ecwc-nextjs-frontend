@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { 
-  ArrowLeft, 
+  Home,
   Loader2, 
   Eye, 
   EyeOff, 
@@ -36,6 +36,11 @@ export default function SignInPage() {
   const [error, setError] = useState("")
   const [showPassword, setShowPassword] = useState(false)
 
+  // Always light mode on sign-in (ignore landing page theme)
+  useEffect(() => {
+    document.documentElement.classList.remove("dark")
+  }, [])
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({
       ...prev,
@@ -58,61 +63,73 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <motion.header
-        initial={{ y: -100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="border-b bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80"
-      >
-        <div className="container mx-auto px-4 py-4">
-          <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity w-fit">
-            <ArrowLeft className="h-5 w-5" />
-            <div className="flex items-center gap-3">
-              <Image
-                src="/ecwc png logo.png"
-                alt="ECWC"
-                width={64}
-                height={64}
-                className="h-16 w-auto object-contain"
-                quality={100}
-                unoptimized
-                priority
-              />
-              <div className="flex flex-col">
-                <span className="text-sm font-bold bg-gradient-to-r from-cyan-600 to-teal-500 bg-clip-text text-transparent">
-                   ECWC
-                </span>
-                <span className="text-xs text-muted-foreground font-medium">Internal Management System</span>
-              </div>
-            </div>
-          </Link>
-        </div>
-      </motion.header>
+    <div className="h-screen bg-background flex flex-col overflow-hidden">
+      {/* Back to Home Button */}
+      <div className="absolute top-4 left-4 z-50">
+        <Link 
+          href="/" 
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-background/80 dark:bg-zinc-900/80 border border-[#70c82a]/20 hover:border-[#70c82a] hover:bg-[#70c82a]/5 transition-all backdrop-blur-sm"
+        >
+          <Home className="h-4 w-4 text-[#70c82a]" />
+          <span className="text-sm font-medium text-foreground">Back to Home</span>
+        </Link>
+      </div>
 
       {/* Sign In Form */}
-      <div className="flex-1 flex items-center justify-center px-4 py-12 bg-gradient-to-br from-cyan-50/50 via-background to-background dark:from-cyan-950/20">
+      <div className="flex-1 flex items-center justify-center px-4 py-4 bg-gradient-to-br from-[#70c82a]/5 via-background to-background dark:from-[#70c82a]/10 overflow-y-auto">
         <motion.div
           initial="initial"
           animate="animate"
           variants={fadeInUp}
           className="w-full max-w-md"
         >
-          <Card className="border-0 shadow-2xl bg-gradient-to-br from-background to-muted/50 relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-teal-500/5" />
-            <CardHeader className="space-y-1 relative z-10">
-              <CardTitle className="text-2xl font-bold text-center">Welcome Back</CardTitle>
-              <CardDescription className="text-center">
-                Sign in to your EEC Management System account
-              </CardDescription>
+          <Card className="border-0 shadow-2xl bg-gradient-to-br from-background/95 via-background/90 to-muted/30 dark:from-zinc-950/95 dark:via-zinc-950/90 dark:to-zinc-900/30 relative overflow-hidden border border-[#70c82a]/20 backdrop-blur-xl">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#70c82a]/10 via-[#70c82a]/5 to-[#5aa022]/10 dark:from-[#70c82a]/15 dark:via-[#70c82a]/10 dark:to-[#5aa022]/15" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[#70c82a]/5 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#5aa022]/5 rounded-full blur-3xl"></div>
+            <CardHeader className="space-y-2 relative z-10 pb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                {/* Left Section - Logo */}
+                <div className="flex justify-center md:justify-start">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-[#70c82a]/10 rounded-full blur-xl"></div>
+                    <Image
+                      src="/ecwc png logo.png"
+                      alt="ECWC Logo"
+                      width={80}
+                      height={80}
+                      className="h-16 w-auto object-contain relative z-10 drop-shadow-lg"
+                      quality={100}
+                      unoptimized
+                      priority
+                    />
+                  </div>
+                </div>
+                
+                {/* Right Section - Title and Description */}
+                <div className="text-center md:text-left space-y-3 relative">
+                  <div className="space-y-2">
+                    <CardTitle className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-[#70c82a] via-[#5aa022] to-[#70c82a] bg-clip-text text-transparent">
+                      Sign In
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Welcome back!
+                    </p>
+                  </div>
+                  {/* Decorative horizontal line - left to right */}
+                  <div className="relative mt-4 pt-4">
+                    <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#70c82a] via-[#5aa022] to-[#70c82a]"></div>
+                  </div>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent className="relative z-10">
+            <CardContent className="relative z-10 py-4">
               <form onSubmit={handleSubmit} className="space-y-4">
                 {error && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
+                    className="mb-4"
                   >
                     <Alert variant="destructive">
                       <AlertDescription>{error}</AlertDescription>
@@ -122,26 +139,26 @@ export default function SignInPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="email" className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-cyan-600" />
-                    Email Address
+                    <Mail className="h-4 w-4 text-[#70c82a]" />
+                    Email Address *
                   </Label>
                   <Input
                     id="email"
                     name="email"
                     type="email"
-                    placeholder="john.doe@eec.gov.et"
+                    placeholder="john.doe@ecwc.gov.et"
                     value={formData.email}
                     onChange={handleChange}
                     required
                     disabled={isLoading}
-                    className="bg-background/50"
+                    className="bg-background/50 h-9 text-sm"
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="password" className="flex items-center gap-2">
-                    <Lock className="h-4 w-4 text-cyan-600" />
-                    Password
+                    <Lock className="h-4 w-4 text-[#70c82a]" />
+                    Password *
                   </Label>
                   <div className="relative">
                     <Input
@@ -153,7 +170,7 @@ export default function SignInPage() {
                       onChange={handleChange}
                       required
                       disabled={isLoading}
-                      className="bg-background/50 pr-10"
+                      className="bg-background/50 pr-10 h-9 text-sm"
                     />
                     <Button
                       type="button"
@@ -171,18 +188,15 @@ export default function SignInPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    {/* You can add a remember me checkbox here if needed */}
-                  </div>
-                  <Link href="/forgot-password" className="text-sm text-cyan-600 hover:underline">
+                <div className="flex items-center justify-end">
+                  <Link href="/forgot-password" className="text-sm text-[#70c82a] hover:underline font-medium">
                     Forgot password?
                   </Link>
                 </div>
 
                 <Button 
                   type="submit" 
-                  className="w-full bg-cyan-600 hover:bg-cyan-700" 
+                  className="w-full bg-[#70c82a] hover:bg-[#5aa022] text-white" 
                   disabled={isLoading}
                 >
                   {isLoading ? (
@@ -196,10 +210,10 @@ export default function SignInPage() {
                 </Button>
               </form>
             </CardContent>
-            <CardFooter className="flex flex-col space-y-4 relative z-10">
+            <CardFooter className="flex flex-col space-y-4 relative z-10 pt-4">
               <div className="text-sm text-muted-foreground text-center">
                 Don't have an account?{" "}
-                <Link href="/sign-up" className="text-cyan-600 hover:underline font-medium">
+                <Link href="/sign-up" className="text-[#70c82a] hover:underline font-medium">
                   Sign up
                 </Link>
               </div>
