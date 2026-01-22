@@ -7,8 +7,13 @@ const inter = Inter({ subsets: ["latin"] });
 const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans" });
 
 export const metadata: Metadata = {
-  title: "ECWC CMMS",
+  title: "ECWC PEMS",
   description: "Internal Management System for ECWC",
+  icons: {
+    icon: "/PEMS-Web-tag.png",
+    shortcut: "/PEMS-Web-tag.png",
+    apple: "/PEMS-Web-tag.png",
+  },
 };
 
 export default function RootLayout({

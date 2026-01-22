@@ -1022,11 +1022,11 @@ export default function LandingPage() {
                     />
                   </div>
 
-                  {/* CMMS Letters with Full Words */}
+                  {/* PEMS Letters with Full Words */}
                   <div className="flex flex-col gap-5">
                     {[
                       { letter: "P", word: "Plant " },
-                      { letter: "M", word: "Maintenance" },
+                      { letter: "E", word: "Equipment" },
                       { letter: "M", word: "Management" },
                       { letter: "S", word: "System" }
                     ].map((item, i) => (
@@ -1904,7 +1904,7 @@ export default function LandingPage() {
             >
               <div className="flex items-center gap-4 mb-6">
                 <div className="w-16 h-16 rounded-2xl bg-[#70c82a]/10 flex items-center justify-center border border-[#70c82a]/20">
-                  <DollarSign className="w-8 h-8 text-[#70c82a]" />
+                  <span className="text-2xl font-bold text-[#70c82a]">Br</span>
                 </div>
                 <div>
                   <div className="text-xs text-[#70c82a] font-bold uppercase tracking-wider mb-1">Module 05</div>
@@ -1959,9 +1959,9 @@ export default function LandingPage() {
                 <div className="text-foreground font-bold mb-6">Monthly Cost Analysis</div>
                 <div className="grid grid-cols-3 gap-4 mb-6">
                   {[
-                    { label: "Budget", value: "Br 285K", icon: Target },
-                    { label: "Actual", value: "Br 267K", icon: DollarSign },
-                    { label: "Variance", value: "-6.3%", icon: TrendingUp }
+                    { label: "Budget", value: "Br 285K", icon: Target, useText: false },
+                    { label: "Actual", value: "Br 267K", icon: DollarSign, useText: true },
+                    { label: "Variance", value: "-6.3%", icon: TrendingUp, useText: false }
                   ].map((stat, i) => (
                     <motion.div
                       key={i}
@@ -1971,7 +1971,11 @@ export default function LandingPage() {
               transition={{ delay: i * 0.1 }}
                       className="p-4 rounded-xl bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800 text-center"
                     >
-                      <stat.icon className="w-5 h-5 text-[#70c82a] mx-auto mb-2" />
+                      {stat.useText ? (
+                        <span className="text-lg font-bold text-[#70c82a] mx-auto mb-2 block">Br</span>
+                      ) : (
+                        <stat.icon className="w-5 h-5 text-[#70c82a] mx-auto mb-2" />
+                      )}
                       <div className="text-xl font-bold text-foreground mb-1">{stat.value}</div>
                       <div className="text-[10px] text-muted-foreground uppercase font-bold">{stat.label}</div>
                     </motion.div>
@@ -2033,31 +2037,32 @@ export default function LandingPage() {
                 <div className="space-y-4">
                   {/* Site Performance Comparison - Vertical Bar Chart */}
                   <div className="p-4 rounded-xl bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800">
-                    <div className="text-xs font-semibold text-foreground mb-4">Site Performance Comparison</div>
-                    <div className="flex items-end justify-center gap-6 h-16">
-                      {[
-                        { site: "Addis Ababa", value: 94 },
-                        { site: "Dire Dawa", value: 87 },
-                        { site: "Bahir Dar", value: 91 }
-                      ].map((item, j) => (
-                        <div key={j} className="flex flex-col items-center gap-2" style={{ width: '22%' }}>
-                          <div className="relative w-full h-16 flex items-end">
-                            <motion.div
-                              initial={{ height: 0 }}
-                              whileInView={{ height: `${item.value}%` }}
-                              viewport={{ once: true }}
-                              transition={{ duration: 0.8, delay: j * 0.15 }}
-                              className="w-full bg-gradient-to-t from-[#70c82a] via-[#70c82a]/80 to-emerald-400 rounded-t-md relative group shadow-lg shadow-[#70c82a]/20"
-                              style={{ height: `${item.value}%`, minHeight: '10px' }}
-                            >
-                              <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 text-[10px] font-bold text-[#70c82a] whitespace-nowrap">
+                    <div className="text-xs font-semibold text-foreground mb-6">Site Performance Comparison</div>
+                    <div className="relative pt-6 pb-4">
+                      <div className="flex items-end justify-center gap-6 h-16">
+                        {[
+                          { site: "Addis Ababa", value: 94 },
+                          { site: "Dire Dawa", value: 23 },
+                          { site: "Bahir Dar", value: 55 }
+                        ].map((item, j) => (
+                          <div key={j} className="flex flex-col items-center gap-2 flex-1 max-w-[100px]">
+                            <div className="relative w-full h-16 flex items-end justify-center">
+                              <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-[10px] font-bold text-[#70c82a] whitespace-nowrap z-10">
                                 {item.value}%
                               </div>
-                            </motion.div>
+                              <motion.div
+                                initial={{ height: 0 }}
+                                whileInView={{ height: `${item.value}%` }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.8, delay: j * 0.15 }}
+                                className="w-full bg-gradient-to-t from-[#70c82a] via-[#70c82a]/80 to-emerald-400 rounded-t-md relative group shadow-lg shadow-[#70c82a]/20"
+                                style={{ height: `${item.value}%`, minHeight: '10px' }}
+                              />
+                            </div>
+                            <span className="text-[11px] text-foreground font-semibold text-center leading-tight">{item.site}</span>
                           </div>
-                          <span className="text-sm text-foreground font-semibold text-center">{item.site}</span>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   </div>
 
@@ -2729,7 +2734,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* CMMS Benefits - Before & After */}
+      {/*  Benefits - PEMSBefore & After */}
       <section className="py-32 bg-gradient-to-b from-background to-muted/30 dark:from-black dark:to-zinc-950 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(112,200,42,0.05),transparent_70%)]" />
         <div className="container mx-auto px-4 lg:px-8 relative z-10">
@@ -2740,10 +2745,10 @@ export default function LandingPage() {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-              Why CMMS Transforms Maintenance Operations
+              Why PEMS Transforms Maintenance Operations
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              See how ECWC's CMMS solves critical challenges and delivers measurable results
+              See how ECWC's PEMS solves critical challenges and delivers measurable results
             </p>
           </motion.div>
 
@@ -2760,7 +2765,7 @@ export default function LandingPage() {
                   <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center border-2 border-red-500/30">
                     <AlertTriangle className="w-6 h-6 text-red-500" />
                   </div>
-                  <h3 className="text-2xl font-bold text-foreground">Before CMMS</h3>
+                  <h3 className="text-2xl font-bold text-foreground">Before PEMS</h3>
                 </div>
                 <div className="space-y-2">
                   {[
@@ -2823,7 +2828,7 @@ export default function LandingPage() {
                   <div className="w-12 h-12 rounded-full bg-[#70c82a]/20 flex items-center justify-center border-2 border-[#70c82a]/30">
                     <CheckCircle className="w-6 h-6 text-[#70c82a]" />
                   </div>
-                  <h3 className="text-2xl font-bold text-foreground">With ECWC CMMS</h3>
+                  <h3 className="text-2xl font-bold text-foreground">With ECWC PEMS</h3>
                 </div>
                 <div className="space-y-2">
                   {[
@@ -2877,7 +2882,7 @@ export default function LandingPage() {
       </section>
 
       {/* Motto Section with Dual-Row Auto-Scroll */}
-      <section className="py-6 md:py-8 mb-16 md:mb-24 bg-gradient-to-b from-[#70c82a]/5 via-background to-[#70c82a]/5 dark:from-[#70c82a]/3 dark:via-background dark:to-[#70c82a]/3 overflow-hidden relative w-full">
+      <section className="py-6 md:py-8 mb-0 bg-gradient-to-b from-[#70c82a]/5 via-background to-[#70c82a]/5 dark:from-[#70c82a]/3 dark:via-background dark:to-[#70c82a]/3 overflow-hidden relative w-full">
         <div className="relative w-full space-y-4">
           {/* English Row - Left to Right */}
           <div className="relative w-full overflow-hidden">
@@ -3033,7 +3038,7 @@ export default function LandingPage() {
 
     <div className="pt-8 border-t border-border dark:border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4">
       <p className="text-sm text-muted-foreground">
-        © 2025 ECWC Equipment Management System. Internal use only.
+        © 2025 ECWC Plant Equipment Management System. Internal use only.
       </p>
       <div className="flex items-center gap-4">
         <ThemeToggle />
