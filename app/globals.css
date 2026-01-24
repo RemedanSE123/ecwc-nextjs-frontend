@@ -2,77 +2,85 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  /* Updated to use teal/turquoise brand color from Ethiopian Engineering Corporation logo */
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.65 0.15 195); /* Teal/turquoise color */
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.65 0.15 195);
-  --chart-1: oklch(0.65 0.15 195);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.65 0.15 195);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
+@layer base {
+  :root {
+    /* CEO-grade light mode: #70c82a primary, warm off-whites, refined neutrals */
+    --background: 48 14% 98.2%;
+    --foreground: 240 12% 9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 12% 9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 12% 9%;
+    --primary: 94 65% 47%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 48 12% 96%;
+    --secondary-foreground: 240 10% 12%;
+    --muted: 48 10% 96%;
+    --muted-foreground: 240 5% 44%;
+    --accent: 94 30% 96%;
+    --accent-foreground: 240 10% 12%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 48 10% 90%;
+    --input: 48 10% 90%;
+    --ring: 94 65% 47%;
+    --chart-1: 94 65% 47%;
+    --chart-2: 94 55% 40%;
+    --chart-3: 38 92% 50%;
+    --chart-4: 0 72% 51%;
+    --chart-5: 240 5% 55%;
+    --radius: 0.625rem;
+    --sidebar: 48 12% 98%;
+    --sidebar-foreground: 240 12% 9%;
+    --sidebar-primary: 94 65% 47%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 48 10% 96%;
+    --sidebar-accent-foreground: 240 10% 12%;
+    --sidebar-border: 48 10% 90%;
+    --sidebar-ring: 94 65% 47%;
+  }
 
-.dark {
-  /* Updated dark mode to use teal accent */
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.65 0.15 195); /* Teal color */
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.65 0.15 195);
-  --chart-1: oklch(0.65 0.15 195);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.65 0.15 195);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 94 65% 47%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 94 65% 47%;
+    --chart-1: 94 65% 47%;
+    --chart-2: 94 55% 40%;
+    --chart-3: 38 92% 50%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+    --sidebar: 240 8% 8%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 94 65% 47%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 240 4.9% 83.9%;
+  }
+
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
 }
 
 @theme inline {
@@ -114,22 +122,12 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-@layer base {
-  * {
-    border-color: var(--border);
-  }
-  body {
-    background-color: var(--background);
-    color: var(--foreground);
-  }
-}
-
 @layer utilities {
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
   }
   .custom-scrollbar::-webkit-scrollbar-track {
-    background: oklch(0.97 0 0 / 0.5);
+    background: hsl(48 10% 94% / 0.6);
     border-radius: 10px;
   }
   .dark .custom-scrollbar::-webkit-scrollbar-track {
@@ -142,7 +140,7 @@
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: rgba(112, 200, 42, 0.5);
   }
-  
+
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -175,5 +173,13 @@
 
   .animate-scroll-reverse {
     animation: scroll-reverse 25s linear infinite;
+  }
+
+  .light-card {
+    box-shadow: 0 1px 3px hsl(240 12% 9% / 0.06);
+  }
+
+  :root .rounded-lg.border.bg-card {
+    box-shadow: 0 1px 3px hsl(240 12% 9% / 0.06);
   }
 }

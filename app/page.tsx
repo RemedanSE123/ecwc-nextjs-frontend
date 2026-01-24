@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
+import { Separator } from "@/components/ui/separator"
 import { 
   Wrench, 
   TrendingUp, 
@@ -344,87 +345,63 @@ const CommandCenterSection = () => {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left: Image Panel */}
             <div className="relative h-[300px] md:h-[500px] flex items-center justify-center overflow-hidden">
-              {equipmentCategories.map((category, index) => {
-                const isActive = index === currentIndex;
-                const isNext = index === (currentIndex + 1) % equipmentCategories.length;
-                const isPrev = index === (currentIndex - 1 + equipmentCategories.length) % equipmentCategories.length;
-
-                return (
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentCategory.id}
+                  initial={{ opacity: 0, x: 100, scale: 0.85 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  exit={{ opacity: 0, x: -100, scale: 0.85 }}
+                  transition={{ duration: 0.9, ease: [0.4, 0, 0.2, 1] }}
+                  className="absolute inset-0 flex items-center justify-center"
+                >
+                  <div
+                    className={`absolute inset-0 bg-gradient-to-tr ${
+                      statusColor === "bg-[#70c82a]"
+                        ? "from-[#70c82a]/20"
+                        : statusColor === "bg-amber-500"
+                          ? "from-amber-500/20"
+                          : "from-red-500/20"
+                    } to-transparent blur-3xl opacity-30 rounded-full`}
+                  />
                   <motion.div
-                    key={category.id}
-                    initial={false}
-                    animate={{
-                      opacity: isActive ? 1 : 0,
-                      x: isActive ? 0 : isNext ? 100 : -100,
-                      scale: isActive ? 1 : 0.8,
-                      zIndex: isActive ? 10 : isNext || isPrev ? 5 : 1
-                    }}
-                    transition={{
-                      duration: 1.2,
-                      ease: [0.4, 0, 0.2, 1]
-                    }}
-                    className="absolute inset-0 flex items-center justify-center"
+                    animate={{ x: [0, -10, 10, -10, 0] }}
+                    transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                    className="relative w-full h-full"
                   >
-                    <div className={`absolute inset-0 bg-gradient-to-tr ${getStatusColor(calculateUtilization(category)) === 'bg-[#70c82a]' ? 'from-[#70c82a]/20' : getStatusColor(calculateUtilization(category)) === 'bg-amber-500' ? 'from-amber-500/20' : 'from-red-500/20'} to-transparent blur-3xl opacity-30 rounded-full`} />
-                    <motion.div 
-                      animate={{
-                        x: isActive ? [0, -10, 10, -10, 0] : 0,
-                      }}
-                      transition={{
-                        duration: 5,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                      }}
-                      className="relative w-full h-full"
-                    >
-                      <Image
-                        src={category.image}
-                        alt={category.name}
-                        fill
-                        className="object-contain drop-shadow-[0_0_50px_rgba(112,200,42,0.2)]"
-                        priority={index === 0}
-                        unoptimized
-                      />
-                    </motion.div>
+                    <Image
+                      src={currentCategory.image}
+                      alt={currentCategory.name}
+                      fill
+                      className="object-contain drop-shadow-[0_0_50px_rgba(112,200,42,0.2)]"
+                      priority
+                      unoptimized
+                    />
                   </motion.div>
-                );
-              })}
+                </motion.div>
+              </AnimatePresence>
             </div>
 
             {/* Right: Aggregated Data Panel - Attractive & Descriptive */}
             <div className="relative min-h-[500px] flex flex-col justify-center overflow-visible">
-              {equipmentCategories.map((category, index) => {
-                const isActive = index === currentIndex;
-                const isNext = index === (currentIndex + 1) % equipmentCategories.length;
-                const isPrev = index === (currentIndex - 1 + equipmentCategories.length) % equipmentCategories.length;
-                const categoryUtilization = calculateUtilization(category);
-                const categoryStatusColor = getStatusColor(categoryUtilization);
-
-                return (
-                  <motion.div
-                    key={category.id}
-                    initial={false}
-                    animate={{
-                      opacity: isActive ? 1 : 0,
-                      y: isActive ? 0 : isNext ? 50 : -50,
-                      zIndex: isActive ? 10 : isNext || isPrev ? 5 : 1
-                    }}
-                    transition={{
-                      duration: 1.2,
-                      ease: [0.4, 0, 0.2, 1]
-                    }}
-                    className="absolute inset-0 space-y-5"
-                  >
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentCategory.id}
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -50 }}
+                  transition={{ duration: 0.9, ease: [0.4, 0, 0.2, 1] }}
+                  className="absolute inset-0 space-y-5"
+                >
                     <div className="space-y-2">
                       <div className="flex items-center gap-3">
-                        <div className={`w-3 h-3 rounded-full ${categoryStatusColor} animate-pulse shadow-[0_0_10px_${categoryStatusColor.replace('bg-', '')}]`} />
+                      <div className={`w-3 h-3 rounded-full ${statusColor} animate-pulse shadow-[0_0_10px_${statusColor.replace('bg-', '')}]`} />
                         <span className="text-sm font-bold tracking-widest uppercase text-muted-foreground">
-                          {categoryUtilization >= 80 ? '🚀 OPTIMAL PERFORMANCE' : categoryUtilization >= 60 ? '✅ GOOD STATUS' : categoryUtilization >= 40 ? '⚠️ NEEDS ATTENTION' : '🔴 CRITICAL ALERT'}
+                        {utilization >= 80 ? '🚀 OPTIMAL PERFORMANCE' : utilization >= 60 ? '✅ GOOD STATUS' : utilization >= 40 ? '⚠️ NEEDS ATTENTION' : '🔴 CRITICAL ALERT'}
                         </span>
                       </div>
-                      <h3 className="text-3xl md:text-4xl font-bold text-foreground tracking-tight leading-tight">{category.name}</h3>
-                      <p className="text-[#70c82a] font-mono text-base">Fleet Category #{category.id} of {equipmentCategories.length}</p>
-                      <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed italic mb-4">{getEquipmentDescription(category.name)}</p>
+                    <h3 className="text-3xl md:text-4xl font-bold text-foreground tracking-tight leading-tight">{currentCategory.name}</h3>
+                    <p className="text-[#70c82a] font-mono text-base">Fleet Category #{currentCategory.id} of {equipmentCategories.length}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed italic mb-4">{getEquipmentDescription(currentCategory.name)}</p>
                     </div>
 
                     {/* Main Stats with Icons and Descriptions */}
@@ -439,7 +416,7 @@ const CommandCenterSection = () => {
                           <p className="text-xs font-semibold text-muted-foreground">Operational & Ready</p>
                         </div>
                         <div className="text-2xl font-bold text-[#70c82a] mb-1">
-                          <AnimatedCounter value={category.op} duration={1000} />
+                          <AnimatedCounter value={currentCategory.op} duration={1000} />
                         </div>
                         <p className="text-[10px] text-muted-foreground leading-tight">Units actively working on projects</p>
                       </motion.div>
@@ -454,7 +431,7 @@ const CommandCenterSection = () => {
                           <p className="text-xs font-semibold text-muted-foreground">Total Fleet Size</p>
                         </div>
                         <div className="text-2xl font-bold text-foreground mb-1">
-                          <AnimatedCounter value={category.totalQty} duration={1000} />
+                          <AnimatedCounter value={currentCategory.totalQty} duration={1000} />
                         </div>
                         <p className="text-[10px] text-muted-foreground leading-tight">Total equipment in this category</p>
                       </motion.div>
@@ -469,7 +446,7 @@ const CommandCenterSection = () => {
                           <p className="text-xs font-semibold text-muted-foreground">Utilization Rate</p>
                         </div>
                         <div className="text-2xl font-bold text-amber-500 mb-1">
-                          <AnimatedCounter value={categoryUtilization} duration={1000} />%
+                          <AnimatedCounter value={utilization} duration={1000} />%
                         </div>
                         <p className="text-[10px] text-muted-foreground leading-tight">Percentage of fleet in use</p>
                       </motion.div>
@@ -484,7 +461,7 @@ const CommandCenterSection = () => {
                           <p className="text-xs font-semibold text-muted-foreground">Out of Service</p>
                         </div>
                         <div className="text-2xl font-bold text-red-500 mb-1">
-                          <AnimatedCounter value={category.down} duration={1000} />
+                          <AnimatedCounter value={currentCategory.down} duration={1000} />
                         </div>
                         <p className="text-[10px] text-muted-foreground leading-tight">Units requiring immediate attention</p>
                       </motion.div>
@@ -494,23 +471,24 @@ const CommandCenterSection = () => {
                     <div className="grid grid-cols-3 gap-2 pt-3 border-t border-border dark:border-zinc-800">
                       <div className="text-center p-2 rounded-lg bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800">
                         <Clock className="w-4 h-4 text-amber-400 mx-auto mb-1" />
-                        <div className="text-base font-bold text-foreground mb-0.5">{category.idle}</div>
+                        <div className="text-base font-bold text-foreground mb-0.5">{currentCategory.idle}</div>
                         <p className="text-[9px] text-muted-foreground leading-tight">Standby / Idle</p>
                       </div>
                       <div className="text-center p-2 rounded-lg bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800">
                         <Wrench className="w-4 h-4 text-orange-400 mx-auto mb-1" />
-                        <div className="text-base font-bold text-foreground mb-0.5">{category.ur}</div>
+                        <div className="text-base font-bold text-foreground mb-0.5">{currentCategory.ur}</div>
                         <p className="text-[9px] text-muted-foreground leading-tight">Under Repair</p>
                       </div>
                       <div className="text-center p-2 rounded-lg bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800">
                         <TrendingUp className="w-4 h-4 text-[#70c82a] mx-auto mb-1" />
-                        <div className="text-base font-bold text-foreground mb-0.5">{category.hr + category.ui + category.rfd + category.afd}</div>
+                        <div className="text-base font-bold text-foreground mb-0.5">
+                          {currentCategory.hr + currentCategory.ui + currentCategory.rfd + currentCategory.afd}
+                        </div>
                         <p className="text-[9px] text-muted-foreground leading-tight">In Transit / Other</p>
                       </div>
                     </div>
-                  </motion.div>
-                );
-              })}
+                </motion.div>
+              </AnimatePresence>
             </div>
           </div>
 
@@ -911,7 +889,7 @@ export default function LandingPage() {
               <Button variant="outline" size="sm" asChild className="border-[#70c82a]/30 hover:border-[#70c82a] hover:text-[#70c82a]">
                 <Link href="/sign-in">Sign In</Link>
               </Button>
-              <Button size="sm" className="bg-[#70c82a] hover:bg-[#5aa022] text-white shadow-lg shadow-[#70c82a]/20" asChild>
+              <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20" asChild>
                 <Link href="/sign-up">Sign Up</Link>
               </Button>
               <ThemeToggle />
@@ -979,7 +957,7 @@ export default function LandingPage() {
                     <Button variant="outline" size="sm" className="w-full border-[#70c82a]/30 hover:border-[#70c82a] hover:text-[#70c82a]" asChild>
                       <Link href="/sign-in" onClick={() => setMobileMenuOpen(false)}>Sign In</Link>
                     </Button>
-                    <Button size="sm" className="w-full bg-[#70c82a] hover:bg-[#5aa022] text-white" asChild>
+                    <Button size="sm" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" asChild>
                       <Link href="/sign-up" onClick={() => setMobileMenuOpen(false)}>Sign Up</Link>
                     </Button>
                   </div>
@@ -1638,7 +1616,7 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <div className="text-xs text-[#70c82a] font-bold uppercase tracking-wider mb-1">Module 02</div>
-                  <h3 className="text-3xl font-bold text-foreground">Maintenance & Work Order Management</h3>
+                  <h3 className="text-3xl font-bold text-foreground"> Work Order Management</h3>
                 </div>
               </div>
               <p className="text-muted-foreground text-lg leading-relaxed mb-6">
@@ -1872,7 +1850,7 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <div className="text-xs text-[#70c82a] font-bold uppercase tracking-wider mb-1">Module 04</div>
-                  <h3 className="text-3xl font-bold text-foreground">Spare Parts & Inventory Management</h3>
+                  <h3 className="text-3xl font-bold text-foreground">Inventory Management</h3>
                 </div>
               </div>
               <p className="text-muted-foreground text-lg leading-relaxed mb-6">
@@ -1910,135 +1888,6 @@ export default function LandingPage() {
                   When stock goes below minimum, the storekeeper receives an alert to reorder.
                   This prevents delays and emergency purchases.
                 </p>
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Cost Control & Budget Monitoring - Left/Right */}
-          <div className="grid lg:grid-cols-2 gap-16 items-center mb-32">
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="space-y-8"
-            >
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-16 h-16 rounded-2xl bg-[#70c82a]/10 flex items-center justify-center border border-[#70c82a]/20">
-                  <span className="text-2xl font-bold text-[#70c82a]">Br</span>
-                </div>
-                <div>
-                  <div className="text-xs text-[#70c82a] font-bold uppercase tracking-wider mb-1">Module 05</div>
-                  <h3 className="text-3xl font-bold text-foreground">Cost Control & Budget Management</h3>
-                </div>
-              </div>
-              <p className="text-muted-foreground text-lg leading-relaxed mb-6">
-                Understand where maintenance money is going.
-              </p>
-              <div className="mb-8">
-                <h4 className="text-foreground font-semibold mb-4">What this module does</h4>
-                <div className="space-y-3">
-                  {[
-                    "Calculates maintenance cost per equipment",
-                    "Tracks labor, spare parts, and external service costs",
-                    "Compares budget vs actual spending",
-                    "Identifies high-cost equipment",
-                    "Supports cost analysis by site or project"
-          ].map((item, i) => (
-                  <motion.div
-              key={i} 
-                    initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.08 }}
-                    className="flex items-center gap-3 text-foreground"
-                  >
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#70c82a]" />
-                    <span className="text-sm">{item}</span>
-                  </motion.div>
-                ))}
-                </div>
-              </div>
-              <div className="p-6 rounded-xl bg-[#70c82a]/5 border border-[#70c82a]/20">
-                <h4 className="text-foreground font-semibold mb-3">ECWC Scenario</h4>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  A manager notices that one excavator has very high maintenance costs compared to others.
-                  Using the system, they review its history and decide whether to repair, overhaul, or replace it.
-                  This helps ECWC avoid wasting money on inefficient equipment.
-                </p>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: 50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-              className="relative"
-            >
-              <div className="p-8 rounded-2xl bg-card dark:bg-zinc-950 border border-border dark:border-zinc-800">
-                <div className="text-foreground font-bold mb-6">Monthly Cost Analysis</div>
-                <div className="grid grid-cols-3 gap-4 mb-6">
-                  {[
-                    { label: "Budget", value: "Br 285K", icon: Target, useText: false },
-                    { label: "Actual", value: "Br 267K", icon: DollarSign, useText: true },
-                    { label: "Variance", value: "-6.3%", icon: TrendingUp, useText: false }
-                  ].map((stat, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      whileInView={{ opacity: 1, scale: 1 }}
-                      viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-                      className="p-4 rounded-xl bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800 text-center"
-                    >
-                      {stat.useText ? (
-                        <span className="text-lg font-bold text-[#70c82a] mx-auto mb-2 block">Br</span>
-                      ) : (
-                        <stat.icon className="w-5 h-5 text-[#70c82a] mx-auto mb-2" />
-                      )}
-                      <div className="text-xl font-bold text-foreground mb-1">{stat.value}</div>
-                      <div className="text-[10px] text-muted-foreground uppercase font-bold">{stat.label}</div>
-                    </motion.div>
-                  ))}
-              </div>
-                <div className="space-y-3 mb-6">
-                  <div className="text-sm text-muted-foreground mb-2">Cost Breakdown</div>
-                  {[
-                    { category: "Labor Costs", amount: "Br 112K", percent: 42, color: "bg-[#70c82a]" },
-                    { category: "Spare Parts", amount: "Br 89K", percent: 33, color: "bg-blue-500" },
-                    { category: "External Services", amount: "Br 47K", percent: 18, color: "bg-amber-500" },
-                    { category: "Other Expenses", amount: "Br 19K", percent: 7, color: "bg-zinc-600" }
-                  ].map((item, i) => (
-                    <div key={i} className="p-4 rounded-xl bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm text-foreground font-semibold">{item.category}</span>
-                        <span className="text-sm text-foreground font-bold">{item.amount}</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="flex-1 h-2 bg-muted dark:bg-zinc-800 rounded-full overflow-hidden">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            whileInView={{ width: `${item.percent}%` }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 1, delay: i * 0.2 }}
-                            className={`h-full ${item.color} rounded-full`}
-                          />
-                        </div>
-                        <span className="text-xs font-bold text-muted-foreground">{item.percent}%</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="p-4 rounded-xl bg-[#70c82a]/5 border border-[#70c82a]/20">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-xs text-muted-foreground mb-1">Under Budget</div>
-                      <div className="text-2xl font-bold text-[#70c82a]">Br 18,000</div>
-                    </div>
-                    <CheckCircle className="w-8 h-8 text-[#70c82a]" />
-                  </div>
-                </div>
               </div>
             </motion.div>
           </div>
@@ -2268,7 +2117,7 @@ export default function LandingPage() {
                   <BarChart3 className="w-8 h-8 text-[#70c82a]" />
                 </div>
                 <div>
-                  <div className="text-xs text-[#70c82a] font-bold uppercase tracking-wider mb-1">Module 06</div>
+                  <div className="text-xs text-[#70c82a] font-bold uppercase tracking-wider mb-1">Module 05</div>
                   <h3 className="text-3xl font-bold text-foreground">Executive Dashboard & Reporting</h3>
                 </div>
               </div>
@@ -2310,126 +2159,6 @@ export default function LandingPage() {
             </motion.div>
           </div>
 
-          {/* ECWC Management Dashboard */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mt-32"
-          >
-          
-
-            <div className="p-8 rounded-2xl bg-white dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 shadow-lg dark:shadow-none">
-              {/* Stats Grid */}
-              <div className="grid lg:grid-cols-4 md:grid-cols-2 gap-6 mb-8">
-                {[
-                  { label: "Total Equipment", value: 156, change: "+5%", icon: Truck, color: "text-[#70c82a]" },
-                  { label: "Operational", value: 142, change: "+2%", icon: CheckCircle, color: "text-[#70c82a]" },
-                  { label: "Under Maintenance", value: 14, change: "-3%", icon: Wrench, color: "text-amber-500" },
-                  { label: "Fleet Availability", value: 91, change: "+1%", icon: Target, color: "text-[#70c82a]" }
-                ].map((stat, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.1 }}
-                    className="p-6 rounded-xl bg-gray-50 dark:bg-zinc-900/50 border border-gray-200 dark:border-zinc-800 hover:border-[#70c82a]/30 transition-all shadow-sm dark:shadow-none"
-                  >
-                    <div className="flex items-center justify-between mb-4">
-                      <stat.icon className={`w-6 h-6 ${stat.color}`} />
-                      <p className={`text-xs font-bold ${stat.change.startsWith('+') ? 'text-[#70c82a]' : 'text-red-500'}`}>
-                        {stat.change}
-                      </p>
-                    </div>
-                    <p className="text-sm text-gray-600 dark:text-zinc-400 mb-2">{stat.label}</p>
-                    <p className={`text-2xl font-bold ${stat.color}`}>
-                      <AnimatedCounter value={stat.value} duration={1500} />
-                      {stat.label.includes("Availability") && "%"}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-zinc-500 mt-1">from last month</p>
-                  </motion.div>
-                ))}
-              </div>
-
-              {/* Alerts and Activity Grid */}
-              <div className="grid lg:grid-cols-2 gap-8">
-                {/* Maintenance Alerts */}
-                <div className="p-6 rounded-xl bg-gray-50 dark:bg-zinc-900/50 border border-gray-200 dark:border-zinc-800 shadow-sm dark:shadow-none">
-                  <div className="mb-6">
-                    <h3 className="text-gray-900 dark:text-white font-bold text-lg mb-1">Maintenance Alerts</h3>
-                    <p className="text-sm text-gray-600 dark:text-zinc-500">Recent equipment requiring attention</p>
-                  </div>
-                  <div className="space-y-4">
-                    {[
-                      { equipment: "Excavator ECWC-EX-001", issue: "Engine oil change due", priority: "High", priorityColor: "bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-500/30" },
-                      { equipment: "Bulldozer ECWC-BD-015", issue: "Hydraulic leak detected", priority: "Critical", priorityColor: "bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400 border-red-300 dark:border-red-500/30" },
-                      { equipment: "Loader ECWC-LD-023", issue: "Tire replacement needed", priority: "Medium", priorityColor: "bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-500/30" },
-                      { equipment: "Crane ECWC-CR-008", issue: "Scheduled inspection", priority: "Low", priorityColor: "bg-gray-200 dark:bg-zinc-700/50 text-gray-700 dark:text-zinc-400 border-gray-300 dark:border-zinc-700" }
-                    ].map((alert, i) => (
-                      <motion.div
-                        key={i}
-                        initial={{ opacity: 0, x: -20 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: i * 0.1 }}
-                        className="flex items-center justify-between p-4 rounded-lg border border-gray-200 dark:border-zinc-800 hover:border-[#70c82a]/30 transition-all bg-white dark:bg-zinc-950/50 shadow-sm dark:shadow-none"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={`p-2 rounded-lg ${alert.priorityColor} border`}>
-                            <AlertTriangle className="h-4 w-4" />
-                          </div>
-                          <div>
-                            <p className="text-gray-900 dark:text-white font-semibold text-sm">{alert.equipment}</p>
-                            <p className="text-xs text-gray-600 dark:text-zinc-500">{alert.issue}</p>
-                          </div>
-                        </div>
-                        <Badge className={`${alert.priorityColor} border text-xs font-bold`}>
-                          {alert.priority}
-                        </Badge>
-                      </motion.div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Recent ECWC Activity */}
-                <div className="p-6 rounded-xl bg-gray-50 dark:bg-zinc-900/50 border border-gray-200 dark:border-zinc-800 shadow-sm dark:shadow-none">
-                  <div className="mb-6">
-                    <h3 className="text-gray-900 dark:text-white font-bold text-lg mb-1">Recent ECWC Activity</h3>
-                    <p className="text-sm text-gray-600 dark:text-zinc-500">Latest equipment operations and maintenance</p>
-                  </div>
-                  <div className="space-y-4">
-                    {[
-                      { action: "Work order completed", equipment: "ECWC-EX-012", user: "Tech. Alemayehu", time: "10 min ago", type: "success", iconColor: "bg-green-100 dark:bg-[#70c82a]/20 text-green-700 dark:text-[#70c82a] border-green-300 dark:border-[#70c82a]/30" },
-                      { action: "Maintenance scheduled", equipment: "ECWC-BD-008", user: "Manager Sofia", time: "25 min ago", type: "info", iconColor: "bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-500/30" },
-                      { action: "Fuel consumption report", equipment: "ECWC-TR-045", user: "System", time: "1 hour ago", type: "warning", iconColor: "bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-300 dark:border-amber-500/30" },
-                      { action: "New equipment added", equipment: "ECWC-CR-009", user: "Admin Michael", time: "2 hours ago", type: "success", iconColor: "bg-green-100 dark:bg-[#70c82a]/20 text-green-700 dark:text-[#70c82a] border-green-300 dark:border-[#70c82a]/30" }
-                    ].map((activity, i) => (
-                      <motion.div
-                        key={i}
-                        initial={{ opacity: 0, x: 20 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: i * 0.1 }}
-                        className="flex items-center gap-3 p-4 rounded-lg border border-gray-200 dark:border-zinc-800 hover:border-[#70c82a]/30 transition-all bg-white dark:bg-zinc-950/50 shadow-sm dark:shadow-none"
-                      >
-                        <div className={`p-2 rounded-lg ${activity.iconColor} border flex-shrink-0`}>
-                          {activity.type === 'success' ? <CheckCircle className="h-4 w-4" /> :
-                           activity.type === 'info' ? <Bell className="h-4 w-4" /> :
-                           <AlertTriangle className="h-4 w-4" />}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-gray-900 dark:text-white font-semibold text-sm">{activity.action}</p>
-                          <p className="text-xs text-gray-600 dark:text-zinc-500 truncate">{activity.equipment} • {activity.user}</p>
-                        </div>
-                        <span className="text-xs text-gray-500 dark:text-zinc-500 flex-shrink-0">{activity.time}</span>
-                      </motion.div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
         </div>
       </section>
 
@@ -2835,7 +2564,9 @@ export default function LandingPage() {
             </motion.div>
 
             {/* Vertical Divider */}
-            <div className="hidden lg:block absolute left-1/2 top-0 bottom-0 w-px bg-border dark:bg-gray-700 transform -translate-x-1/2"></div>
+            <div className="hidden lg:block absolute left-1/2 top-0 bottom-0 transform -translate-x-1/2">
+              <Separator orientation="vertical" className="h-full" />
+            </div>
 
             {/* After - Solutions */}
             <motion.div
