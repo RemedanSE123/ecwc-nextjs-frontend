@@ -34,18 +34,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Main Content */}
       <div className={`flex-1 flex flex-col w-full transition-all duration-300 ${
-        sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'
+        sidebarCollapsed ? 'lg:ml-14' : 'lg:ml-48'
       }`}>
         {/* Mobile Menu Button */}
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="lg:hidden fixed top-4 left-4 z-30 p-2 bg-green-600 hover:bg-green-700 text-white rounded-md shadow-lg"
+          className="lg:hidden fixed top-3 left-3 z-30 p-1.5 bg-green-600 hover:bg-green-700 text-white rounded shadow-lg"
         >
-          {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
 
         <Header sidebarCollapsed={sidebarCollapsed} />
-        <main className="flex-1 overflow-y-auto mt-14 lg:mt-14 p-2.5 sm:p-3.5 lg:p-4.5 max-w-full">
+        <main className="flex-1 overflow-y-auto mt-14 p-2 sm:p-2.5 lg:p-3 max-w-full bg-gray-50/50 dark:bg-gray-900/50">
           <div className="max-w-full overflow-x-hidden">
             {children}
           </div>
