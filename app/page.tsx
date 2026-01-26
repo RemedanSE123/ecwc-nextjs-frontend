@@ -78,55 +78,55 @@ import Image from "next/image"
 // Helper function to get equipment description
 const getEquipmentDescription = (name: string): string => {
   const descMap: { [key: string]: string } = {
-    "Dozer, Chain": "Heavy crawler tractor with large blade for pushing earth, rocks, and debris. Used for site clearing and grading.",
-    "Motor Grader": "Machine with long blade for creating flat surfaces on roads. Used for fine grading and finishing road surfaces.",
-    "Excavator, Chain": "Crawler-mounted excavator with bucket arm for digging trenches, foundations, and moving large amounts of earth.",
-    "Excavator, Wheel": "Wheeled excavator with bucket arm, more mobile than chain excavators. Ideal for urban construction sites.",
-    "Loader, Chain": "Tracked loader for loading materials into trucks. Excellent traction on rough terrain.",
-    "Loader, Wheel": "Wheeled front-end loader for moving and loading materials. Faster on roads than tracked loaders.",
-    "Backhoe Loader": "Versatile machine with front loader and rear excavator bucket. Perfect for smaller sites needing multiple functions.",
-    "Roller D/Drum": "Double drum roller for compacting soil and asphalt. Essential for road construction density.",
-    "Roller S/Drum": "Single drum roller with steel drum for soil compaction and road finishing.",
-    "Roller S/foot -D/D": "Double drum sheep's foot roller with projecting feet for deep soil compaction.",
-    "Roller S/foot -S/D": "Single drum sheep's foot roller for specialized soil compaction in specific areas.",
-    "Roller Pneumatic": "Rubber-tired roller for asphalt compaction. Provides smooth finish without marks.",
-    "Trencher, Chain": "Tracked machine for digging trenches. Used for utility installation and drainage.",
-    "Trencher, Wheel": "Wheeled trenching machine, more mobile for utility and irrigation work.",
-    "Scraper": "Large self-loading earthmoving machine. Moves massive volumes of soil over long distances.",
-    "Asphalt Paver": "Machine that lays asphalt for roads and parking lots. Creates smooth, even surfaces.",
-    "Concrete Paver": "Specialized machine for laying concrete slabs. Used in highway and runway construction.",
-    "Asphalt Milling machine": "Removes old asphalt surfaces for recycling. Prepares surfaces for repaving.",
-    "Chip Spreader": "Distributes aggregate chips for chip seal road treatments.",
-    "Power Curber": "Creates concrete curbs and gutters automatically. Essential for road edge finishing.",
-    "D/Truck Beiben": "Heavy-duty dump truck for transporting construction materials and debris.",
-    "D/Truck Daewoo": "Medium to large dump truck for material hauling on construction sites.",
-    "D/Truck Faw": "Chinese-made dump truck for heavy material transport.",
-    "D/Truck Nissan": "Japanese dump truck, reliable for various construction hauling needs.",
-    "D/Truck Sino": "Sino truck dump vehicle for material transportation.",
-    "D/Truck Foton": "Foton brand dump truck for construction material delivery.",
-    "Water Truck": "Truck with water tank for dust control and compaction. Essential on construction sites.",
-    "Water Truck Trailer": "Trailer-mounted water tank for large-scale dust suppression.",
-    "Fuel Truck": "Mobile fuel delivery truck. Keeps equipment running on remote sites.",
-    "Fuel Truck Trailer": "Trailer system for fuel distribution to multiple locations.",
-    "Asphalt Distributer": "Sprays hot asphalt binder for road resurfacing and maintenance.",
-    "Low bed": "Low-profile flatbed trailer for transporting heavy machinery and equipment.",
-    "Low bed Trailer": "Specialized low trailer for oversized construction equipment transport.",
-    "High bed trailer": "Raised trailer bed for transporting tall equipment and structures.",
-    "Mobile Crane": "Truck-mounted crane for lifting and moving heavy materials and equipment.",
-    "Cargo Truck": "Standard cargo vehicle for transporting construction supplies and tools.",
-    "Cargo Crane": "Truck with crane attachment for loading and unloading cargo.",
-    "Water Well Drilling rig": "Specialized equipment for drilling water wells and boreholes.",
-    "Shop Truck": "Mobile workshop truck for on-site equipment maintenance and repairs.",
-    "Fork lift": "Material handling equipment for lifting and moving pallets and heavy items.",
-    "Farm Truck": "Agricultural truck adapted for construction site material transport.",
-    "Automobile": "Passenger vehicles for staff and site management transportation.",
-    "Bus Passenger": "Bus for transporting workers and personnel to construction sites.",
-    "Midi Bus": "Medium-sized bus for crew transportation.",
-    "Station Wagon": "Utility vehicle for site supervisors and material transport.",
-    "Double Cabin": "Pickup truck with extended cab for transporting crew and tools.",
-    "Single Cabin": "Standard pickup truck for light material and tool transportation.",
+    "Dozer, Chain": "Heavy crawler tractor with large blade for pushing earth, rocks, and debris. Used for site clearing and grading operations. Features excellent ground pressure distribution and superior traction on challenging terrain. Essential for initial site preparation, bulk earthmoving, and maintaining access roads in construction projects.",
+    "Motor Grader": "Machine with long blade for creating flat surfaces on roads. Used for fine grading and finishing road surfaces. Provides precise control for achieving exact grade specifications and smooth finishes. Critical for road construction, maintenance, and ensuring proper drainage slopes on infrastructure projects.",
+    "Excavator, Chain": "Crawler-mounted excavator with bucket arm for digging trenches, foundations, and moving large amounts of earth. Offers exceptional stability and digging power for heavy-duty excavation work. Ideal for deep foundation work, trenching for utilities, and bulk material handling in construction and infrastructure development.",
+    "Excavator, Wheel": "Wheeled excavator with bucket arm, more mobile than chain excavators. Ideal for urban construction sites where frequent repositioning is required. Provides faster travel speeds between work areas while maintaining strong digging capabilities. Perfect for road work, utility installation, and projects requiring high mobility.",
+    "Loader, Chain": "Tracked loader for loading materials into trucks. Excellent traction on rough terrain and soft ground conditions. Designed for heavy-duty material handling with superior stability. Essential for loading aggregates, moving bulk materials, and working in challenging site conditions where wheeled equipment struggles.",
+    "Loader, Wheel": "Wheeled front-end loader for moving and loading materials. Faster on roads than tracked loaders with better fuel efficiency. Provides quick material handling and excellent maneuverability. Ideal for material yards, stockpile management, and projects requiring frequent travel between loading and dumping locations.",
+    "Backhoe Loader": "Versatile machine with front loader and rear excavator bucket. Perfect for smaller sites needing multiple functions in one unit. Combines loading, digging, and material handling capabilities efficiently. Essential for utility work, small construction projects, and sites with limited space where multiple machines aren't practical.",
+    "Roller D/Drum": "Double drum roller for compacting soil and asphalt. Essential for road construction density requirements. Provides uniform compaction across the full width with both drums. Critical for achieving proper compaction density in asphalt paving and soil stabilization projects to meet engineering specifications.",
+    "Roller S/Drum": "Single drum roller with steel drum for soil compaction and road finishing. Offers precise control for edge compaction and tight area work. Ideal for compacting base courses, finishing road surfaces, and working in confined spaces where double drum rollers cannot operate effectively.",
+    "Roller S/foot -D/D": "Double drum sheep's foot roller with projecting feet for deep soil compaction. Designed to penetrate and compact cohesive soils effectively. Essential for achieving proper density in embankment construction and foundation preparation. Provides kneading action that breaks down soil particles for maximum compaction.",
+    "Roller S/foot -S/D": "Single drum sheep's foot roller for specialized soil compaction in specific areas. Offers targeted compaction for cohesive soils and clay materials. Perfect for compacting embankments, dam construction, and areas requiring deep soil density. Provides focused compaction force for challenging soil conditions.",
+    "Roller Pneumatic": "Rubber-tired roller for asphalt compaction. Provides smooth finish without marks or surface damage. Offers kneading action that helps achieve proper density in hot mix asphalt. Essential for final compaction passes and achieving smooth road surfaces without leaving roller marks or surface defects.",
+    "Trencher, Chain": "Tracked machine for digging trenches. Used for utility installation and drainage systems. Provides precise depth and width control for utility trenches. Essential for installing water lines, sewer systems, electrical conduits, and irrigation systems with accurate trench dimensions and minimal surface disruption.",
+    "Trencher, Wheel": "Wheeled trenching machine, more mobile for utility and irrigation work. Offers faster repositioning between trench locations compared to tracked models. Ideal for utility installation projects requiring multiple trench locations. Perfect for irrigation systems, utility line installation, and projects with frequent site movement requirements.",
+    "Scraper": "Large self-loading earthmoving machine. Moves massive volumes of soil over long distances efficiently. Combines cutting, loading, hauling, and spreading functions in one machine. Essential for large-scale earthmoving projects, highway construction, and projects requiring movement of substantial soil volumes over extended distances.",
+    "Asphalt Paver": "Machine that lays asphalt for roads and parking lots. Creates smooth, even surfaces with precise thickness control. Provides consistent material distribution and compaction. Critical for road construction, parking lot paving, and any project requiring uniform asphalt placement with proper grade and smooth finish.",
+    "Concrete Paver": "Specialized machine for laying concrete slabs. Used in highway and runway construction. Provides precise concrete placement with controlled thickness and smooth finish. Essential for large-scale concrete paving projects including highways, airport runways, and industrial floors requiring uniform concrete placement.",
+    "Asphalt Milling machine": "Removes old asphalt surfaces for recycling. Prepares surfaces for repaving with precise depth control. Allows for selective removal of damaged asphalt layers. Essential for road rehabilitation, surface preparation, and recycling old asphalt materials for use in new pavement construction projects.",
+    "Chip Spreader": "Distributes aggregate chips for chip seal road treatments. Provides uniform distribution of aggregate material over asphalt binder. Essential for chip seal road surface treatments that extend pavement life. Critical for road maintenance programs and creating skid-resistant road surfaces in cost-effective pavement preservation.",
+    "Power Curber": "Creates concrete curbs and gutters automatically. Essential for road edge finishing and drainage control. Provides consistent curb dimensions and smooth finishes. Critical for road construction projects requiring precise curb and gutter installation for proper drainage management and road edge definition.",
+    "D/Truck Beiben": "Heavy-duty dump truck for transporting construction materials and debris. Designed for rugged construction site conditions with high payload capacity. Essential for hauling aggregates, excavated materials, and construction waste. Provides reliable transportation for bulk materials in large-scale construction and infrastructure projects.",
+    "D/Truck Daewoo": "Medium to large dump truck for material hauling on construction sites. Offers good balance between capacity and maneuverability. Ideal for transporting construction materials, aggregates, and excavated earth. Essential for material supply chains in construction projects requiring efficient bulk material transportation.",
+    "D/Truck Faw": "Chinese-made dump truck for heavy material transport. Provides cost-effective solution for bulk material hauling. Designed for construction site operations with good reliability. Essential for transporting construction materials, aggregates, and excavated materials in various construction and infrastructure development projects.",
+    "D/Truck Nissan": "Japanese dump truck, reliable for various construction hauling needs. Known for durability and fuel efficiency in construction operations. Ideal for material transportation in construction projects. Essential for reliable material supply chains in construction sites requiring consistent and dependable material delivery.",
+    "D/Truck Sino": "Sino truck dump vehicle for material transportation. Provides practical solution for construction material hauling. Designed for construction site operations with adequate payload capacity. Essential for transporting construction materials, aggregates, and excavated earth in various construction projects.",
+    "D/Truck Foton": "Foton brand dump truck for construction material delivery. Offers reliable material transportation for construction operations. Designed for construction site conditions with good maneuverability. Essential for material supply chains in construction projects requiring efficient bulk material transportation and delivery.",
+    "Water Truck": "Truck with water tank for dust control and compaction. Essential on construction sites for maintaining workable conditions. Provides water for soil compaction, dust suppression, and site maintenance. Critical for dust control compliance, proper soil compaction, and maintaining safe working conditions on construction sites.",
+    "Water Truck Trailer": "Trailer-mounted water tank for large-scale dust suppression. Provides high-capacity water supply for extensive construction operations. Essential for large construction sites requiring substantial water volumes. Critical for dust control on large-scale projects, soil compaction operations, and maintaining environmental compliance.",
+    "Fuel Truck": "Mobile fuel delivery truck. Keeps equipment running on remote sites without interruption. Provides on-site fuel supply for construction equipment. Essential for maintaining equipment operations on remote construction sites, reducing downtime, and ensuring continuous project progress without fuel supply interruptions.",
+    "Fuel Truck Trailer": "Trailer system for fuel distribution to multiple locations. Offers flexible fuel delivery for distributed construction operations. Essential for projects with multiple work sites requiring fuel supply. Critical for maintaining equipment operations across large project areas and ensuring fuel availability at various locations.",
+    "Asphalt Distributer": "Sprays hot asphalt binder for road resurfacing and maintenance. Provides uniform application of asphalt binder for surface treatments. Essential for chip seal applications, road resurfacing, and pavement preservation. Critical for road maintenance programs and extending pavement life through proper surface treatment applications.",
+    "Low bed": "Low-profile flatbed trailer for transporting heavy machinery and equipment. Designed to carry oversized and heavy construction equipment safely. Essential for equipment mobilization between project sites. Critical for transporting excavators, bulldozers, cranes, and other heavy construction machinery that cannot be driven on public roads.",
+    "Low bed Trailer": "Specialized low trailer for oversized construction equipment transport. Provides maximum load capacity with minimal ground clearance. Essential for moving large construction equipment safely. Critical for equipment logistics in construction projects requiring transportation of heavy and oversized machinery between sites.",
+    "High bed trailer": "Raised trailer bed for transporting tall equipment and structures. Designed to accommodate equipment with significant height requirements. Essential for transporting tall construction equipment and structures. Critical for moving equipment like mobile cranes, drilling rigs, and other tall machinery that requires elevated transport platforms.",
+    "Mobile Crane": "Truck-mounted crane for lifting and moving heavy materials and equipment. Provides mobility combined with significant lifting capacity. Essential for material placement, equipment installation, and heavy lifting operations. Critical for construction projects requiring lifting of heavy materials, structural components, and equipment positioning.",
+    "Cargo Truck": "Standard cargo vehicle for transporting construction supplies and tools. Provides reliable transportation for construction materials and equipment. Essential for material supply chains and equipment logistics. Critical for maintaining construction site operations through consistent delivery of supplies, tools, and materials needed for project execution.",
+    "Cargo Crane": "Truck with crane attachment for loading and unloading cargo. Combines transportation and material handling capabilities efficiently. Essential for projects requiring self-sufficient material handling. Critical for construction operations needing both transport and lifting capabilities, reducing dependency on separate crane equipment for loading and unloading operations.",
+    "Water Well Drilling rig": "Specialized equipment for drilling water wells and boreholes. Provides water access for construction sites and communities. Essential for water supply development and site water access. Critical for construction projects in remote locations requiring water wells, geotechnical investigation drilling, and water resource development for construction and community needs.",
+    "Shop Truck": "Mobile workshop truck for on-site equipment maintenance and repairs. Provides essential maintenance services directly at construction sites. Essential for minimizing equipment downtime and maintaining operational efficiency. Critical for construction projects requiring on-site equipment maintenance, reducing equipment downtime, and ensuring continuous project progress through timely equipment repairs.",
+    "Fork lift": "Material handling equipment for lifting and moving pallets and heavy items. Provides efficient material handling in warehouses and construction sites. Essential for loading, unloading, and positioning materials. Critical for construction site material management, warehouse operations, and efficient handling of palletized materials and heavy items in construction and logistics operations.",
+    "Farm Truck": "Agricultural truck adapted for construction site material transport. Provides versatile material transportation for various construction needs. Essential for flexible material handling in construction operations. Critical for construction projects requiring adaptable material transport solutions and efficient movement of construction materials and supplies across project sites.",
+    "Automobile": "Passenger vehicles for staff and site management transportation. Provides essential mobility for project management and supervision. Essential for site visits, inspections, and project coordination. Critical for construction project management, allowing supervisors and managers to efficiently move between project locations, conduct site inspections, and coordinate construction activities.",
+    "Bus Passenger": "Bus for transporting workers and personnel to construction sites. Provides essential workforce transportation for construction operations. Essential for moving construction crews to and from project sites. Critical for large construction projects requiring transportation of significant numbers of workers, ensuring reliable crew transportation and maintaining project schedules.",
+    "Midi Bus": "Medium-sized bus for crew transportation. Provides efficient transportation for construction crews. Essential for projects requiring regular crew movement. Critical for construction operations needing reliable crew transportation, ensuring workers arrive on time and maintaining project productivity through consistent workforce availability.",
+    "Station Wagon": "Utility vehicle for site supervisors and material transport. Provides versatile transportation for personnel and light materials. Essential for project management and light material handling. Critical for construction site operations requiring flexible transportation for supervisors, tools, and light materials, supporting efficient project management and site operations.",
+    "Double Cabin": "Pickup truck with extended cab for transporting crew and tools. Provides practical solution for crew and equipment transportation. Essential for projects requiring combined personnel and tool transport. Critical for construction operations needing efficient transportation of small crews with tools and equipment, supporting flexible and responsive project execution.",
+    "Single Cabin": "Standard pickup truck for light material and tool transportation. Provides essential utility transportation for construction operations. Essential for site logistics and material delivery. Critical for construction projects requiring reliable transportation of tools, light materials, and equipment, supporting efficient site operations and material logistics.",
   };
-  return descMap[name] || "Construction equipment for various site operations.";
+  return descMap[name] || "Construction equipment for various site operations. Essential for maintaining project schedules and operational efficiency in construction and infrastructure development projects.";
 };
 
 // --- Equipment Command Center Data - Aggregated by Category ---
@@ -200,6 +200,9 @@ const CommandCenterSection = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const carouselRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeft, setScrollLeft] = useState(0);
 
   // Filter categories based on search
   const filteredCategories = equipmentCategories.filter(cat =>
@@ -393,12 +396,6 @@ const CommandCenterSection = () => {
                   className="absolute inset-0 space-y-5"
                 >
                     <div className="space-y-2">
-                      <div className="flex items-center gap-3">
-                      <div className={`w-3 h-3 rounded-full ${statusColor} animate-pulse shadow-[0_0_10px_${statusColor.replace('bg-', '')}]`} />
-                        <span className="text-sm font-bold tracking-widest uppercase text-muted-foreground">
-                        {utilization >= 80 ? '🚀 OPTIMAL PERFORMANCE' : utilization >= 60 ? '✅ GOOD STATUS' : utilization >= 40 ? '⚠️ NEEDS ATTENTION' : '🔴 CRITICAL ALERT'}
-                        </span>
-                      </div>
                     <h3 className="text-3xl md:text-4xl font-bold text-foreground tracking-tight leading-tight">{currentCategory.name}</h3>
                     <p className="text-[#70c82a] font-mono text-base">Fleet Category #{currentCategory.id} of {equipmentCategories.length}</p>
                     <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed italic mb-4">{getEquipmentDescription(currentCategory.name)}</p>
@@ -467,33 +464,14 @@ const CommandCenterSection = () => {
                       </motion.div>
                     </div>
 
-                    {/* Additional Status Info */}
-                    <div className="grid grid-cols-3 gap-2 pt-3 border-t border-border dark:border-zinc-800">
-                      <div className="text-center p-2 rounded-lg bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800">
-                        <Clock className="w-4 h-4 text-amber-400 mx-auto mb-1" />
-                        <div className="text-base font-bold text-foreground mb-0.5">{currentCategory.idle}</div>
-                        <p className="text-[9px] text-muted-foreground leading-tight">Standby / Idle</p>
-                      </div>
-                      <div className="text-center p-2 rounded-lg bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800">
-                        <Wrench className="w-4 h-4 text-orange-400 mx-auto mb-1" />
-                        <div className="text-base font-bold text-foreground mb-0.5">{currentCategory.ur}</div>
-                        <p className="text-[9px] text-muted-foreground leading-tight">Under Repair</p>
-                      </div>
-                      <div className="text-center p-2 rounded-lg bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800">
-                        <TrendingUp className="w-4 h-4 text-[#70c82a] mx-auto mb-1" />
-                        <div className="text-base font-bold text-foreground mb-0.5">
-                          {currentCategory.hr + currentCategory.ui + currentCategory.rfd + currentCategory.afd}
-                        </div>
-                        <p className="text-[9px] text-muted-foreground leading-tight">In Transit / Other</p>
-                      </div>
-                    </div>
+                  
                 </motion.div>
               </AnimatePresence>
             </div>
           </div>
 
           {/* Scrollable Image Carousel - Small Images with Names */}
-          <div className="mt-12 pt-8 border-t border-border dark:border-zinc-800">
+          <div className="mt-6 pt-4 border-t border-border dark:border-zinc-800">
             {/* Search Bar */}
             <div className="mb-6 flex justify-center">
               <div className="relative w-full max-w-md">
@@ -530,8 +508,27 @@ const CommandCenterSection = () => {
 
               <div 
                 ref={carouselRef}
-                className="overflow-x-auto overflow-y-hidden scrollbar-hide pb-4 px-12"
+                className="overflow-x-auto overflow-y-hidden scrollbar-hide pb-4 px-12 cursor-grab active:cursor-grabbing select-none"
                 style={{ scrollBehavior: 'smooth' }}
+                onMouseDown={(e) => {
+                  if (!carouselRef.current) return;
+                  setIsDragging(true);
+                  setStartX(e.pageX - carouselRef.current.offsetLeft);
+                  setScrollLeft(carouselRef.current.scrollLeft);
+                }}
+                onMouseLeave={() => {
+                  setIsDragging(false);
+                }}
+                onMouseUp={() => {
+                  setIsDragging(false);
+                }}
+                onMouseMove={(e) => {
+                  if (!isDragging || !carouselRef.current) return;
+                  e.preventDefault();
+                  const x = e.pageX - carouselRef.current.offsetLeft;
+                  const walk = (x - startX) * 2; // Scroll speed multiplier
+                  carouselRef.current.scrollLeft = scrollLeft - walk;
+                }}
               >
                 <div className="flex gap-3 min-w-max justify-center">
                   {displayCategories.map((category, index) => {
@@ -2767,10 +2764,10 @@ export default function LandingPage() {
           <h4 className="font-semibold text-foreground">Follow Us</h4>
           <div className="space-y-2">
             {[
-              { name: "Facebook", icon: Facebook, href: "#" },
-              { name: "Twitter", icon: Twitter, href: "#" },
-              { name: "LinkedIn", icon: Linkedin, href: "#" },
-              { name: "Website", icon: Globe, href: "#" }
+              { name: "Website", icon: Globe, href: "http://ecwc.gov.et/" },
+              { name: "LinkedIn", icon: Linkedin, href: "https://www.linkedin.com/company/ethiopian-construction-work-corporation/about/" },
+              { name: "Telegram", icon: Twitter, href: "https://t.me/s/ECWCCOM" },
+              { name: "Facebook", icon: Facebook, href: "https://web.facebook.com/EthiopianConstructionWorksCorporation" }
             ].map((social, i) => (
               <Link
                 key={i}

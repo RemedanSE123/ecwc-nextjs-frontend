@@ -76,22 +76,22 @@ export default function SignInPage() {
       </div>
 
       {/* Sign In Form */}
-      <div className="flex-1 flex items-center justify-center px-4 py-4 bg-gradient-to-br from-[#70c82a]/5 via-background to-background dark:from-[#70c82a]/10 overflow-y-auto">
+      <div className="flex-1 flex items-center justify-center px-4 py-8 bg-gradient-to-br from-[#70c82a]/5 via-background to-background dark:from-[#70c82a]/10 overflow-y-auto">
         <motion.div
           initial="initial"
           animate="animate"
           variants={fadeInUp}
           className="w-full max-w-md"
         >
-          <Card className="border-0 shadow-2xl bg-gradient-to-br from-background/95 via-background/90 to-muted/30 dark:from-zinc-950/95 dark:via-zinc-950/90 dark:to-zinc-900/30 relative overflow-hidden border border-[#70c82a]/20 backdrop-blur-xl">
+          <Card className="border-0 shadow-2xl bg-gradient-to-br from-background/95 via-background/90 to-muted/30 dark:from-zinc-950/95 dark:via-zinc-950/90 dark:to-zinc-900/30 relative overflow-visible border border-[#70c82a]/20 backdrop-blur-xl">
             <div className="absolute inset-0 bg-gradient-to-br from-[#70c82a]/10 via-[#70c82a]/5 to-[#5aa022]/10 dark:from-[#70c82a]/15 dark:via-[#70c82a]/10 dark:to-[#5aa022]/15" />
             <div className="absolute top-0 right-0 w-64 h-64 bg-[#70c82a]/5 rounded-full blur-3xl"></div>
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#5aa022]/5 rounded-full blur-3xl"></div>
-            <CardHeader className="space-y-2 relative z-10 pb-4">
+            <CardHeader className="space-y-2 relative z-10 pb-6 overflow-visible">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
                 {/* Left Section - Logo */}
                 <div className="flex justify-center md:justify-start">
-                  <div className="relative">
+                  <Link href="/" className="relative cursor-pointer hover:opacity-80 transition-opacity">
                     <div className="absolute inset-0 bg-[#70c82a]/10 rounded-full blur-xl"></div>
                     <Image
                       src="/ecwc png logo.png"
@@ -103,16 +103,16 @@ export default function SignInPage() {
                       unoptimized
                       priority
                     />
-                  </div>
+                  </Link>
                 </div>
                 
                 {/* Right Section - Title and Description */}
-                <div className="text-center md:text-left space-y-3 relative">
-                  <div className="space-y-2">
-                    <CardTitle className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-[#70c82a] via-[#5aa022] to-[#70c82a] bg-clip-text text-transparent">
+                <div className="text-center md:text-left space-y-3 relative overflow-visible">
+                  <div className="space-y-2 overflow-visible">
+                    <CardTitle className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-[#70c82a] via-[#5aa022] to-[#70c82a] bg-clip-text text-transparent pb-2 leading-tight overflow-visible">
                       Sign In
                     </CardTitle>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
+                    <p className="text-sm text-muted-foreground leading-relaxed mt-2">
                       Welcome back!
                     </p>
                   </div>
@@ -210,8 +210,8 @@ export default function SignInPage() {
                 </Button>
               </form>
             </CardContent>
-            <CardFooter className="flex flex-col space-y-4 relative z-10 pt-4">
-              <div className="text-sm text-muted-foreground text-center">
+            <CardFooter className="flex flex-col space-y-4 relative z-10 pt-4 pb-8 mb-2">
+              <div className="text-sm text-muted-foreground text-center leading-normal">
                 Don't have an account?{" "}
                 <Link href="/sign-up" className="text-[#70c82a] hover:underline font-medium">
                   Sign up

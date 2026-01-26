@@ -668,15 +668,15 @@ export default function SignUpPage() {
             currentStep === 3 ? 'max-w-xl' : 'max-w-3xl'
           }`}
         >
-          <Card className="border-0 shadow-2xl bg-gradient-to-br from-background/95 via-background/90 to-muted/30 dark:from-zinc-950/95 dark:via-zinc-950/90 dark:to-zinc-900/30 relative overflow-hidden border border-[#70c82a]/20 backdrop-blur-xl">
+          <Card className="border-0 shadow-2xl bg-gradient-to-br from-background/95 via-background/90 to-muted/30 dark:from-zinc-950/95 dark:via-zinc-950/90 dark:to-zinc-900/30 relative overflow-visible border border-[#70c82a]/20 backdrop-blur-xl">
             <div className="absolute inset-0 bg-gradient-to-br from-[#70c82a]/10 via-[#70c82a]/5 to-[#5aa022]/10 dark:from-[#70c82a]/15 dark:via-[#70c82a]/10 dark:to-[#5aa022]/15" />
             <div className="absolute top-0 right-0 w-64 h-64 bg-[#70c82a]/5 rounded-full blur-3xl"></div>
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#5aa022]/5 rounded-full blur-3xl"></div>
-            <CardHeader className="space-y-2 relative z-10 pb-4">
+            <CardHeader className="space-y-2 relative z-10 pb-3 overflow-visible">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
                 {/* Left Section - Logo */}
                 <div className="flex justify-center md:justify-start">
-                  <div className="relative">
+                  <Link href="/" className="relative cursor-pointer hover:opacity-80 transition-opacity">
                     <div className="absolute inset-0 bg-[#70c82a]/10 rounded-full blur-xl"></div>
                     <Image
                       src="/ecwc png logo.png"
@@ -688,29 +688,29 @@ export default function SignUpPage() {
                       unoptimized
                       priority
                     />
-                  </div>
+                  </Link>
                 </div>
                 
                 {/* Right Section - Title and Description */}
-                <div className="text-center md:text-left space-y-3 relative">
-                  <div className="space-y-2">
-                    <CardTitle className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-[#70c82a] via-[#5aa022] to-[#70c82a] bg-clip-text text-transparent">
+                <div className="text-center md:text-left space-y-3 relative overflow-visible">
+                  <div className="space-y-2 overflow-visible">
+                    <CardTitle className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-[#70c82a] via-[#5aa022] to-[#70c82a] bg-clip-text text-transparent pb-2 leading-tight overflow-visible">
                       Sign Up
                     </CardTitle>
                     {currentStep !== 3 && (
-                      <p className="text-sm text-muted-foreground leading-relaxed">
+                      <p className="text-sm text-muted-foreground leading-relaxed mt-2">
                         Create your account to access the PEMS
                       </p>
                     )}
                   </div>
                   {/* Decorative horizontal line - left to right */}
-                  <div className="relative mt-4 pt-4">
+                  <div className="relative mt-2">
                     <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#70c82a] via-[#5aa022] to-[#70c82a]"></div>
                   </div>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="relative z-10 py-3 pb-4">
+            <CardContent className="relative z-10 py-2 pb-3">
               {renderStepIndicator()}
               
               <form onSubmit={(e) => {
@@ -780,8 +780,8 @@ export default function SignUpPage() {
                 </div>
               </form>
             </CardContent>
-            <CardFooter className="flex flex-col space-y-2 relative z-10 pt-4 pb-5">
-              <div className="text-sm text-muted-foreground text-center">
+            <CardFooter className="flex flex-col space-y-2 relative z-10 pt-4 pb-8 mb-2">
+              <div className="text-sm text-muted-foreground text-center leading-normal">
                 Already have an account?{" "}
                 <Link href="/sign-in" className="text-[#70c82a] hover:underline font-medium">
                   Sign in
