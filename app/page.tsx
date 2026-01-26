@@ -69,7 +69,8 @@ import {
   Menu,
   Facebook,
   Twitter,
-  Linkedin
+  Linkedin,
+  Send
 }  from "lucide-react"
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -2766,7 +2767,7 @@ export default function LandingPage() {
             {[
               { name: "Website", icon: Globe, href: "http://ecwc.gov.et/" },
               { name: "LinkedIn", icon: Linkedin, href: "https://www.linkedin.com/company/ethiopian-construction-work-corporation/about/" },
-              { name: "Telegram", icon: Twitter, href: "https://t.me/s/ECWCCOM" },
+              { name: "Telegram", icon: Send, href: "https://t.me/s/ECWCCOM" },
               { name: "Facebook", icon: Facebook, href: "https://web.facebook.com/EthiopianConstructionWorksCorporation" }
             ].map((social, i) => (
               <Link

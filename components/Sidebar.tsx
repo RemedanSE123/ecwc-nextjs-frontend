@@ -107,7 +107,7 @@ export default function Sidebar({ isCollapsed = false, onToggleCollapse }: Sideb
   };
 
   return (
-    <div className={`${isCollapsed ? 'w-14' : 'w-48'} bg-gradient-to-b from-[#16A34A] via-[#15803D] to-[#166534] text-white flex flex-col h-screen transition-all duration-300 ease-in-out shadow-xl relative overflow-hidden font-[var(--font-dm-sans)]`}>
+    <div className={`${isCollapsed ? 'w-16' : 'w-56'} bg-gradient-to-b from-[#16A34A] via-[#15803D] to-[#166534] text-white flex flex-col h-screen transition-all duration-300 ease-in-out shadow-xl relative overflow-hidden font-[var(--font-dm-sans)]`}>
       
       {/* Subtle Dot Pattern (Texture) */}
       <div className="absolute inset-0 opacity-5">
@@ -118,16 +118,16 @@ export default function Sidebar({ isCollapsed = false, onToggleCollapse }: Sideb
       <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
       
       {/* Header Section */}
-      <div className="h-14 border-b border-white/10 flex items-center relative z-10">
-        {/* Header Glow Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white/[0.08] via-transparent to-white/[0.03]"></div>
-        <div className="relative w-full h-full px-3 flex items-center">
+      <div className="h-16 border-b border-white/10 flex items-center relative z-10">
+        {/* Dark Header Background */}
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="relative w-full h-full px-4 flex items-center">
           {!isCollapsed && (
             <div className="flex flex-col">
-              <span className="text-[14px] font-extrabold text-white leading-tight tracking-wide drop-shadow-sm">
+              <span className="text-[16px] font-extrabold text-white leading-tight tracking-wide drop-shadow-md">
                 ECWC PEMS
               </span>
-              <span className="text-[9px] text-green-100 leading-tight">
+              <span className="text-[10px] text-green-200/80 leading-tight">
                 Plant Equipment Management System
               </span>
             </div>
@@ -138,21 +138,21 @@ export default function Sidebar({ isCollapsed = false, onToggleCollapse }: Sideb
         {onToggleCollapse && (
           <button
             onClick={onToggleCollapse}
-            className="absolute top-1/2 -translate-y-1/2 right-1.5 p-1 rounded-md hover:bg-white/10 transition-all duration-200"
+            className="absolute top-1/2 -translate-y-1/2 right-2 p-1.5 rounded-md hover:bg-white/10 transition-all duration-200"
             title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             {isCollapsed ? (
-              <ChevronsRight className="w-3.5 h-3.5 text-white/70" />
+              <ChevronsRight className="w-4 h-4 text-white/70" />
             ) : (
-              <ChevronsLeft className="w-3.5 h-3.5 text-white/70" />
+              <ChevronsLeft className="w-4 h-4 text-white/70" />
             )}
           </button>
         )}
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-2 py-3 relative z-10">
-        <ul className="space-y-0.5">
+      <nav className="flex-1 overflow-y-auto px-3 py-4 relative z-10">
+        <ul className="space-y-1">
           {navigation.map((item) => {
             const hasChildren = item.children && item.children.length > 0;
             const isExpanded = expandedItems.includes(item.name) && !isCollapsed;
@@ -165,23 +165,23 @@ export default function Sidebar({ isCollapsed = false, onToggleCollapse }: Sideb
                   <>
                     <button
                       onClick={(e) => handleItemClick(e, true, item.name)}
-                      className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} px-2 py-2 rounded-lg text-[11px] transition-all duration-200 ${
+                      className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} px-3 py-2.5 rounded-lg text-[13px] transition-all duration-200 ${
                         itemIsActive
                           ? 'bg-green-700/50 text-white font-semibold'
                           : 'text-white hover:bg-white/10'
                       }`}
                       title={isCollapsed ? item.name : undefined}
                     >
-                      <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-2'}`}>
-                        <Icon className="w-3.5 h-3.5" />
+                      <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
+                        <Icon className="w-4 h-4" />
                         {!isCollapsed && <span>{item.name}</span>}
                       </div>
                       {!isCollapsed && (
-                        <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${isExpanded ? '' : '-rotate-90'}`} />
+                        <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? '' : '-rotate-90'}`} />
                       )}
                     </button>
                     {isExpanded && item.children && !isCollapsed && (
-                      <ul className="mt-0.5 ml-2 space-y-0.5 border-l border-white/15 pl-2">
+                      <ul className="mt-1 ml-3 space-y-1 border-l border-white/15 pl-3">
                         {item.children.map((child) => {
                           const ChildIcon = child.icon;
                           const childIsActive = isActive(child.href);
@@ -190,13 +190,13 @@ export default function Sidebar({ isCollapsed = false, onToggleCollapse }: Sideb
                               <Link
                                 href={child.href}
                                 onClick={handleChildClick}
-                                className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-[10px] transition-all duration-200 ${
+                                className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-[12px] transition-all duration-200 ${
                                   childIsActive
                                     ? 'bg-green-600/40 text-white font-medium'
                                     : 'text-white hover:bg-white/10'
                                 }`}
                               >
-                                <ChildIcon className="w-3 h-3" />
+                                <ChildIcon className="w-3.5 h-3.5" />
                                 <span>{child.name}</span>
                               </Link>
                             </li>
@@ -209,14 +209,14 @@ export default function Sidebar({ isCollapsed = false, onToggleCollapse }: Sideb
                   <Link
                     href={item.href}
                     onClick={handleLinkClick}
-                    className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-2'} px-2 py-2 rounded-lg text-[11px] transition-all duration-200 ${
+                    className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2.5 rounded-lg text-[13px] transition-all duration-200 ${
                       itemIsActive
                         ? 'bg-green-700/50 text-white font-semibold'
                         : 'text-white hover:bg-white/10'
                     }`}
                     title={isCollapsed ? item.name : undefined}
                   >
-                    <Icon className="w-3.5 h-3.5" />
+                    <Icon className="w-4 h-4" />
                     {!isCollapsed && <span>{item.name}</span>}
                   </Link>
                 )}
@@ -228,12 +228,12 @@ export default function Sidebar({ isCollapsed = false, onToggleCollapse }: Sideb
 
       {/* Footer */}
       {!isCollapsed && (
-        <div className="px-2 py-3 border-t border-white/15 relative z-10">
-          <div className="bg-white/10 rounded-lg px-2 py-2 backdrop-blur-sm text-center">
-            <p className="text-[9px] font-normal text-white leading-relaxed tracking-wide">
+        <div className="px-3 py-3 border-t border-white/20 relative z-10">
+          <div className="text-center">
+            <p className="text-[11px] text-white/90 leading-relaxed">
               ኢትዮጵያ ኮንስትራክሽን ስራዎች ኮርፖሬሽን
             </p>
-            <p className="text-[8px] font-medium text-green-200 leading-relaxed mt-0.5">
+            <p className="text-[10px] text-green-200/80 leading-relaxed">
               Ethiopian Construction Works Corp.
             </p>
           </div>
