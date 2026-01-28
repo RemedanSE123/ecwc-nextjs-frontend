@@ -23,6 +23,10 @@ import {
 import { useState } from 'react';
 import Image from 'next/image';
 
+function BrIcon({ className }: { className?: string }) {
+  return <span className={className} style={{ fontWeight: 700, fontSize: '0.75rem' }}>Br</span>;
+}
+
 interface NavItem {
   name: string;
   href: string;
@@ -37,13 +41,26 @@ const navigation: NavItem[] = [
     href: '/equipment',
     icon: Wrench,
     children: [
-      { name: 'Equipment Dashboard', href: '/equipment/dashboard', icon: LayoutDashboard },
+      { name: 'Dashboard', href: '/equipment/dashboard', icon: LayoutDashboard },
       { name: 'Equipment List', href: '/equipment', icon: Wrench },
      
       { name: 'Cargo Truck List', href: '/cargo-truck', icon: Truck },
       { name: 'Light Vehicle List', href: '/light-vehicle', icon: Car },
       { name: 'Detailed Reports', href: '/equipment/reports', icon: FileText },
   
+    ],
+  },
+  {
+    name: 'Forms',
+    href: '/forms',
+    icon: ClipboardList,
+    children: [
+      { name: 'Dry Load TS', href: '/forms/dry-cargo-timesheet', icon: FileText },
+      { name: 'Machinery TS', href: '/forms/construction-equipment-timesheet', icon: FileText },
+      { name: 'Dump Truck TS', href: '/forms/dump-truck-timesheet', icon: FileText },
+      { name: 'Light Vehicle TS', href: '/forms/light-vehicle-timesheet', icon: FileText },
+      { name: 'Wagon Drill TS', href: '/forms/wagon-drill-timesheet', icon: FileText },
+      { name: 'Rate Reference', href: '/rates', icon: BrIcon },
     ],
   },
   { name: 'Maintenance', href: '/maintenance', icon: FileText },
@@ -59,7 +76,7 @@ interface SidebarProps {
 
 export default function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps) {
   const pathname = usePathname();
-  const [expandedItems, setExpandedItems] = useState<string[]>(['Equipment']);
+  const [expandedItems, setExpandedItems] = useState<string[]>(['Equipment', 'Forms']);
 
   const toggleExpanded = (name: string) => {
     setExpandedItems((prev) =>

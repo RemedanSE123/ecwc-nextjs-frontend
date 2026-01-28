@@ -2691,7 +2691,7 @@ export default function LandingPage() {
       </section>
 
     {/* Footer */}
-<footer className="bg-muted dark:bg-black py-12">
+<footer className="bg-muted dark:bg-black pt-12 pb-4">
   <div className="container mx-auto px-4 lg:px-8 text-foreground">
     <div className="grid grid-cols-1 md:grid-cols-5 gap-8 mb-8">
       {/* Logo Section */}
@@ -2762,7 +2762,7 @@ export default function LandingPage() {
           </ul>
         </div>
         <div className="space-y-4">
-          <h4 className="font-semibold text-foreground">Follow Us</h4>
+          <h4 className="font-semibold text-foreground">Socials</h4>
           <div className="space-y-2">
             {[
               { name: "Website", icon: Globe, href: "http://ecwc.gov.et/" },
@@ -2788,7 +2788,7 @@ export default function LandingPage() {
 
     <div className="pt-8 border-t border-border dark:border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4">
       <p className="text-sm text-muted-foreground">
-        © 2025 ECWC Plant Equipment Management System. Internal use only.
+        © 2026 ECWC Plant Equipment Management System. Internal use only.
       </p>
       <div className="flex items-center gap-4">
         <ThemeToggle />
@@ -2799,6 +2799,14 @@ export default function LandingPage() {
           Terms of Service
         </Button>
       </div>
+    </div>
+
+    {/* Tagline and year below footer bar */}
+    <div className="pt-6 pb-0 border-t border-border dark:border-gray-800 mt-4 text-center space-y-2">
+      <p className="text-xs sm:text-sm text-muted-foreground font-medium tracking-wide mb-0">
+        <span className="text-base sm:text-lg font-bold text-foreground">E</span>XECUTION | <span className="text-base sm:text-lg font-bold text-foreground">C</span>OMMERCIAL AWARENESS | <span className="text-base sm:text-lg font-bold text-foreground">W</span>INNING LEADERSHIP | <span className="text-base sm:text-lg font-bold text-foreground">C</span>LEAR STANDARDS & PROCEDURES
+      </p>
+     
     </div>
   </div>
 </footer>
