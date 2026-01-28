@@ -1,14 +1,16 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import Image from "next/image"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Download, Printer } from "lucide-react"
+import html2pdf from "html2pdf.js"
 
 export default function LightVehicleTimeSheet() {
+  const pdfRef = useRef<HTMLDivElement>(null)
   const [formData, setFormData] = useState({
     vehicleEquipmentType: "",
     serialGoNumber: "",
@@ -38,51 +40,86 @@ export default function LightVehicleTimeSheet() {
   })
 
   const handlePrint = () => window.print()
-  const lineInput = "border-0 border-b border-black rounded-none px-0 py-1 h-7 text-[14px] bg-transparent focus-visible:ring-0 focus-visible:border-b-2 focus-visible:border-black"
+
+  const handleDownloadPDF = async () => {
+    if (!pdfRef.current) return
+    
+    const element = pdfRef.current
+    const opt = {
+      margin: [10, 10, 10, 10],
+      filename: 'light-vehicle-timesheet.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        letterRendering: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+    }
+    
+    await html2pdf().set(opt).from(element).save()
+  }
+
+  const lineInput = "border-0 border-b-2 border-black rounded-none px-0 py-1 h-7 min-h-[1.75rem] text-[15px] font-medium text-black bg-white focus-visible:ring-0 focus-visible:border-b-2 focus-visible:border-black print:text-black print:bg-white print:min-h-[1.25rem] [color-scheme:light]"
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-4 print:p-6 print:space-y-2 print:scale-[0.95] print:font-[Arial]">
+    <div id="form-print-area" className="max-w-5xl mx-auto p-6 space-y-4 print:max-w-[210mm] print:mx-0 print:p-0 print:space-y-2 print:font-[Arial]">
       <div className="flex justify-end gap-2 print:hidden mb-4">
         <Button variant="outline" onClick={handlePrint} className="shadow-sm">
           <Printer className="h-4 w-4 mr-2" /> Print
         </Button>
-        <Button className="bg-ecwc-green hover:bg-ecwc-green-dark shadow-sm">
+        <Button onClick={handleDownloadPDF} className="bg-ecwc-green hover:bg-ecwc-green-dark shadow-sm">
           <Download className="h-4 w-4 mr-2" /> Download PDF
         </Button>
       </div>
 
-      <Card className="border-2 border-gray-300 shadow-lg print:shadow-none print:border-black">
-        <CardHeader className="border-b border-black pb-3">
-          <div className="grid grid-cols-3 items-center gap-4">
-            <div className="flex justify-start">
-              <div className="bg-ecwc-green p-3 rounded-lg border-2 border-ecwc-green-dark shadow-md relative h-32 w-48">
-                <Image src="/logo.png" alt="ECWC Logo" fill className="object-contain drop-shadow-sm" />
-              </div>
+      <div ref={pdfRef} className="w-full max-w-[210mm] mx-auto bg-white">
+        <Card className="border-2 border-gray-300 shadow-lg print:shadow-none print:border-black print:break-inside-avoid">
+        <CardHeader className="p-0 border-b-2 border-black">
+          <div className="grid grid-cols-12 border-2 border-black">
+            <div className="col-span-2 border-r-2 border-black flex items-center justify-center p-1.5 relative h-20">
+              <Image src="/ecwc png logo.png" alt="ECWC Logo" fill className="object-contain" />
             </div>
-            <div className="text-center leading-tight">
-              <p className="text-[15px] font-bold">ኢትየጵያ ኮንስትራክሽን ሥራዎች ኮርፖሬሽን</p>
-              <p className="text-[15px] font-bold">Ethiopian Construction and Works Corporation</p>
+            <div className="col-span-8 border-r-2 border-black flex flex-col items-center justify-center py-1.5 text-center">
+              <p className="text-[18px] font-bold">ኢትየጵያ ኮንስትራክሽን ሥራዎች ኮርፖሬሽን</p>
+              <p className="text-[10px] font-bold">ETHIOPIAN CONSTRUCTION WORKS CORPORATION</p>
             </div>
-            <div className="text-right text-[12px] leading-snug">
-              <p>LIGHT VEHICLE &amp; PUBLIC TRANSPORT TIME SHEET / የቀላል ተሽከርካሪና ህዝብ ትራንስፖርት ታይም ሺት</p>
-              <p><b>Document No:</b> CSF/EEC/CONSTR/PE/XXX</p>
-              <p><b>Issue No:</b> 1</p>
-              <p><b>Page No:</b> 1 of 1</p>
+            <div className="col-span-2 flex flex-col justify-center pl-2 text-[12px]">
+              <p><b>Document No.</b></p>
+              <p>OF/ECWC/xxx</p>
+            </div>
+            <div className="col-span-2 border-r-2 border-black flex flex-col items-center justify-center py-1 text-[12px] border-t border-black">
+              <p><b>Issue No.</b></p>
+              <p>1</p>
+            </div>
+            <div className="col-span-8 border-r-2 border-black flex flex-col items-center justify-center py-1 text-center border-t border-black">
+              <p className="text-[18px] font-bold">የቀላል ተሽከርካሪና ህዝብ ትራንስፖርት ታይም ሺት</p>
+              <p className="text-[10px] font-bold">LIGHT VEHICLE &amp; PUBLIC TRANSPORT TIME SHEET</p>
+            </div>
+            <div className="col-span-2 flex flex-col justify-center pl-2 text-[12px] border-t border-black">
+              <p><b>Page No.</b></p>
+              <p>1 of 1</p>
             </div>
           </div>
-          <h2 className="text-center text-lg font-bold mt-4 underline underline-offset-2">
-            LIGHT VEHICLE &amp; PUBLIC TRANSPORT TIME SHEET / የቀላል ተሽከርካሪና ህዝብ ትራንስፖርት ታይም ሺት
-          </h2>
         </CardHeader>
 
         <CardContent className="p-4 space-y-6">
           <div className="grid grid-cols-2 md:grid-cols-5 gap-6 border-b border-gray-300 pb-6">
             <div className="space-y-2">
-              <Label className="text-sm font-semibold">የተሽ/መሣሪያ ዓይነት / Vehicle/Equipment Type:</Label>
+              <Label className="flex flex-col text-[10px] leading-tight">
+                <span>የተሽ/መሣሪያ ዓይነት</span>
+                <span>Vehicle/Equipment Type:</span>
+              </Label>
               <Input className={lineInput} value={formData.vehicleEquipmentType} onChange={(e) => setFormData(prev => ({ ...prev, vehicleEquipmentType: e.target.value }))} />
             </div>
             <div className="space-y-2">
-              <Label className="text-sm font-semibold">ሠ/ሴ/ጎ/ቁጥር / Serial/Go Number:</Label>
+              <Label className="flex flex-col text-[10px] leading-tight">
+                <span>ሠ/ሴ/ጎ/ቁጥር</span>
+                <span>Serial/Go Number:</span>
+              </Label>
               <Input className={lineInput} value={formData.serialGoNumber} onChange={(e) => setFormData(prev => ({ ...prev, serialGoNumber: e.target.value }))} />
             </div>
             <div className="space-y-2">
@@ -90,7 +127,10 @@ export default function LightVehicleTimeSheet() {
               <Input className={lineInput} value={formData.vehicleEquipmentCapacity} onChange={(e) => setFormData(prev => ({ ...prev, vehicleEquipmentCapacity: e.target.value }))} />
             </div>
             <div className="space-y-2">
-              <Label className="text-sm font-semibold">የኦፕሬተር ሥም / Operator&apos;s Name:</Label>
+              <Label className="flex flex-col text-[10px] leading-tight">
+                <span>የኦፕሬተር ሥም</span>
+                <span>Operator&apos;s Name:</span>
+              </Label>
               <Input className={lineInput} value={formData.operatorName} onChange={(e) => setFormData(prev => ({ ...prev, operatorName: e.target.value }))} />
             </div>
             <div className="space-y-2">
@@ -100,17 +140,26 @@ export default function LightVehicleTimeSheet() {
           </div>
 
           <div className="space-y-2 border-b border-gray-300 pb-6">
-            <Label className="text-sm font-semibold">ቀን / Date:</Label>
+            <Label className="flex flex-col text-[10px] leading-tight">
+              <span>ቀን</span>
+              <span>Date:</span>
+            </Label>
             <Input type="date" className={lineInput} value={formData.date} onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))} />
           </div>
 
           <div className="space-y-4 border-b border-gray-300 pb-6">
             <h3 className="text-base font-bold">የስራ ሰዓታት / Working Hours</h3>
             <div className="space-y-3 border-b border-gray-200 pb-4">
-              <h4 className="text-sm font-semibold">ጠዋት / Morning</h4>
+              <h4 className="flex flex-col text-[10px] leading-tight font-semibold">
+                <span>ጠዋት</span>
+                <span>Morning</span>
+              </h4>
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label className="text-sm font-semibold">ሥራ የጀመረበት ሰዓት / Start Time:</Label>
+                  <Label className="flex flex-col text-[10px] leading-tight">
+                    <span>ሥራ የጀመረበት ሰዓት</span>
+                    <span>Start Time:</span>
+                  </Label>
                   <Input type="time" className={lineInput} value={formData.morningStartTime} onChange={(e) => setFormData(prev => ({ ...prev, morningStartTime: e.target.value }))} />
                 </div>
                 <div className="space-y-2">
@@ -123,7 +172,10 @@ export default function LightVehicleTimeSheet() {
               <h4 className="text-sm font-semibold">ከሰዓት / Afternoon</h4>
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label className="text-sm font-semibold">ሥራ የጀመረበት ሰዓት / Start Time:</Label>
+                  <Label className="flex flex-col text-[10px] leading-tight">
+                    <span>ሥራ የጀመረበት ሰዓት</span>
+                    <span>Start Time:</span>
+                  </Label>
                   <Input type="time" className={lineInput} value={formData.afternoonStartTime} onChange={(e) => setFormData(prev => ({ ...prev, afternoonStartTime: e.target.value }))} />
                 </div>
                 <div className="space-y-2">
@@ -133,10 +185,16 @@ export default function LightVehicleTimeSheet() {
               </div>
             </div>
             <div className="space-y-3">
-              <h4 className="text-sm font-semibold">ማታ / Evening</h4>
+              <h4 className="flex flex-col text-[10px] leading-tight font-semibold">
+                <span>ማታ</span>
+                <span>Evening</span>
+              </h4>
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label className="text-sm font-semibold">ሥራ የጀመረበት ሰዓት / Start Time:</Label>
+                  <Label className="flex flex-col text-[10px] leading-tight">
+                    <span>ሥራ የጀመረበት ሰዓት</span>
+                    <span>Start Time:</span>
+                  </Label>
                   <Input type="time" className={lineInput} value={formData.eveningStartTime} onChange={(e) => setFormData(prev => ({ ...prev, eveningStartTime: e.target.value }))} />
                 </div>
                 <div className="space-y-2">
@@ -149,7 +207,10 @@ export default function LightVehicleTimeSheet() {
 
           <div className="grid grid-cols-2 gap-6 border-b border-gray-300 pb-6">
             <div className="space-y-2">
-              <Label className="text-sm font-semibold">ጠቅላላ የተሰራ ሰዓት / Total Working Hours:</Label>
+              <Label className="flex flex-col text-[10px] leading-tight">
+                <span>ጠቅላላ የተሰራ ሰዓት</span>
+                <span>Total Working Hours:</span>
+              </Label>
               <Input className={lineInput} value={formData.totalWorkingHours} onChange={(e) => setFormData(prev => ({ ...prev, totalWorkingHours: e.target.value }))} />
             </div>
             <div className="space-y-2">
@@ -162,11 +223,17 @@ export default function LightVehicleTimeSheet() {
             <h3 className="text-base font-bold">ሥራ ያልሰራበት (Idle) / Idle time</h3>
             <div className="grid grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label className="text-sm font-semibold">ጠቅላላ ሠዓት / Total Hours:</Label>
+                <Label className="flex flex-col text-[10px] leading-tight">
+                  <span>ጠቅላላ ሠዓት</span>
+                  <span>Total Hours:</span>
+                </Label>
                 <Input className={lineInput} value={formData.idleHours} onChange={(e) => setFormData(prev => ({ ...prev, idleHours: e.target.value }))} />
               </div>
               <div className="space-y-2">
-                <Label className="text-sm font-semibold">ምክንያት / Reason:</Label>
+                <Label className="flex flex-col text-[10px] leading-tight">
+                  <span>ምክንያት</span>
+                  <span>Reason:</span>
+                </Label>
                 <Input className={lineInput} value={formData.idleReason} onChange={(e) => setFormData(prev => ({ ...prev, idleReason: e.target.value }))} />
               </div>
             </div>
@@ -186,13 +253,19 @@ export default function LightVehicleTimeSheet() {
               <Input className={lineInput} value={formData.kmReadingOrEngineHours} onChange={(e) => setFormData(prev => ({ ...prev, kmReadingOrEngineHours: e.target.value }))} />
             </div>
             <div className="space-y-2">
-              <Label className="text-sm font-semibold">የቀዳው ነዳጅ /ሊትር/ / Fuel dispensed (Liter):</Label>
+              <Label className="flex flex-col text-[10px] leading-tight">
+                <span>የቀዳው ነዳጅ /ሊትር/</span>
+                <span>Fuel dispensed (Liter):</span>
+              </Label>
               <Input className={lineInput} value={formData.fuelLiters} onChange={(e) => setFormData(prev => ({ ...prev, fuelLiters: e.target.value }))} />
             </div>
           </div>
 
           <div className="space-y-2 border-b border-gray-300 pb-6">
-            <Label className="text-sm font-semibold">የሰራበት ፕሮጀክት / Project Worked On:</Label>
+            <Label className="flex flex-col text-[10px] leading-tight">
+              <span>የሰራበት ፕሮጀክት</span>
+              <span>Project Worked On:</span>
+            </Label>
             <Input className={lineInput} value={formData.projectWorkedOn} onChange={(e) => setFormData(prev => ({ ...prev, projectWorkedOn: e.target.value }))} />
           </div>
 
@@ -204,7 +277,10 @@ export default function LightVehicleTimeSheet() {
                 <Input className={lineInput} value={formData.operator} onChange={(e) => setFormData(prev => ({ ...prev, operator: e.target.value }))} />
               </div>
               <div className="space-y-2">
-                <Label className="text-sm font-semibold">ሣይት ኃላፊ/ተቆጣጣሪ / Site Manager/Supervisor:</Label>
+                <Label className="flex flex-col text-[10px] leading-tight">
+                  <span>ሣይት ኃላፊ/ተቆጣጣሪ</span>
+                  <span>Site Manager/Supervisor:</span>
+                </Label>
                 <Input className={lineInput} value={formData.siteManagerSupervisor} onChange={(e) => setFormData(prev => ({ ...prev, siteManagerSupervisor: e.target.value }))} />
               </div>
               <div className="space-y-2">
@@ -212,14 +288,20 @@ export default function LightVehicleTimeSheet() {
                 <Input className={lineInput} value={formData.workEquipmentBranchHead} onChange={(e) => setFormData(prev => ({ ...prev, workEquipmentBranchHead: e.target.value }))} />
               </div>
               <div className="space-y-2">
-                <Label className="text-sm font-semibold">ፕ/ሥራ አስኪያጅ / Project Manager:</Label>
+                <Label className="flex flex-col text-[10px] leading-tight">
+                  <span>ፕ/ሥራ አስኪያጅ</span>
+                  <span>Project Manager:</span>
+                </Label>
                 <Input className={lineInput} value={formData.projectManager} onChange={(e) => setFormData(prev => ({ ...prev, projectManager: e.target.value }))} />
               </div>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label className="text-sm font-semibold">ምርመራ / Inspection:</Label>
+            <Label className="flex flex-col text-[10px] leading-tight">
+              <span>ምርመራ</span>
+              <span>Inspection:</span>
+            </Label>
             <Input className={lineInput} value={formData.inspection} onChange={(e) => setFormData(prev => ({ ...prev, inspection: e.target.value }))} />
           </div>
 
@@ -228,6 +310,7 @@ export default function LightVehicleTimeSheet() {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   )
 }

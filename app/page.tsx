@@ -2786,6 +2786,13 @@ export default function LandingPage() {
       </div>
     </div>
 
+    {/* Motto - E,C,W,C in ECWC green - below footer links */}
+    <div className="pt-6 pb-4 text-center border-t border-border dark:border-gray-800">
+      <p className="text-xs sm:text-sm text-muted-foreground font-medium tracking-wide mb-0">
+        <span className="text-base sm:text-lg font-bold text-[#70c82a]">E</span>XECUTION | <span className="text-base sm:text-lg font-bold text-[#70c82a]">C</span>OMMERCIAL AWARENESS | <span className="text-base sm:text-lg font-bold text-[#70c82a]">W</span>INNING LEADERSHIP | <span className="text-base sm:text-lg font-bold text-[#70c82a]">C</span>LEAR STANDARDS & PROCEDURES
+      </p>
+    </div>
+
     <div className="pt-8 border-t border-border dark:border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4">
       <p className="text-sm text-muted-foreground">
         © 2026 ECWC Plant Equipment Management System. Internal use only.
@@ -2799,14 +2806,6 @@ export default function LandingPage() {
           Terms of Service
         </Button>
       </div>
-    </div>
-
-    {/* Tagline and year below footer bar */}
-    <div className="pt-6 pb-0 border-t border-border dark:border-gray-800 mt-4 text-center space-y-2">
-      <p className="text-xs sm:text-sm text-muted-foreground font-medium tracking-wide mb-0">
-        <span className="text-base sm:text-lg font-bold text-foreground">E</span>XECUTION | <span className="text-base sm:text-lg font-bold text-foreground">C</span>OMMERCIAL AWARENESS | <span className="text-base sm:text-lg font-bold text-foreground">W</span>INNING LEADERSHIP | <span className="text-base sm:text-lg font-bold text-foreground">C</span>LEAR STANDARDS & PROCEDURES
-      </p>
-     
     </div>
   </div>
 </footer>

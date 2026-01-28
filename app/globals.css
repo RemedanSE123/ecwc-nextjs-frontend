@@ -183,3 +183,54 @@
     box-shadow: 0 1px 3px hsl(240 12% 9% / 0.06);
   }
 }
+
+/* A4 form print / PDF: full page, no cut, data clearly visible */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    background: white !important;
+  }
+  .print-hide {
+    display: none !important;
+  }
+  main {
+    margin-top: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+  #form-print-area {
+    width: 100% !important;
+    max-width: 210mm !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    background: white !important;
+    font-family: Arial, sans-serif !important;
+    font-size: 11pt !important;
+    color: black !important;
+  }
+  #form-print-area input,
+  #form-print-area label,
+  #form-print-area p {
+    color: black !important;
+  }
+  #form-print-area input {
+    background: transparent !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* Form inputs: always show entered data clearly (screen + PDF capture) */
+#form-print-area input,
+[data-form-input] {
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827 !important;
+}
+#form-print-area input::placeholder {
+  color: #9ca3af;
+}

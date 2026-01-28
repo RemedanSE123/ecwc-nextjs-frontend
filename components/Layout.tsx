@@ -25,7 +25,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Sidebar */}
       <div
-        className={`fixed lg:fixed inset-y-0 left-0 z-50 transform ${
+        className={`print-hide fixed lg:fixed inset-y-0 left-0 z-50 transform ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } lg:translate-x-0 transition-transform duration-300 ease-in-out`}
       >
@@ -39,12 +39,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         {/* Mobile Menu Button */}
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="lg:hidden fixed top-2.5 left-2.5 z-30 p-1 bg-green-600 hover:bg-green-700 text-white rounded shadow-lg"
+          className="print-hide lg:hidden fixed top-2.5 left-2.5 z-30 p-1 bg-green-600 hover:bg-green-700 text-white rounded shadow-lg"
         >
           {sidebarOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
         </button>
 
-        <Header sidebarCollapsed={sidebarCollapsed} />
+        <div className="print-hide">
+          <Header sidebarCollapsed={sidebarCollapsed} />
+        </div>
         <main className="flex-1 overflow-y-auto mt-[3.675rem] p-[0.65625rem] sm:p-[0.7875rem] lg:p-[1.05rem] max-w-full bg-gray-50/50 dark:bg-gray-900/50">
           <div className="max-w-full overflow-x-hidden">
             {children}
