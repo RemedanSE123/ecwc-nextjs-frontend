@@ -7,18 +7,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { 
-  Wrench, 
-  TrendingUp, 
-  Shield, 
-  Clock, 
-  BarChart3, 
-  ArrowRight, 
-  Truck, 
-  Settings, 
-  FileText, 
-  Zap, 
-  Target, 
+import {
+  Wrench,
+  TrendingUp,
+  Shield,
+  Clock,
+  BarChart3,
+  ArrowRight,
+  Truck,
+  Settings,
+  FileText,
+  Zap,
+  Target,
   Award,
   Building,
   Users,
@@ -71,7 +71,7 @@ import {
   Twitter,
   Linkedin,
   Send
-}  from "lucide-react"
+} from "lucide-react"
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import { ThemeToggle } from "@/components/theme-toggle"
 import Image from "next/image"
@@ -132,12 +132,12 @@ const getEquipmentDescription = (name: string): string => {
 
 // --- Equipment Command Center Data - Aggregated by Category ---
 const equipmentCategories = [
-  { id: 1, name: "Dozer, Chain", op: 19, idle: 1, ur: 11, down: 2, hr: 16, ui: 0, rfd: 0, afd: 3, totalQty: 52, image: "/Dozer,-Chain.webp"},
-  { id: 2, name: "Motor Grader", op: 13, idle: 2, ur: 8, down: 0, hr: 6, ui: 0, rfd: 0, afd: 2, totalQty: 31, image: "/Motor-Grader.webp"},
-  { id: 3, name: "Excavator, Chain", op: 28, idle: 1, ur: 13, down: 5, hr: 13, ui: 0, rfd: 1, afd: 1, totalQty: 62, image: "/Excavator,-Chain.webp"},
+  { id: 1, name: "Dozer, Chain", op: 19, idle: 1, ur: 11, down: 2, hr: 16, ui: 0, rfd: 0, afd: 3, totalQty: 52, image: "/Dozer,-Chain.webp" },
+  { id: 2, name: "Motor Grader", op: 13, idle: 2, ur: 8, down: 0, hr: 6, ui: 0, rfd: 0, afd: 2, totalQty: 31, image: "/Motor-Grader.webp" },
+  { id: 3, name: "Excavator, Chain", op: 28, idle: 1, ur: 13, down: 5, hr: 13, ui: 0, rfd: 1, afd: 1, totalQty: 62, image: "/Excavator,-Chain.webp" },
   { id: 4, name: "Excavator, Wheel", op: 1, idle: 0, ur: 4, down: 2, hr: 4, ui: 0, rfd: 0, afd: 1, totalQty: 12, image: "/Excavator,-Wheel.webp" },
   { id: 5, name: "Loader, Chain", op: 1, idle: 0, ur: 2, down: 0, hr: 2, ui: 0, rfd: 0, afd: 0, totalQty: 5, image: "/Empty-Section.webp" },
-  { id: 6, name: "Loader, Wheel", op: 17, idle: 1, ur: 13, down: 3, hr: 25, ui: 0, rfd: 1, afd: 7, totalQty: 67, image: "/Loader,-Wheel.webp"},
+  { id: 6, name: "Loader, Wheel", op: 17, idle: 1, ur: 13, down: 3, hr: 25, ui: 0, rfd: 1, afd: 7, totalQty: 67, image: "/Loader,-Wheel.webp" },
   { id: 7, name: "Backhoe Loader", op: 3, idle: 0, ur: 0, down: 0, hr: 0, ui: 0, rfd: 1, afd: 0, totalQty: 4, image: "/Backhoe-Loader.webp" },
   { id: 8, name: "Roller D/Drum", op: 15, idle: 2, ur: 4, down: 0, hr: 5, ui: 0, rfd: 0, afd: 2, totalQty: 28, image: "/Roller-D.Drum.webp" },
   { id: 9, name: "Roller S/Drum", op: 6, idle: 2, ur: 3, down: 2, hr: 7, ui: 0, rfd: 0, afd: 0, totalQty: 20, image: "/Roller-S.Drum.webp" },
@@ -217,7 +217,7 @@ const CommandCenterSection = () => {
       // Find the actual index in the displayed categories
       const categoryId = equipmentCategories[index].id;
       const displayIndex = displayCategories.findIndex(cat => cat.id === categoryId);
-      
+
       if (displayIndex !== -1) {
         const itemWidth = 96; // w-24 = 96px (including gap)
         const scrollPosition = displayIndex * itemWidth - (carouselRef.current.clientWidth / 2) + (itemWidth / 2);
@@ -235,7 +235,7 @@ const CommandCenterSection = () => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
-    
+
     // Start auto-scroll - changes data every 8 seconds
     intervalRef.current = setInterval(() => {
       setCurrentIndex((prevIndex) => {
@@ -251,12 +251,12 @@ const CommandCenterSection = () => {
     const actualIndex = equipmentCategories.findIndex(cat => cat.id === displayCategories[index].id);
     setCurrentIndex(actualIndex);
     scrollToActive(actualIndex);
-    
+
     // Clear auto-scroll when user selects
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
-    
+
     // Resume auto-scroll after 10 seconds of user selection
     setTimeout(() => {
       startAutoScroll();
@@ -269,7 +269,7 @@ const CommandCenterSection = () => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
     }
-    
+
     if (direction === 'left') {
       const newIndex = (currentIndex - 1 + equipmentCategories.length) % equipmentCategories.length;
       setCurrentIndex(newIndex);
@@ -279,7 +279,7 @@ const CommandCenterSection = () => {
       setCurrentIndex(newIndex);
       scrollToActive(newIndex);
     }
-    
+
     // Resume auto-scroll after 10 seconds of user navigation
     setTimeout(() => {
       startAutoScroll();
@@ -301,14 +301,14 @@ const CommandCenterSection = () => {
   useEffect(() => {
     const carousel = carouselRef.current;
     if (!carousel) return;
-    
+
     const handleScroll = () => {
       // User is manually scrolling - don't change data
       // Data only changes on click/select or auto-scroll
     };
 
     carousel.addEventListener('scroll', handleScroll);
-    
+
     return () => {
       carousel.removeEventListener('scroll', handleScroll);
     };
@@ -323,7 +323,7 @@ const CommandCenterSection = () => {
       <div className="container mx-auto px-4 lg:px-8 relative z-10">
         {/* Cinematic Background Lighting */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <motion.div 
+          <motion.div
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] rounded-full blur-[120px] bg-[#70c82a]/10"
             animate={{
               opacity: [0.3, 0.6, 0.3],
@@ -335,276 +335,275 @@ const CommandCenterSection = () => {
             }}
           />
         </div>
-          <div className="mb-12">
-            <motion.h2 
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              className="text-4xl md:text-6xl font-bold text-foreground mb-2 tracking-tight"
-            >
-               <span className="text-[#70c82a]">Equipment Command Center</span>
-            </motion.h2>
-            <p className="text-muted-foreground text-lg md:text-xl font-medium">Every machine. Every detail. One intelligent system.</p>
-          </div>
+        <div className="mb-12">
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            className="text-4xl md:text-6xl font-bold text-foreground mb-2 tracking-tight"
+          >
+            <span className="text-[#70c82a]">Equipment Command Center</span>
+          </motion.h2>
+          <p className="text-muted-foreground text-lg md:text-xl font-medium">Every machine. Every detail. One intelligent system.</p>
+        </div>
 
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Left: Image Panel */}
-            <div className="relative h-[300px] md:h-[500px] flex items-center justify-center overflow-hidden">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentCategory.id}
-                  initial={{ opacity: 0, x: 100, scale: 0.85 }}
-                  animate={{ opacity: 1, x: 0, scale: 1 }}
-                  exit={{ opacity: 0, x: -100, scale: 0.85 }}
-                  transition={{ duration: 0.9, ease: [0.4, 0, 0.2, 1] }}
-                  className="absolute inset-0 flex items-center justify-center"
-                >
-                  <div
-                    className={`absolute inset-0 bg-gradient-to-tr ${
-                      statusColor === "bg-[#70c82a]"
-                        ? "from-[#70c82a]/20"
-                        : statusColor === "bg-amber-500"
-                          ? "from-amber-500/20"
-                          : "from-red-500/20"
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          {/* Left: Image Panel */}
+          <div className="relative h-[300px] md:h-[500px] flex items-center justify-center overflow-hidden">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentCategory.id}
+                initial={{ opacity: 0, x: 100, scale: 0.85 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: -100, scale: 0.85 }}
+                transition={{ duration: 0.9, ease: [0.4, 0, 0.2, 1] }}
+                className="absolute inset-0 flex items-center justify-center"
+              >
+                <div
+                  className={`absolute inset-0 bg-gradient-to-tr ${statusColor === "bg-[#70c82a]"
+                      ? "from-[#70c82a]/20"
+                      : statusColor === "bg-amber-500"
+                        ? "from-amber-500/20"
+                        : "from-red-500/20"
                     } to-transparent blur-3xl opacity-30 rounded-full`}
-                  />
-                  <motion.div
-                    animate={{ x: [0, -10, 10, -10, 0] }}
-                    transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                    className="relative w-full h-full"
-                  >
-                    <Image
-                      src={currentCategory.image}
-                      alt={currentCategory.name}
-                      fill
-                      className="object-contain drop-shadow-[0_0_50px_rgba(112,200,42,0.2)]"
-                      priority
-                      unoptimized
-                    />
-                  </motion.div>
-                </motion.div>
-              </AnimatePresence>
-            </div>
-
-            {/* Right: Aggregated Data Panel - Attractive & Descriptive */}
-            <div className="relative min-h-[500px] flex flex-col justify-center overflow-visible">
-              <AnimatePresence mode="wait">
+                />
                 <motion.div
-                  key={currentCategory.id}
-                  initial={{ opacity: 0, y: 50 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -50 }}
-                  transition={{ duration: 0.9, ease: [0.4, 0, 0.2, 1] }}
-                  className="absolute inset-0 space-y-5"
+                  animate={{ x: [0, -10, 10, -10, 0] }}
+                  transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                  className="relative w-full h-full"
                 >
-                    <div className="space-y-2">
-                    <h3 className="text-3xl md:text-4xl font-bold text-foreground tracking-tight leading-tight">{currentCategory.name}</h3>
-                    <p className="text-[#70c82a] font-mono text-base">Fleet Category #{currentCategory.id} of {equipmentCategories.length}</p>
-                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed italic mb-4">{getEquipmentDescription(currentCategory.name)}</p>
-                    </div>
-
-                    {/* Main Stats with Icons and Descriptions */}
-                    <div className="grid grid-cols-2 gap-3">
-                      <motion.div
-                        initial={{ scale: 0.95 }}
-                        animate={{ scale: 1 }}
-                        className="p-3 rounded-xl bg-gradient-to-br from-[#70c82a]/10 to-transparent border border-[#70c82a]/20"
-                      >
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <CheckCircle className="w-4 h-4 text-[#70c82a]" />
-                          <p className="text-xs font-semibold text-muted-foreground">Operational & Ready</p>
-                        </div>
-                        <div className="text-2xl font-bold text-[#70c82a] mb-1">
-                          <AnimatedCounter value={currentCategory.op} duration={1000} />
-                        </div>
-                        <p className="text-[10px] text-muted-foreground leading-tight">Units actively working on projects</p>
-                      </motion.div>
-
-                      <motion.div
-                        initial={{ scale: 0.95 }}
-                        animate={{ scale: 1 }}
-                        className="p-3 rounded-xl bg-gradient-to-br from-blue-500/10 to-transparent border border-blue-500/20"
-                      >
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <Truck className="w-4 h-4 text-blue-500" />
-                          <p className="text-xs font-semibold text-muted-foreground">Total Fleet Size</p>
-                        </div>
-                        <div className="text-2xl font-bold text-foreground mb-1">
-                          <AnimatedCounter value={currentCategory.totalQty} duration={1000} />
-                        </div>
-                        <p className="text-[10px] text-muted-foreground leading-tight">Total equipment in this category</p>
-                      </motion.div>
-
-                      <motion.div
-                        initial={{ scale: 0.95 }}
-                        animate={{ scale: 1 }}
-                        className="p-3 rounded-xl bg-gradient-to-br from-amber-500/10 to-transparent border border-amber-500/20"
-                      >
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <Gauge className="w-4 h-4 text-amber-500" />
-                          <p className="text-xs font-semibold text-muted-foreground">Utilization Rate</p>
-                        </div>
-                        <div className="text-2xl font-bold text-amber-500 mb-1">
-                          <AnimatedCounter value={utilization} duration={1000} />%
-                        </div>
-                        <p className="text-[10px] text-muted-foreground leading-tight">Percentage of fleet in use</p>
-                      </motion.div>
-
-                      <motion.div
-                        initial={{ scale: 0.95 }}
-                        animate={{ scale: 1 }}
-                        className="p-3 rounded-xl bg-gradient-to-br from-red-500/10 to-transparent border border-red-500/20"
-                      >
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <AlertTriangle className="w-4 h-4 text-red-500" />
-                          <p className="text-xs font-semibold text-muted-foreground">Out of Service</p>
-                        </div>
-                        <div className="text-2xl font-bold text-red-500 mb-1">
-                          <AnimatedCounter value={currentCategory.down} duration={1000} />
-                        </div>
-                        <p className="text-[10px] text-muted-foreground leading-tight">Units requiring immediate attention</p>
-                      </motion.div>
-                    </div>
-
-                  
+                  <Image
+                    src={currentCategory.image}
+                    alt={currentCategory.name}
+                    fill
+                    className="object-contain drop-shadow-[0_0_50px_rgba(112,200,42,0.2)]"
+                    priority
+                    unoptimized
+                  />
                 </motion.div>
-              </AnimatePresence>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          {/* Right: Aggregated Data Panel - Attractive & Descriptive */}
+          <div className="relative min-h-[500px] flex flex-col justify-center overflow-visible">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentCategory.id}
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -50 }}
+                transition={{ duration: 0.9, ease: [0.4, 0, 0.2, 1] }}
+                className="absolute inset-0 space-y-5"
+              >
+                <div className="space-y-2">
+                  <h3 className="text-3xl md:text-4xl font-bold text-foreground tracking-tight leading-tight">{currentCategory.name}</h3>
+                  <p className="text-[#70c82a] font-mono text-base">Fleet Category #{currentCategory.id} of {equipmentCategories.length}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed italic mb-4">{getEquipmentDescription(currentCategory.name)}</p>
+                </div>
+
+                {/* Main Stats with Icons and Descriptions */}
+                <div className="grid grid-cols-2 gap-3">
+                  <motion.div
+                    initial={{ scale: 0.95 }}
+                    animate={{ scale: 1 }}
+                    className="p-3 rounded-xl bg-gradient-to-br from-[#70c82a]/10 to-transparent border border-[#70c82a]/20"
+                  >
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <CheckCircle className="w-4 h-4 text-[#70c82a]" />
+                      <p className="text-xs font-semibold text-muted-foreground">Operational & Ready</p>
+                    </div>
+                    <div className="text-2xl font-bold text-[#70c82a] mb-1">
+                      <AnimatedCounter value={currentCategory.op} duration={1000} />
+                    </div>
+                    <p className="text-[10px] text-muted-foreground leading-tight">Units actively working on projects</p>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ scale: 0.95 }}
+                    animate={{ scale: 1 }}
+                    className="p-3 rounded-xl bg-gradient-to-br from-blue-500/10 to-transparent border border-blue-500/20"
+                  >
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <Truck className="w-4 h-4 text-blue-500" />
+                      <p className="text-xs font-semibold text-muted-foreground">Total Fleet Size</p>
+                    </div>
+                    <div className="text-2xl font-bold text-foreground mb-1">
+                      <AnimatedCounter value={currentCategory.totalQty} duration={1000} />
+                    </div>
+                    <p className="text-[10px] text-muted-foreground leading-tight">Total equipment in this category</p>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ scale: 0.95 }}
+                    animate={{ scale: 1 }}
+                    className="p-3 rounded-xl bg-gradient-to-br from-amber-500/10 to-transparent border border-amber-500/20"
+                  >
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <Gauge className="w-4 h-4 text-amber-500" />
+                      <p className="text-xs font-semibold text-muted-foreground">Utilization Rate</p>
+                    </div>
+                    <div className="text-2xl font-bold text-amber-500 mb-1">
+                      <AnimatedCounter value={utilization} duration={1000} />%
+                    </div>
+                    <p className="text-[10px] text-muted-foreground leading-tight">Percentage of fleet in use</p>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ scale: 0.95 }}
+                    animate={{ scale: 1 }}
+                    className="p-3 rounded-xl bg-gradient-to-br from-red-500/10 to-transparent border border-red-500/20"
+                  >
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <AlertTriangle className="w-4 h-4 text-red-500" />
+                      <p className="text-xs font-semibold text-muted-foreground">Out of Service</p>
+                    </div>
+                    <div className="text-2xl font-bold text-red-500 mb-1">
+                      <AnimatedCounter value={currentCategory.down} duration={1000} />
+                    </div>
+                    <p className="text-[10px] text-muted-foreground leading-tight">Units requiring immediate attention</p>
+                  </motion.div>
+                </div>
+
+
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {/* Scrollable Image Carousel - Small Images with Names */}
+        <div className="mt-6 pt-4 border-t border-border dark:border-zinc-800">
+          {/* Search Bar */}
+          <div className="mb-6 flex justify-center">
+            <div className="relative w-full max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Search equipment categories..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 bg-input dark:bg-zinc-900/50 border border-border dark:border-zinc-700 rounded-lg text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:border-[#70c82a] transition-colors"
+              />
             </div>
           </div>
 
-          {/* Scrollable Image Carousel - Small Images with Names */}
-          <div className="mt-6 pt-4 border-t border-border dark:border-zinc-800">
-            {/* Search Bar */}
-            <div className="mb-6 flex justify-center">
-              <div className="relative w-full max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input
-                  type="text"
-                  placeholder="Search equipment categories..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-input dark:bg-zinc-900/50 border border-border dark:border-zinc-700 rounded-lg text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:border-[#70c82a] transition-colors"
-                />
-              </div>
-            </div>
+          {/* Horizontal Scrollable Image Carousel */}
+          <div className="relative">
+            {/* Left Scroll Button - Always Visible */}
+            <button
+              onClick={() => handleNavigate('left')}
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-background/95 dark:bg-zinc-900/95 border border-border dark:border-zinc-700 hover:border-[#70c82a] flex items-center justify-center transition-all hover:bg-muted dark:hover:bg-zinc-800 hover:scale-110 shadow-lg"
+              aria-label="Scroll left"
+            >
+              <ChevronRight className="w-5 h-5 text-muted-foreground hover:text-[#70c82a] rotate-180 transition-colors" />
+            </button>
 
-            {/* Horizontal Scrollable Image Carousel */}
-            <div className="relative">
-              {/* Left Scroll Button - Always Visible */}
-              <button
-                onClick={() => handleNavigate('left')}
-                className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-background/95 dark:bg-zinc-900/95 border border-border dark:border-zinc-700 hover:border-[#70c82a] flex items-center justify-center transition-all hover:bg-muted dark:hover:bg-zinc-800 hover:scale-110 shadow-lg"
-                aria-label="Scroll left"
-              >
-                <ChevronRight className="w-5 h-5 text-muted-foreground hover:text-[#70c82a] rotate-180 transition-colors" />
-              </button>
+            {/* Right Scroll Button - Always Visible */}
+            <button
+              onClick={() => handleNavigate('right')}
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-background/95 dark:bg-zinc-900/95 border border-border dark:border-zinc-700 hover:border-[#70c82a] flex items-center justify-center transition-all hover:bg-muted dark:hover:bg-zinc-800 hover:scale-110 shadow-lg"
+              aria-label="Scroll right"
+            >
+              <ChevronRight className="w-5 h-5 text-muted-foreground hover:text-[#70c82a] transition-colors" />
+            </button>
 
-              {/* Right Scroll Button - Always Visible */}
-              <button
-                onClick={() => handleNavigate('right')}
-                className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-background/95 dark:bg-zinc-900/95 border border-border dark:border-zinc-700 hover:border-[#70c82a] flex items-center justify-center transition-all hover:bg-muted dark:hover:bg-zinc-800 hover:scale-110 shadow-lg"
-                aria-label="Scroll right"
-              >
-                <ChevronRight className="w-5 h-5 text-muted-foreground hover:text-[#70c82a] transition-colors" />
-              </button>
+            <div
+              ref={carouselRef}
+              className="overflow-x-auto overflow-y-hidden scrollbar-hide pb-4 px-12 cursor-grab active:cursor-grabbing select-none"
+              style={{ scrollBehavior: 'smooth' }}
+              onMouseDown={(e) => {
+                if (!carouselRef.current) return;
+                setIsDragging(true);
+                setStartX(e.pageX - carouselRef.current.offsetLeft);
+                setScrollLeft(carouselRef.current.scrollLeft);
+              }}
+              onMouseLeave={() => {
+                setIsDragging(false);
+              }}
+              onMouseUp={() => {
+                setIsDragging(false);
+              }}
+              onMouseMove={(e) => {
+                if (!isDragging || !carouselRef.current) return;
+                e.preventDefault();
+                const x = e.pageX - carouselRef.current.offsetLeft;
+                const walk = (x - startX) * 2; // Scroll speed multiplier
+                carouselRef.current.scrollLeft = scrollLeft - walk;
+              }}
+            >
+              <div className="flex gap-3 min-w-max justify-center">
+                {displayCategories.map((category, index) => {
+                  const actualIndex = equipmentCategories.findIndex(cat => cat.id === category.id);
+                  const isActive = actualIndex === currentIndex;
+                  const categoryUtilization = calculateUtilization(category);
+                  const categoryStatusColor = getStatusColor(categoryUtilization);
 
-              <div 
-                ref={carouselRef}
-                className="overflow-x-auto overflow-y-hidden scrollbar-hide pb-4 px-12 cursor-grab active:cursor-grabbing select-none"
-                style={{ scrollBehavior: 'smooth' }}
-                onMouseDown={(e) => {
-                  if (!carouselRef.current) return;
-                  setIsDragging(true);
-                  setStartX(e.pageX - carouselRef.current.offsetLeft);
-                  setScrollLeft(carouselRef.current.scrollLeft);
-                }}
-                onMouseLeave={() => {
-                  setIsDragging(false);
-                }}
-                onMouseUp={() => {
-                  setIsDragging(false);
-                }}
-                onMouseMove={(e) => {
-                  if (!isDragging || !carouselRef.current) return;
-                  e.preventDefault();
-                  const x = e.pageX - carouselRef.current.offsetLeft;
-                  const walk = (x - startX) * 2; // Scroll speed multiplier
-                  carouselRef.current.scrollLeft = scrollLeft - walk;
-                }}
-              >
-                <div className="flex gap-3 min-w-max justify-center">
-                  {displayCategories.map((category, index) => {
-                    const actualIndex = equipmentCategories.findIndex(cat => cat.id === category.id);
-                    const isActive = actualIndex === currentIndex;
-                    const categoryUtilization = calculateUtilization(category);
-                    const categoryStatusColor = getStatusColor(categoryUtilization);
-
-                    return (
-                      <motion.button
-                        key={category.id}
-                        onClick={() => handleSelectCategory(index)}
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        whileInView={{ opacity: 1, scale: 1 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: index * 0.02 }}
-                        whileHover={{ scale: 1.05, y: -5 }}
-                        whileTap={{ scale: 0.95 }}
-                        className={`
+                  return (
+                    <motion.button
+                      key={category.id}
+                      onClick={() => handleSelectCategory(index)}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: index * 0.02 }}
+                      whileHover={{ scale: 1.05, y: -5 }}
+                      whileTap={{ scale: 0.95 }}
+                      className={`
                           relative flex flex-col items-center gap-2 w-20 sm:w-24 p-3 rounded-xl border-2 transition-all cursor-pointer flex-shrink-0 group
-                          ${isActive 
-                            ? 'bg-[#70c82a]/10 border-[#70c82a] shadow-[0_0_20px_rgba(112,200,42,0.4)] scale-105' 
-                            : 'bg-card/50 dark:bg-zinc-900/50 border-border dark:border-zinc-800 hover:border-border/80 dark:hover:border-zinc-700 hover:bg-card/70 dark:hover:bg-zinc-900/70'
-                          }
+                          ${isActive
+                          ? 'bg-[#70c82a]/10 border-[#70c82a] shadow-[0_0_20px_rgba(112,200,42,0.4)] scale-105'
+                          : 'bg-card/50 dark:bg-zinc-900/50 border-border dark:border-zinc-800 hover:border-border/80 dark:hover:border-zinc-700 hover:bg-card/70 dark:hover:bg-zinc-900/70'
+                        }
                         `}
-                      >
-                        {isActive && (
-                          <motion.div
-                            layoutId="activeCarouselItem"
-                            className="absolute inset-0 bg-[#70c82a]/5 rounded-xl"
-                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                          />
-                        )}
-                        
-                        {/* Status Indicator */}
-                        <div className={`absolute top-1 right-1 w-2.5 h-2.5 rounded-full ${categoryStatusColor} ${isActive ? 'animate-pulse shadow-[0_0_8px_rgba(112,200,42,0.6)]' : ''} z-10`} />
+                    >
+                      {isActive && (
+                        <motion.div
+                          layoutId="activeCarouselItem"
+                          className="absolute inset-0 bg-[#70c82a]/5 rounded-xl"
+                          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                        />
+                      )}
 
-                        {/* Small Image */}
-                        <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-muted dark:bg-zinc-800 border border-border dark:border-zinc-700 group-hover:border-[#70c82a]/50 transition-colors">
-                          <Image
-                            src={category.image}
-                            alt={category.name}
-                            fill
-                            className="object-cover"
-                            sizes="(max-width: 640px) 56px, 64px"
-                            unoptimized
-                          />
+                      {/* Status Indicator */}
+                      <div className={`absolute top-1 right-1 w-2.5 h-2.5 rounded-full ${categoryStatusColor} ${isActive ? 'animate-pulse shadow-[0_0_8px_rgba(112,200,42,0.6)]' : ''} z-10`} />
+
+                      {/* Small Image */}
+                      <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-muted dark:bg-zinc-800 border border-border dark:border-zinc-700 group-hover:border-[#70c82a]/50 transition-colors">
+                        <Image
+                          src={category.image}
+                          alt={category.name}
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 640px) 56px, 64px"
+                          unoptimized
+                        />
+                      </div>
+
+                      {/* Category Name */}
+                      <div className="text-center w-full">
+                        <p className={`text-[10px] sm:text-[11px] font-semibold line-clamp-2 leading-tight ${isActive ? 'text-foreground' : 'text-foreground/80 dark:text-zinc-300 group-hover:text-foreground'}`}>
+                          {category.name}
+                        </p>
+                        <div className={`mt-1 text-[9px] font-bold ${isActive ? 'text-[#70c82a]' : 'text-muted-foreground'}`}>
+                          {categoryUtilization}% · {category.op}/{category.totalQty}
                         </div>
+                      </div>
 
-                        {/* Category Name */}
-                        <div className="text-center w-full">
-                          <p className={`text-[10px] sm:text-[11px] font-semibold line-clamp-2 leading-tight ${isActive ? 'text-foreground' : 'text-foreground/80 dark:text-zinc-300 group-hover:text-foreground'}`}>
-                            {category.name}
-                          </p>
-                          <div className={`mt-1 text-[9px] font-bold ${isActive ? 'text-[#70c82a]' : 'text-muted-foreground'}`}>
-                            {categoryUtilization}% · {category.op}/{category.totalQty}
-                          </div>
-                        </div>
-
-                        {/* Active Indicator Line */}
-                        {isActive && (
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: "100%" }}
-                            className="absolute bottom-0 left-0 h-0.5 bg-[#70c82a] rounded-full"
-                          />
-                        )}
-                      </motion.button>
-                    );
-                  })}
-                </div>
+                      {/* Active Indicator Line */}
+                      {isActive && (
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: "100%" }}
+                          className="absolute bottom-0 left-0 h-0.5 bg-[#70c82a] rounded-full"
+                        />
+                      )}
+                    </motion.button>
+                  );
+                })}
               </div>
             </div>
           </div>
         </div>
+      </div>
     </section>
   );
 };
@@ -710,15 +709,15 @@ const AnimatedProgress = ({ value, duration = 1500 }: { value: number; duration?
 }
 
 // Animated Progress Bar Component for Equipment Status - KEEPING ORIGINAL COLORS
-const AnimatedEquipmentProgress = ({ 
-  name, 
-  operational, 
-  total, 
-  duration = 1800 
-}: { 
-  name: string; 
-  operational: number; 
-  total: number; 
+const AnimatedEquipmentProgress = ({
+  name,
+  operational,
+  total,
+  duration = 1800
+}: {
+  name: string;
+  operational: number;
+  total: number;
   duration?: number;
 }) => {
   const [progress, setProgress] = useState(0)
@@ -827,9 +826,9 @@ export default function LandingPage() {
                 <Image
                   src="/ecwc png logo.png"
                   alt="ECWC Logo"
-                  width={48}
-                  height={48}
-                  className="object-contain relative z-10 w-10 h-10 md:w-12 md:h-12"
+                  width={64}
+                  height={64}
+                  className="object-contain relative z-10 w-14 h-14 md:w-16 md:h-16"
                   quality={100}
                   unoptimized
                   priority
@@ -841,7 +840,7 @@ export default function LandingPage() {
                 <span className="text-[10px] md:text-xs font-bold bg-gradient-to-r from-[#70c82a] to-[#5aa022] bg-clip-text text-transparent leading-tight">
                   ETHIOPIAN CONSTRUCTION WORKS CORPORATION
                 </span>
-                <span className="text-[9px] md:text-[10px] text-muted-foreground font-medium leading-tight">የኢትዮጵያ ኮንስትራክሽን ሥራዎች ኮርፖሬሽን</span>
+                <span className="text-[13px] font-bold text-muted-foreground leading-tight">የኢትዮጵያ ኮንስትራክሽን ሥራዎች ኮርፖሬሽን</span>
               </div>
             </motion.div>
 
@@ -969,13 +968,13 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="relative overflow-hidden py-12 lg:py-16 bg-background dark:bg-black">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(112,200,42,0.05),transparent_50%)] dark:bg-[radial-gradient(circle_at_30%_50%,rgba(112,200,42,0.05),transparent_50%)]" />
-        <motion.div 
+        <motion.div
           className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#70c82a] to-transparent"
           initial={{ scaleX: 0 }}
           animate={{ scaleX: 1 }}
           transition={{ duration: 1.5 }}
         />
-        
+
         <div className="container mx-auto px-4 lg:px-8 relative z-10">
           <motion.div
             initial="initial"
@@ -985,7 +984,7 @@ export default function LandingPage() {
           >
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               {/* Left Content */}
-              <motion.div variants={fadeInUp} className="space-y-8">
+              <motion.div variants={fadeInUp} className="space-y-4">
                 {/* PMMS Acronym with Explanations */}
                 <div className="relative">
                   {/* Vertical Connecting Line - starts after first circle, ends before last circle */}
@@ -1010,10 +1009,10 @@ export default function LandingPage() {
                         key={i}
                         initial={{ x: -30, opacity: 0 }}
                         animate={{ x: 0, opacity: 1 }}
-                        transition={{ 
-                          duration: 0.7, 
-                          delay: 0.6 + i * 0.25, 
-                          ease: [0.4, 0, 0.2, 1] 
+                        transition={{
+                          duration: 0.7,
+                          delay: 0.6 + i * 0.25,
+                          ease: [0.4, 0, 0.2, 1]
                         }}
                         className="flex items-center gap-4 relative"
                       >
@@ -1040,7 +1039,7 @@ export default function LandingPage() {
                         {/* Large Letter */}
                         <div
                           className="text-2xl md:text-3xl lg:text-4xl font-black text-foreground flex-shrink-0"
-                          style={{ 
+                          style={{
                             fontFamily: 'var(--font-dm-sans), "DM Sans", sans-serif',
                             lineHeight: 1,
                             width: '32px'
@@ -1048,7 +1047,7 @@ export default function LandingPage() {
                         >
                           {item.letter}
                         </div>
-                        
+
                         {/* Animated Arrow Connector */}
                         <motion.div
                           initial={{ width: 0, opacity: 0 }}
@@ -1065,11 +1064,11 @@ export default function LandingPage() {
                           </motion.div>
                           <div className="h-0.5 w-3 bg-black/30 dark:bg-white/30"></div>
                         </motion.div>
-                        
+
                         {/* Full Word */}
                         <h1
                           className="text-lg md:text-xl lg:text-2xl font-bold tracking-tight text-foreground"
-                          style={{ 
+                          style={{
                             fontFamily: 'var(--font-dm-sans), "DM Sans", sans-serif',
                             letterSpacing: '-0.01em',
                             fontWeight: 700
@@ -1093,14 +1092,14 @@ export default function LandingPage() {
                     transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
                     className="w-2 bg-[#70c82a] rounded-full shrink-0 mt-2 shadow-lg shadow-[#70c82a]/40"
                   />
-               
+
                 </motion.div>
 
-                
+
                 {/* Key Features Overview */}
                 <motion.div
                   variants={fadeInUp}
-                  className="space-y-4 pt-4"
+                  className="space-y-4"
                 >
                   <div className="flex items-start gap-3">
                     <CheckCircle className="w-5 h-5 text-[#70c82a] flex-shrink-0 mt-0.5" />
@@ -1144,38 +1143,38 @@ export default function LandingPage() {
                     </div>
                     <div className="space-y-6">
                       {/* Equipment Uptime Progress */}
-                     
+
 
                       {/* Equipment Status with Animated Progress Bars */}
                       <div className="space-y-4">
-                        <AnimatedEquipmentProgress 
-                          name="Machinery" 
-                          operational={122} 
-                          total={312} 
+                        <AnimatedEquipmentProgress
+                          name="Machinery"
+                          operational={122}
+                          total={312}
                           duration={1600}
                         />
-                        <AnimatedEquipmentProgress 
-                          name="Dump Trucks" 
-                          operational={111} 
-                          total={365} 
+                        <AnimatedEquipmentProgress
+                          name="Dump Trucks"
+                          operational={111}
+                          total={365}
                           duration={1800}
                         />
-                        <AnimatedEquipmentProgress 
-                          name="Heavy Vehicles" 
-                          operational={201} 
-                          total={540} 
+                        <AnimatedEquipmentProgress
+                          name="Heavy Vehicles"
+                          operational={201}
+                          total={540}
                           duration={2000}
                         />
-                        <AnimatedEquipmentProgress 
-                          name="Light Vehicles" 
-                          operational={111} 
-                          total={288} 
+                        <AnimatedEquipmentProgress
+                          name="Light Vehicles"
+                          operational={111}
+                          total={288}
                           duration={2200}
                         />
                       </div>
 
                       {/* Quick Stats */}
-                      <motion.div 
+                      <motion.div
                         className="grid grid-cols-2 gap-4 pt-4"
                         initial="initial"
                         whileInView="animate"
@@ -1191,7 +1190,7 @@ export default function LandingPage() {
                             variants={fadeInUp}
                             className={`text-center p-4 rounded-xl border ${stat.color} hover:scale-105 transition-transform duration-300`}
                           >
-                            <motion.div 
+                            <motion.div
                               className={`text-2xl font-bold ${stat.textColor}`}
                               initial={{ scale: 0 }}
                               whileInView={{ scale: 1 }}
@@ -1245,7 +1244,7 @@ export default function LandingPage() {
       <section id="system-overview" className="relative py-20 lg:py-32 bg-gradient-to-b from-background via-muted/30 to-background dark:from-background dark:via-zinc-950 dark:to-black overflow-hidden">
         {/* Animated Background */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(112,200,42,0.05),transparent_70%)]" />
-        <motion.div 
+        <motion.div
           className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#70c82a] to-transparent"
           initial={{ scaleX: 0 }}
           whileInView={{ scaleX: 1 }}
@@ -1266,9 +1265,9 @@ export default function LandingPage() {
               System Overview
             </div>
             <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6">
-               <span className="text-[#70c82a]">ECWC Plant Management</span> in Action
+              <span className="text-[#70c82a]">ECWC Plant Management</span> in Action
             </h2>
-          
+
           </motion.div>
 
           {/* Video Container with Cinematic Frame */}
@@ -1282,7 +1281,7 @@ export default function LandingPage() {
           >
             {/* Glowing Border Effect */}
             <div className="absolute -inset-1 bg-gradient-to-r from-[#70c82a] via-emerald-500 to-teal-500 rounded-3xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500" />
-            
+
             {/* Video Frame */}
             <div className="relative rounded-2xl overflow-hidden border border-border dark:border-zinc-800 bg-card dark:bg-zinc-950 shadow-2xl" style={{ zIndex: 15 }}>
               {/* Video Player */}
@@ -1298,7 +1297,7 @@ export default function LandingPage() {
                   <source src="/erp.mp4" type="video/mp4" />
                   Your browser does not support the video tag.
                 </video>
-                
+
                 {/* Video Overlay Stats */}
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6 pointer-events-none">
                   <div className="grid grid-cols-3 gap-4 text-center">
@@ -1326,9 +1325,9 @@ export default function LandingPage() {
                     <p className="text-muted-foreground text-sm">Comprehensive overview of features, capabilities, and operational excellence</p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       className="gap-2 border-border hover:border-[#70c82a]"
                       onClick={() => {
                         // Add brochure download functionality
@@ -1342,8 +1341,8 @@ export default function LandingPage() {
                       Brochure
                     </Button>
                     <Link href="/sign-up">
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         className="gap-2 bg-[#70c82a] hover:bg-[#5fa822] text-black font-semibold"
                       >
                         Request Demo
@@ -1356,10 +1355,10 @@ export default function LandingPage() {
             </div>
 
             {/* Floating Feature Cards */}
-      <motion.div 
+            <motion.div
               initial={{ opacity: 0, x: -50 }}
-        whileInView={{ opacity: 1, x: 0 }} 
-        viewport={{ once: true }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
               transition={{ duration: 0.8, delay: 0.5 }}
               className="hidden lg:block absolute -left-12 top-1/4 w-64 p-4 rounded-xl bg-card dark:bg-zinc-900 border border-border dark:border-zinc-800 shadow-xl z-20"
               style={{ pointerEvents: 'auto' }}
@@ -1367,7 +1366,7 @@ export default function LandingPage() {
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-10 h-10 rounded-lg bg-[#70c82a]/10 flex items-center justify-center">
                   <Shield className="w-5 h-5 text-[#70c82a]" />
-        </div>
+                </div>
                 <div>
                   <div className="text-foreground font-bold text-sm">Government-Grade</div>
                   <div className="text-muted-foreground text-xs">Security & Compliance</div>
@@ -1395,7 +1394,7 @@ export default function LandingPage() {
             </motion.div>
           </motion.div>
 
-          
+
         </div>
       </section>
 
@@ -1406,7 +1405,7 @@ export default function LandingPage() {
       <section id="features" className="py-32 bg-background dark:bg-black relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(112,200,42,0.03),transparent_70%)]" />
         <div className="container mx-auto px-4 lg:px-8 relative z-10">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -1417,7 +1416,7 @@ export default function LandingPage() {
             </div>
             <h2 className="text-4xl md:text-6xl font-bold text-foreground mb-4">
               Core <span className="text-[#70c82a]">Functional Areas</span>
-        </h2>
+            </h2>
             <p className="text-muted-foreground text-lg max-w-3xl mx-auto">
               Comprehensive operational intelligence platform built for national-scale infrastructure management
             </p>
@@ -1425,17 +1424,17 @@ export default function LandingPage() {
 
           {/* Plant & Equipment Management - Left/Right with Table */}
           <div className="grid lg:grid-cols-2 gap-16 items-center mb-32">
-      <motion.div 
+            <motion.div
               initial={{ opacity: 0, x: -50 }}
-        whileInView={{ opacity: 1, x: 0 }} 
-        viewport={{ once: true }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
               transition={{ duration: 0.8 }}
               className="space-y-8"
             >
               <div className="flex items-center gap-4 mb-6">
                 <div className="w-16 h-16 rounded-2xl bg-[#70c82a]/10 flex items-center justify-center border border-[#70c82a]/20">
                   <HardHat className="w-8 h-8 text-[#70c82a]" />
-        </div>
+                </div>
                 <div>
                   <div className="text-xs text-[#70c82a] font-bold uppercase tracking-wider mb-1">Module 01</div>
                   <h3 className="text-3xl font-bold text-foreground">Asset & Fleet Management</h3>
@@ -1477,15 +1476,15 @@ export default function LandingPage() {
                   Managers can see its status anytime without calling the site.
                 </p>
               </div>
-      </motion.div>
+            </motion.div>
 
-      <motion.div
+            <motion.div
               initial={{ opacity: 0, x: 50 }}
-        whileInView={{ opacity: 1, x: 0 }}
-        viewport={{ once: true }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
               transition={{ duration: 0.8 }}
-        className="relative"
-      >
+              className="relative"
+            >
               <div className="absolute inset-0 bg-[#70c82a]/5 blur-3xl rounded-full" />
               <div className="relative p-6 rounded-2xl bg-card dark:bg-zinc-950 border border-border dark:border-zinc-800">
                 <div className="flex items-center justify-between mb-6 pb-4 border-b border-border dark:border-zinc-800">
@@ -1510,12 +1509,12 @@ export default function LandingPage() {
                         { id: "ECWC-L-023", type: "Loader", status: "Critical", value: "Br 210.4K", color: "bg-red-500" },
                         { id: "ECWC-T-091", type: "Truck", status: "Active", value: "Br 78.3K", color: "bg-[#70c82a]" }
                       ].map((row, i) => (
-                        <motion.tr 
-                key={i}
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                        <motion.tr
+                          key={i}
+                          initial={{ opacity: 0, y: 10 }}
+                          whileInView={{ opacity: 1, y: 0 }}
                           viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
+                          transition={{ delay: i * 0.1 }}
                           className="border-b border-border/50 dark:border-zinc-800/50 hover:bg-muted/30 dark:hover:bg-zinc-900/30 transition-colors"
                         >
                           <td className="py-3 px-2 text-sm font-mono text-foreground">{row.id}</td>
@@ -1535,8 +1534,8 @@ export default function LandingPage() {
                 <div className="mt-6 pt-4 border-t border-border dark:border-zinc-800 flex justify-between items-center">
                   <div className="text-xs text-muted-foreground">Total Fleet Value</div>
                   <div className="text-2xl font-bold text-[#70c82a]">Br 12.4M</div>
-                  </div>
                 </div>
+              </div>
             </motion.div>
           </div>
 
@@ -1572,8 +1571,8 @@ export default function LandingPage() {
                       </div>
                       <div className="text-2xl font-bold text-foreground mb-1">{kpi.value}</div>
                       <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{kpi.label}</div>
-              </motion.div>
-            ))}
+                    </motion.div>
+                  ))}
                 </div>
                 <div className="space-y-3">
                   {[
@@ -1653,12 +1652,12 @@ export default function LandingPage() {
                   Maintenance is completed on time, preventing an unexpected breakdown on site.
                 </p>
               </div>
-      </motion.div>
-    </div>
+            </motion.div>
+          </div>
 
           {/* Workforce & Time Sheet Management - Left/Right */}
           <div className="grid lg:grid-cols-2 gap-16 items-center mb-32">
-      <motion.div
+            <motion.div
               initial={{ opacity: 0, x: -50 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
@@ -1689,9 +1688,9 @@ export default function LandingPage() {
                   ].map((item, i) => (
                     <motion.div
                       key={i}
-        initial={{ opacity: 0, x: -20 }}
-        whileInView={{ opacity: 1, x: 0 }}
-        viewport={{ once: true }}
+                      initial={{ opacity: 0, x: -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
                       transition={{ delay: i * 0.08 }}
                       className="flex items-center gap-3 text-foreground"
                     >
@@ -1726,12 +1725,12 @@ export default function LandingPage() {
                     { label: "Overtime", value: "89h", icon: TrendingUp, color: "text-amber-500" },
                     { label: "Technicians", value: "42", icon: Users, color: "text-blue-500" }
                   ].map((stat, i) => (
-                <motion.div 
-                  key={i}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
                       viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
+                      transition={{ delay: i * 0.1 }}
                       className="p-4 rounded-xl bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800 text-center"
                     >
                       <stat.icon className={`w-5 h-5 ${stat.color} mx-auto mb-2`} />
@@ -1771,7 +1770,7 @@ export default function LandingPage() {
                   <div className="text-xs text-muted-foreground">Total Labor Cost This Week</div>
                   <div className="text-2xl font-bold text-[#70c82a]">Br 47,850</div>
                 </div>
-                  </div>
+              </div>
             </motion.div>
           </div>
 
@@ -1806,9 +1805,9 @@ export default function LandingPage() {
                         <span className="text-xs font-bold text-muted-foreground">{stat.trend}</span>
                       </div>
                       <div className="text-[10px] text-muted-foreground uppercase font-bold">{stat.label}</div>
-                </motion.div>
-              ))}
-            </div>
+                    </motion.div>
+                  ))}
+                </div>
                 <div className="mb-6">
                   <div className="text-sm text-muted-foreground mb-3">Recent Parts Issued</div>
                   <div className="space-y-2">
@@ -1833,9 +1832,9 @@ export default function LandingPage() {
                   <div className="text-2xl font-bold text-[#70c82a]">Br 1.8M</div>
                 </div>
               </div>
-      </motion.div>
+            </motion.div>
 
-      <motion.div
+            <motion.div
               initial={{ opacity: 0, x: 50 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
@@ -1866,9 +1865,9 @@ export default function LandingPage() {
                   ].map((item, i) => (
                     <motion.div
                       key={i}
-        initial={{ opacity: 0, x: 20 }}
-        whileInView={{ opacity: 1, x: 0 }}
-        viewport={{ once: true }}
+                      initial={{ opacity: 0, x: 20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
                       transition={{ delay: i * 0.08 }}
                       className="flex items-center gap-3 text-foreground"
                     >
@@ -1892,7 +1891,7 @@ export default function LandingPage() {
 
           {/* Executive Dashboards & Reports - Right/Left */}
           <div className="grid lg:grid-cols-2 gap-16 items-center">
-        <motion.div
+            <motion.div
               initial={{ opacity: 0, x: -50 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
@@ -1901,7 +1900,7 @@ export default function LandingPage() {
             >
               <div className="p-8 rounded-2xl bg-gradient-to-br from-[#70c82a]/5 via-card to-card dark:via-zinc-950 dark:to-zinc-950 border border-[#70c82a]/20">
                 <div className="text-foreground font-bold mb-6 text-lg">Executive Command Center</div>
-                
+
                 <div className="space-y-4">
                   {/* Site Performance Comparison - Vertical Bar Chart */}
                   <div className="p-4 rounded-xl bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800">
@@ -2014,11 +2013,11 @@ export default function LandingPage() {
                         const percentage = item.value;
                         const circumference = 2 * Math.PI * 35; // radius 35
                         const offset = circumference - (percentage / 100) * circumference;
-                        
+
                         // Gradient IDs for each quarter
                         const gradientId = `pieGradient${j}`;
                         const shadowId = `pieShadow${j}`;
-                        
+
                         return (
                           <div key={j} className="flex flex-col items-center gap-3 flex-1 group">
                             <div className="relative">
@@ -2029,14 +2028,14 @@ export default function LandingPage() {
                                     <stop offset="100%" stopColor={item.color} stopOpacity="0.7" />
                                   </linearGradient>
                                   <filter id={shadowId}>
-                                    <feGaussianBlur in="SourceAlpha" stdDeviation="2"/>
-                                    <feOffset dx="0" dy="2" result="offsetblur"/>
+                                    <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
+                                    <feOffset dx="0" dy="2" result="offsetblur" />
                                     <feComponentTransfer>
-                                      <feFuncA type="linear" slope="0.3"/>
+                                      <feFuncA type="linear" slope="0.3" />
                                     </feComponentTransfer>
                                     <feMerge>
-                                      <feMergeNode/>
-                                      <feMergeNode in="SourceGraphic"/>
+                                      <feMergeNode />
+                                      <feMergeNode in="SourceGraphic" />
                                     </feMerge>
                                   </filter>
                                 </defs>
@@ -2099,9 +2098,9 @@ export default function LandingPage() {
                     </div>
                   </div>
                 </div>
-               
+
               </div>
-        </motion.div>
+            </motion.div>
 
             <motion.div
               initial={{ opacity: 0, x: 50 }}
@@ -2142,7 +2141,7 @@ export default function LandingPage() {
                     >
                       <div className="w-1.5 h-1.5 rounded-full bg-[#70c82a]" />
                       <span className="text-sm">{item}</span>
-      </motion.div>
+                    </motion.div>
                   ))}
                 </div>
               </div>
@@ -2164,10 +2163,10 @@ export default function LandingPage() {
       <section id="ai-support" className="py-32 bg-background dark:bg-zinc-950 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-background via-muted/30 to-background dark:from-black dark:via-zinc-950 dark:to-black" />
         <div className="container mx-auto px-4 lg:px-8 relative z-10">
-    <motion.div
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
             className="text-center mb-20"
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#70c82a]/10 text-[#70c82a] text-xs font-bold uppercase tracking-widest mb-6 border border-[#70c82a]/20">
@@ -2210,18 +2209,18 @@ export default function LandingPage() {
                 desc: "Real-time anomaly detection flags unusual spending patterns and asset wear, enabling immediate corrective action."
               }
             ].map((card, i) => (
-        <motion.div
-          key={i}
+              <motion.div
+                key={i}
                 initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.15 }}
                 className="p-6 rounded-2xl bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800 hover:border-[#70c82a]/30 transition-all group"
-        >
+              >
                 <div className="flex items-center justify-between mb-6">
                   <div className="w-12 h-12 rounded-xl bg-[#70c82a]/10 flex items-center justify-center border border-[#70c82a]/20">
                     <card.icon className="w-6 h-6 text-[#70c82a]" />
-          </div>
+                  </div>
                   <div className="text-right">
                     <div className="text-3xl font-bold text-foreground">{card.metric}</div>
                     <div className="text-[10px] text-muted-foreground uppercase font-bold">{card.label}</div>
@@ -2229,9 +2228,9 @@ export default function LandingPage() {
                 </div>
                 <h4 className="text-foreground font-bold text-lg mb-3">{card.title}</h4>
                 <p className="text-sm text-muted-foreground leading-relaxed">{card.desc}</p>
-        </motion.div>
-      ))}
-    </div>
+              </motion.div>
+            ))}
+          </div>
 
           {/* Smart Maintenance Intelligence Panel */}
           <motion.div
@@ -2254,24 +2253,24 @@ export default function LandingPage() {
             <div className="grid lg:grid-cols-3 gap-8 mb-8">
               <div className="lg:col-span-2 space-y-6">
                 {[
-                  { 
-                    asset: "ECWC-E-108 (Excavator)", 
+                  {
+                    asset: "ECWC-E-108 (Excavator)",
                     alert: "Abnormal vibration detected - Hydraulic seal failure probability: 87%",
                     action: "Schedule inspection within 48h",
                     cost: "Br 12,000",
                     priority: "Critical",
                     color: "red"
                   },
-                  { 
-                    asset: "ECWC-B-042 (Dozer)", 
+                  {
+                    asset: "ECWC-B-042 (Dozer)",
                     alert: "Engine oil degradation - Service interval approaching",
                     action: "Schedule maintenance in 72h",
                     cost: "Br 3,200",
                     priority: "Medium",
                     color: "amber"
                   },
-                  { 
-                    asset: "ECWC-L-023 (Loader)", 
+                  {
+                    asset: "ECWC-L-023 (Loader)",
                     alert: "Tire wear pattern suggests alignment issue",
                     action: "Inspection recommended next scheduled maintenance",
                     cost: "Br 5,800",
@@ -2290,11 +2289,10 @@ export default function LandingPage() {
                     <div className="flex items-start justify-between mb-3">
                       <div>
                         <div className="flex items-center gap-2 mb-2">
-                          <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${
-                            alert.color === 'red' ? 'bg-red-500/20 text-red-400' :
-                            alert.color === 'amber' ? 'bg-amber-500/20 text-amber-400' :
-                            'bg-blue-500/20 text-blue-400'
-                          }`}>
+                          <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${alert.color === 'red' ? 'bg-red-500/20 text-red-400' :
+                              alert.color === 'amber' ? 'bg-amber-500/20 text-amber-400' :
+                                'bg-blue-500/20 text-blue-400'
+                            }`}>
                             {alert.priority}
                           </span>
                           <span className="text-xs font-mono text-muted-foreground">{alert.asset}</span>
@@ -2307,9 +2305,9 @@ export default function LandingPage() {
                         <div className="text-lg font-bold text-foreground">{alert.cost}</div>
                       </div>
                     </div>
-    </motion.div>
+                  </motion.div>
                 ))}
-  </div>
+              </div>
 
               <div className="space-y-4">
                 <div className="p-6 rounded-xl bg-card dark:bg-zinc-950 border border-border dark:border-zinc-800">
@@ -2374,107 +2372,107 @@ export default function LandingPage() {
               {/* Chat Messages Container */}
               <div className="h-[600px] overflow-y-auto overflow-x-hidden bg-gradient-to-b from-background to-muted/20">
                 <div className="divide-y divide-border dark:divide-zinc-800">
-                {[
-                  {
-                    question: "Which site has the highest maintenance cost this month?",
-                    answer: "Addis Ababa Site — Br 82,400. Main drivers: high emergency work orders, heavy spare-part consumption for excavators, and increased overtime labor hours."
-                  },
-                  {
-                    question: "What are the main maintenance issues this month and their impact?",
-                    answer: {
-                      main: "Three primary issues are driving higher costs and equipment downtime:",
-                      details: [
-                        {
-                          issue: "Hydraulic system failures",
-                          percentage: "38%",
-                          impact: "This is the leading cause of downtime, affecting multiple excavators and loaders. Most failures occur due to seal degradation and contamination from harsh operating conditions.",
-                          cost: "Estimated monthly cost: Br 42,000 in repairs and lost productivity"
-                        },
-                        {
-                          issue: "Engine overheating",
-                          percentage: "27%",
-                          impact: "Primarily affecting older equipment and those operating in high-temperature conditions. Coolant system failures and radiator blockages are common causes.",
-                          cost: "Estimated monthly cost: Br 28,500 including engine repairs and preventive measures"
-                        },
-                        {
-                          issue: "Delayed spare-part availability",
-                          percentage: "19%",
-                          impact: "Critical parts often take 3-5 days to arrive, extending equipment downtime. This is compounded by insufficient inventory levels for commonly failing components.",
-                          cost: "Estimated monthly cost: Br 19,800 in extended downtime and emergency shipping fees"
-                        }
-                      ],
-                      recommendation: "Immediate actions: (1) Implement preventive seal replacement program, (2) Upgrade cooling systems on high-risk equipment, (3) Increase critical spare parts inventory by 40% to reduce delays.",
-                      total: "Combined monthly impact: ~Br 90,300 in direct costs and productivity losses."
+                  {[
+                    {
+                      question: "Which site has the highest maintenance cost this month?",
+                      answer: "Addis Ababa Site — Br 82,400. Main drivers: high emergency work orders, heavy spare-part consumption for excavators, and increased overtime labor hours."
+                    },
+                    {
+                      question: "What are the main maintenance issues this month and their impact?",
+                      answer: {
+                        main: "Three primary issues are driving higher costs and equipment downtime:",
+                        details: [
+                          {
+                            issue: "Hydraulic system failures",
+                            percentage: "38%",
+                            impact: "This is the leading cause of downtime, affecting multiple excavators and loaders. Most failures occur due to seal degradation and contamination from harsh operating conditions.",
+                            cost: "Estimated monthly cost: Br 42,000 in repairs and lost productivity"
+                          },
+                          {
+                            issue: "Engine overheating",
+                            percentage: "27%",
+                            impact: "Primarily affecting older equipment and those operating in high-temperature conditions. Coolant system failures and radiator blockages are common causes.",
+                            cost: "Estimated monthly cost: Br 28,500 including engine repairs and preventive measures"
+                          },
+                          {
+                            issue: "Delayed spare-part availability",
+                            percentage: "19%",
+                            impact: "Critical parts often take 3-5 days to arrive, extending equipment downtime. This is compounded by insufficient inventory levels for commonly failing components.",
+                            cost: "Estimated monthly cost: Br 19,800 in extended downtime and emergency shipping fees"
+                          }
+                        ],
+                        recommendation: "Immediate actions: (1) Implement preventive seal replacement program, (2) Upgrade cooling systems on high-risk equipment, (3) Increase critical spare parts inventory by 40% to reduce delays.",
+                        total: "Combined monthly impact: ~Br 90,300 in direct costs and productivity losses."
+                      }
                     }
-                  }
-                ].map((qa, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 10 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.1 }}
-                    className="group"
-                  >
-                    {/* User Question - Right Side */}
-                    <div className="bg-muted/30 dark:bg-zinc-900/50 px-4 sm:px-6 py-4">
-                      <div className="flex gap-3 sm:gap-4 justify-end items-start">
-                        <div className="flex-1 min-w-0 flex justify-end">
-                          <p className="text-sm font-medium text-foreground leading-relaxed whitespace-pre-wrap text-right max-w-full sm:max-w-[85%] break-words">{qa.question}</p>
-                        </div>
-                        <div className="w-8 h-8 rounded-full bg-[#70c82a] dark:bg-[#70c82a] flex items-center justify-center flex-shrink-0 mt-1">
-                          <User className="w-4 h-4 text-white" />
+                  ].map((qa, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 10 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: i * 0.1 }}
+                      className="group"
+                    >
+                      {/* User Question - Right Side */}
+                      <div className="bg-muted/30 dark:bg-zinc-900/50 px-4 sm:px-6 py-4">
+                        <div className="flex gap-3 sm:gap-4 justify-end items-start">
+                          <div className="flex-1 min-w-0 flex justify-end">
+                            <p className="text-sm font-medium text-foreground leading-relaxed whitespace-pre-wrap text-right max-w-full sm:max-w-[85%] break-words">{qa.question}</p>
+                          </div>
+                          <div className="w-8 h-8 rounded-full bg-[#70c82a] dark:bg-[#70c82a] flex items-center justify-center flex-shrink-0 mt-1">
+                            <User className="w-4 h-4 text-white" />
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* AI Answer - Left Side */}
-                    <div className="bg-background dark:bg-zinc-950 px-4 sm:px-6 py-4">
-                      <div className="flex gap-3 sm:gap-4 items-start">
-                        <div className="w-8 h-8 rounded-full bg-[#70c82a]/20 dark:bg-[#70c82a]/20 flex items-center justify-center flex-shrink-0 mt-1 border border-[#70c82a]/30">
-                          <Cpu className="w-4 h-4 text-[#70c82a]" />
-                        </div>
-                        <div className="flex-1 min-w-0 pt-1">
-                          {typeof qa.answer === 'string' ? (
-                            <div className="prose prose-sm dark:prose-invert max-w-none">
-                              <p className="text-foreground leading-relaxed whitespace-pre-wrap break-words">{qa.answer}</p>
-                            </div>
-                          ) : (
-                            <div className="space-y-4">
-                              <p className="text-foreground leading-relaxed break-words">{qa.answer.main}</p>
-                              
-                              <div className="space-y-6">
-                                {qa.answer.details.map((detail: any, idx: number) => (
-                                  <div key={idx} className="border-l-2 border-[#70c82a]/30 pl-4 space-y-2">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                      <h4 className="text-base font-semibold text-foreground break-words">{detail.issue}</h4>
-                                      <span className="px-2 py-0.5 rounded bg-[#70c82a]/10 text-[#70c82a] text-xs font-bold flex-shrink-0">{detail.percentage}</span>
-                                    </div>
-                                    <p className="text-sm text-muted-foreground leading-relaxed break-words">{detail.impact}</p>
-                                    <p className="text-xs text-[#70c82a] font-medium break-words">{detail.cost}</p>
-                                  </div>
-                                ))}
+                      {/* AI Answer - Left Side */}
+                      <div className="bg-background dark:bg-zinc-950 px-4 sm:px-6 py-4">
+                        <div className="flex gap-3 sm:gap-4 items-start">
+                          <div className="w-8 h-8 rounded-full bg-[#70c82a]/20 dark:bg-[#70c82a]/20 flex items-center justify-center flex-shrink-0 mt-1 border border-[#70c82a]/30">
+                            <Cpu className="w-4 h-4 text-[#70c82a]" />
+                          </div>
+                          <div className="flex-1 min-w-0 pt-1">
+                            {typeof qa.answer === 'string' ? (
+                              <div className="prose prose-sm dark:prose-invert max-w-none">
+                                <p className="text-foreground leading-relaxed whitespace-pre-wrap break-words">{qa.answer}</p>
                               </div>
+                            ) : (
+                              <div className="space-y-4">
+                                <p className="text-foreground leading-relaxed break-words">{qa.answer.main}</p>
 
-                              {qa.answer.recommendation && (
-                                <div className="mt-6 p-4 bg-[#70c82a]/5 dark:bg-[#70c82a]/10 rounded-lg border border-[#70c82a]/20">
-                                  <p className="text-sm font-semibold text-foreground mb-2">Recommended Actions:</p>
-                                  <p className="text-sm text-muted-foreground leading-relaxed break-words">{qa.answer.recommendation}</p>
+                                <div className="space-y-6">
+                                  {qa.answer.details.map((detail: any, idx: number) => (
+                                    <div key={idx} className="border-l-2 border-[#70c82a]/30 pl-4 space-y-2">
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <h4 className="text-base font-semibold text-foreground break-words">{detail.issue}</h4>
+                                        <span className="px-2 py-0.5 rounded bg-[#70c82a]/10 text-[#70c82a] text-xs font-bold flex-shrink-0">{detail.percentage}</span>
+                                      </div>
+                                      <p className="text-sm text-muted-foreground leading-relaxed break-words">{detail.impact}</p>
+                                      <p className="text-xs text-[#70c82a] font-medium break-words">{detail.cost}</p>
+                                    </div>
+                                  ))}
                                 </div>
-                              )}
 
-                              {qa.answer.total && (
-                                <div className="mt-4 pt-4 border-t border-border dark:border-zinc-800">
-                                  <p className="text-sm font-bold text-foreground break-words">{qa.answer.total}</p>
-                                </div>
-                              )}
-                            </div>
-                          )}
+                                {qa.answer.recommendation && (
+                                  <div className="mt-6 p-4 bg-[#70c82a]/5 dark:bg-[#70c82a]/10 rounded-lg border border-[#70c82a]/20">
+                                    <p className="text-sm font-semibold text-foreground mb-2">Recommended Actions:</p>
+                                    <p className="text-sm text-muted-foreground leading-relaxed break-words">{qa.answer.recommendation}</p>
+                                  </div>
+                                )}
+
+                                {qa.answer.total && (
+                                  <div className="mt-4 pt-4 border-t border-border dark:border-zinc-800">
+                                    <p className="text-sm font-bold text-foreground break-words">{qa.answer.total}</p>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -2627,7 +2625,7 @@ export default function LandingPage() {
             </motion.div>
           </div>
 
-         
+
         </div>
       </section>
 
@@ -2690,125 +2688,125 @@ export default function LandingPage() {
         </div>
       </section>
 
-    {/* Footer */}
-<footer className="bg-muted dark:bg-black pt-12 pb-4">
-  <div className="container mx-auto px-4 lg:px-8 text-foreground">
-    <div className="grid grid-cols-1 md:grid-cols-5 gap-8 mb-8">
-      {/* Logo Section */}
-      <div className="space-y-4 md:col-span-1">
-        <div className="flex items-center gap-3">
-         <div className="relative">
-  <Image
-    src="/ecwc png logo.png"
-    alt="ECWC Logo"
-    width={80}
-    height={80}
-    className="object-contain"
-    quality={100}
-    unoptimized
-    priority
-  />
-</div>
-
-          <div>
-            <div className="font-bold text-foreground">ECWC  </div>
-        
-          </div>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          Enterprise equipment management platform designed specifically for ECWC construction operations.
-        </p>
-      </div>
-
-      {/* Footer Links - Mobile: 2 rows with 2 columns each, Desktop: 4 columns */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:col-span-4">
-        {/* Row 1: System and Support */}
-        <div className="space-y-4">
-          <h4 className="font-semibold text-foreground">System</h4>
-          <ul className="space-y-2">
-            {["Dashboard", "Equipment", "Work Orders", "Reports", "Inventory"].map((link, j) => (
-              <li key={j}>
-                <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  {link}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="space-y-4">
-          <h4 className="font-semibold text-foreground">Support</h4>
-          <ul className="space-y-2">
-            {["IT Help Desk", "User Manual", "Training", "System Status", "Contact"].map((link, j) => (
-              <li key={j}>
-                <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  {link}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Row 2: Company and Follow Us */}
-        <div className="space-y-4">
-          <h4 className="font-semibold text-foreground">Company</h4>
-          <ul className="space-y-2">
-            {["About ECWC", "Departments", "Policies", "Careers", "Contact"].map((link, j) => (
-              <li key={j}>
-                <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  {link}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="space-y-4">
-          <h4 className="font-semibold text-foreground">Socials</h4>
-          <div className="space-y-2">
-            {[
-              { name: "Website", icon: Globe, href: "http://ecwc.gov.et/" },
-              { name: "LinkedIn", icon: Linkedin, href: "https://www.linkedin.com/company/ethiopian-construction-work-corporation/about/" },
-              { name: "Telegram", icon: Send, href: "https://t.me/s/ECWCCOM" },
-              { name: "Facebook", icon: Facebook, href: "https://web.facebook.com/EthiopianConstructionWorksCorporation" }
-            ].map((social, i) => (
-              <Link
-                key={i}
-                href={social.href}
-                className="flex items-center gap-3 text-sm text-muted-foreground hover:text-[#70c82a] transition-colors group"
-              >
-                <div className="w-8 h-8 rounded-lg bg-[#70c82a]/10 dark:bg-[#70c82a]/20 flex items-center justify-center group-hover:bg-[#70c82a]/20 dark:group-hover:bg-[#70c82a]/30 transition-colors border border-[#70c82a]/20">
-                  <social.icon className="w-4 h-4 text-[#70c82a]" />
+      {/* Footer */}
+      <footer className="bg-muted dark:bg-black pt-12 pb-4">
+        <div className="container mx-auto px-4 lg:px-8 text-foreground">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-8 mb-8">
+            {/* Logo Section */}
+            <div className="space-y-4 md:col-span-1">
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <Image
+                    src="/ecwc png logo.png"
+                    alt="ECWC Logo"
+                    width={80}
+                    height={80}
+                    className="object-contain"
+                    quality={100}
+                    unoptimized
+                    priority
+                  />
                 </div>
-                <span>{social.name}</span>
-              </Link>
-            ))}
+
+                <div>
+                  <div className="font-bold text-foreground">ECWC  </div>
+
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Enterprise equipment management platform designed specifically for ECWC construction operations.
+              </p>
+            </div>
+
+            {/* Footer Links - Mobile: 2 rows with 2 columns each, Desktop: 4 columns */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:col-span-4">
+              {/* Row 1: System and Support */}
+              <div className="space-y-4">
+                <h4 className="font-semibold text-foreground">System</h4>
+                <ul className="space-y-2">
+                  {["Dashboard", "Equipment", "Work Orders", "Reports", "Inventory"].map((link, j) => (
+                    <li key={j}>
+                      <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                        {link}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="space-y-4">
+                <h4 className="font-semibold text-foreground">Support</h4>
+                <ul className="space-y-2">
+                  {["IT Help Desk", "User Manual", "Training", "System Status", "Contact"].map((link, j) => (
+                    <li key={j}>
+                      <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                        {link}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Row 2: Company and Follow Us */}
+              <div className="space-y-4">
+                <h4 className="font-semibold text-foreground">Company</h4>
+                <ul className="space-y-2">
+                  {["About ECWC", "Departments", "Policies", "Careers", "Contact"].map((link, j) => (
+                    <li key={j}>
+                      <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                        {link}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="space-y-4">
+                <h4 className="font-semibold text-foreground">Socials</h4>
+                <div className="space-y-2">
+                  {[
+                    { name: "Website", icon: Globe, href: "http://ecwc.gov.et/" },
+                    { name: "LinkedIn", icon: Linkedin, href: "https://www.linkedin.com/company/ethiopian-construction-work-corporation/about/" },
+                    { name: "Telegram", icon: Send, href: "https://t.me/s/ECWCCOM" },
+                    { name: "Facebook", icon: Facebook, href: "https://web.facebook.com/EthiopianConstructionWorksCorporation" }
+                  ].map((social, i) => (
+                    <Link
+                      key={i}
+                      href={social.href}
+                      className="flex items-center gap-3 text-sm text-muted-foreground hover:text-[#70c82a] transition-colors group"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-[#70c82a]/10 dark:bg-[#70c82a]/20 flex items-center justify-center group-hover:bg-[#70c82a]/20 dark:group-hover:bg-[#70c82a]/30 transition-colors border border-[#70c82a]/20">
+                        <social.icon className="w-4 h-4 text-[#70c82a]" />
+                      </div>
+                      <span>{social.name}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Motto - E,C,W,C in ECWC green - below footer links */}
+          <div className="pt-6 pb-4 text-center border-t border-border dark:border-gray-800">
+            <p className="text-xs sm:text-sm text-muted-foreground font-medium tracking-wide mb-0">
+              <span className="text-base sm:text-lg font-bold text-[#70c82a]">E</span>XECUTION | <span className="text-base sm:text-lg font-bold text-[#70c82a]">C</span>OMMERCIAL AWARENESS | <span className="text-base sm:text-lg font-bold text-[#70c82a]">W</span>INNING LEADERSHIP | <span className="text-base sm:text-lg font-bold text-[#70c82a]">C</span>LEAR STANDARDS & PROCEDURES
+            </p>
+          </div>
+
+          <div className="pt-8 border-t border-border dark:border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-sm text-muted-foreground">
+              © 2026 ECWC Plant Equipment Management System. Internal use only.
+            </p>
+            <div className="flex items-center gap-4">
+              <ThemeToggle />
+              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                Privacy Policy
+              </Button>
+              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                Terms of Service
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-
-    {/* Motto - E,C,W,C in ECWC green - below footer links */}
-    <div className="pt-6 pb-4 text-center border-t border-border dark:border-gray-800">
-      <p className="text-xs sm:text-sm text-muted-foreground font-medium tracking-wide mb-0">
-        <span className="text-base sm:text-lg font-bold text-[#70c82a]">E</span>XECUTION | <span className="text-base sm:text-lg font-bold text-[#70c82a]">C</span>OMMERCIAL AWARENESS | <span className="text-base sm:text-lg font-bold text-[#70c82a]">W</span>INNING LEADERSHIP | <span className="text-base sm:text-lg font-bold text-[#70c82a]">C</span>LEAR STANDARDS & PROCEDURES
-      </p>
-    </div>
-
-    <div className="pt-8 border-t border-border dark:border-gray-800 flex flex-col md:flex-row justify-between items-center gap-4">
-      <p className="text-sm text-muted-foreground">
-        © 2026 ECWC Plant Equipment Management System. Internal use only.
-      </p>
-      <div className="flex items-center gap-4">
-        <ThemeToggle />
-        <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-          Privacy Policy
-        </Button>
-        <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-          Terms of Service
-        </Button>
-      </div>
-    </div>
-  </div>
-</footer>
+      </footer>
 
     </div>
   )
