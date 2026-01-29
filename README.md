@@ -84,8 +84,18 @@ npm run dev
 
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
+- `npm run build:win` - Build using a path without spaces (Windows; use if `build` fails with EPERM)
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint
+
+### If build fails with EPERM (operation not permitted on `.next\trace`)
+
+On Windows this often happens when the dev server is running or the project path is locked. Try:
+
+1. **Stop the dev server** – Press `Ctrl+C` in the terminal where `npm run dev` is running.
+2. **Run build from an external terminal** – Open PowerShell or Command Prompt *outside* Cursor, go to the project folder, and run `npm run build`.
+3. **Use the Windows workaround** – Run `npm run build:win` (builds via a drive letter path).
+4. **Run as Administrator** – Right‑click PowerShell or CMD → “Run as administrator”, then `cd` to the project and run `npm run build`.
 
 ## Frontend-Only Template
 

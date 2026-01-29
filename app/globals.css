@@ -2,6 +2,119 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Leaflet map - required for compound map to display */
+@import 'leaflet/dist/leaflet.css';
+
+/* Dark blue compound map: controls and attribution */
+.compound-map-dark .leaflet-control-zoom {
+  border: 1px solid rgba(255,255,255,0.15) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+.compound-map-dark .leaflet-control-zoom a {
+  background: #1e293b !important;
+  color: #94a3b8 !important;
+  border-color: rgba(255,255,255,0.08) !important;
+}
+.compound-map-dark .leaflet-control-zoom a:hover {
+  background: #334155 !important;
+  color: #e2e8f0 !important;
+}
+.compound-map-dark .leaflet-control-attribution {
+  background: rgba(15,23,42,0.85) !important;
+  color: #64748b !important;
+  font-size: 10px;
+}
+.compound-map-dark .leaflet-control-attribution a {
+  color: #60a5fa !important;
+}
+.compound-map-dark .leaflet-container {
+  transition: opacity 0.2s ease;
+}
+
+/* Layer control (base layer chooser) - buildings, dark, light, etc. */
+.compound-map-layers .leaflet-control-layers {
+  border: 1px solid rgba(255,255,255,0.15) !important;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.35);
+  border-radius: 8px;
+  background: rgba(15,23,42,0.95) !important;
+}
+.compound-map-layers .leaflet-control-layers-expanded {
+  padding: 8px 12px;
+  min-width: 180px;
+}
+.compound-map-layers .leaflet-control-layers label {
+  color: #e2e8f0;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  cursor: pointer;
+}
+.compound-map-layers .leaflet-control-layers label:hover {
+  color: #f8fafc;
+}
+.compound-map-layers .leaflet-control-layers-selector {
+  margin: 0;
+  accent-color: #70c82a;
+}
+.compound-map-layers .leaflet-control-layers-base {
+  font-weight: 500;
+}
+.compound-map-layers .leaflet-control-layers-list {
+  margin: 0;
+}
+.compound-map-layers .leaflet-control-zoom {
+  border: 1px solid rgba(255,255,255,0.15) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+.compound-map-layers .leaflet-control-zoom a {
+  background: #1e293b !important;
+  color: #94a3b8 !important;
+  border-color: rgba(255,255,255,0.08) !important;
+}
+.compound-map-layers .leaflet-control-zoom a:hover {
+  background: #334155 !important;
+  color: #e2e8f0 !important;
+}
+.compound-map-layers .leaflet-control-attribution {
+  background: rgba(15,23,42,0.85) !important;
+  color: #64748b !important;
+  font-size: 10px;
+}
+.compound-map-layers .leaflet-control-attribution a {
+  color: #60a5fa !important;
+}
+
+/* Satellite-only map: controls over imagery */
+.compound-map-satellite .leaflet-control-zoom {
+  border: 1px solid rgba(255,255,255,0.2) !important;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.35);
+  border-radius: 10px !important;
+  overflow: hidden;
+}
+.compound-map-satellite .leaflet-control-zoom a {
+  background: rgba(15,23,42,0.9) !important;
+  color: #e2e8f0 !important;
+  border-color: rgba(255,255,255,0.1) !important;
+}
+.compound-map-satellite .leaflet-control-zoom a:hover {
+  background: rgba(30,41,59,0.95) !important;
+  color: #fff !important;
+}
+.compound-map-satellite .leaflet-control-attribution {
+  background: rgba(15,23,42,0.85) !important;
+  color: #94a3b8 !important;
+  font-size: 10px;
+  border-radius: 0 10px 0 0;
+}
+.compound-map-satellite .leaflet-control-attribution a {
+  color: #70c82a !important;
+}
+.compound-map-satellite .leaflet-container {
+  border-radius: inherit;
+}
+
 @layer base {
   :root {
     /* CEO-grade light mode: #70c82a primary, warm off-whites, refined neutrals */

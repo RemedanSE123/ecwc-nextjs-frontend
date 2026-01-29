@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
+import dynamic from "next/dynamic"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -75,6 +76,11 @@ import {
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import { ThemeToggle } from "@/components/theme-toggle"
 import Image from "next/image"
+
+const CompoundMap = dynamic(
+  () => import("@/components/compound-map/CompoundMap").then((m) => m.default),
+  { ssr: false, loading: () => <div className="flex min-h-[480px] items-center justify-center rounded-xl border bg-muted/30 text-muted-foreground">Loading map…</div> }
+)
 
 // Helper function to get equipment description
 const getEquipmentDescription = (name: string): string => {
@@ -2196,14 +2202,14 @@ export default function LandingPage() {
               },
               {
                 icon: Zap,
-                title: "Suggest preventive maintenance actions",
+                title: " preventive maintenance actions",
                 metric: "2.4x",
                 label: "ROI Improvement",
                 desc: "AI-driven scheduling optimizes maintenance windows, reducing downtime and maximizing asset utilization across the fleet."
               },
               {
                 icon: AlertTriangle,
-                title: "Identify abnormal maintenance spending",
+                title: "Identify abnormal maintenance ",
                 metric: "Br 47K",
                 label: "Cost Saved/Month",
                 desc: "Real-time anomaly detection flags unusual spending patterns and asset wear, enabling immediate corrective action."
@@ -2369,9 +2375,9 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* Chat Messages Container */}
-              <div className="h-[600px] overflow-y-auto overflow-x-hidden bg-gradient-to-b from-background to-muted/20">
-                <div className="divide-y divide-border dark:divide-zinc-800">
+              {/* Chat Messages Container - no vertical scroll, compact */}
+              <div className="overflow-hidden bg-gradient-to-b from-background to-muted/20">
+                <div className="divide-y divide-border dark:divide-zinc-800 px-1">
                   {[
                     {
                       question: "Which site has the highest maintenance cost this month?",
@@ -2380,7 +2386,7 @@ export default function LandingPage() {
                     {
                       question: "What are the main maintenance issues this month and their impact?",
                       answer: {
-                        main: "Three primary issues are driving higher costs and equipment downtime:",
+                        main: "Two primary issues are driving higher costs and equipment downtime:",
                         details: [
                           {
                             issue: "Hydraulic system failures",
@@ -2393,16 +2399,10 @@ export default function LandingPage() {
                             percentage: "27%",
                             impact: "Primarily affecting older equipment and those operating in high-temperature conditions. Coolant system failures and radiator blockages are common causes.",
                             cost: "Estimated monthly cost: Br 28,500 including engine repairs and preventive measures"
-                          },
-                          {
-                            issue: "Delayed spare-part availability",
-                            percentage: "19%",
-                            impact: "Critical parts often take 3-5 days to arrive, extending equipment downtime. This is compounded by insufficient inventory levels for commonly failing components.",
-                            cost: "Estimated monthly cost: Br 19,800 in extended downtime and emergency shipping fees"
                           }
                         ],
-                        recommendation: "Immediate actions: (1) Implement preventive seal replacement program, (2) Upgrade cooling systems on high-risk equipment, (3) Increase critical spare parts inventory by 40% to reduce delays.",
-                        total: "Combined monthly impact: ~Br 90,300 in direct costs and productivity losses."
+                        recommendation: "Immediate actions: (1) Implement preventive seal replacement program, (2) Upgrade cooling systems on high-risk equipment.",
+                        total: "Combined monthly impact: ~Br 70,500 in direct costs and productivity losses."
                       }
                     }
                   ].map((qa, i) => (
@@ -2415,7 +2415,7 @@ export default function LandingPage() {
                       className="group"
                     >
                       {/* User Question - Right Side */}
-                      <div className="bg-muted/30 dark:bg-zinc-900/50 px-4 sm:px-6 py-4">
+                      <div className="bg-muted/30 dark:bg-zinc-900/50 px-4 sm:px-6 py-3">
                         <div className="flex gap-3 sm:gap-4 justify-end items-start">
                           <div className="flex-1 min-w-0 flex justify-end">
                             <p className="text-sm font-medium text-foreground leading-relaxed whitespace-pre-wrap text-right max-w-full sm:max-w-[85%] break-words">{qa.question}</p>
@@ -2427,7 +2427,7 @@ export default function LandingPage() {
                       </div>
 
                       {/* AI Answer - Left Side */}
-                      <div className="bg-background dark:bg-zinc-950 px-4 sm:px-6 py-4">
+                      <div className="bg-background dark:bg-zinc-950 px-4 sm:px-6 py-3">
                         <div className="flex gap-3 sm:gap-4 items-start">
                           <div className="w-8 h-8 rounded-full bg-[#70c82a]/20 dark:bg-[#70c82a]/20 flex items-center justify-center flex-shrink-0 mt-1 border border-[#70c82a]/30">
                             <Cpu className="w-4 h-4 text-[#70c82a]" />
@@ -2441,9 +2441,9 @@ export default function LandingPage() {
                               <div className="space-y-4">
                                 <p className="text-foreground leading-relaxed break-words">{qa.answer.main}</p>
 
-                                <div className="space-y-6">
+                                <div className="space-y-4">
                                   {qa.answer.details.map((detail: any, idx: number) => (
-                                    <div key={idx} className="border-l-2 border-[#70c82a]/30 pl-4 space-y-2">
+                                    <div key={idx} className="border-l-2 border-[#70c82a]/30 pl-3 space-y-1.5">
                                       <div className="flex items-center gap-2 flex-wrap">
                                         <h4 className="text-base font-semibold text-foreground break-words">{detail.issue}</h4>
                                         <span className="px-2 py-0.5 rounded bg-[#70c82a]/10 text-[#70c82a] text-xs font-bold flex-shrink-0">{detail.percentage}</span>
@@ -2455,14 +2455,14 @@ export default function LandingPage() {
                                 </div>
 
                                 {qa.answer.recommendation && (
-                                  <div className="mt-6 p-4 bg-[#70c82a]/5 dark:bg-[#70c82a]/10 rounded-lg border border-[#70c82a]/20">
-                                    <p className="text-sm font-semibold text-foreground mb-2">Recommended Actions:</p>
+                                  <div className="mt-4 p-3 bg-[#70c82a]/5 dark:bg-[#70c82a]/10 rounded-lg border border-[#70c82a]/20">
+                                    <p className="text-sm font-semibold text-foreground mb-1">Recommended Actions:</p>
                                     <p className="text-sm text-muted-foreground leading-relaxed break-words">{qa.answer.recommendation}</p>
                                   </div>
                                 )}
 
                                 {qa.answer.total && (
-                                  <div className="mt-4 pt-4 border-t border-border dark:border-zinc-800">
+                                  <div className="mt-3 pt-3 border-t border-border dark:border-zinc-800">
                                     <p className="text-sm font-bold text-foreground break-words">{qa.answer.total}</p>
                                   </div>
                                 )}
@@ -2475,8 +2475,50 @@ export default function LandingPage() {
                   ))}
                 </div>
               </div>
+
+              {/* Input + Send */}
+              <div className="border-t border-border dark:border-zinc-800 px-4 sm:px-6 py-3 bg-background dark:bg-zinc-950">
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="text"
+                    placeholder="Ask a follow-up question…"
+                    className="flex-1 min-w-0 rounded-xl border border-border dark:border-zinc-700 bg-muted/30 dark:bg-zinc-800/50 px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#70c82a]/50 focus:border-[#70c82a]/50"
+                  />
+                  <button
+                    type="button"
+                    className="shrink-0 w-10 h-10 rounded-xl bg-[#70c82a] hover:bg-[#70c82a]/90 text-white flex items-center justify-center transition-colors"
+                    aria-label="Send"
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
             </div>
           </motion.div>
+        </div>
+      </section>
+
+      {/* ECWC Compound Map - big title like AI section, tall section and map */}
+      <section id="compound-map" className="min-h-screen w-full flex flex-col bg-background dark:bg-zinc-950 border-t border-border dark:border-zinc-800/50">
+        <div className="shrink-0 relative overflow-hidden border-b border-border dark:border-zinc-800">
+          <div className="absolute inset-0 bg-gradient-to-b from-background via-muted/30 to-background dark:from-black dark:via-zinc-950 dark:to-black" />
+          <div className="container mx-auto px-4 lg:px-8 relative z-10 py-8 sm:py-12">
+            <div className="text-center">
+              
+              <h2 className="text-4xl md:text-6xl font-bold text-foreground mb-4">
+                <span className="text-[#70c82a]">ECWC Compound</span> Map
+              </h2>
+              <p className="text-muted-foreground text-lg max-w-3xl mx-auto mb-3">
+                Explore sites, assets, and locations — all in one interactive view
+              </p>
+             
+            </div>
+          </div>
+        </div>
+        <div className="flex-1 min-h-[85vh] w-full px-4 sm:px-6 lg:px-12 flex justify-center py-4">
+          <div className="w-full max-w-[1600px] h-full min-h-[75vh]">
+            <CompoundMap />
+          </div>
         </div>
       </section>
 

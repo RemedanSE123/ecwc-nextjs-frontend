@@ -19,6 +19,7 @@ import {
   Info,
   Truck,
   Car,
+  MapPin,
 } from 'lucide-react';
 import { useState } from 'react';
 import Image from 'next/image';
@@ -36,6 +37,7 @@ interface NavItem {
 
 const navigation: NavItem[] = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+  { name: 'Compound Map', href: '/compound-map', icon: MapPin },
   {
     name: 'Equipment',
     href: '/equipment',

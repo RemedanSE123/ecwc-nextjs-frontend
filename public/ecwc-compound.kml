@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document id="14Qm1aUGZdkw6yf5-CUlJvwqYMJ6DX3CC">
+	<name>ECWC Compound</name>
+	<gx:CascadingStyle kml:id="__managed_style_201DFB75513D3E10F256">
+		<styleUrl>https://earth.google.com/balloon_components/base/1.1.0.0/card_template.kml#main</styleUrl>
+		<Style>
+			<IconStyle>
+				<scale>0.9</scale>
+				<Icon>
+					<href>https://earth.google.com/earth/document/icon?color=388e3c&amp;id=2322&amp;scale=4</href>
+				</Icon>
+				<hotSpot x="64" y="128" xunits="pixels" yunits="insetPixels"/>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff2dc0fb</color>
+				<width>6</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>40ffffff</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<StyleMap id="__managed_style_06212FD5553D3E10F256">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#__managed_style_1918AE18663D3E10F256</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#__managed_style_201DFB75513D3E10F256</styleUrl>
+		</Pair>
+	</StyleMap>
+	<gx:CascadingStyle kml:id="__managed_style_06FEEB2E133D3E10F253">
+		<styleUrl>https://earth.google.com/balloon_components/base/1.1.0.0/card_template.kml#main</styleUrl>
+		<Style>
+			<IconStyle>
+				<scale>1.2</scale>
+				<Icon>
+					<href>https://earth.google.com/earth/document/icon?color=1976d2&amp;id=2000&amp;scale=4</href>
+				</Icon>
+				<hotSpot x="64" y="128" xunits="pixels" yunits="insetPixels"/>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff3c8e38</color>
+				<width>6</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>402f2fd3</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<gx:CascadingStyle kml:id="__managed_style_1918AE18663D3E10F256">
+		<styleUrl>https://earth.google.com/balloon_components/base/1.1.0.0/card_template.kml#main</styleUrl>
+		<Style>
+			<IconStyle>
+				<scale>0.75</scale>
+				<Icon>
+					<href>https://earth.google.com/earth/document/icon?color=388e3c&amp;id=2322&amp;scale=4</href>
+				</Icon>
+				<hotSpot x="64" y="128" xunits="pixels" yunits="insetPixels"/>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff2dc0fb</color>
+				<width>4</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>40ffffff</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<gx:CascadingStyle kml:id="__managed_style_150A5681B93D3E10F251">
+		<styleUrl>https://earth.google.com/balloon_components/base/1.1.0.0/card_template.kml#main</styleUrl>
+		<Style>
+			<IconStyle>
+				<Icon>
+					<href>https://earth.google.com/earth/document/icon?color=1976d2&amp;id=2000&amp;scale=4</href>
+				</Icon>
+				<hotSpot x="64" y="128" xunits="pixels" yunits="insetPixels"/>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff3c8e38</color>
+				<width>4</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>402f2fd3</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<StyleMap id="__managed_style_0A719025793D3E10F251">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#__managed_style_150A5681B93D3E10F251</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#__managed_style_06FEEB2E133D3E10F253</styleUrl>
+		</Pair>
+	</StyleMap>
+	<gx:CascadingStyle kml:id="__managed_style_0019C9F3F63D3E10F244">
+		<Style>
+			<IconStyle>
+				<scale>1.2</scale>
+				<Icon>
+					<href>https://earth.google.com/earth/document/icon?color=1976d2&amp;id=2000&amp;scale=4</href>
+				</Icon>
+				<hotSpot x="64" y="128" xunits="pixels" yunits="insetPixels"/>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff3c8e38</color>
+				<width>6</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>402f2fd3</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<gx:CascadingStyle kml:id="__managed_style_1151EEE1C53D3E10F243">
+		<Style>
+			<IconStyle>
+				<Icon>
+					<href>https://earth.google.com/earth/document/icon?color=1976d2&amp;id=2000&amp;scale=4</href>
+				</Icon>
+				<hotSpot x="64" y="128" xunits="pixels" yunits="insetPixels"/>
+			</IconStyle>
+			<LabelStyle>
+			</LabelStyle>
+			<LineStyle>
+				<color>ff3c8e38</color>
+				<width>4</width>
+			</LineStyle>
+			<PolyStyle>
+				<color>402f2fd3</color>
+			</PolyStyle>
+			<BalloonStyle>
+			</BalloonStyle>
+		</Style>
+	</gx:CascadingStyle>
+	<StyleMap id="__managed_style_00F3DBE6633D3E10F243">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#__managed_style_1151EEE1C53D3E10F243</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#__managed_style_0019C9F3F63D3E10F244</styleUrl>
+		</Pair>
+	</StyleMap>
+	<Placemark id="07A16B87F53D3B1F0831">
+		<name>ECWC Head Office</name>
+		<LookAt>
+			<longitude>38.82260459659598</longitude>
+			<latitude>9.021808898357342</latitude>
+			<altitude>2380.784158333087</altitude>
+			<heading>13.21452012503962</heading>
+			<tilt>0</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>480.2967365632504</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_00F3DBE6633D3E10F243</styleUrl>
+		<Polygon>
+			<outerBoundaryIs>
+				<LinearRing>
+					<coordinates>
+						38.82334033468189,9.020837936638877,0 38.82350314719073,9.022387527286561,0 38.82217527299489,9.022509867730614,0 38.82208379527292,9.02137968319802,0 38.82215969353743,9.021284065532063,0 38.8221375424344,9.020961612689469,0 38.82334033468189,9.020837936638877,0 
+					</coordinates>
+				</LinearRing>
+			</outerBoundaryIs>
+		</Polygon>
+	</Placemark>
+	<Placemark id="0AD9EF70E93D3A551974">
+		<name>ECWC Kality P&amp;E</name>
+		<LookAt>
+			<longitude>38.76969660750263</longitude>
+			<latitude>8.926826432080174</latitude>
+			<altitude>2181.652922803534</altitude>
+			<heading>143.0896761712104</heading>
+			<tilt>0</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>1118.856611282827</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_0A719025793D3E10F251</styleUrl>
+		<Polygon>
+			<outerBoundaryIs>
+				<LinearRing>
+					<coordinates>
+						38.7715274451233,8.930944416033334,0 38.76853148962655,8.929279426895409,0 38.76836416051015,8.928911820340772,0 38.76918842180778,8.927426360212523,0 38.76939909711034,8.927119924311075,0 38.77112191310945,8.925177039592246,0 38.77309806116382,8.926560124190454,0 38.77376847254352,8.926698917979706,0 38.77206448688222,8.929488153940236,0 38.77227119307362,8.929620621930011,0 38.7715274451233,8.930944416033334,0 
+					</coordinates>
+				</LinearRing>
+			</outerBoundaryIs>
+		</Polygon>
+	</Placemark>
+	<Placemark id="04AA5675BA3D3DD17A48">
+		<name>METAL WORKSHOP</name>
+		<description><![CDATA[<div><span style="line-height: 115%;"><span class="font" style="font-family: Aptos, sans-serif;"><span class="size" style="font-size: 12pt;">Performs
+cutting, welding, and shaping of metal parts.</span></span></span><br></div>]]></description>
+		<LookAt>
+			<longitude>38.77041337440236</longitude>
+			<latitude>8.927393067393702</latitude>
+			<altitude>2179.5037479757</altitude>
+			<heading>148.2672145218414</heading>
+			<tilt>1.368191439487818</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>162.405473480303</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_06212FD5553D3E10F256</styleUrl>
+		<Point>
+			<coordinates>38.7705087418781,8.927373563091809,2178.998713421704</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="0F03F361863D3DD25408">
+		<name>MODIFICATION WORKSHOP</name>
+		<description><![CDATA[<div><span style="line-height: 115%;"><span class="font" style="font-family: Aptos, sans-serif;"><span class="size" style="font-size: 12pt;">Modifies
+and upgrades equipment, vehicles, and metal structures.</span></span></span><br></div>]]></description>
+		<LookAt>
+			<longitude>38.77002688731415</longitude>
+			<latitude>8.927009708223135</latitude>
+			<altitude>2181.153999973405</altitude>
+			<heading>148.2671545449091</heading>
+			<tilt>1.368191084722337</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>160.7547764426999</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_06212FD5553D3E10F256</styleUrl>
+		<Point>
+			<coordinates>38.76983250050594,8.926969331169053,2180.888295066766</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="0F8DCDF6E23D3DD332C9">
+		<name>FLEXI FLUME FACTORY</name>
+		<description><![CDATA[<div><span style="line-height: 115%;"><span class="font" style="font-family:Aptos, sans-serif"><span class="size" style="font-size:12pt">Produces
+flume pipes used for water transport and irrigation systems.</span></span></span><br></div>]]></description>
+		<LookAt>
+			<longitude>38.77081121277423</longitude>
+			<latitude>8.927670655399782</latitude>
+			<altitude>2177.047996877511</altitude>
+			<heading>148.2672507024593</heading>
+			<tilt>1.368211823840877</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>257.3731489098282</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_06212FD5553D3E10F256</styleUrl>
+		<Point>
+			<coordinates>38.77108214738418,8.927901475751289,2176.098636942948</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="08D31514073D3DD41571">
+		<name>FABRICATION WORKSHOP</name>
+		<description><![CDATA[<div><span style="line-height: 115%;"><span class="font" style="font-family:Aptos, sans-serif"><span class="size" style="font-size:12pt">Manufactures
+steel structures and metal components.</span></span></span><br></div>]]></description>
+		<LookAt>
+			<longitude>38.77027864804449</longitude>
+			<latitude>8.927381470707699</latitude>
+			<altitude>2180.076839403881</altitude>
+			<heading>148.2671680537994</heading>
+			<tilt>1.368211173310625</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>254.3434426543172</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_06212FD5553D3E10F256</styleUrl>
+		<Point>
+			<coordinates>38.77006204746678,8.927135888278949,2181.083932022324</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="02FB1A64D73D3A56ACD4">
+		<name>ECWC Kality Production</name>
+		<LookAt>
+			<longitude>38.76763986220909</longitude>
+			<latitude>8.927373044752978</latitude>
+			<altitude>2180.32857431807</altitude>
+			<heading>143.0894422181237</heading>
+			<tilt>0</tilt>
+			<gx:fovy>35</gx:fovy>
+			<range>712.1035563680927</range>
+			<altitudeMode>absolute</altitudeMode>
+		</LookAt>
+		<styleUrl>#__managed_style_00F3DBE6633D3E10F243</styleUrl>
+		<Polygon>
+			<outerBoundaryIs>
+				<LinearRing>
+					<coordinates>
+						38.76854946438375,8.928393318365412,0 38.76830342656837,8.927966475412678,0 38.76814473858769,8.928022375180516,0 38.76808734742645,8.927963215466889,0 38.76804690810986,8.927987558780025,0 38.76798080170211,8.928081180556681,0 38.76792173553223,8.92822754603468,0 38.76669329029268,8.925988827370238,0 38.7687964396397,8.923571147168444,0 38.77083061973681,8.925370735944387,0 38.7695728887352,8.9267818731589,0 38.7694233803284,8.926960327873942,0 38.76924419036332,8.927158839682361,0 38.7691305795685,8.927321973658444,0 38.76905512104637,8.927457480509322,0 38.76854946438375,8.928393318365412,0 
+					</coordinates>
+				</LinearRing>
+			</outerBoundaryIs>
+		</Polygon>
+	</Placemark>
+</Document>
+</kml>
