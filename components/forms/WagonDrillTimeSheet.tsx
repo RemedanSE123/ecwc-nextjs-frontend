@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Download, Printer } from "lucide-react"
-import html2pdf from "html2pdf.js"
 
 export default function WagonDrillTimeSheet() {
   const pdfRef = useRef<HTMLDivElement>(null)
@@ -44,6 +43,7 @@ export default function WagonDrillTimeSheet() {
 
   const handleDownloadPDF = async () => {
     if (!pdfRef.current) return
+    const { default: html2pdf } = await import("html2pdf.js")
     const element = pdfRef.current
     const opt = {
       margin: [10, 10, 10, 10],
