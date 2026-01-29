@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   MapContainer,
   TileLayer,
@@ -121,24 +121,26 @@ export default function CompoundMapView({
   onSelectLocation: (loc: MapLocation) => void;
 }) {
   const selectedLocation = locations.find((l) => l.id === selectedId) ?? null;
-  const wrapperRef = useRef<HTMLDivElement>(null);
+  const [mapReady, setMapReady] = useState(false);
   const mapKey = useRef(
     typeof window !== 'undefined' ? `compound-map-${Date.now()}-${Math.random().toString(36).slice(2)}` : 'ssr'
   ).current;
 
-  // Clear Leaflet's container id on unmount so the same DOM node can be reused without "already initialized" error
+  // Render MapContainer only after mount to avoid "Map container is being reused" (Leaflet + React lifecycle)
   useEffect(() => {
-    const wrapper = wrapperRef.current;
-    return () => {
-      const container = wrapper?.querySelector?.('.leaflet-container');
-      if (container && '_leaflet_id' in container) {
-        delete (container as Record<string, unknown>)._leaflet_id;
-      }
-    };
+    setMapReady(true);
   }, []);
 
+  if (!mapReady) {
+    return (
+      <div className="h-full w-full min-h-[480px] flex items-center justify-center bg-muted/30 rounded-2xl">
+        <div className="animate-pulse text-muted-foreground">Loading map…</div>
+      </div>
+    );
+  }
+
   return (
-    <div ref={wrapperRef} className="h-full w-full" data-compound-map-wrapper>
+    <div className="h-full w-full" data-compound-map-wrapper>
       <MapContainer
         key={mapKey}
         center={INITIAL_CENTER}

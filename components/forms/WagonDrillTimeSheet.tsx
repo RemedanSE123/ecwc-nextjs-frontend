@@ -90,11 +90,11 @@ export default function WagonDrillTimeSheet() {
               <p><b>Document No.</b></p>
               <p>OF/ECWC/xxx</p>
             </div>
-            <div className="col-span-2 border-r-2 border-black flex flex-col items-center justify-center py-1 text-[12px] border-t border-black">
+            <div className="col-span-2 border-r-2 border-t border-black flex flex-col items-center justify-center py-1 text-[12px]">
               <p><b>Issue No.</b></p>
               <p>1</p>
             </div>
-            <div className="col-span-8 border-r-2 border-black flex flex-col items-center justify-center py-1 text-center border-t border-black">
+            <div className="col-span-8 border-r-2 border-t border-black flex flex-col items-center justify-center py-1 text-center">
               <p className="text-[18px] font-bold">የዋገን ድሪል /መሰርሰሪያ/ መሣሪያ ታይም ሺት</p>
               <p className="text-[10px] font-bold">WAGON DRILL / BLASTING EQUIPMENT TIME SHEET</p>
             </div>
