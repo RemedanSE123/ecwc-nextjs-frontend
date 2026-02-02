@@ -6,10 +6,19 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Download, Printer } from "lucide-react"
+import { Download, Printer, ClipboardList, LayoutList, DollarSign, List, Check } from "lucide-react"
+import DryCargoCollectedData from "./DryCargoCollectedData"
+import DryCargoCost from "./DryCargoCost"
 
 export default function DryCargoTimeSheet() {
   const pdfRef = useRef<HTMLDivElement>(null)
+  const tabs = [
+    { id: "list" as const, label: "List", icon: List, step: 1 },
+    { id: "entry" as const, label: "Data Entry", icon: ClipboardList, step: 2 },
+    { id: "data" as const, label: "Collected Data", icon: LayoutList, step: 3 },
+    { id: "cost" as const, label: "Cost Analysis", icon: DollarSign, step: 4 },
+  ]
+  const [activeTab, setActiveTab] = useState<"list" | "entry" | "data" | "cost">("list")
   const [formData, setFormData] = useState({
     vehicleType: "",
     serialGoNumber: "",
@@ -68,6 +77,90 @@ export default function DryCargoTimeSheet() {
   const lineInput = "border-0 border-b border-black rounded-none px-0 py-1 h-7 text-[14px] bg-transparent focus-visible:ring-0 focus-visible:border-b-2 focus-visible:border-black print:text-black print:min-h-[1.25rem]"
 
   return (
+    <div className="flex flex-col min-h-0 w-full max-w-full min-w-0 overflow-x-hidden">
+      {/* Navbar: contained in its own layer so wide content below cannot push it */}
+      <div className="sticky top-0 z-30 w-full max-w-full min-w-0 flex-shrink-0 bg-background border-b border-border shadow-sm">
+        <nav className="print:hidden w-full max-w-2xl mx-auto min-h-[4.5rem] py-3 px-4" aria-label="Steps">
+        <div className="w-full relative pt-1">
+        {/* Full background line: from center of List to center of Cost Analysis */}
+        <div
+          className="absolute top-4 h-0.5 -translate-y-1/2 bg-muted-foreground/20 transition-[left,right] duration-300"
+          style={{ left: "12.5%", right: "12.5%" }}
+          aria-hidden
+        />
+        {/* Filled line up to current step */}
+        <div
+          className="absolute top-4 h-0.5 -translate-y-1/2 bg-primary transition-[width] duration-300"
+          style={{
+            left: "12.5%",
+            width: `${(tabs.findIndex((t) => t.id === activeTab) / tabs.length) * 100}%`,
+          }}
+          aria-hidden
+        />
+        <ol className="relative z-10 flex">
+          {tabs.map((tab) => {
+            const isActive = activeTab === tab.id
+            const currentStepIndex = tabs.findIndex((t) => t.id === activeTab)
+            const thisStepIndex = tabs.findIndex((t) => t.id === tab.id)
+            const isCompleted = thisStepIndex < currentStepIndex
+            return (
+              <li key={tab.id} className="flex flex-1 flex-col items-center last:flex-initial">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab(tab.id)}
+                  className="flex flex-col items-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"
+                >
+                  <span
+                    className={`
+                      flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 text-xs font-medium transition-colors
+                      ${isActive
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : isCompleted
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-muted-foreground/30 bg-background text-muted-foreground"
+                      }
+                    `}
+                  >
+                    {isCompleted ? <Check className="h-4 w-4" strokeWidth={2.5} /> : tab.step}
+                  </span>
+                  <span
+                    className={`
+                      text-xs font-medium
+                      ${isActive ? "text-foreground" : "text-muted-foreground"}
+                    `}
+                  >
+                    {tab.label}
+                  </span>
+                </button>
+              </li>
+            )
+          })}
+        </ol>
+        </div>
+        </nav>
+      </div>
+
+      {/* Content area: width constrained so only this area scrolls; navbar never moves */}
+      <div className="flex-1 min-h-[480px] min-w-0 w-full max-w-full mt-6 overflow-x-auto overflow-y-visible">
+      {activeTab === "list" && (
+        <div className="min-h-[400px] rounded-lg border border-dashed border-muted-foreground/30 bg-muted/20 flex items-center justify-center">
+          <p className="text-muted-foreground text-sm">Equipment list — data will appear here.</p>
+        </div>
+      )}
+
+      {activeTab === "data" && (
+        <div className="min-h-[420px] min-w-0 w-full inline-block">
+          <DryCargoCollectedData />
+        </div>
+      )}
+
+      {activeTab === "cost" && (
+        <div className="min-h-[420px]">
+          <DryCargoCost />
+        </div>
+      )}
+
+      {activeTab === "entry" && (
     <div id="form-print-area" className="max-w-5xl mx-auto p-6 space-y-4 print:max-w-[210mm] print:mx-0 print:p-0 print:space-y-2 print:font-[Arial]">
       <div className="flex justify-end gap-2 print:hidden mb-4">
         <Button variant="outline" onClick={handlePrint} className="shadow-sm">
@@ -454,6 +547,9 @@ export default function DryCargoTimeSheet() {
           </div>
         </CardContent>
       </Card>
+      </div>
+    </div>
+      )}
       </div>
     </div>
   )

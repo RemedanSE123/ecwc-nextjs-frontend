@@ -44,11 +44,12 @@ const navigation: NavItem[] = [
     icon: Wrench,
     children: [
       { name: 'Dashboard', href: '/equipment/dashboard', icon: LayoutDashboard },
-      { name: 'Equipment List', href: '/equipment', icon: Wrench },
-     
-      { name: 'Cargo Truck List', href: '/cargo-truck', icon: Truck },
-      { name: 'Light Vehicle List', href: '/light-vehicle', icon: Car },
-      { name: 'Detailed Reports', href: '/equipment/reports', icon: FileText },
+      { name: 'Plant Equipment', href: '/equipment', icon: Wrench },
+      { name: 'Auxiliary Equipment', href: '/cargo-truck', icon: Truck },
+      { name: 'Light Vehicles', href: '/light-vehicle', icon: Car },
+      { name: 'Heavy Vehicles', href: '/equipment/reports', icon: FileText },
+      { name: 'Machinery', href: '/equipment/reports', icon: FileText },
+      { name: 'Factory Equipment', href: '/equipment/reports', icon: FileText },
   
     ],
   },
