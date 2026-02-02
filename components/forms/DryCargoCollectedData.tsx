@@ -89,6 +89,7 @@ const MOCK_DATA: TimeSheetData[] = [
 
 export default function DryCargoCollectedData() {
     const [data, setData] = useState<TimeSheetData[]>(MOCK_DATA)
+    const [statusFilter, setStatusFilter] = useState("all")
 
     const handleApprove = (id: string) => {
         setData(prev => prev.map(item => item.id === id ? { ...item, status: "Approved" } : item))
@@ -114,7 +115,7 @@ export default function DryCargoCollectedData() {
                     <Input placeholder="Search serial no, operator..." className="pl-8" />
                 </div>
                 <div className="flex items-center gap-2 w-full sm:w-auto">
-                    <Select defaultValue="all">
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
                         <SelectTrigger className="w-[130px]">
                             <Filter className="mr-2 h-4 w-4" />
                             <SelectValue placeholder="Status" />
