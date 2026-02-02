@@ -47,6 +47,8 @@ import {
   MessageSquare,
   HelpCircle,
   ChevronRight,
+  ChevronUp,
+  ChevronDown,
   Star,
   Play,
   Pause,
@@ -82,59 +84,56 @@ const CompoundMap = dynamic(
   { ssr: false, loading: () => <div className="flex min-h-[480px] items-center justify-center rounded-xl border bg-muted/30 text-muted-foreground">Loading map…</div> }
 )
 
-// Helper function to get equipment description
 const getEquipmentDescription = (name: string): string => {
   const descMap: { [key: string]: string } = {
-    "Dozer, Chain": "Heavy crawler tractor with large blade for pushing earth, rocks, and debris. Used for site clearing and grading operations. Features excellent ground pressure distribution and superior traction on challenging terrain. Essential for initial site preparation, bulk earthmoving, and maintaining access roads in construction projects.",
-    "Motor Grader": "Machine with long blade for creating flat surfaces on roads. Used for fine grading and finishing road surfaces. Provides precise control for achieving exact grade specifications and smooth finishes. Critical for road construction, maintenance, and ensuring proper drainage slopes on infrastructure projects.",
-    "Excavator, Chain": "Crawler-mounted excavator with bucket arm for digging trenches, foundations, and moving large amounts of earth. Offers exceptional stability and digging power for heavy-duty excavation work. Ideal for deep foundation work, trenching for utilities, and bulk material handling in construction and infrastructure development.",
-    "Excavator, Wheel": "Wheeled excavator with bucket arm, more mobile than chain excavators. Ideal for urban construction sites where frequent repositioning is required. Provides faster travel speeds between work areas while maintaining strong digging capabilities. Perfect for road work, utility installation, and projects requiring high mobility.",
-    "Loader, Chain": "Tracked loader for loading materials into trucks. Excellent traction on rough terrain and soft ground conditions. Designed for heavy-duty material handling with superior stability. Essential for loading aggregates, moving bulk materials, and working in challenging site conditions where wheeled equipment struggles.",
-    "Loader, Wheel": "Wheeled front-end loader for moving and loading materials. Faster on roads than tracked loaders with better fuel efficiency. Provides quick material handling and excellent maneuverability. Ideal for material yards, stockpile management, and projects requiring frequent travel between loading and dumping locations.",
-    "Backhoe Loader": "Versatile machine with front loader and rear excavator bucket. Perfect for smaller sites needing multiple functions in one unit. Combines loading, digging, and material handling capabilities efficiently. Essential for utility work, small construction projects, and sites with limited space where multiple machines aren't practical.",
-    "Roller D/Drum": "Double drum roller for compacting soil and asphalt. Essential for road construction density requirements. Provides uniform compaction across the full width with both drums. Critical for achieving proper compaction density in asphalt paving and soil stabilization projects to meet engineering specifications.",
-    "Roller S/Drum": "Single drum roller with steel drum for soil compaction and road finishing. Offers precise control for edge compaction and tight area work. Ideal for compacting base courses, finishing road surfaces, and working in confined spaces where double drum rollers cannot operate effectively.",
-    "Roller S/foot -D/D": "Double drum sheep's foot roller with projecting feet for deep soil compaction. Designed to penetrate and compact cohesive soils effectively. Essential for achieving proper density in embankment construction and foundation preparation. Provides kneading action that breaks down soil particles for maximum compaction.",
-    "Roller S/foot -S/D": "Single drum sheep's foot roller for specialized soil compaction in specific areas. Offers targeted compaction for cohesive soils and clay materials. Perfect for compacting embankments, dam construction, and areas requiring deep soil density. Provides focused compaction force for challenging soil conditions.",
-    "Roller Pneumatic": "Rubber-tired roller for asphalt compaction. Provides smooth finish without marks or surface damage. Offers kneading action that helps achieve proper density in hot mix asphalt. Essential for final compaction passes and achieving smooth road surfaces without leaving roller marks or surface defects.",
-    "Trencher, Chain": "Tracked machine for digging trenches. Used for utility installation and drainage systems. Provides precise depth and width control for utility trenches. Essential for installing water lines, sewer systems, electrical conduits, and irrigation systems with accurate trench dimensions and minimal surface disruption.",
-    "Trencher, Wheel": "Wheeled trenching machine, more mobile for utility and irrigation work. Offers faster repositioning between trench locations compared to tracked models. Ideal for utility installation projects requiring multiple trench locations. Perfect for irrigation systems, utility line installation, and projects with frequent site movement requirements.",
-    "Scraper": "Large self-loading earthmoving machine. Moves massive volumes of soil over long distances efficiently. Combines cutting, loading, hauling, and spreading functions in one machine. Essential for large-scale earthmoving projects, highway construction, and projects requiring movement of substantial soil volumes over extended distances.",
-    "Asphalt Paver": "Machine that lays asphalt for roads and parking lots. Creates smooth, even surfaces with precise thickness control. Provides consistent material distribution and compaction. Critical for road construction, parking lot paving, and any project requiring uniform asphalt placement with proper grade and smooth finish.",
-    "Concrete Paver": "Specialized machine for laying concrete slabs. Used in highway and runway construction. Provides precise concrete placement with controlled thickness and smooth finish. Essential for large-scale concrete paving projects including highways, airport runways, and industrial floors requiring uniform concrete placement.",
-    "Asphalt Milling machine": "Removes old asphalt surfaces for recycling. Prepares surfaces for repaving with precise depth control. Allows for selective removal of damaged asphalt layers. Essential for road rehabilitation, surface preparation, and recycling old asphalt materials for use in new pavement construction projects.",
-    "Chip Spreader": "Distributes aggregate chips for chip seal road treatments. Provides uniform distribution of aggregate material over asphalt binder. Essential for chip seal road surface treatments that extend pavement life. Critical for road maintenance programs and creating skid-resistant road surfaces in cost-effective pavement preservation.",
-    "Power Curber": "Creates concrete curbs and gutters automatically. Essential for road edge finishing and drainage control. Provides consistent curb dimensions and smooth finishes. Critical for road construction projects requiring precise curb and gutter installation for proper drainage management and road edge definition.",
-    "D/Truck Beiben": "Heavy-duty dump truck for transporting construction materials and debris. Designed for rugged construction site conditions with high payload capacity. Essential for hauling aggregates, excavated materials, and construction waste. Provides reliable transportation for bulk materials in large-scale construction and infrastructure projects.",
-    "D/Truck Daewoo": "Medium to large dump truck for material hauling on construction sites. Offers good balance between capacity and maneuverability. Ideal for transporting construction materials, aggregates, and excavated earth. Essential for material supply chains in construction projects requiring efficient bulk material transportation.",
-    "D/Truck Faw": "Chinese-made dump truck for heavy material transport. Provides cost-effective solution for bulk material hauling. Designed for construction site operations with good reliability. Essential for transporting construction materials, aggregates, and excavated materials in various construction and infrastructure development projects.",
-    "D/Truck Nissan": "Japanese dump truck, reliable for various construction hauling needs. Known for durability and fuel efficiency in construction operations. Ideal for material transportation in construction projects. Essential for reliable material supply chains in construction sites requiring consistent and dependable material delivery.",
-    "D/Truck Sino": "Sino truck dump vehicle for material transportation. Provides practical solution for construction material hauling. Designed for construction site operations with adequate payload capacity. Essential for transporting construction materials, aggregates, and excavated earth in various construction projects.",
-    "D/Truck Foton": "Foton brand dump truck for construction material delivery. Offers reliable material transportation for construction operations. Designed for construction site conditions with good maneuverability. Essential for material supply chains in construction projects requiring efficient bulk material transportation and delivery.",
-    "Water Truck": "Truck with water tank for dust control and compaction. Essential on construction sites for maintaining workable conditions. Provides water for soil compaction, dust suppression, and site maintenance. Critical for dust control compliance, proper soil compaction, and maintaining safe working conditions on construction sites.",
-    "Water Truck Trailer": "Trailer-mounted water tank for large-scale dust suppression. Provides high-capacity water supply for extensive construction operations. Essential for large construction sites requiring substantial water volumes. Critical for dust control on large-scale projects, soil compaction operations, and maintaining environmental compliance.",
-    "Fuel Truck": "Mobile fuel delivery truck. Keeps equipment running on remote sites without interruption. Provides on-site fuel supply for construction equipment. Essential for maintaining equipment operations on remote construction sites, reducing downtime, and ensuring continuous project progress without fuel supply interruptions.",
-    "Fuel Truck Trailer": "Trailer system for fuel distribution to multiple locations. Offers flexible fuel delivery for distributed construction operations. Essential for projects with multiple work sites requiring fuel supply. Critical for maintaining equipment operations across large project areas and ensuring fuel availability at various locations.",
-    "Asphalt Distributer": "Sprays hot asphalt binder for road resurfacing and maintenance. Provides uniform application of asphalt binder for surface treatments. Essential for chip seal applications, road resurfacing, and pavement preservation. Critical for road maintenance programs and extending pavement life through proper surface treatment applications.",
-    "Low bed": "Low-profile flatbed trailer for transporting heavy machinery and equipment. Designed to carry oversized and heavy construction equipment safely. Essential for equipment mobilization between project sites. Critical for transporting excavators, bulldozers, cranes, and other heavy construction machinery that cannot be driven on public roads.",
-    "Low bed Trailer": "Specialized low trailer for oversized construction equipment transport. Provides maximum load capacity with minimal ground clearance. Essential for moving large construction equipment safely. Critical for equipment logistics in construction projects requiring transportation of heavy and oversized machinery between sites.",
-    "High bed trailer": "Raised trailer bed for transporting tall equipment and structures. Designed to accommodate equipment with significant height requirements. Essential for transporting tall construction equipment and structures. Critical for moving equipment like mobile cranes, drilling rigs, and other tall machinery that requires elevated transport platforms.",
-    "Mobile Crane": "Truck-mounted crane for lifting and moving heavy materials and equipment. Provides mobility combined with significant lifting capacity. Essential for material placement, equipment installation, and heavy lifting operations. Critical for construction projects requiring lifting of heavy materials, structural components, and equipment positioning.",
-    "Cargo Truck": "Standard cargo vehicle for transporting construction supplies and tools. Provides reliable transportation for construction materials and equipment. Essential for material supply chains and equipment logistics. Critical for maintaining construction site operations through consistent delivery of supplies, tools, and materials needed for project execution.",
-    "Cargo Crane": "Truck with crane attachment for loading and unloading cargo. Combines transportation and material handling capabilities efficiently. Essential for projects requiring self-sufficient material handling. Critical for construction operations needing both transport and lifting capabilities, reducing dependency on separate crane equipment for loading and unloading operations.",
-    "Water Well Drilling rig": "Specialized equipment for drilling water wells and boreholes. Provides water access for construction sites and communities. Essential for water supply development and site water access. Critical for construction projects in remote locations requiring water wells, geotechnical investigation drilling, and water resource development for construction and community needs.",
-    "Shop Truck": "Mobile workshop truck for on-site equipment maintenance and repairs. Provides essential maintenance services directly at construction sites. Essential for minimizing equipment downtime and maintaining operational efficiency. Critical for construction projects requiring on-site equipment maintenance, reducing equipment downtime, and ensuring continuous project progress through timely equipment repairs.",
-    "Fork lift": "Material handling equipment for lifting and moving pallets and heavy items. Provides efficient material handling in warehouses and construction sites. Essential for loading, unloading, and positioning materials. Critical for construction site material management, warehouse operations, and efficient handling of palletized materials and heavy items in construction and logistics operations.",
-    "Farm Truck": "Agricultural truck adapted for construction site material transport. Provides versatile material transportation for various construction needs. Essential for flexible material handling in construction operations. Critical for construction projects requiring adaptable material transport solutions and efficient movement of construction materials and supplies across project sites.",
-    "Automobile": "Passenger vehicles for staff and site management transportation. Provides essential mobility for project management and supervision. Essential for site visits, inspections, and project coordination. Critical for construction project management, allowing supervisors and managers to efficiently move between project locations, conduct site inspections, and coordinate construction activities.",
-    "Bus Passenger": "Bus for transporting workers and personnel to construction sites. Provides essential workforce transportation for construction operations. Essential for moving construction crews to and from project sites. Critical for large construction projects requiring transportation of significant numbers of workers, ensuring reliable crew transportation and maintaining project schedules.",
-    "Midi Bus": "Medium-sized bus for crew transportation. Provides efficient transportation for construction crews. Essential for projects requiring regular crew movement. Critical for construction operations needing reliable crew transportation, ensuring workers arrive on time and maintaining project productivity through consistent workforce availability.",
-    "Station Wagon": "Utility vehicle for site supervisors and material transport. Provides versatile transportation for personnel and light materials. Essential for project management and light material handling. Critical for construction site operations requiring flexible transportation for supervisors, tools, and light materials, supporting efficient project management and site operations.",
-    "Double Cabin": "Pickup truck with extended cab for transporting crew and tools. Provides practical solution for crew and equipment transportation. Essential for projects requiring combined personnel and tool transport. Critical for construction operations needing efficient transportation of small crews with tools and equipment, supporting flexible and responsive project execution.",
-    "Single Cabin": "Standard pickup truck for light material and tool transportation. Provides essential utility transportation for construction operations. Essential for site logistics and material delivery. Critical for construction projects requiring reliable transportation of tools, light materials, and equipment, supporting efficient site operations and material logistics.",
+
+    "Dozer, Chain": "Heavy-duty crawler tractor engineered for aggressive earthmoving, terrain shaping, and site preparation activities. Equipped with a large front blade capable of pushing, spreading, ripping, and leveling soil, rock, and construction debris across extensive work areas. Its tracked undercarriage provides superior traction, stability, and low ground pressure, allowing continuous operation on soft, muddy, rocky, or uneven terrain where wheeled equipment cannot function safely. Widely used during the initial phases of construction projects for clearing vegetation, removing overburden, forming embankments, cutting access roads, and shaping slopes. Advanced hydraulic systems allow precise blade control for fine grading, while the reinforced chassis and drivetrain ensure durability under sustained heavy loads. Plays a critical role in accelerating project timelines, reducing manual labor dependency, and ensuring consistent terrain formation that meets engineering and environmental requirements.",
+
+    "Motor Grader": "High-precision grading machine specifically designed for shaping, leveling, and finishing surfaces to exact elevation and slope specifications. Features a long centrally mounted moldboard blade capable of fine material redistribution for road bases, shoulders, drainage channels, and finished surfaces. Extensively used in road construction, highway maintenance, airport runway preparation, and large-scale infrastructure works where accuracy directly impacts performance and longevity. Advanced articulation, hydraulic blade control, and optional GPS or laser guidance systems enable millimeter-level precision, ensuring optimal drainage and surface uniformity. Improves pavement lifespan by preventing water pooling and uneven load distribution. Essential for achieving engineering tolerances, reducing rework, and maintaining consistent surface quality across long distances and large projects.",
+
+    "Excavator, Chain": "Crawler-mounted excavator designed for intensive excavation, trenching, lifting, demolition, and bulk material handling operations. Built with a reinforced undercarriage and high-powered hydraulic system, it delivers exceptional digging force, reach, and stability even in deep excavations and difficult soil conditions. Frequently deployed for foundation excavation, utility trenching, slope cutting, and large-scale earthmoving tasks. Supports a wide range of attachments including buckets, hydraulic breakers, grapples, and augers, making it one of the most versatile machines on a construction site. Enhances operational efficiency by reducing excavation cycle time, improving material control, and enabling precise excavation near structures. A cornerstone machine in civil works, infrastructure development, mining, and industrial construction projects.",
+
+    "Excavator, Wheel": "Highly mobile excavator mounted on rubber tires, designed for operations requiring frequent relocation and rapid response. Combines strong digging capability with superior travel speed, making it ideal for urban construction, road maintenance, drainage systems, and utility installation projects. Equipped with stabilizers and advanced hydraulic controls to ensure stability during excavation despite its wheeled configuration. Minimizes surface damage on paved areas and allows direct road travel without transport trailers. Improves productivity by reducing downtime between tasks and increasing operational flexibility. Essential for city infrastructure projects where space constraints, traffic flow, and mobility are critical factors.",
+
+    "Loader, Chain": "Tracked loader built for powerful and reliable material handling in extreme ground conditions. Designed to load, carry, and stockpile heavy materials such as soil, aggregates, debris, and demolition waste. Its tracked system ensures excellent traction, stability, and load control on soft, wet, or uneven terrain where wheeled loaders may lose effectiveness. Commonly used in quarry operations, earthworks, landfills, and rough construction sites. The machine’s robust hydraulic lifting system allows continuous heavy-duty operation with minimal performance loss. Enhances site productivity by maintaining loading efficiency regardless of terrain limitations.",
+
+    "Loader, Wheel": "High-capacity front-end loader optimized for fast, efficient material movement and truck loading operations. Designed for stockpile management, aggregate handling, and logistics support across construction sites, batching plants, and material yards. Rubber tires allow smooth and rapid movement across paved and compacted surfaces, reducing cycle times and fuel consumption. Equipped with powerful hydraulics and large bucket options to maximize payload efficiency. Improves operational workflow by accelerating loading processes and reducing equipment idle time. Essential for projects with high material throughput and continuous logistics demand.",
+
+    "Backhoe Loader": "Versatile multipurpose machine integrating a front loader and rear excavator arm into a single compact unit. Designed for flexibility and efficiency on small to medium-scale construction sites. Capable of performing excavation, trenching, loading, backfilling, and material handling tasks without the need for multiple machines. Particularly effective in urban environments, roadside works, and utility installations where space is limited. Reduces operational costs by minimizing equipment mobilization and operator requirements. Widely used by municipalities, contractors, and maintenance teams for diverse daily operations.",
+
+    "Roller D/Drum": "Double drum vibratory compaction machine engineered for high-performance soil and asphalt compaction. Applies uniform pressure and vibration across both drums, ensuring consistent density over wide surface areas. Essential for road construction, industrial yards, and large paved surfaces where compaction quality directly affects structural integrity and lifespan. Adjustable vibration frequencies allow adaptation to different material types and layer thicknesses. Enhances construction quality by reducing voids, preventing settlement, and improving long-term pavement durability.",
+
+    "Roller S/Drum": "Single drum roller designed for controlled soil compaction and base preparation. Delivers focused compaction force ideal for edges, shoulders, and confined work zones. Frequently used for embankments, subgrade preparation, and secondary compaction passes. Offers precise maneuverability and depth control, ensuring stable foundation layers. Supports infrastructure longevity by achieving required density levels before surface construction.",
+
+    "Roller Pneumatic": "Rubber-tired roller utilized primarily for asphalt compaction and finishing operations. Applies kneading action that improves aggregate interlock and material bonding without damaging surface texture. Produces smooth, uniform finishes critical for ride quality and surface durability. Commonly used during final compaction stages of asphalt paving. Enhances pavement performance by sealing surface voids and reducing long-term cracking.",
+
+    "Scraper": "High-capacity earthmoving machine capable of cutting, loading, hauling, and spreading soil in a single continuous operation. Designed for long-distance earth transport with minimal support equipment. Ideal for large-scale projects such as highways, airports, dams, and land development works. Reduces reliance on multiple machines, improving efficiency and lowering operational costs. Plays a strategic role in mass earthworks and terrain reshaping projects.",
+
+    "Asphalt Paver": "Specialized paving machine responsible for placing asphalt layers with precise thickness, width, and smoothness. Ensures uniform material distribution and consistent surface finish essential for road performance. Used extensively in highways, urban roads, parking facilities, and industrial pavements. Supports automated screed control systems for accurate leveling. Enhances pavement quality, ride comfort, and structural integrity.",
+
+    "Low bed": "Low-profile heavy transport trailer designed for moving oversized and heavy construction equipment. Allows safe transport of excavators, bulldozers, cranes, and industrial machinery. Its low deck height ensures compliance with transport height restrictions. Essential for equipment mobilization across project sites and long-distance logistics.",
+
+    "Mobile Crane": "Truck-mounted lifting machine combining mobility with powerful hoisting capability. Used for lifting, positioning, and installing heavy materials, structural elements, and equipment. Supports construction, industrial assembly, and infrastructure projects requiring flexible lifting solutions. Reduces reliance on fixed cranes and enhances site adaptability.",
+
+    "Water Truck": "Multi-purpose tanker vehicle supplying water for dust suppression, soil compaction, and site maintenance. Essential for maintaining safe working conditions, environmental compliance, and construction quality. Supports road construction, earthworks, and remote site operations where water access is limited.",
+
+    "Fuel Truck": "Mobile fuel delivery vehicle ensuring continuous equipment operation on construction sites. Supplies diesel and lubricants directly to machinery, minimizing downtime and logistical delays. Essential for large or remote projects where centralized fueling is impractical.",
+
+    "Fork lift": "Material handling equipment designed for lifting, stacking, and transporting palletized loads. Widely used in warehouses, workshops, and construction sites. Enhances efficiency and safety in material logistics and inventory handling.",
+
+    "Bus Passenger": "High-capacity transport vehicle dedicated to moving construction workers safely and efficiently. Supports workforce logistics on large project sites, ensuring punctual crew deployment and operational continuity.",
+
+    "Double Cabin": "Pickup truck with extended seating designed to transport both personnel and tools. Provides flexibility for supervision, inspection, and light logistics tasks across construction sites."
+
   };
-  return descMap[name] || "Construction equipment for various site operations. Essential for maintaining project schedules and operational efficiency in construction and infrastructure development projects.";
+
+  return (
+    descMap[name] ||
+    "Heavy construction equipment designed to support earthmoving, compaction, material handling, transportation, and infrastructure development activities. These assets play a critical role in maintaining productivity, safety, quality control, and schedule adherence across complex construction and industrial projects."
+  );
 };
+
+
 
 // --- Equipment Command Center Data - Aggregated by Category ---
 const equipmentCategories = [
@@ -325,7 +324,7 @@ const CommandCenterSection = () => {
   const statusColor = getStatusColor(utilization);
 
   return (
-    <section className="relative py-32 bg-background dark:bg-zinc-950">
+    <section className="relative py-12 lg:py-16 bg-background dark:bg-zinc-950">
       <div className="container mx-auto px-4 lg:px-8 relative z-10">
         {/* Cinematic Background Lighting */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -409,20 +408,7 @@ const CommandCenterSection = () => {
 
                 {/* Main Stats with Icons and Descriptions */}
                 <div className="grid grid-cols-2 gap-3">
-                  <motion.div
-                    initial={{ scale: 0.95 }}
-                    animate={{ scale: 1 }}
-                    className="p-3 rounded-xl bg-gradient-to-br from-[#70c82a]/10 to-transparent border border-[#70c82a]/20"
-                  >
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <CheckCircle className="w-4 h-4 text-[#70c82a]" />
-                      <p className="text-xs font-semibold text-muted-foreground">Operational & Ready</p>
-                    </div>
-                    <div className="text-2xl font-bold text-[#70c82a] mb-1">
-                      <AnimatedCounter value={currentCategory.op} duration={1000} />
-                    </div>
-                    <p className="text-[10px] text-muted-foreground leading-tight">Units actively working on projects</p>
-                  </motion.div>
+               
 
                   <motion.div
                     initial={{ scale: 0.95 }}
@@ -454,20 +440,7 @@ const CommandCenterSection = () => {
                     <p className="text-[10px] text-muted-foreground leading-tight">Percentage of fleet in use</p>
                   </motion.div>
 
-                  <motion.div
-                    initial={{ scale: 0.95 }}
-                    animate={{ scale: 1 }}
-                    className="p-3 rounded-xl bg-gradient-to-br from-red-500/10 to-transparent border border-red-500/20"
-                  >
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <AlertTriangle className="w-4 h-4 text-red-500" />
-                      <p className="text-xs font-semibold text-muted-foreground">Out of Service</p>
-                    </div>
-                    <div className="text-2xl font-bold text-red-500 mb-1">
-                      <AnimatedCounter value={currentCategory.down} duration={1000} />
-                    </div>
-                    <p className="text-[10px] text-muted-foreground leading-tight">Units requiring immediate attention</p>
-                  </motion.div>
+                 
                 </div>
 
 
@@ -788,6 +761,30 @@ const AnimatedEquipmentProgress = ({
 export default function LandingPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [scrollToBottom, setScrollToBottom] = useState(true)
+  const [chatInput, setChatInput] = useState('')
+  const [chatUserMessages, setChatUserMessages] = useState<{ id: number; text: string }[]>([])
+  const chatMessageIdRef = useRef(0)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight
+      if (maxScroll <= 0) return
+      setScrollToBottom(scrollY < maxScroll * 0.5)
+    }
+    handleScroll()
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  const handleScrollClick = () => {
+    if (scrollToBottom) {
+      window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' })
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
 
   // Set light mode as default
   useEffect(() => {
@@ -1408,14 +1405,14 @@ export default function LandingPage() {
       <CommandCenterSection />
 
       {/* Core Functional Areas - Enterprise Data-Driven */}
-      <section id="features" className="py-32 bg-background dark:bg-black relative overflow-hidden">
+      <section id="features" className="pt-6 pb-12 lg:pt-8 lg:pb-16 bg-background dark:bg-black relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(112,200,42,0.03),transparent_70%)]" />
         <div className="container mx-auto px-4 lg:px-8 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-20"
+            className="text-center mb-8"
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#70c82a]/10 text-[#70c82a] text-xs font-bold uppercase tracking-widest mb-6 border border-[#70c82a]/20">
               Enterprise Architecture
@@ -1424,7 +1421,7 @@ export default function LandingPage() {
               Core <span className="text-[#70c82a]">Functional Areas</span>
             </h2>
             <p className="text-muted-foreground text-lg max-w-3xl mx-auto">
-              Comprehensive operational intelligence platform built for national-scale infrastructure management
+              Comprehensive operational intelligence platform built for ECWC infrastructure management
             </p>
           </motion.div>
 
@@ -1833,10 +1830,7 @@ export default function LandingPage() {
                     ))}
                   </div>
                 </div>
-                <div className="pt-4 border-t border-border dark:border-zinc-800 flex justify-between items-center">
-                  <div className="text-xs text-muted-foreground">Total Inventory Value</div>
-                  <div className="text-2xl font-bold text-[#70c82a]">Br 1.8M</div>
-                </div>
+               
               </div>
             </motion.div>
 
@@ -2092,17 +2086,7 @@ export default function LandingPage() {
                     </div>
                   </div>
 
-                  {/* Quick Stats Row */}
-                  <div className="grid grid-cols-2 gap-3 pt-2">
-                    <div className="p-3 rounded-lg bg-[#70c82a]/10 border border-[#70c82a]/20">
-                      <div className="text-[10px] text-muted-foreground mb-1">Fleet Availability</div>
-                      <div className="text-lg font-bold text-[#70c82a]">91%</div>
-                    </div>
-                    <div className="p-3 rounded-lg bg-[#70c82a]/10 border border-[#70c82a]/20">
-                      <div className="text-[10px] text-muted-foreground mb-1">MTBF</div>
-                      <div className="text-lg font-bold text-[#70c82a]">245h</div>
-                    </div>
-                  </div>
+                 
                 </div>
 
               </div>
@@ -2186,7 +2170,7 @@ export default function LandingPage() {
               AI-Powered <span className="text-[#70c82a]">Decision Support</span>
             </h2>
             <p className="text-muted-foreground text-lg max-w-3xl mx-auto">
-              Transform from reactive maintenance to predictive leadership with advanced machine intelligence
+              Transform from reactive maintenance to predictive leadership with AI Support
             </p>
           </motion.div>
 
@@ -2238,118 +2222,7 @@ export default function LandingPage() {
             ))}
           </div>
 
-          {/* Smart Maintenance Intelligence Panel */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="p-8 rounded-2xl bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800"
-          >
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <Cpu className="w-6 h-6 text-[#70c82a]" />
-                  <h3 className="text-2xl font-bold text-foreground">Smart Maintenance Intelligence</h3>
-                </div>
-                <p className="text-muted-foreground">Real-time predictive analytics and asset health monitoring</p>
-              </div>
-              <Badge className="bg-[#70c82a] text-black font-bold">LIVE</Badge>
-            </div>
-
-            <div className="grid lg:grid-cols-3 gap-8 mb-8">
-              <div className="lg:col-span-2 space-y-6">
-                {[
-                  {
-                    asset: "ECWC-E-108 (Excavator)",
-                    alert: "Abnormal vibration detected - Hydraulic seal failure probability: 87%",
-                    action: "Schedule inspection within 48h",
-                    cost: "Br 12,000",
-                    priority: "Critical",
-                    color: "red"
-                  },
-                  {
-                    asset: "ECWC-B-042 (Dozer)",
-                    alert: "Engine oil degradation - Service interval approaching",
-                    action: "Schedule maintenance in 72h",
-                    cost: "Br 3,200",
-                    priority: "Medium",
-                    color: "amber"
-                  },
-                  {
-                    asset: "ECWC-L-023 (Loader)",
-                    alert: "Tire wear pattern suggests alignment issue",
-                    action: "Inspection recommended next scheduled maintenance",
-                    cost: "Br 5,800",
-                    priority: "Low",
-                    color: "blue"
-                  }
-                ].map((alert, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, x: -30 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.1 }}
-                    className="p-5 rounded-xl bg-card dark:bg-zinc-950 border border-border dark:border-zinc-800 hover:border-[#70c82a]/30 transition-all"
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${alert.color === 'red' ? 'bg-red-500/20 text-red-400' :
-                              alert.color === 'amber' ? 'bg-amber-500/20 text-amber-400' :
-                                'bg-blue-500/20 text-blue-400'
-                            }`}>
-                            {alert.priority}
-                          </span>
-                          <span className="text-xs font-mono text-muted-foreground">{alert.asset}</span>
-                        </div>
-                        <p className="text-sm text-foreground mb-2">{alert.alert}</p>
-                        <p className="text-xs text-[#70c82a]">→ {alert.action}</p>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-xs text-muted-foreground mb-1">Est. Cost Avoided</div>
-                        <div className="text-lg font-bold text-foreground">{alert.cost}</div>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-
-              <div className="space-y-4">
-                <div className="p-6 rounded-xl bg-card dark:bg-zinc-950 border border-border dark:border-zinc-800">
-                  <div className="text-muted-foreground text-xs mb-2">Predictive Health Score</div>
-                  <div className="text-5xl font-bold text-[#70c82a] mb-4">94%</div>
-                  <div className="h-2 bg-muted dark:bg-zinc-800 rounded-full overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      whileInView={{ width: "94%" }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 1.5 }}
-                      className="h-full bg-gradient-to-r from-[#70c82a] to-emerald-400"
-                    />
-                  </div>
-                </div>
-
-                <div className="p-6 rounded-xl bg-card dark:bg-zinc-950 border border-border dark:border-zinc-800">
-                  <div className="text-muted-foreground text-xs mb-2">Underperforming Assets</div>
-                  <div className="text-5xl font-bold text-amber-500 mb-2">03</div>
-                  <div className="text-xs text-muted-foreground">Requiring immediate attention</div>
-                </div>
-
-                <div className="p-6 rounded-xl bg-card dark:bg-zinc-950 border border-border dark:border-zinc-800">
-                  <div className="text-muted-foreground text-xs mb-2">Cost Optimization</div>
-                  <div className="text-5xl font-bold text-[#70c82a] mb-2">12.5%</div>
-                  <div className="text-xs text-muted-foreground">Potential monthly savings</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-4 rounded-xl bg-[#70c82a]/5 border border-[#70c82a]/20 text-center">
-              <p className="text-sm text-foreground/80 dark:text-zinc-300 italic">
-                <span className="text-[#70c82a] font-bold">From reactive maintenance to predictive leadership.</span> AI-powered insights enable proactive decision-making across the entire ECWC fleet.
-              </p>
-            </div>
-          </motion.div>
+        
 
           {/* AI Chat Assistant - ChatGPT Style */}
           <motion.div
@@ -2476,43 +2349,116 @@ export default function LandingPage() {
                 </div>
               </div>
 
+              {/* User-sent messages + "Coming soon" reply */}
+              {chatUserMessages.length > 0 && (
+                <div className="divide-y divide-border dark:divide-zinc-800 px-1">
+                  {chatUserMessages.map((msg) => (
+                    <div key={msg.id} className="group">
+                      <div className="bg-muted/30 dark:bg-zinc-900/50 px-4 sm:px-6 py-3">
+                        <div className="flex gap-3 sm:gap-4 justify-end items-start">
+                          <div className="flex-1 min-w-0 flex justify-end">
+                            <p className="text-sm font-medium text-foreground leading-relaxed whitespace-pre-wrap text-right max-w-full sm:max-w-[85%] break-words">{msg.text}</p>
+                          </div>
+                          <div className="w-8 h-8 rounded-full bg-[#70c82a] flex items-center justify-center flex-shrink-0 mt-1">
+                            <User className="w-4 h-4 text-white" />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="bg-background dark:bg-zinc-950 px-4 sm:px-6 py-3">
+                        <div className="flex gap-3 sm:gap-4 items-start">
+                          <div className="w-8 h-8 rounded-full bg-[#70c82a]/20 flex items-center justify-center flex-shrink-0 mt-1 border border-[#70c82a]/30">
+                            <Cpu className="w-4 h-4 text-[#70c82a]" />
+                          </div>
+                          <div className="flex-1 min-w-0 pt-1">
+                            <div className="rounded-xl border-2 border-[#70c82a]/25 bg-gradient-to-br from-[#70c82a]/10 to-[#70c82a]/5 dark:from-[#70c82a]/15 dark:to-[#70c82a]/5 p-4 shadow-sm">
+                              <p className="text-sm font-semibold text-[#70c82a] mb-2 flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-[#70c82a] animate-pulse" />
+                                We appreciate you want to use the chatbot
+                              </p>
+                              <p className="text-sm text-foreground leading-relaxed mb-3">
+                                The ECWC AI Assistant is currently in development. We are building a smart AI assistant to help you with maintenance insights, cost analysis, and recommendations.
+                              </p>
+                              <p className="text-sm font-medium text-foreground">
+                                Coming soon — stay tuned.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {/* Input + Send */}
               <div className="border-t border-border dark:border-zinc-800 px-4 sm:px-6 py-3 bg-background dark:bg-zinc-950">
                 <div className="flex gap-2 items-center">
                   <input
                     type="text"
                     placeholder="Ask a follow-up question…"
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault()
+                        const text = chatInput.trim()
+                        if (text) {
+                          chatMessageIdRef.current += 1
+                          setChatUserMessages((m) => [...m, { id: chatMessageIdRef.current, text }])
+                          setChatInput('')
+                        }
+                      }
+                    }}
                     className="flex-1 min-w-0 rounded-xl border border-border dark:border-zinc-700 bg-muted/30 dark:bg-zinc-800/50 px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#70c82a]/50 focus:border-[#70c82a]/50"
                   />
                   <button
                     type="button"
-                    className="shrink-0 w-10 h-10 rounded-xl bg-[#70c82a] hover:bg-[#70c82a]/90 text-white flex items-center justify-center transition-colors"
+                    onClick={() => {
+                      const text = chatInput.trim()
+                      if (text) {
+                        chatMessageIdRef.current += 1
+                        setChatUserMessages((m) => [...m, { id: chatMessageIdRef.current, text }])
+                        setChatInput('')
+                      }
+                    }}
+                    className="shrink-0 w-10 h-10 rounded-xl bg-[#70c82a] hover:bg-[#70c82a]/90 text-white flex items-center justify-center transition-colors disabled:opacity-50"
                     aria-label="Send"
                   >
                     <Send className="w-4 h-4" />
                   </button>
                 </div>
+                <p className="mt-2 text-[10px] sm:text-xs text-muted-foreground text-center">
+                  AI Assistant is in development — your message will receive a &quot;Coming soon&quot; reply.
+                </p>
               </div>
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* ECWC Compound Map - big title like AI section, tall section and map */}
+  
+
+      {/* ECWC Compound Map - below Why PEMS */}
       <section id="compound-map" className="min-h-screen w-full flex flex-col bg-background dark:bg-zinc-950 border-t border-border dark:border-zinc-800/50">
         <div className="shrink-0 relative overflow-hidden border-b border-border dark:border-zinc-800">
           <div className="absolute inset-0 bg-gradient-to-b from-background via-muted/30 to-background dark:from-black dark:via-zinc-950 dark:to-black" />
-          <div className="container mx-auto px-4 lg:px-8 relative z-10 py-8 sm:py-12">
-            <div className="text-center">
-              
+          <div className="container mx-auto px-4 lg:px-8 relative z-10 py-8 sm:py-10">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center mb-8"
+            >
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#70c82a]/10 text-[#70c82a] text-xs font-bold uppercase tracking-widest mb-6 border border-[#70c82a]/20">
+                Sites & Locations
+              </div>
               <h2 className="text-4xl md:text-6xl font-bold text-foreground mb-4">
-                <span className="text-[#70c82a]">ECWC Compound</span> Map
+                ECWC Compound <span className="text-[#70c82a]">Map</span>
               </h2>
-              <p className="text-muted-foreground text-lg max-w-3xl mx-auto mb-3">
+              <p className="text-muted-foreground text-lg max-w-3xl mx-auto">
                 Explore sites, assets, and locations — all in one interactive view
               </p>
-             
-            </div>
+            </motion.div>
           </div>
         </div>
         <div className="flex-1 min-h-[85vh] w-full px-4 sm:px-6 lg:px-12 flex justify-center py-4">
@@ -2522,152 +2468,63 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/*  Benefits - PEMSBefore & After */}
-      <section className="py-32 bg-gradient-to-b from-background to-muted/30 dark:from-black dark:to-zinc-950 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(112,200,42,0.05),transparent_70%)]" />
+      {/* Ethiopia Digital 2030 – Alignment & Pillars */}
+      <section className="relative py-16 lg:py-24 overflow-hidden border-t border-border dark:border-zinc-800/50">
+        {/* Layered background */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#70c82a]/[0.07] via-[#70c82a]/[0.02] to-background dark:from-[#70c82a]/[0.08] dark:via-[#70c82a]/[0.03] dark:to-black" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(112,200,42,0.15),transparent)] dark:bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(112,200,42,0.12),transparent)]" />
         <div className="container mx-auto px-4 lg:px-8 relative z-10">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-8"
           >
-            <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-              Why PEMS Transforms Maintenance Operations
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#70c82a]/10 text-[#70c82a] text-xs font-bold uppercase tracking-widest mb-6 border border-[#70c82a]/20">
+              National Alignment
+            </div>
+            <h2 className="text-4xl md:text-6xl font-bold text-foreground mb-4">
+              Aligned with <span className="text-[#70c82a]"> Digital Ethiopia 2030</span>
             </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              See how ECWC's PEMS solves critical challenges and delivers measurable results
+            <p className="text-muted-foreground text-lg max-w-3xl mx-auto">
+              Built for the future: dynamic, intelligent, connected, and secure.
             </p>
           </motion.div>
 
-          <div className="relative grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
-            {/* Before - Problems */}
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="space-y-6"
-            >
-              <div className="p-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center border-2 border-red-500/30">
-                    <AlertTriangle className="w-6 h-6 text-red-500" />
-                  </div>
-                  <h3 className="text-2xl font-bold text-foreground">Before PEMS</h3>
-                </div>
-                <div className="space-y-2">
-                  {[
-                    {
-                      title: "Reactive Maintenance",
-                      desc: "Equipment breaks down unexpectedly, causing costly emergency repairs and production delays."
-                    },
-                    {
-                      title: "Manual Paperwork",
-                      desc: "Maintenance records scattered across spreadsheets and paper files, making tracking impossible."
-                    },
-                    {
-                      title: "No Visibility",
-                      desc: "Managers can't see equipment status, maintenance history, or costs in real-time."
-                    },
-                    {
-                      title: "Inventory Chaos",
-                      desc: "Spare parts inventory unknown, leading to stockouts, delays, and emergency purchases."
-                    },
-                    {
-                      title: "Cost Overruns",
-                      desc: "No budget tracking or cost analysis, making it impossible to control maintenance spending."
-                    },
-                    {
-                      title: "Scheduling Nightmare",
-                      desc: "Work orders managed manually, causing missed maintenance, double-booking, and confusion."
-                    }
-                  ].map((problem, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: i * 0.1, duration: 0.4 }}
-                      className="flex gap-3 p-3 rounded-lg bg-background/50 dark:bg-zinc-900/50 border border-red-500/10"
-                    >
-                      <X className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <h4 className="font-semibold text-foreground mb-1">{problem.title}</h4>
-                        <p className="text-sm text-muted-foreground">{problem.desc}</p>
+          {/* Pillar cards – premium style */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6 max-w-6xl mx-auto">
+            {[
+              { icon: Zap, title: 'Dynamic', desc: 'Real-time updates and adaptive workflows that scale with your operations.', accent: 'from-amber-500/20 to-[#70c82a]/20' },
+              { icon: Cpu, title: 'AI Support', desc: 'Intelligent insights and predictive maintenance powered by AI.', accent: 'from-violet-500/20 to-[#70c82a]/20' },
+              { icon: Database, title: 'Data Sharing', desc: 'Seamless, standards-based data sharing across sites and systems.', accent: 'from-blue-500/20 to-[#70c82a]/20' },
+              { icon: Shield, title: 'Secure', desc: 'Enterprise-grade security to protect data and operations.', accent: 'from-emerald-500/20 to-[#70c82a]/20' },
+            ].map((item, i) => (
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, y: 32 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.1 + i * 0.1, duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+                whileHover={{ y: -4 }}
+                className="group relative"
+              >
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#70c82a]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                <div className="relative h-full rounded-2xl border-2 border-border dark:border-zinc-700/80 bg-card/80 dark:bg-zinc-900/90 backdrop-blur-sm p-6 md:p-7 shadow-lg shadow-black/5 dark:shadow-black/20 hover:shadow-xl hover:shadow-[#70c82a]/10 dark:hover:shadow-[#70c82a]/5 hover:border-[#70c82a]/40 transition-all duration-300 overflow-hidden">
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#70c82a] to-[#8fd936] rounded-l-2xl opacity-90" />
+                  <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${item.accent} rounded-bl-full opacity-60`} />
+                  <div className="relative">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#70c82a]/25 to-[#70c82a]/10 flex items-center justify-center border border-[#70c82a]/30 shadow-[0_4px_14px_rgba(112,200,42,0.2)] group-hover:scale-110 transition-transform duration-300">
+                        <item.icon className="w-6 h-6 text-[#70c82a]" />
                       </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Vertical Divider */}
-            <div className="hidden lg:block absolute left-1/2 top-0 bottom-0 transform -translate-x-1/2">
-              <Separator orientation="vertical" className="h-full" />
-            </div>
-
-            {/* After - Solutions */}
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="space-y-6"
-            >
-              <div className="p-8">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 rounded-full bg-[#70c82a]/20 flex items-center justify-center border-2 border-[#70c82a]/30">
-                    <CheckCircle className="w-6 h-6 text-[#70c82a]" />
+                      <h3 className="text-xl font-bold text-foreground">{item.title}</h3>
+                    </div>
+                    <p className="text-sm text-muted-foreground leading-relaxed pl-0.5">{item.desc}</p>
                   </div>
-                  <h3 className="text-2xl font-bold text-foreground">With ECWC PEMS</h3>
                 </div>
-                <div className="space-y-2">
-                  {[
-                    {
-                      title: "Predictive Maintenance",
-                      desc: "AI-powered alerts predict failures before they happen, reducing downtime by up to 50% and extending equipment life."
-                    },
-                    {
-                      title: "Digital Records",
-                      desc: "Complete maintenance history, work orders, and costs stored in one centralized system, accessible from anywhere."
-                    },
-                    {
-                      title: "Real-Time Dashboard",
-                      desc: "Executive dashboard shows fleet availability, KPIs, alerts, and costs instantly - no reports needed."
-                    },
-                    {
-                      title: "Smart Inventory",
-                      desc: "Real-time stock levels, automatic reorder alerts, and parts tracking per work order prevent delays."
-                    },
-                    {
-                      title: "Cost Control",
-                      desc: "Track maintenance costs per equipment, compare budget vs actual, and identify high-cost assets for optimization."
-                    },
-                    {
-                      title: "Automated Scheduling",
-                      desc: "System automatically creates work orders, assigns technicians, and tracks progress from start to finish."
-                    }
-                  ].map((solution, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: i * 0.1, duration: 0.4 }}
-                      className="flex gap-3 p-3 rounded-lg bg-background/50 dark:bg-zinc-900/50 border border-[#70c82a]/20"
-                    >
-                      <CheckCircle className="w-5 h-5 text-[#70c82a] flex-shrink-0 mt-0.5" />
-                      <div>
-                        <h4 className="font-semibold text-foreground mb-1">{solution.title}</h4>
-                        <p className="text-sm text-muted-foreground">{solution.desc}</p>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
+              </motion.div>
+            ))}
           </div>
-
-
         </div>
       </section>
 
@@ -2850,6 +2707,25 @@ export default function LandingPage() {
         </div>
       </footer>
 
+      {/* Scroll to top / bottom – corner arrow: down when above, up when below */}
+      <AnimatePresence mode="wait">
+        <motion.button
+          key={scrollToBottom ? 'down' : 'up'}
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          transition={{ duration: 0.2 }}
+          onClick={handleScrollClick}
+          className="fixed bottom-6 right-6 z-40 flex h-12 w-12 items-center justify-center rounded-full border-2 border-[#70c82a]/40 bg-background/95 shadow-lg backdrop-blur-sm hover:border-[#70c82a] hover:bg-[#70c82a]/10 hover:shadow-[0_0_20px_rgba(112,200,42,0.2)] focus:outline-none focus:ring-2 focus:ring-[#70c82a]/50 focus:ring-offset-2 dark:bg-zinc-900/95"
+          aria-label={scrollToBottom ? 'Scroll to bottom' : 'Scroll to top'}
+        >
+          {scrollToBottom ? (
+            <ChevronDown className="h-6 w-6 text-[#70c82a]" />
+          ) : (
+            <ChevronUp className="h-6 w-6 text-[#70c82a]" />
+          )}
+        </motion.button>
+      </AnimatePresence>
     </div>
   )
 }
