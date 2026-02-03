@@ -24,8 +24,21 @@ export interface AssetFilters {
   project_location?: string;
   search?: string;
   ownership?: string;
+  responsible_person_name?: string;
   page?: number;
   limit?: number;
+}
+
+export interface AssetFacets {
+  status: string[];
+  project_location: string[];
+  ownership: string[];
+  responsible_person_name: string[];
+}
+
+export interface AssetCompleteness {
+  total: number;
+  columns: Record<string, { filled: number; empty: number; pctEmpty: number; pctFilled: number }>;
 }
 
 export interface AssetsResponse {

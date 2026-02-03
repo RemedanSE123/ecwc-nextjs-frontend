@@ -1,4 +1,4 @@
-import type { Asset, AssetFilters, AssetsResponse, AssetStats, AssetReportData } from '@/types/asset';
+import type { Asset, AssetFilters, AssetsResponse, AssetStats, AssetReportData, AssetFacets, AssetCompleteness } from '@/types/asset';
 
 const API_BASE = '';
 
@@ -30,6 +30,7 @@ export async function fetchAssets(filters: AssetFilters = {}): Promise<AssetsRes
     project_location: filters.project_location,
     search: filters.search,
     ownership: filters.ownership,
+    responsible_person_name: filters.responsible_person_name,
     page: filters.page ?? 1,
     limit: filters.limit ?? 20,
   });
@@ -55,5 +56,23 @@ export async function fetchAssetReports(category?: string, categoryGroup?: strin
   const q = params.toString() ? `?${params}` : '';
   const res = await fetch(`${API_BASE}/api/assets/reports${q}`);
   if (!res.ok) return handleApiError(res, 'Failed to fetch asset reports');
+  return res.json();
+}
+
+export async function fetchAssetFacets(categoryGroup?: string): Promise<AssetFacets> {
+  const params = new URLSearchParams();
+  if (categoryGroup) params.set('category_group', categoryGroup);
+  const q = params.toString() ? `?${params}` : '';
+  const res = await fetch(`${API_BASE}/api/assets/facets${q}`);
+  if (!res.ok) return handleApiError(res, 'Failed to fetch filter options');
+  return res.json();
+}
+
+export async function fetchAssetCompleteness(categoryGroup?: string): Promise<AssetCompleteness> {
+  const params = new URLSearchParams();
+  if (categoryGroup) params.set('category_group', categoryGroup);
+  const q = params.toString() ? `?${params}` : '';
+  const res = await fetch(`${API_BASE}/api/assets/completeness${q}`);
+  if (!res.ok) return handleApiError(res, 'Failed to fetch completeness');
   return res.json();
 }

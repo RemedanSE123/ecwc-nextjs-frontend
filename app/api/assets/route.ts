@@ -16,8 +16,9 @@ export async function GET(request: NextRequest) {
     const project_location = searchParams.get('project_location') || undefined;
     const search = searchParams.get('search') || undefined;
     const ownership = searchParams.get('ownership') || undefined;
+    const responsible_person_name = searchParams.get('responsible_person_name') || undefined;
     const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
-    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20', 10)));
+    const limit = Math.min(5000, Math.max(1, parseInt(searchParams.get('limit') || '20', 10)));
     const offset = (page - 1) * limit;
 
     const conditions: string[] = ['1=1'];
@@ -43,6 +44,11 @@ export async function GET(request: NextRequest) {
     if (ownership) {
       conditions.push(`ownership ILIKE $${idx}`);
       params.push(ownership);
+      idx++;
+    }
+    if (responsible_person_name) {
+      conditions.push(`responsible_person_name ILIKE $${idx}`);
+      params.push(responsible_person_name);
       idx++;
     }
     if (search) {
