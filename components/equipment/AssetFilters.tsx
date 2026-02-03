@@ -67,6 +67,7 @@ export default function AssetFilters({
 
       {expanded && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 border rounded-lg bg-muted/30">
+          {!hideCategoryFilter && (
           <div>
             <label className="text-[11px] text-muted-foreground mb-1 block">Category</label>
             <Select

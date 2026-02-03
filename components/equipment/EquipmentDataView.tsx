@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { fetchAssets, fetchAssetStats } from '@/lib/api/assets';
-import type { Asset, AssetFilters } from '@/types/asset';
+import type { Asset, AssetFilters, AssetStats } from '@/types/asset';
 import AssetFiltersComponent from './AssetFilters';
 import AssetDetailModal from './AssetDetailModal';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -23,7 +23,7 @@ export default function EquipmentDataView({ categoryGroup, categoryName }: Equip
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [stats, setStats] = useState<{ total: number } | null>(null);
+  const [stats, setStats] = useState<AssetStats | null>(null);
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
 
   useEffect(() => {
