@@ -1,9 +1,14 @@
 "use client"
 
+import { useState, useEffect } from "react"
+import Link from "next/link"
 import Layout from "@/components/Layout"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
+import { fetchAssetStats, fetchAssetReports } from "@/lib/api/assets"
+import type { AssetStats, AssetReportData } from "@/types/asset"
 import { 
   Truck, 
   Wrench, 
@@ -11,28 +16,45 @@ import {
   CheckCircle, 
   AlertTriangle,
   TrendingUp,
-  Users,
   Calendar,
   Activity,
   Clock,
-  ArrowUpRight,
-  ArrowDownRight,
   BarChart3,
-  Gauge,
-  Target,
-  Zap,
   MapPin,
-  Settings
 } from "lucide-react"
 import { motion } from "framer-motion"
 
-const fadeInUp = {
-  initial: { opacity: 0, y: 15 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.4 }
+function getStatusCount(byStatus: { status: string; count: number }[], match: string | RegExp): number {
+  return byStatus?.find((s) =>
+    typeof match === "string"
+      ? s.status?.toLowerCase().includes(match.toLowerCase())
+      : match.test(s.status || "")
+  )?.count ?? 0
 }
 
 export default function DashboardPage() {
+  const [stats, setStats] = useState<AssetStats | null>(null)
+  const [report, setReport] = useState<AssetReportData | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    Promise.all([fetchAssetStats(), fetchAssetReports()])
+      .then(([s, r]) => {
+        setStats(s)
+        setReport(r)
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false))
+  }, [])
+
+  const total = stats?.total ?? 0
+  const operational = getStatusCount(stats?.byStatus ?? [], /operational|active|running/i)
+  const underRepair = getStatusCount(stats?.byStatus ?? [], /repair|maintenance/i)
+  const idle = getStatusCount(stats?.byStatus ?? [], /idle|available/i)
+  const downAccident = getStatusCount(stats?.byStatus ?? [], /down|accident|broken|out/i)
+  const activeSites = stats?.byLocation?.filter((l) => l.project_location !== "Unassigned")?.length ?? 0
+  const opPct = total ? Math.round((operational / total) * 100) : 0
+
   return (
     <Layout>
       {/* Container - scaled for 95% appearance at 100% zoom */}
@@ -61,13 +83,18 @@ export default function DashboardPage() {
 
         {/* Top Stats Row - 6 Cards */}
         <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
-          {[
-            { title: "Total Fleet", value: "1,140", subValue: "Equipment", icon: Truck, color: "text-blue-600", bgColor: "bg-blue-50 dark:bg-blue-900/20", borderColor: "border-blue-200 dark:border-blue-800" },
-            { title: "Operational", value: "434", subValue: "38% Active", icon: CheckCircle, color: "text-green-600", bgColor: "bg-green-50 dark:bg-green-900/20", borderColor: "border-green-200 dark:border-green-800" },
-            { title: "Under Repair", value: "187", subValue: "16% Fleet", icon: Wrench, color: "text-orange-600", bgColor: "bg-orange-50 dark:bg-orange-900/20", borderColor: "border-orange-200 dark:border-orange-800" },
-            { title: "Idle", value: "34", subValue: "Available", icon: Clock, color: "text-cyan-600", bgColor: "bg-cyan-50 dark:bg-cyan-900/20", borderColor: "border-cyan-200 dark:border-cyan-800" },
-            { title: "Down/Accident", value: "145", subValue: "Attention", icon: AlertTriangle, color: "text-red-600", bgColor: "bg-red-50 dark:bg-red-900/20", borderColor: "border-red-200 dark:border-red-800" },
-            { title: "Active Sites", value: "31", subValue: "Nationwide", icon: MapPin, color: "text-purple-600", bgColor: "bg-purple-50 dark:bg-purple-900/20", borderColor: "border-purple-200 dark:border-purple-800" },
+          {loading ? (
+            [...Array(6)].map((_, i) => (
+              <Skeleton key={i} className="h-[88px]" />
+            ))
+          ) : (
+          [
+            { title: "Total Fleet", value: total.toLocaleString(), subValue: "Equipment", icon: Truck, color: "text-blue-600", bgColor: "bg-blue-50 dark:bg-blue-900/20", borderColor: "border-blue-200 dark:border-blue-800" },
+            { title: "Operational", value: operational.toString(), subValue: `${opPct}% Active`, icon: CheckCircle, color: "text-green-600", bgColor: "bg-green-50 dark:bg-green-900/20", borderColor: "border-green-200 dark:border-green-800" },
+            { title: "Under Repair", value: underRepair.toString(), subValue: `${total ? Math.round((underRepair / total) * 100) : 0}% Fleet`, icon: Wrench, color: "text-orange-600", bgColor: "bg-orange-50 dark:bg-orange-900/20", borderColor: "border-orange-200 dark:border-orange-800" },
+            { title: "Idle", value: idle.toString(), subValue: "Available", icon: Clock, color: "text-cyan-600", bgColor: "bg-cyan-50 dark:bg-cyan-900/20", borderColor: "border-cyan-200 dark:border-cyan-800" },
+            { title: "Down/Accident", value: downAccident.toString(), subValue: "Attention", icon: AlertTriangle, color: "text-red-600", bgColor: "bg-red-50 dark:bg-red-900/20", borderColor: "border-red-200 dark:border-red-800" },
+            { title: "Active Sites", value: activeSites.toString(), subValue: "Locations", icon: MapPin, color: "text-purple-600", bgColor: "bg-purple-50 dark:bg-purple-900/20", borderColor: "border-purple-200 dark:border-purple-800" },
           ].map((stat, i) => (
             <motion.div
               key={i}
@@ -90,7 +117,8 @@ export default function DashboardPage() {
                 </CardContent>
               </Card>
             </motion.div>
-          ))}
+          ))
+          )}
         </div>
 
         {/* Main Dashboard Grid - 3 Columns */}
@@ -114,28 +142,29 @@ export default function DashboardPage() {
                     <div className="relative w-20 h-20 flex-shrink-0">
                       <svg className="w-20 h-20 -rotate-90" viewBox="0 0 100 100">
                         <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" strokeWidth="14" className="text-gray-200 dark:text-gray-700" />
-                        <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" strokeWidth="14" strokeDasharray="251.2" strokeDashoffset="96.2" strokeLinecap="round" className="text-green-500" />
+                        <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" strokeWidth="14" strokeDasharray="251.2" strokeDashoffset={251.2 - (251.2 * opPct) / 100} strokeLinecap="round" className="text-green-500" />
                       </svg>
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-base font-bold text-green-600">62%</span>
+                        <span className="text-base font-bold text-green-600">{loading ? "..." : `${opPct}%`}</span>
                       </div>
                     </div>
                     <div className="flex-1 space-y-2.5">
-                      <div className="flex justify-between text-[11px]">
-                        <span className="text-muted-foreground">Machinery</span>
-                        <span className="font-medium">39%</span>
-                      </div>
-                      <Progress value={39} className="h-1.5" />
-                      <div className="flex justify-between text-[11px]">
-                        <span className="text-muted-foreground">Dump Trucks</span>
-                        <span className="font-medium">30%</span>
-                      </div>
-                      <Progress value={30} className="h-1.5" />
-                      <div className="flex justify-between text-[11px]">
-                        <span className="text-muted-foreground">Heavy Vehicles</span>
-                        <span className="font-medium">37%</span>
-                      </div>
-                      <Progress value={37} className="h-1.5" />
+                      {loading ? (
+                        <Skeleton className="h-16 w-full" />
+                      ) : (
+                        stats?.byCategory?.slice(0, 3).map((c) => {
+                          const pct = total ? Math.round((c.count / total) * 100) : 0
+                          return (
+                            <div key={c.category}>
+                              <div className="flex justify-between text-[11px]">
+                                <span className="text-muted-foreground truncate max-w-[120px]">{c.category}</span>
+                                <span className="font-medium">{pct}%</span>
+                              </div>
+                              <Progress value={pct} className="h-1.5" />
+                            </div>
+                          )
+                        })
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -152,19 +181,29 @@ export default function DashboardPage() {
                   {[
                     { label: "New Request", icon: FileText, color: "text-blue-600 bg-blue-50 dark:bg-blue-900/20" },
                     { label: "Add Equipment", icon: Truck, color: "text-green-600 bg-green-50 dark:bg-green-900/20" },
-                    { label: "View Reports", icon: BarChart3, color: "text-purple-600 bg-purple-50 dark:bg-purple-900/20" },
+                    { label: "View Reports", icon: BarChart3, color: "text-purple-600 bg-purple-50 dark:bg-purple-900/20", href: "/equipment/dashboard" },
                     { label: "Schedule", icon: Calendar, color: "text-orange-600 bg-orange-50 dark:bg-orange-900/20" },
-                  ].map((action, i) => (
-                    <button
-                      key={i}
-                      className="flex items-center gap-2.5 p-2.5 border rounded-md hover:bg-muted/50 hover:border-green-300 transition-all text-left group"
-                    >
-                      <div className={`p-1.5 rounded-md ${action.color}`}>
-                        <action.icon className="h-3.5 w-3.5" />
-                      </div>
-                      <span className="text-[11px] font-medium group-hover:text-green-600">{action.label}</span>
-                    </button>
-                  ))}
+                  ].map((action, i) => {
+                    const a = action as { href?: string }
+                    if (a.href) {
+                      return (
+                        <Link key={i} href={a.href} className="flex items-center gap-2.5 p-2.5 border rounded-md hover:bg-muted/50 hover:border-green-300 transition-all text-left group">
+                          <div className={`p-1.5 rounded-md ${action.color}`}>
+                            <action.icon className="h-3.5 w-3.5" />
+                          </div>
+                          <span className="text-[11px] font-medium group-hover:text-green-600">{action.label}</span>
+                        </Link>
+                      )
+                    }
+                    return (
+                      <button key={i} className="flex items-center gap-2.5 p-2.5 border rounded-md hover:bg-muted/50 hover:border-green-300 transition-all text-left group">
+                        <div className={`p-1.5 rounded-md ${action.color}`}>
+                          <action.icon className="h-3.5 w-3.5" />
+                        </div>
+                        <span className="text-[11px] font-medium group-hover:text-green-600">{action.label}</span>
+                      </button>
+                    )
+                  })}
                 </CardContent>
               </Card>
             </motion.div>
@@ -207,42 +246,29 @@ export default function DashboardPage() {
               <Card className="h-full">
                 <CardHeader className="p-3 pb-1.5">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-[13px] font-semibold">Recent Activity</CardTitle>
-                    <button className="text-[10px] text-green-600 hover:underline">View All</button>
+                    <CardTitle className="text-[13px] font-semibold">Recent Assets</CardTitle>
+                    <Link href="/equipment/dashboard" className="text-[10px] text-green-600 hover:underline">View All</Link>
                   </div>
                 </CardHeader>
                 <CardContent className="p-3 pt-1.5">
                   <div className="space-y-2">
-                    {[
-                      { action: "Work order completed", equipment: "EEC-EX-012", user: "Tech. Alemayehu", time: "10m", type: "success" },
-                      { action: "Maintenance scheduled", equipment: "EEC-BD-008", user: "Manager Sofia", time: "25m", type: "info" },
-                      { action: "Fuel consumption report", equipment: "EEC-TR-045", user: "System", time: "1h", type: "warning" },
-                      { action: "New equipment added", equipment: "EEC-CR-009", user: "Admin Michael", time: "2h", type: "success" },
-                      { action: "Maintenance request", equipment: "EEC-LD-023", user: "Operator John", time: "3h", type: "info" },
-                      { action: "Equipment inspection", equipment: "EEC-GR-017", user: "Tech. Samuel", time: "4h", type: "success" },
-                      { action: "Parts requisition", equipment: "EEC-RL-031", user: "Tech. Yonas", time: "5h", type: "info" },
-                       { action: "Equipment inspection", equipment: "EEC-GR-017", user: "Tech. Samuel", time: "4h", type: "success" },
-                    ].map((activity, i) => (
-                      <div
-                        key={i}
-                        className="flex items-center gap-2.5 p-2 border rounded-md hover:bg-muted/50 transition-colors"
-                      >
-                        <div className={`p-1.5 rounded-full flex-shrink-0 ${
-                          activity.type === 'success' ? 'bg-green-100 text-green-600 dark:bg-green-900/30' :
-                          activity.type === 'info' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30' :
-                          'bg-amber-100 text-amber-600 dark:bg-amber-900/30'
-                        }`}>
-                          {activity.type === 'success' ? <CheckCircle className="h-3 w-3" /> :
-                           activity.type === 'info' ? <FileText className="h-3 w-3" /> :
-                           <AlertTriangle className="h-3 w-3" />}
+                    {loading ? (
+                      [...Array(5)].map((_, i) => <Skeleton key={i} className="h-12" />)
+                    ) : report?.recentAssets?.length ? (
+                      report.recentAssets.slice(0, 8).map((a, i) => (
+                        <div key={i} className="flex items-center gap-2.5 p-2 border rounded-md hover:bg-muted/50 transition-colors">
+                          <div className="p-1.5 rounded-full flex-shrink-0 bg-green-100 text-green-600 dark:bg-green-900/30">
+                            <CheckCircle className="h-3 w-3" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-[11px] truncate">{a.asset_no ?? a.description?.slice(0, 40) ?? "—"}</p>
+                            <p className="text-[10px] text-muted-foreground truncate">Status: {a.status ?? "—"}</p>
+                          </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-[11px] truncate">{activity.action}</p>
-                          <p className="text-[10px] text-muted-foreground truncate">{activity.equipment} • {activity.user}</p>
-                        </div>
-                        <span className="text-[10px] text-muted-foreground flex-shrink-0">{activity.time}</span>
-                      </div>
-                    ))}
+                      ))
+                    ) : (
+                      <p className="text-[11px] text-muted-foreground py-4 text-center">No recent assets</p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -317,22 +343,30 @@ export default function DashboardPage() {
                   <CardTitle className="text-[13px] font-semibold">Top Sites</CardTitle>
                 </CardHeader>
                 <CardContent className="p-3 pt-1.5 space-y-2.5">
-                  {[
-                    { name: "Addis Ababa", utilization: 94, equipment: 156 },
-                    { name: "Bahir Dar", utilization: 87, equipment: 89 },
-                    { name: "Hawassa", utilization: 82, equipment: 67 },
-                  ].map((site, i) => (
-                    <div key={i} className="flex items-center gap-2.5">
-                      <div className="flex-1">
-                        <div className="flex justify-between text-[11px] mb-0.5">
-                          <span className="font-medium">{site.name}</span>
-                          <span className="text-green-600">{site.utilization}%</span>
-                        </div>
-                        <Progress value={site.utilization} className="h-1.5" />
-                      </div>
-                      <span className="text-[10px] text-muted-foreground w-14 text-right">{site.equipment} units</span>
-                    </div>
-                  ))}
+                  {loading ? (
+                    [...Array(3)].map((_, i) => <Skeleton key={i} className="h-8" />)
+                  ) : report?.locationBreakdown?.length ? (
+                    report.locationBreakdown
+                      .filter((l) => l.location !== "Unassigned")
+                      .slice(0, 5)
+                      .map((site, i) => {
+                        const pct = total ? Math.round((site.total / total) * 100) : 0
+                        return (
+                          <div key={i} className="flex items-center gap-2.5">
+                            <div className="flex-1">
+                              <div className="flex justify-between text-[11px] mb-0.5">
+                                <span className="font-medium truncate max-w-[120px]">{site.location}</span>
+                                <span className="text-green-600">{pct}%</span>
+                              </div>
+                              <Progress value={pct} className="h-1.5" />
+                            </div>
+                            <span className="text-[10px] text-muted-foreground w-14 text-right">{site.total} units</span>
+                          </div>
+                        )
+                      })
+                  ) : (
+                    <p className="text-[11px] text-muted-foreground">No location data</p>
+                  )}
                 </CardContent>
               </Card>
             </motion.div>
@@ -349,37 +383,36 @@ export default function DashboardPage() {
             <CardHeader className="p-3 pb-1.5">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-[13px] font-semibold">Equipment Categories Overview</CardTitle>
-                <button className="text-[10px] text-green-600 hover:underline">View Details</button>
+                <Link href="/equipment/dashboard" className="text-[10px] text-green-600 hover:underline">View Details</Link>
               </div>
             </CardHeader>
             <CardContent className="p-3 pt-1.5">
               <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-8 xl:grid-cols-10 gap-2.5">
-                {[
-                  { type: "Dozers", count: 52, operational: 19, color: "bg-orange-500" },
-                  { type: "Graders", count: 31, operational: 13, color: "bg-amber-500" },
-                  { type: "Excavators", count: 74, operational: 29, color: "bg-yellow-500" },
-                  { type: "Loaders", count: 76, operational: 21, color: "bg-lime-500" },
-                  { type: "Rollers", count: 66, operational: 32, color: "bg-green-500" },
-                  { type: "Dump Trucks", count: 365, operational: 111, color: "bg-cyan-500" },
-                  { type: "Water Trucks", count: 69, operational: 46, color: "bg-blue-500" },
-                  { type: "Light Vehicles", count: 288, operational: 111, color: "bg-purple-500" },
-                  { type: "Fuel Trucks", count: 25, operational: 15, color: "bg-rose-500" },
-                  { type: "Cranes", count: 8, operational: 4, color: "bg-indigo-500" },
-                ].map((category, i) => (
-                  <div key={i} className="p-2.5 border rounded-md hover:shadow-md hover:border-green-300 transition-all cursor-pointer group">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-[10px] font-medium truncate group-hover:text-green-600">{category.type}</span>
-                      <div className={`w-2 h-2 rounded-full ${category.color}`} />
-                    </div>
-                    <div className="text-base font-bold leading-tight">{category.operational}<span className="text-[11px] font-normal text-muted-foreground">/{category.count}</span></div>
-                    <div className="text-[9px] text-muted-foreground">
-                      {Math.round((category.operational / category.count) * 100)}% op
-                    </div>
-                    <div className="mt-1 h-1 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                      <div className={`h-full ${category.color} rounded-full`} style={{ width: `${(category.operational / category.count) * 100}%` }} />
-                    </div>
-                  </div>
-                ))}
+                {loading ? (
+                  [...Array(6)].map((_, i) => <Skeleton key={i} className="h-20" />)
+                ) : stats?.byCategory?.length ? (
+                  stats.byCategory.slice(0, 10).map((cat, i) => {
+                    const pct = total ? Math.round((cat.count / total) * 100) : 0
+                    const colors = ["bg-orange-500", "bg-amber-500", "bg-yellow-500", "bg-lime-500", "bg-green-500", "bg-cyan-500", "bg-blue-500", "bg-purple-500", "bg-rose-500", "bg-indigo-500"]
+                    return (
+                      <Link key={i} href={`/equipment/${cat.category.toLowerCase().replace(/\s+/g, "-")}`} className="block">
+                        <div className="p-2.5 border rounded-md hover:shadow-md hover:border-green-300 transition-all group">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] font-medium truncate group-hover:text-green-600">{cat.category}</span>
+                            <div className={`w-2 h-2 rounded-full ${colors[i % colors.length]}`} />
+                          </div>
+                          <div className="text-base font-bold leading-tight">{cat.count}</div>
+                          <div className="text-[9px] text-muted-foreground">{pct}% of fleet</div>
+                          <div className="mt-1 h-1 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                            <div className={`h-full ${colors[i % colors.length]} rounded-full`} style={{ width: `${pct}%` }} />
+                          </div>
+                        </div>
+                      </Link>
+                    )
+                  })
+                ) : (
+                  <p className="col-span-full text-[11px] text-muted-foreground py-4 text-center">No category data</p>
+                )}
               </div>
             </CardContent>
           </Card>
