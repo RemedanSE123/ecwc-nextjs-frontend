@@ -53,7 +53,7 @@ import { motion } from 'framer-motion';
 
 const COLORS = ['#16a34a', '#ea580c', '#0891b2', '#dc2626', '#7c3aed', '#ca8a04'];
 
-const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+const iconMap: Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
   'plant-equipment': Wrench,
   'auxiliary-equipment': Truck,
   'light-vehicles': Car,

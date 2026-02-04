@@ -86,7 +86,7 @@ export default function EquipmentDataView({ categoryGroup, categoryName }: Equip
     setExporting(true);
     try {
       const res = await fetchAssets({ ...filters, limit: 5000 });
-      exportAssetsToExcel(res.data as Record<string, unknown>[], `${categoryName.replace(/\s/g, '-')}-${new Date().toISOString().slice(0, 10)}.xlsx`);
+      exportAssetsToExcel(res.data as unknown as Record<string, unknown>[], `${categoryName.replace(/\s/g, '-')}-${new Date().toISOString().slice(0, 10)}.xlsx`);
     } finally {
       setExporting(false);
     }
@@ -96,7 +96,7 @@ export default function EquipmentDataView({ categoryGroup, categoryName }: Equip
     setExporting(true);
     try {
       const res = await fetchAssets({ ...filters, limit: 5000 });
-      exportAssetsToCsv(res.data as Record<string, unknown>[], `${categoryName.replace(/\s/g, '-')}-${new Date().toISOString().slice(0, 10)}.csv`);
+      exportAssetsToCsv(res.data as unknown as Record<string, unknown>[], `${categoryName.replace(/\s/g, '-')}-${new Date().toISOString().slice(0, 10)}.csv`);
     } finally {
       setExporting(false);
     }

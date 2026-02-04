@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { SLUG_TO_DB_CATEGORY } from '@/types/asset';
 
+export const dynamic = 'force-dynamic';
+
 function getErrorMessage(err: unknown): string {
   if (err instanceof Error) return err.message;
   return String(err);
