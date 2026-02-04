@@ -20,18 +20,25 @@ export interface Asset {
 export interface AssetFilters {
   category?: string;
   category_group?: string;  // slug e.g. plant-equipment
-  status?: string;
-  project_location?: string;
+  status?: string | string[];
+  project_location?: string | string[];
   search?: string;
-  ownership?: string;
+  description?: string | string[];  // filter by exact description(s), multi-select
+  make?: string | string[];
+  model?: string | string[];
+  ownership?: string | string[];
   responsible_person_name?: string;
   page?: number;
   limit?: number;
 }
 
 export interface AssetFacets {
+  category?: string[];
+  description?: string[];
   status: string[];
   project_location: string[];
+  make: string[];
+  model: string[];
   ownership: string[];
   responsible_person_name: string[];
 }

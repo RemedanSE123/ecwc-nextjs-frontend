@@ -1,18 +1,25 @@
 'use client';
 
+import { useState } from 'react';
 import type { Asset } from '@/types/asset';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, User, Phone, MapPin, FileText } from 'lucide-react';
+import { getAssetImageUrl } from '@/lib/api/assets';
+import { deleteAsset } from '@/lib/api/assets';
+import { X, User, Phone, MapPin, FileText, Pencil, Trash2 } from 'lucide-react';
 
 interface AssetDetailModalProps {
   asset: Asset | null;
   onClose: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
-export default function AssetDetailModal({ asset, onClose }: AssetDetailModalProps) {
+export default function AssetDetailModal({ asset, onClose, onEdit, onDelete }: AssetDetailModalProps) {
+  const [deleting, setDeleting] = useState(false);
   if (!asset) return null;
 
+  const imageUrl = getAssetImageUrl(asset.image_s3_key);
   const statusColor =
     asset.status?.toLowerCase().includes('operational') ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
     asset.status?.toLowerCase().includes('repair') ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400' :
@@ -36,11 +43,11 @@ export default function AssetDetailModal({ asset, onClose }: AssetDetailModalPro
           </Button>
         </div>
 
-        {/* Image placeholder */}
+        {/* Image */}
         <div className="flex justify-center p-4 border-b bg-muted/30">
-          <div className="w-32 h-24 rounded-lg bg-muted flex items-center justify-center text-muted-foreground text-xs">
-            {asset.image_s3_key ? (
-              <span>Image</span>
+          <div className="w-32 h-24 rounded-lg bg-muted flex items-center justify-center overflow-hidden text-muted-foreground text-xs">
+            {imageUrl ? (
+              <img src={imageUrl} alt="" className="w-full h-full object-cover" />
             ) : (
               <span>No image</span>
             )}
@@ -118,7 +125,36 @@ export default function AssetDetailModal({ asset, onClose }: AssetDetailModalPro
             </div>
           )}
 
-          <div className="flex justify-end pt-2">
+          <div className="flex justify-end gap-2 pt-2">
+            {onEdit && (
+              <Button variant="outline" size="sm" onClick={onEdit} className="gap-1">
+                <Pencil className="h-3 w-3" />
+                Edit
+              </Button>
+            )}
+            {onDelete && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1 text-destructive border-destructive/50 hover:bg-destructive/10"
+                disabled={deleting}
+                onClick={async () => {
+                  if (!confirm('Delete this asset? This cannot be undone.')) return;
+                  setDeleting(true);
+                  try {
+                    await deleteAsset(asset.id);
+                    onDelete();
+                  } catch (e) {
+                    alert(e instanceof Error ? e.message : 'Delete failed');
+                  } finally {
+                    setDeleting(false);
+                  }
+                }}
+              >
+                <Trash2 className="h-3 w-3" />
+                {deleting ? 'Deleting…' : 'Delete'}
+              </Button>
+            )}
             <Button variant="outline" size="sm" onClick={onClose}>
               Close
             </Button>

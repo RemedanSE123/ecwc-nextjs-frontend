@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/tooltip';
 import { Skeleton } from '@/components/ui/skeleton';
 import { fetchAssetStats, fetchAssetReports } from '@/lib/api/assets';
+import EquipmentDataView from '@/components/equipment/EquipmentDataView';
 import { exportStatsToExcel, exportToPdf } from '@/lib/export-utils';
 import { EQUIPMENT_CATEGORIES, SLUG_TO_DB_CATEGORY } from '@/types/asset';
 import type { AssetStats, AssetReportData } from '@/types/asset';
@@ -242,6 +243,9 @@ export default function EquipmentDashboardPage() {
               <TabsTrigger value="reports" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow">
                 Category Report
               </TabsTrigger>
+              <TabsTrigger value="all-assets" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow">
+                All Assets
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="overview" className="space-y-4">
@@ -438,6 +442,13 @@ export default function EquipmentDashboardPage() {
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="all-assets" className="mt-4">
+              <EquipmentDataView
+                categoryName="All Assets"
+                initialLimit={5000}
+              />
             </TabsContent>
           </Tabs>
         </div>

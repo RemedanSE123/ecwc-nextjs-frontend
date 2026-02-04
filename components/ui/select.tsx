@@ -32,16 +32,22 @@ const Select = ({ value, onValueChange, disabled, children, className }: SelectP
     }
   }, [open])
 
-  const selectedLabel = React.Children.toArray(children)
+  const contentChild = React.Children.toArray(children).find(
+    (c) => React.isValidElement(c) && (c as React.ReactElement<{ children?: React.ReactNode }>).type === SelectContent
+  )
+  const items = React.isValidElement(contentChild) && contentChild.props.children
+    ? React.Children.toArray((contentChild as React.ReactElement<{ children: React.ReactNode }>).props.children)
+    : React.Children.toArray(children)
+  const selectedLabel = items
     .filter((child) => {
       if (React.isValidElement(child) && child.type === SelectItem) {
-        return child.props.value === value
+        return (child.props as { value: string }).value === value
       }
       return false
     })
     .map((child) => {
       if (React.isValidElement(child)) {
-        return child.props.children
+        return (child.props as { children: React.ReactNode }).children
       }
       return null
     })[0]
@@ -63,14 +69,14 @@ const Select = ({ value, onValueChange, disabled, children, className }: SelectP
       {open && (
         <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md">
           <div className="p-1">
-            {React.Children.map(children, (child) => {
+            {items.map((child) => {
               if (React.isValidElement(child) && child.type === SelectItem) {
-                return React.cloneElement(child as React.ReactElement, {
+                return React.cloneElement(child as React.ReactElement<{ value: string; children: React.ReactNode }>, {
                   onClick: () => {
-                    onValueChange(child.props.value)
+                    onValueChange((child.props as { value: string }).value)
                     setOpen(false)
                   },
-                  isSelected: child.props.value === value,
+                  isSelected: (child.props as { value: string }).value === value,
                 })
               }
               return null

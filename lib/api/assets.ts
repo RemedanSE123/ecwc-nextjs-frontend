@@ -2,11 +2,31 @@ import type { Asset, AssetFilters, AssetsResponse, AssetStats, AssetReportData, 
 
 const API_BASE = '';
 
-function buildQuery(params: Record<string, string | number | undefined>) {
+/** Build URL for viewing an asset image (redirects to presigned S3 URL). */
+export function getAssetImageUrl(key: string | null): string | null {
+  if (!key) return null;
+  return `${typeof window === 'undefined' ? '' : ''}/api/assets/image?key=${encodeURIComponent(key)}`;
+}
+
+const MULTI_KEYS = ['status', 'project_location', 'make', 'model', 'ownership', 'description'] as const;
+
+function buildAssetsQuery(filters: AssetFilters): string {
   const search = new URLSearchParams();
-  Object.entries(params).forEach(([k, v]) => {
+  const set = (k: string, v: string | number | undefined) => {
     if (v !== undefined && v !== '' && v !== null) search.set(k, String(v));
-  });
+  };
+  const appendAll = (k: string, val: string | string[] | undefined) => {
+    if (val == null) return;
+    const arr = Array.isArray(val) ? val : [val];
+    arr.filter((v) => v !== '').forEach((v) => search.append(k, v));
+  };
+  set('category', filters.category);
+  set('category_group', filters.category_group);
+  set('search', filters.search);
+  set('responsible_person_name', filters.responsible_person_name);
+  set('page', String(filters.page ?? 1));
+  set('limit', String(filters.limit ?? 20));
+  MULTI_KEYS.forEach((k) => appendAll(k, filters[k]));
   return search.toString();
 }
 
@@ -19,21 +39,14 @@ async function handleApiError(res: Response, fallback: string): Promise<never> {
   } catch {
     detail = `${fallback} (${res.status} ${res.statusText})`;
   }
+  if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
+    console.error('[API Error]', fallback, res.status, detail);
+  }
   throw new Error(detail);
 }
 
 export async function fetchAssets(filters: AssetFilters = {}): Promise<AssetsResponse> {
-  const q = buildQuery({
-    category: filters.category,
-    category_group: filters.category_group,
-    status: filters.status,
-    project_location: filters.project_location,
-    search: filters.search,
-    ownership: filters.ownership,
-    responsible_person_name: filters.responsible_person_name,
-    page: filters.page ?? 1,
-    limit: filters.limit ?? 20,
-  });
+  const q = buildAssetsQuery(filters);
   const res = await fetch(`${API_BASE}/api/assets${q ? `?${q}` : ''}`);
   if (!res.ok) return handleApiError(res, 'Failed to fetch assets');
   return res.json();
@@ -68,11 +81,64 @@ export async function fetchAssetFacets(categoryGroup?: string): Promise<AssetFac
   return res.json();
 }
 
+
 export async function fetchAssetCompleteness(categoryGroup?: string): Promise<AssetCompleteness> {
   const params = new URLSearchParams();
   if (categoryGroup) params.set('category_group', categoryGroup);
   const q = params.toString() ? `?${params}` : '';
   const res = await fetch(`${API_BASE}/api/assets/completeness${q}`);
   if (!res.ok) return handleApiError(res, 'Failed to fetch completeness');
+  return res.json();
+}
+
+export async function fetchAsset(id: string): Promise<Asset> {
+  const res = await fetch(`${API_BASE}/api/assets/${encodeURIComponent(id)}`);
+  if (!res.ok) return handleApiError(res, 'Failed to fetch asset');
+  return res.json();
+}
+
+export type CreateAssetPayload = Partial<Omit<Asset, 'id' | 'created_at' | 'updated_at'>> & {
+  category: string;
+  description: string;
+};
+
+export async function createAsset(payload: CreateAssetPayload): Promise<Asset> {
+  const res = await fetch(`${API_BASE}/api/assets`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) return handleApiError(res, 'Failed to create asset');
+  return res.json();
+}
+
+export type UpdateAssetPayload = Partial<Omit<Asset, 'id' | 'created_at' | 'updated_at'>>;
+
+export async function updateAsset(id: string, payload: UpdateAssetPayload): Promise<Asset> {
+  const res = await fetch(`${API_BASE}/api/assets/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) return handleApiError(res, 'Failed to update asset');
+  return res.json();
+}
+
+export async function deleteAsset(id: string): Promise<{ success: boolean; id: string }> {
+  const res = await fetch(`${API_BASE}/api/assets/${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) return handleApiError(res, 'Failed to delete asset');
+  return res.json();
+}
+
+export async function uploadAssetImage(file: File): Promise<{ key: string }> {
+  const formData = new FormData();
+  formData.append('file', file);
+  const res = await fetch(`${API_BASE}/api/assets/upload`, {
+    method: 'POST',
+    body: formData,
+  });
+  if (!res.ok) return handleApiError(res, 'Failed to upload image');
   return res.json();
 }

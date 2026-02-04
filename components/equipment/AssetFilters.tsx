@@ -1,20 +1,111 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Select, SelectItem } from '@/components/ui/select';
-import { Search, Filter, X } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import { Search, X, ChevronDown } from 'lucide-react';
 import type { AssetFilters as AssetFiltersType } from '@/types/asset';
 import type { AssetFacets } from '@/types/asset';
+
+function toArray(v: string | string[] | undefined): string[] {
+  if (v == null) return [];
+  return Array.isArray(v) ? v : [v];
+}
+
+const DEBOUNCE_MS = 250;
+
+function MultiSelectFilter({
+  label,
+  options,
+  selected,
+  onSelectedChange,
+  placeholder,
+  className,
+  optionDisplay,
+}: {
+  label: string;
+  options: string[];
+  selected: string[];
+  onSelectedChange: (values: string[]) => void;
+  placeholder: string;
+  className?: string;
+  optionDisplay?: (opt: string) => React.ReactNode;
+}) {
+  const toggle = (value: string) => {
+    const next = selected.includes(value) ? selected.filter((v) => v !== value) : [...selected, value];
+    onSelectedChange(next.length ? next : []);
+  };
+  const selectAll = () => onSelectedChange(options.length ? [...options] : []);
+  const clear = () => onSelectedChange([]);
+  const displayLabel = selected.length === 0 ? label : `${label} (${selected.length})`;
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="sm" className={`h-8 text-xs justify-between gap-1 ${className ?? ''}`}>
+          <span className="truncate">{displayLabel}</span>
+          <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="max-h-[280px] overflow-y-auto">
+        <DropdownMenuLabel className="flex items-center justify-between gap-2 text-xs">
+          <span>{placeholder}</span>
+          <span className="flex gap-1">
+            <Button type="button" variant="ghost" size="sm" className="h-6 px-1.5 text-[10px]" onClick={selectAll}>All</Button>
+            <Button type="button" variant="ghost" size="sm" className="h-6 px-1.5 text-[10px]" onClick={clear}>Clear</Button>
+          </span>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {options.length === 0 ? (
+          <div className="py-4 px-3 text-[11px] text-muted-foreground">No options</div>
+        ) : (
+          options.map((opt) => (
+            <DropdownMenuCheckboxItem
+              key={opt}
+              checked={selected.includes(opt)}
+              onCheckedChange={() => toggle(opt)}
+              onSelect={(e) => e.preventDefault()}
+              className="text-xs"
+            >
+              {optionDisplay ? optionDisplay(opt) : opt}
+            </DropdownMenuCheckboxItem>
+          ))
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 interface AssetFiltersProps {
   filters: AssetFiltersType;
   onFiltersChange: (f: AssetFiltersType) => void;
   onReset: () => void;
   categoryOptions?: { value: string; label: string }[];
+  descriptionOptions?: { value: string; label: string }[];
   hideCategoryFilter?: boolean;
   facets?: AssetFacets | null;
+  /** Compact: single row, small search, filters inline */
+  compact?: boolean;
+  /** When set, show near filter bar (e.g. facets fetch failed) */
+  facetsError?: string | null;
+  /** When true with compact, render filter row only (no wrapper) for use in a single header row */
+  inline?: boolean;
+  /** When true with compact, do not render Search input (e.g. search is in header row 1) */
+  hideSearch?: boolean;
 }
 
 export default function AssetFilters({
@@ -22,160 +113,276 @@ export default function AssetFilters({
   onFiltersChange,
   onReset,
   categoryOptions = [],
+  descriptionOptions = [],
   hideCategoryFilter = false,
   facets,
+  compact = true,
+  facetsError,
+  inline = false,
+  hideSearch = false,
 }: AssetFiltersProps) {
-  const [expanded, setExpanded] = useState(false);
   const [localSearch, setLocalSearch] = useState(filters.search ?? '');
+  const filtersRef = useRef(filters);
+  filtersRef.current = filters;
 
-  const handleSearch = () => {
-    onFiltersChange({ ...filters, search: localSearch || undefined, page: 1 });
-  };
+  useEffect(() => {
+    if (hideSearch) return;
+    const t = setTimeout(() => {
+      const value = localSearch.trim() || undefined;
+      if (filtersRef.current.search === value) return;
+      onFiltersChange({ ...filtersRef.current, search: value, page: 1 });
+    }, DEBOUNCE_MS);
+    return () => clearTimeout(t);
+  }, [localSearch, onFiltersChange, hideSearch]);
+
+  useEffect(() => {
+    if ((filters.search ?? '') !== localSearch) setLocalSearch(filters.search ?? '');
+  }, [filters.search]);
 
   const hasActiveFilters = !!(
     filters.category ||
-    filters.status ||
-    filters.project_location ||
-    filters.ownership ||
+    toArray(filters.status).length > 0 ||
+    toArray(filters.project_location).length > 0 ||
+    toArray(filters.make).length > 0 ||
+    toArray(filters.model).length > 0 ||
+    toArray(filters.ownership).length > 0 ||
     filters.responsible_person_name ||
-    filters.search
+    (filters.search ?? '').trim() ||
+    toArray(filters.description).length > 0
   );
 
   const statusOptions = facets?.status ?? [];
   const locationOptions = facets?.project_location ?? [];
+  const makeOptions = facets?.make ?? [];
+  const modelOptions = facets?.model ?? [];
   const ownershipOptions = facets?.ownership ?? [];
   const responsibleOptions = facets?.responsible_person_name ?? [];
 
+  if (compact) {
+    const filterRow = (
+      <div className="flex flex-wrap items-center gap-2">
+        {facetsError && inline && (
+          <span className="text-[11px] text-amber-600 dark:text-amber-400 shrink-0">Filters: {facetsError}</span>
+        )}
+        {!hideSearch && (
+          <>
+            <span className="text-[11px] text-muted-foreground font-medium shrink-0 hidden sm:inline">Search:</span>
+            <div className="relative w-40 sm:w-48 shrink-0">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+              <Input
+                placeholder="Asset no, make, serial..."
+                value={localSearch}
+                onChange={(e) => setLocalSearch(e.target.value)}
+                className="pl-7 h-8 text-xs transition-shadow focus-visible:ring-2"
+              />
+            </div>
+          </>
+        )}
+        <span className="text-[11px] text-muted-foreground font-medium shrink-0 hidden sm:inline">Filter by:</span>
+        {!hideCategoryFilter && (
+          <Select
+            value={filters.category?.trim() ? filters.category : '_all'}
+            onValueChange={(v) => onFiltersChange({ ...filters, category: v === '_all' ? undefined : v, page: 1 })}
+          >
+            <SelectTrigger className="h-8 w-[110px] sm:w-[120px] text-xs">
+              <SelectValue placeholder="All categories" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="_all">All categories</SelectItem>
+              {categoryOptions.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+        <MultiSelectFilter
+          label="Location"
+          options={locationOptions}
+          selected={toArray(filters.project_location)}
+          onSelectedChange={(v) => onFiltersChange({ ...filters, project_location: v.length ? v : undefined, page: 1 })}
+          placeholder="Location"
+          className="w-[110px] sm:w-[120px]"
+        />
+        {descriptionOptions.length > 0 && (
+          <MultiSelectFilter
+            label="Description"
+            options={descriptionOptions.map((o) => o.value)}
+            selected={toArray(filters.description)}
+            onSelectedChange={(v) => onFiltersChange({ ...filters, description: v.length ? v : undefined, page: 1 })}
+            placeholder="Description"
+            className="w-[130px] sm:w-[150px] max-w-[200px]"
+            optionDisplay={(opt) => (opt.length > 50 ? `${opt.slice(0, 50)}…` : opt)}
+          />
+        )}
+        <MultiSelectFilter
+          label="Make"
+          options={makeOptions}
+          selected={toArray(filters.make)}
+          onSelectedChange={(v) => onFiltersChange({ ...filters, make: v.length ? v : undefined, page: 1 })}
+          placeholder="Make"
+          className="w-[95px] sm:w-[100px]"
+        />
+        <MultiSelectFilter
+          label="Model"
+          options={modelOptions}
+          selected={toArray(filters.model)}
+          onSelectedChange={(v) => onFiltersChange({ ...filters, model: v.length ? v : undefined, page: 1 })}
+          placeholder="Model"
+          className="w-[95px] sm:w-[100px]"
+        />
+        <MultiSelectFilter
+          label="Status"
+          options={statusOptions}
+          selected={toArray(filters.status)}
+          onSelectedChange={(v) => onFiltersChange({ ...filters, status: v.length ? v : undefined, page: 1 })}
+          placeholder="Status"
+          className="w-[100px] sm:w-[110px]"
+        />
+        <MultiSelectFilter
+          label="Ownership"
+          options={ownershipOptions}
+          selected={toArray(filters.ownership)}
+          onSelectedChange={(v) => onFiltersChange({ ...filters, ownership: v.length ? v : undefined, page: 1 })}
+          placeholder="Ownership"
+          className="w-[100px] sm:w-[110px]"
+        />
+        {hasActiveFilters && (
+          <Button variant="ghost" size="sm" onClick={onReset} className="h-8 px-2 text-xs">
+            <X className="w-3.5 h-3.5 mr-1" /> Clear
+          </Button>
+        )}
+      </div>
+    );
+    if (inline) return filterRow;
+    return (
+      <div className="space-y-1">
+        {facetsError && !inline && (
+          <p className="text-[11px] text-amber-600 dark:text-amber-400">Filter options could not be loaded: {facetsError}</p>
+        )}
+        {filterRow}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-3">
+      {facetsError && (
+        <p className="text-sm text-amber-600 dark:text-amber-400">Filter options could not be loaded: {facetsError}</p>
+      )}
       <div className="flex flex-wrap items-center gap-2">
-        <div className="relative flex-1 min-w-[200px]">
+        <div className="relative flex-1 min-w-[160px]">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Search asset no, description, serial, make..."
+            placeholder="Search description, asset no, serial, make..."
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            className="pl-9"
+            className="pl-9 h-9 text-sm"
           />
         </div>
-        <Button onClick={handleSearch} size="sm">
-          Search
-        </Button>
-        <Button variant="outline" size="sm" onClick={() => setExpanded(!expanded)}>
-          <Filter className="w-4 h-4 mr-1" />
-          Filters {hasActiveFilters && `(${Object.values(filters).filter((v) => v !== undefined && v !== '').length})`}
-        </Button>
         {hasActiveFilters && (
           <Button variant="ghost" size="sm" onClick={onReset}>
             <X className="w-4 h-4 mr-1" /> Clear
           </Button>
         )}
       </div>
-
-      {expanded && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 p-4 border rounded-lg bg-muted/30">
-          {!hideCategoryFilter && (
-            <div>
-              <label className="text-[11px] text-muted-foreground mb-1 block font-medium">Category</label>
-              <Select
-                value={filters.category ?? ''}
-                onValueChange={(v) => onFiltersChange({ ...filters, category: v || undefined, page: 1 })}
-              >
-                <SelectItem value="">All</SelectItem>
-                {categoryOptions.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>
-                    {o.label}
-                  </SelectItem>
-                ))}
-              </Select>
-            </div>
-          )}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 p-4 border rounded-lg bg-muted/30">
+        {!hideCategoryFilter && (
           <div>
-            <label className="text-[11px] text-muted-foreground mb-1 block font-medium">Status</label>
+            <label className="text-[11px] text-muted-foreground mb-1 block font-medium">Category</label>
             <Select
-              value={filters.status ?? ''}
-              onValueChange={(v) => onFiltersChange({ ...filters, status: v || undefined, page: 1 })}
+              value={filters.category?.trim() ? filters.category : '_all'}
+              onValueChange={(v) => onFiltersChange({ ...filters, category: v === '_all' ? undefined : v, page: 1 })}
             >
-              <SelectItem value="">All</SelectItem>
-              {statusOptions.map((s) => (
-                <SelectItem key={s} value={s}>
-                  {s}
-                </SelectItem>
-              ))}
+              <SelectTrigger><SelectValue placeholder="All categories" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_all">All categories</SelectItem>
+                {categoryOptions.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                ))}
+              </SelectContent>
             </Select>
           </div>
-          <div>
-            <label className="text-[11px] text-muted-foreground mb-1 block font-medium">Location</label>
-            {locationOptions.length > 0 ? (
-              <Select
-                value={filters.project_location ?? ''}
-                onValueChange={(v) => onFiltersChange({ ...filters, project_location: v || undefined, page: 1 })}
-              >
-                <SelectItem value="">All</SelectItem>
-                {locationOptions.map((loc) => (
-                  <SelectItem key={loc} value={loc}>
-                    {loc}
-                  </SelectItem>
-                ))}
-              </Select>
-            ) : (
-              <Input
-                placeholder="Type location"
-                value={filters.project_location ?? ''}
-                onChange={(e) => onFiltersChange({ ...filters, project_location: e.target.value || undefined, page: 1 })}
-                className="h-9"
-              />
-            )}
-          </div>
-          <div>
-            <label className="text-[11px] text-muted-foreground mb-1 block font-medium">Ownership</label>
-            {ownershipOptions.length > 0 ? (
-              <Select
-                value={filters.ownership ?? ''}
-                onValueChange={(v) => onFiltersChange({ ...filters, ownership: v || undefined, page: 1 })}
-              >
-                <SelectItem value="">All</SelectItem>
-                {ownershipOptions.map((o) => (
-                  <SelectItem key={o} value={o}>
-                    {o}
-                  </SelectItem>
-                ))}
-              </Select>
-            ) : (
-              <Input
-                placeholder="Type ownership"
-                value={filters.ownership ?? ''}
-                onChange={(e) => onFiltersChange({ ...filters, ownership: e.target.value || undefined, page: 1 })}
-                className="h-9"
-              />
-            )}
-          </div>
-          <div>
-            <label className="text-[11px] text-muted-foreground mb-1 block font-medium">Responsible</label>
-            {responsibleOptions.length > 0 ? (
-              <Select
-                value={filters.responsible_person_name ?? ''}
-                onValueChange={(v) => onFiltersChange({ ...filters, responsible_person_name: v || undefined, page: 1 })}
-              >
-                <SelectItem value="">All</SelectItem>
-                {responsibleOptions.map((r) => (
-                  <SelectItem key={r} value={r}>
-                    {r}
-                  </SelectItem>
-                ))}
-              </Select>
-            ) : (
-              <Input
-                placeholder="Type name"
-                value={filters.responsible_person_name ?? ''}
-                onChange={(e) => onFiltersChange({ ...filters, responsible_person_name: e.target.value || undefined, page: 1 })}
-                className="h-9"
-              />
-            )}
-          </div>
+        )}
+        <div>
+          <label className="text-[11px] text-muted-foreground mb-1 block font-medium">Location</label>
+          <MultiSelectFilter
+            label="Location"
+            options={locationOptions}
+            selected={toArray(filters.project_location)}
+            onSelectedChange={(v) => onFiltersChange({ ...filters, project_location: v.length ? v : undefined, page: 1 })}
+            placeholder="Location"
+          />
         </div>
-      )}
+        {descriptionOptions.length > 0 && (
+          <div>
+            <label className="text-[11px] text-muted-foreground mb-1 block font-medium">Description</label>
+            <MultiSelectFilter
+              label="Description"
+              options={descriptionOptions.map((o) => o.value)}
+              selected={toArray(filters.description)}
+              onSelectedChange={(v) => onFiltersChange({ ...filters, description: v.length ? v : undefined, page: 1 })}
+              placeholder="Description"
+            />
+          </div>
+        )}
+        <div>
+          <label className="text-[11px] text-muted-foreground mb-1 block font-medium">Make</label>
+          <MultiSelectFilter
+            label="Make"
+            options={makeOptions}
+            selected={toArray(filters.make)}
+            onSelectedChange={(v) => onFiltersChange({ ...filters, make: v.length ? v : undefined, page: 1 })}
+            placeholder="Make"
+          />
+        </div>
+        <div>
+          <label className="text-[11px] text-muted-foreground mb-1 block font-medium">Model</label>
+          <MultiSelectFilter
+            label="Model"
+            options={modelOptions}
+            selected={toArray(filters.model)}
+            onSelectedChange={(v) => onFiltersChange({ ...filters, model: v.length ? v : undefined, page: 1 })}
+            placeholder="Model"
+          />
+        </div>
+        <div>
+          <label className="text-[11px] text-muted-foreground mb-1 block font-medium">Status</label>
+          <MultiSelectFilter
+            label="Status"
+            options={statusOptions}
+            selected={toArray(filters.status)}
+            onSelectedChange={(v) => onFiltersChange({ ...filters, status: v.length ? v : undefined, page: 1 })}
+            placeholder="Status"
+          />
+        </div>
+        <div>
+          <label className="text-[11px] text-muted-foreground mb-1 block font-medium">Ownership</label>
+          <MultiSelectFilter
+            label="Ownership"
+            options={ownershipOptions}
+            selected={toArray(filters.ownership)}
+            onSelectedChange={(v) => onFiltersChange({ ...filters, ownership: v.length ? v : undefined, page: 1 })}
+            placeholder="Ownership"
+          />
+        </div>
+        <div>
+          <label className="text-[11px] text-muted-foreground mb-1 block font-medium">Responsible</label>
+          <Select
+            value={filters.responsible_person_name ?? ''}
+            onValueChange={(v) => onFiltersChange({ ...filters, responsible_person_name: v || undefined, page: 1 })}
+          >
+            <SelectTrigger><SelectValue placeholder="All" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">All</SelectItem>
+              {responsibleOptions.map((r) => (
+                <SelectItem key={r} value={r}>{r}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
     </div>
   );
 }

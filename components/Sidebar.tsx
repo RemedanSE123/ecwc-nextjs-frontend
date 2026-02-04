@@ -36,8 +36,8 @@ interface NavItem {
 }
 
 const navigation: NavItem[] = [
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { name: 'Compound Map', href: '/compound-map', icon: MapPin },
+  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  
   {
     name: 'Equipment',
     href: '/equipment',
@@ -66,8 +66,8 @@ const navigation: NavItem[] = [
       { name: 'Rate Reference', href: '/rates', icon: BrIcon },
     ],
   },
-  { name: 'Maintenance', href: '/maintenance', icon: FileText },
-  { name: 'Technician', href: '/technician-report', icon: UserCheck },
+  { name: 'Compound Map', href: '/compound-map', icon: MapPin },
+
   { name: 'Settings', href: '/settings', icon: Settings },
   { name: 'Help & Support', href: '/help', icon: HelpCircle },
 ];

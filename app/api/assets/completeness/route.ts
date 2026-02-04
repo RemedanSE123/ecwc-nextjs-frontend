@@ -18,23 +18,11 @@ export async function GET(request: NextRequest) {
     const whereClause = dbCategory ? 'WHERE category = $1' : '';
     const params = dbCategory ? [dbCategory] : [];
 
-    const totalRes = await query<{ total: number }>(
-      `SELECT COUNT(*)::int as total FROM asset_master ${whereClause}`,
-      params
-    );
-    const total = totalRes?.[0]?.total ?? 0;
-
-    if (total === 0) {
-      return NextResponse.json({
-        total: 0,
-        columns: {},
-      });
-    }
-
     const cols = [
       'image_s3_key',
       'project_location',
       'asset_no',
+      'description',
       'serial_no',
       'make',
       'model',
@@ -49,6 +37,7 @@ export async function GET(request: NextRequest) {
       image_s3_key: 'Image',
       project_location: 'Location',
       asset_no: 'Asset No',
+      description: 'Description',
       serial_no: 'Serial No',
       make: 'Make',
       model: 'Model',
@@ -59,22 +48,28 @@ export async function GET(request: NextRequest) {
       remark: 'Remark',
     };
 
+    const filters = cols.map(
+      (col) => `COUNT(*) FILTER (WHERE (${col} IS NOT NULL) AND (TRIM(COALESCE(${col}::text, '')) != ''))::int AS ${col}_filled`
+    ).join(', ');
+    const oneRow = await query<Record<string, number>>(
+      `SELECT COUNT(*)::int AS total, ${filters} FROM asset_master ${whereClause}`,
+      params
+    );
+    const row = oneRow?.[0];
+    const totalFromQuery = row ? Number(row.total) || 0 : 0;
+    if (totalFromQuery === 0) {
+      return NextResponse.json({ total: 0, columns: {} });
+    }
     const results: Record<string, { filled: number; empty: number; pctEmpty: number; pctFilled: number }> = {};
-
-    const connector = whereClause ? ' AND ' : ' WHERE ';
     for (const col of cols) {
-      const filledRes = await query<{ cnt: number }>(
-        `SELECT COUNT(*)::int as cnt FROM asset_master ${whereClause}${connector}${col} IS NOT NULL AND TRIM(${col}::text) != ''`,
-        params
-      );
-      const filled = filledRes?.[0]?.cnt ?? 0;
-      const empty = total - filled;
-      const pctEmpty = total ? Math.round((empty / total) * 100) : 0;
-      const pctFilled = total ? Math.round((filled / total) * 100) : 0;
+      const filled = Number(row[`${col}_filled`]) || 0;
+      const empty = Math.max(0, totalFromQuery - filled);
+      const pctEmpty = totalFromQuery ? Math.round((empty / totalFromQuery) * 100) : 0;
+      const pctFilled = totalFromQuery ? Math.round((filled / totalFromQuery) * 100) : 0;
       results[columnLabels[col] || col] = { filled, empty, pctEmpty, pctFilled };
     }
 
-    return NextResponse.json({ total, columns: results });
+    return NextResponse.json({ total: totalFromQuery, columns: results });
   } catch (err) {
     const msg = getErrorMessage(err);
     console.error('GET /api/assets/completeness error:', msg);

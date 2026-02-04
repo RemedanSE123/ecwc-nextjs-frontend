@@ -9,15 +9,68 @@ function getErrorMessage(err: unknown): string {
   return String(err);
 }
 
+const ASSET_COLUMNS = [
+  'image_s3_key', 'project_location', 'category', 'asset_no', 'description',
+  'serial_no', 'make', 'model', 'status', 'responsible_person_name',
+  'responsible_person_pno', 'ownership', 'remark',
+] as const;
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const category = body.category ?? null;
+    const description = (body.description ?? '').trim() || null;
+    if (!category || !description) {
+      return NextResponse.json(
+        { error: 'Validation error', detail: 'category and description are required' },
+        { status: 400 }
+      );
+    }
+    const values: (string | null)[] = [];
+    for (const key of ASSET_COLUMNS) {
+      const v = body[key];
+      values.push(v === undefined || v === '' ? null : String(v));
+    }
+    const placeholders = values.map((_, i) => `$${i + 1}`).join(', ');
+    const sql = `INSERT INTO asset_master (${ASSET_COLUMNS.join(', ')}) VALUES (${placeholders}) RETURNING *`;
+    const rows = await query(sql, values);
+    if (!rows?.length) {
+      return NextResponse.json(
+        { error: 'Insert failed' },
+        { status: 500 }
+      );
+    }
+    return NextResponse.json(rows[0], { status: 201 });
+  } catch (err) {
+    const msg = getErrorMessage(err);
+    console.error('POST /api/assets error:', msg);
+    return NextResponse.json(
+      { error: 'Failed to create asset', detail: msg },
+      { status: 500 }
+    );
+  }
+}
+
+function getParamValues(searchParams: URLSearchParams, key: string): string[] {
+  const all = searchParams.getAll(key);
+  if (all.length > 0) return all.map((v) => v.trim()).filter(Boolean);
+  const single = searchParams.get(key);
+  if (single?.trim()) return [single.trim()];
+  return [];
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category') || undefined;
     const categoryGroup = searchParams.get('category_group') || undefined;
-    const status = searchParams.get('status') || undefined;
-    const project_location = searchParams.get('project_location') || undefined;
+    const statusArr = getParamValues(searchParams, 'status');
+    const project_locationArr = getParamValues(searchParams, 'project_location');
+    const makeArr = getParamValues(searchParams, 'make');
+    const modelArr = getParamValues(searchParams, 'model');
+    const ownershipArr = getParamValues(searchParams, 'ownership');
     const search = searchParams.get('search') || undefined;
-    const ownership = searchParams.get('ownership') || undefined;
+    const descriptionArr = getParamValues(searchParams, 'description');
     const responsible_person_name = searchParams.get('responsible_person_name') || undefined;
     const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
     const limit = Math.min(5000, Math.max(1, parseInt(searchParams.get('limit') || '20', 10)));
@@ -33,25 +86,40 @@ export async function GET(request: NextRequest) {
       params.push(dbCategory);
       idx++;
     }
-    if (status) {
-      conditions.push(`status ILIKE $${idx}`);
-      params.push(status);
-      idx++;
+    if (statusArr.length > 0) {
+      conditions.push(`(status = ${statusArr.map((_, i) => `$${idx + i}`).join(' OR status = ')})`);
+      statusArr.forEach((v) => params.push(v));
+      idx += statusArr.length;
     }
-    if (project_location) {
-      conditions.push(`project_location ILIKE $${idx}`);
-      params.push(`%${project_location}%`);
-      idx++;
+    if (project_locationArr.length > 0) {
+      conditions.push(`(project_location = ${project_locationArr.map((_, i) => `$${idx + i}`).join(' OR project_location = ')})`);
+      project_locationArr.forEach((v) => params.push(v));
+      idx += project_locationArr.length;
     }
-    if (ownership) {
-      conditions.push(`ownership ILIKE $${idx}`);
-      params.push(ownership);
-      idx++;
+    if (makeArr.length > 0) {
+      conditions.push(`(make = ${makeArr.map((_, i) => `$${idx + i}`).join(' OR make = ')})`);
+      makeArr.forEach((v) => params.push(v));
+      idx += makeArr.length;
+    }
+    if (modelArr.length > 0) {
+      conditions.push(`(model = ${modelArr.map((_, i) => `$${idx + i}`).join(' OR model = ')})`);
+      modelArr.forEach((v) => params.push(v));
+      idx += modelArr.length;
+    }
+    if (ownershipArr.length > 0) {
+      conditions.push(`(ownership = ${ownershipArr.map((_, i) => `$${idx + i}`).join(' OR ownership = ')})`);
+      ownershipArr.forEach((v) => params.push(v));
+      idx += ownershipArr.length;
     }
     if (responsible_person_name) {
       conditions.push(`responsible_person_name ILIKE $${idx}`);
       params.push(responsible_person_name);
       idx++;
+    }
+    if (descriptionArr.length > 0) {
+      conditions.push(`(description = ${descriptionArr.map((_, i) => `$${idx + i}`).join(' OR description = ')})`);
+      descriptionArr.forEach((v) => params.push(v));
+      idx += descriptionArr.length;
     }
     if (search) {
       const pattern = `%${search}%`;
