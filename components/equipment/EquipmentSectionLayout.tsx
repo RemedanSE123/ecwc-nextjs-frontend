@@ -3,14 +3,17 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Database, BarChart3 } from 'lucide-react';
+import CategoryKPICards from './CategoryKPICards';
 
 interface EquipmentSectionLayoutProps {
   title: string;
   basePath: string;
+  /** Slug for category-specific KPIs (e.g. plant-equipment). Omit for non-category pages. */
+  categoryGroup?: string;
   children: React.ReactNode;
 }
 
-export default function EquipmentSectionLayout({ title, basePath, children }: EquipmentSectionLayoutProps) {
+export default function EquipmentSectionLayout({ title, basePath, categoryGroup, children }: EquipmentSectionLayoutProps) {
   const pathname = usePathname();
   const isData = pathname === basePath || pathname === `${basePath}/data`;
   const isReport = pathname === `${basePath}/report`;
@@ -21,6 +24,11 @@ export default function EquipmentSectionLayout({ title, basePath, children }: Eq
         <h1 className="text-xl lg:text-2xl font-bold text-foreground">{title}</h1>
         <p className="text-muted-foreground text-[12px]">Equipment data and reports</p>
       </div>
+
+      {/* KPI Cards - Total, Operational, Down, Repair, Idle, Availability */}
+      {categoryGroup && (
+        <CategoryKPICards categoryGroup={categoryGroup} />
+      )}
 
       {/* Navbar: Data | Report */}
       <nav className="flex gap-1 p-1 bg-muted/50 rounded-lg w-fit border">

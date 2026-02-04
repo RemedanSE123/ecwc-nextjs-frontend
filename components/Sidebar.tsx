@@ -20,8 +20,10 @@ import {
   Truck,
   Car,
   MapPin,
+  Drill,
+  Factory,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 
 function BrIcon({ className }: { className?: string }) {
@@ -36,20 +38,20 @@ interface NavItem {
 }
 
 const navigation: NavItem[] = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
   
   {
-    name: 'Equipment',
+    name: 'ECWC Assets',
     href: '/equipment',
     icon: Wrench,
     children: [
       { name: 'Dashboard', href: '/equipment/dashboard', icon: LayoutDashboard },
       { name: 'Plant Equipment', href: '/equipment/plant-equipment', icon: Wrench },
-      { name: 'Auxiliary Equipment', href: '/equipment/auxiliary-equipment', icon: Truck },
+      { name: 'Auxiliary Equipment', href: '/equipment/auxiliary-equipment', icon: Drill },
       { name: 'Light Vehicles', href: '/equipment/light-vehicles', icon: Car },
       { name: 'Heavy Vehicles', href: '/equipment/heavy-vehicles', icon: Truck },
       { name: 'Machinery', href: '/equipment/machinery', icon: Wrench },
-      { name: 'Factory Equipment', href: '/equipment/factory-equipment', icon: Wrench },
+      { name: 'Factory Equipment', href: '/equipment/factory-equipment', icon: Factory },
   
     ],
   },
@@ -79,7 +81,21 @@ interface SidebarProps {
 
 export default function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps) {
   const pathname = usePathname();
-  const [expandedItems, setExpandedItems] = useState<string[]>(['Equipment', 'Forms']);
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
+
+  // Keep parent expanded when on a child route (e.g. ECWC Assets stays open when on /equipment/...)
+  useEffect(() => {
+    const parentsToExpand: string[] = [];
+    navigation.forEach((item) => {
+      if (item.children && pathname?.startsWith(item.href)) {
+        parentsToExpand.push(item.name);
+      }
+    });
+    setExpandedItems((prev) => {
+      const combined = new Set([...prev, ...parentsToExpand]);
+      return Array.from(combined);
+    });
+  }, [pathname]);
 
   const toggleExpanded = (name: string) => {
     setExpandedItems((prev) =>

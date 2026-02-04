@@ -72,6 +72,37 @@ export async function fetchAssetReports(category?: string, categoryGroup?: strin
   return res.json();
 }
 
+export interface StatusSummaryRow {
+  no: number;
+  description: string;
+  category: string;
+  op: number;
+  idle: number;
+  ur: number;
+  down: number;
+  hr: number;
+  ui: number;
+  wi: number;
+  uc: number;
+  rfd: number;
+  afd: number;
+  accident: number;
+  other: number;
+  total: number;
+}
+
+export interface StatusSummaryResponse {
+  rows: StatusSummaryRow[];
+  grandTotal: Record<string, number>;
+}
+
+export async function fetchStatusSummary(categoryGroup?: string): Promise<StatusSummaryResponse> {
+  const params = categoryGroup ? `?category_group=${encodeURIComponent(categoryGroup)}` : '';
+  const res = await fetch(`${API_BASE}/api/assets/reports/status-summary${params}`);
+  if (!res.ok) return handleApiError(res, 'Failed to fetch status summary');
+  return res.json();
+}
+
 export async function fetchAssetFacets(categoryGroup?: string): Promise<AssetFacets> {
   const params = new URLSearchParams();
   if (categoryGroup) params.set('category_group', categoryGroup);

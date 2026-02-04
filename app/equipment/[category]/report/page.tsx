@@ -19,7 +19,7 @@ export default function EquipmentCategoryReportPage() {
   return (
     <Layout>
       <div className="space-y-4 text-[13px]">
-        <EquipmentSectionLayout title={title} basePath={basePath}>
+        <EquipmentSectionLayout title={title} basePath={basePath} categoryGroup={slug}>
           <EquipmentReportView categoryGroup={slug} categoryName={title} />
         </EquipmentSectionLayout>
       </div>
