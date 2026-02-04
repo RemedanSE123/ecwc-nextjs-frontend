@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     ]);
 
     const toStrings = <T extends Record<string, unknown>>(rows: T[], key: keyof T): string[] =>
-      (rows ?? []).map((r) => r[key]).filter((v): v is string => v != null && String(v).trim() !== '');
+      (rows ?? []).map((r) => r[key] as unknown).filter((v): v is string => v != null && String(v).trim() !== '');
 
     return NextResponse.json({
       category: toStrings(categoryRes, 'category'),

@@ -107,7 +107,7 @@ export async function DELETE(
         { status: 400 }
       );
     }
-    const rows = await query(
+    const rows = await query<{ id: string | number }>(
       'DELETE FROM asset_master WHERE id = $1 RETURNING id',
       [id]
     );

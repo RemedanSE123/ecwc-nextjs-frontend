@@ -25,7 +25,7 @@ function getDbConfig() {
 const pool = new Pool(getDbConfig());
 
 /** Run a query and return rows (compatible with Neon-style usage) */
-export async function query<T = unknown>(text: string, params?: (string | number)[]): Promise<T[]> {
+export async function query<T = unknown>(text: string, params?: (string | number | null)[]): Promise<T[]> {
   try {
     const result = await pool.query(text, params);
     return (result.rows ?? []) as T[];

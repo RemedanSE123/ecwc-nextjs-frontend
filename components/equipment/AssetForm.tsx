@@ -188,7 +188,6 @@ export default function AssetForm({
           <Select
             value={form.category}
             onValueChange={(v) => update('category', v)}
-            required
           >
             <SelectTrigger id="category">
               <SelectValue placeholder="Select category" />

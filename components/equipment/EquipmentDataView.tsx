@@ -130,15 +130,16 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
   const effectiveFacets = useMemo(() => {
     const empty: AssetFacets = { category: [], description: [], status: [], project_location: [], make: [], model: [], ownership: [], responsible_person_name: [] };
     const fromApi = facets ?? empty;
+    const toStr = (v: string | null | undefined): v is string => v != null && v !== '';
     const fromData = {
-      category: [...new Set(data.map((a) => a.category).filter(Boolean))].sort(),
-      description: [...new Set(data.map((a) => a.description).filter(Boolean))].sort(),
-      status: [...new Set(data.map((a) => a.status).filter(Boolean))].filter(Boolean).sort(),
-      project_location: [...new Set(data.map((a) => a.project_location).filter(Boolean))].sort(),
-      make: [...new Set(data.map((a) => a.make).filter(Boolean))].sort(),
-      model: [...new Set(data.map((a) => a.model).filter(Boolean))].sort(),
-      ownership: [...new Set(data.map((a) => a.ownership).filter(Boolean))].sort(),
-      responsible_person_name: [...new Set(data.map((a) => a.responsible_person_name).filter(Boolean))].sort(),
+      category: [...new Set(data.map((a) => a.category).filter(toStr))].sort(),
+      description: [...new Set(data.map((a) => a.description).filter(toStr))].sort(),
+      status: [...new Set(data.map((a) => a.status).filter(toStr))].sort(),
+      project_location: [...new Set(data.map((a) => a.project_location).filter(toStr))].sort(),
+      make: [...new Set(data.map((a) => a.make).filter(toStr))].sort(),
+      model: [...new Set(data.map((a) => a.model).filter(toStr))].sort(),
+      ownership: [...new Set(data.map((a) => a.ownership).filter(toStr))].sort(),
+      responsible_person_name: [...new Set(data.map((a) => a.responsible_person_name).filter(toStr))].sort(),
     };
     return {
       category: fromApi.category?.length ? fromApi.category : fromData.category,

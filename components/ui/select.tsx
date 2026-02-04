@@ -71,12 +71,13 @@ const Select = ({ value, onValueChange, disabled, children, className }: SelectP
           <div className="p-1">
             {items.map((child) => {
               if (React.isValidElement(child) && child.type === SelectItem) {
-                return React.cloneElement(child as React.ReactElement<{ value: string; children: React.ReactNode }>, {
+                const itemProps = child.props as { value: string; children: React.ReactNode }
+                return React.cloneElement(child as React.ReactElement<SelectItemProps>, {
                   onClick: () => {
-                    onValueChange((child.props as { value: string }).value)
+                    onValueChange(itemProps.value)
                     setOpen(false)
                   },
-                  isSelected: (child.props as { value: string }).value === value,
+                  isSelected: itemProps.value === value,
                 })
               }
               return null
@@ -91,10 +92,11 @@ const Select = ({ value, onValueChange, disabled, children, className }: SelectP
 interface SelectTriggerProps {
   className?: string
   children: React.ReactNode
+  id?: string
 }
 
-const SelectTrigger = ({ className, children }: SelectTriggerProps) => {
-  return <div className={className}>{children}</div>
+const SelectTrigger = ({ className, children, id }: SelectTriggerProps) => {
+  return <div id={id} className={className}>{children}</div>
 }
 
 interface SelectValueProps {
