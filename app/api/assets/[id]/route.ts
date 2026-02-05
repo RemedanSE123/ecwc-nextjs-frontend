@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { getUserFromRequest, getSessionIdFromRequest, insertAuditLog } from '@/lib/audit';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,6 +47,13 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
+    const user = getUserFromRequest(request);
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized', detail: 'Valid X-User-Phone and X-User-Name required' },
+        { status: 401 }
+      );
+    }
     const id = params?.id;
     if (!id) {
       return NextResponse.json(
@@ -59,13 +67,41 @@ export async function PATCH(
       'serial_no', 'make', 'model', 'status', 'responsible_person_name',
       'responsible_person_pno', 'ownership', 'remark',
     ];
+    const assetDataKeys = ['id', ...allowed];
+    const currentRows = await query<Record<string, unknown>>(
+      'SELECT * FROM asset_master WHERE id = $1',
+      [id]
+    );
+    const current = currentRows?.[0];
+    if (!current) {
+      return NextResponse.json(
+        { error: 'Asset not found' },
+        { status: 404 }
+      );
+    }
+    const toPlain = (row: Record<string, unknown>): Record<string, string | null> => {
+      const out: Record<string, string | null> = {};
+      for (const k of assetDataKeys) {
+        const v = row[k];
+        out[k] = v == null ? null : String(v);
+      }
+      return out;
+    };
     const setParts: string[] = [];
     const values: (string | null)[] = [];
     let idx = 1;
+    const changes: { field: string; from: string | null; to: string | null }[] = [];
     for (const key of allowed) {
       if (!(key in body)) continue;
+      const newVal = body[key] === '' ? null : body[key];
+      const oldVal = current[key];
+      const oldStr = oldVal == null ? null : String(oldVal);
+      const newStr = newVal == null ? null : String(newVal);
+      if (oldStr !== newStr) {
+        changes.push({ field: key, from: oldStr, to: newStr });
+      }
       setParts.push(`${key} = $${idx}`);
-      values.push(body[key] === '' ? null : body[key]);
+      values.push(newVal);
       idx++;
     }
     if (setParts.length === 0) {
@@ -77,13 +113,24 @@ export async function PATCH(
     setParts.push(`updated_at = NOW()`);
     values.push(id);
     const sql = `UPDATE asset_master SET ${setParts.join(', ')} WHERE id = $${idx} RETURNING *`;
-    const rows = await query(sql, values);
+    const rows = await query<Record<string, unknown>>(sql, values);
     if (!rows?.length) {
       return NextResponse.json(
         { error: 'Asset not found' },
         { status: 404 }
       );
     }
+    const previous_data = toPlain(current);
+    const updated_data = toPlain(rows[0]);
+    await insertAuditLog({
+      user_phone: user.phone,
+      user_name: user.name,
+      action: 'asset_update',
+      entity_type: 'asset',
+      entity_id: id,
+      details: { asset_id: id, previous_data, updated_data, changes },
+      session_id: getSessionIdFromRequest(request),
+    });
     return NextResponse.json(rows[0]);
   } catch (err) {
     const msg = getErrorMessage(err);
@@ -96,10 +143,17 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
+    const user = getUserFromRequest(request);
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized', detail: 'Valid X-User-Phone and X-User-Name required' },
+        { status: 401 }
+      );
+    }
     const id = params?.id;
     if (!id) {
       return NextResponse.json(
@@ -107,8 +161,13 @@ export async function DELETE(
         { status: 400 }
       );
     }
-    const rows = await query<{ id: string | number }>(
-      'DELETE FROM asset_master WHERE id = $1 RETURNING id',
+    const beforeRows = await query<Record<string, unknown>>(
+      'SELECT * FROM asset_master WHERE id = $1',
+      [id]
+    );
+    const before = beforeRows?.[0];
+    const rows = await query<Record<string, unknown>>(
+      'DELETE FROM asset_master WHERE id = $1 RETURNING *',
       [id]
     );
     if (!rows?.length) {
@@ -117,6 +176,29 @@ export async function DELETE(
         { status: 404 }
       );
     }
+    const assetDataKeys = [
+      'id', 'image_s3_key', 'project_location', 'category', 'asset_no', 'description',
+      'serial_no', 'make', 'model', 'status', 'responsible_person_name',
+      'responsible_person_pno', 'ownership', 'remark',
+    ];
+    const toPlain = (row: Record<string, unknown>): Record<string, string | null> => {
+      const out: Record<string, string | null> = {};
+      for (const k of assetDataKeys) {
+        const v = row[k];
+        out[k] = v == null ? null : String(v);
+      }
+      return out;
+    };
+    const deleted_asset = before ? toPlain(before) : toPlain(rows[0]);
+    await insertAuditLog({
+      user_phone: user.phone,
+      user_name: user.name,
+      action: 'asset_delete',
+      entity_type: 'asset',
+      entity_id: id,
+      details: { deleted_id: id, deleted_asset },
+      session_id: getSessionIdFromRequest(request),
+    });
     return NextResponse.json({ success: true, id: rows[0].id });
   } catch (err) {
     const msg = getErrorMessage(err);

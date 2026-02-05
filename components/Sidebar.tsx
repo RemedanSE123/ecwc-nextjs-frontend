@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useMemo } from 'react';
+import { FULL_ACCESS_PHONES, NO_OVERVIEW_PHONES, ASSETS_AND_MAP_PHONES } from '@/lib/auth';
 import {
   LayoutDashboard,
   Wrench,
@@ -22,6 +24,8 @@ import {
   MapPin,
   Drill,
   Factory,
+  History,
+  Megaphone,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
@@ -46,13 +50,12 @@ const navigation: NavItem[] = [
     icon: Wrench,
     children: [
       { name: 'Dashboard', href: '/equipment/dashboard', icon: LayoutDashboard },
-      { name: 'Plant Equipment', href: '/equipment/plant-equipment', icon: Wrench },
-      { name: 'Auxiliary Equipment', href: '/equipment/auxiliary-equipment', icon: Drill },
-      { name: 'Light Vehicles', href: '/equipment/light-vehicles', icon: Car },
-      { name: 'Heavy Vehicles', href: '/equipment/heavy-vehicles', icon: Truck },
+      { name: 'Plant', href: '/equipment/plant-equipment', icon: Wrench },
       { name: 'Machinery', href: '/equipment/machinery', icon: Wrench },
+      { name: 'Heavy Vehicles', href: '/equipment/heavy-vehicles', icon: Truck },
+      { name: 'Light Vehicles', href: '/equipment/light-vehicles', icon: Car },
       { name: 'Factory Equipment', href: '/equipment/factory-equipment', icon: Factory },
-  
+      { name: 'Auxiliary Equipment', href: '/equipment/auxiliary-equipment', icon: Drill },
     ],
   },
   {
@@ -69,6 +72,8 @@ const navigation: NavItem[] = [
     ],
   },
   { name: 'Compound Map', href: '/compound-map', icon: MapPin },
+  { name: 'Announcements', href: '/announcements', icon: Megaphone },
+  { name: 'Audit Trail', href: '/audit', icon: History },
 
   { name: 'Settings', href: '/settings', icon: Settings },
   { name: 'Help & Support', href: '/help', icon: HelpCircle },
@@ -77,25 +82,46 @@ const navigation: NavItem[] = [
 interface SidebarProps {
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
+  /** Current user phone for role-based nav. Full: 0929517703, 0983007020. No Overview: 0912293712. Assets+Map only: 0927763207, 0921133084, 0980194463. */
+  userPhone?: string | null;
 }
 
-export default function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps) {
+function normalizePhone(phone: string): string {
+  return phone.replace(/\s/g, '');
+}
+
+export default function Sidebar({ isCollapsed = false, onToggleCollapse, userPhone }: SidebarProps) {
   const pathname = usePathname();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
-  // Keep parent expanded when on a child route (e.g. ECWC Assets stays open when on /equipment/...)
+  const visibleNav = useMemo(() => {
+    const phone = userPhone ? normalizePhone(userPhone) : '';
+    if (ASSETS_AND_MAP_PHONES.some((p) => normalizePhone(p) === phone)) {
+      return navigation.filter((item) => item.name === 'ECWC Assets' || item.name === 'Compound Map');
+    }
+    if (NO_OVERVIEW_PHONES.some((p) => normalizePhone(p) === phone)) {
+      return navigation.filter((item) => item.href !== '/dashboard');
+    }
+    return navigation;
+  }, [userPhone]);
+
+  // Keep parent expanded when on a child route; for Assets+Map-only users always expand ECWC Assets
   useEffect(() => {
     const parentsToExpand: string[] = [];
-    navigation.forEach((item) => {
+    visibleNav.forEach((item) => {
       if (item.children && pathname?.startsWith(item.href)) {
         parentsToExpand.push(item.name);
       }
     });
+    const phone = userPhone ? normalizePhone(userPhone) : '';
+    if (ASSETS_AND_MAP_PHONES.some((p) => normalizePhone(p) === phone)) {
+      parentsToExpand.push('ECWC Assets');
+    }
     setExpandedItems((prev) => {
       const combined = new Set([...prev, ...parentsToExpand]);
       return Array.from(combined);
     });
-  }, [pathname]);
+  }, [pathname, userPhone, visibleNav]);
 
   const toggleExpanded = (name: string) => {
     setExpandedItems((prev) =>
@@ -189,7 +215,7 @@ export default function Sidebar({ isCollapsed = false, onToggleCollapse }: Sideb
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-2.5 py-3 relative z-10">
         <ul className="space-y-0.5">
-          {navigation.map((item) => {
+          {visibleNav.map((item) => {
             const hasChildren = item.children && item.children.length > 0;
             const isExpanded = expandedItems.includes(item.name) && !isCollapsed;
             const Icon = item.icon;

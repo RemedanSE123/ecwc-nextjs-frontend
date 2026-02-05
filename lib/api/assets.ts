@@ -1,4 +1,5 @@
 import type { Asset, AssetFilters, AssetsResponse, AssetStats, AssetReportData, AssetFacets, AssetCompleteness } from '@/types/asset';
+import { getAuthHeaders } from '@/lib/auth';
 
 const API_BASE = '';
 
@@ -136,7 +137,7 @@ export type CreateAssetPayload = Partial<Omit<Asset, 'id' | 'created_at' | 'upda
 export async function createAsset(payload: CreateAssetPayload): Promise<Asset> {
   const res = await fetch(`${API_BASE}/api/assets`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(payload),
   });
   if (!res.ok) return handleApiError(res, 'Failed to create asset');
@@ -148,7 +149,7 @@ export type UpdateAssetPayload = Partial<Omit<Asset, 'id' | 'created_at' | 'upda
 export async function updateAsset(id: string, payload: UpdateAssetPayload): Promise<Asset> {
   const res = await fetch(`${API_BASE}/api/assets/${encodeURIComponent(id)}`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(payload),
   });
   if (!res.ok) return handleApiError(res, 'Failed to update asset');
@@ -158,16 +159,19 @@ export async function updateAsset(id: string, payload: UpdateAssetPayload): Prom
 export async function deleteAsset(id: string): Promise<{ success: boolean; id: string }> {
   const res = await fetch(`${API_BASE}/api/assets/${encodeURIComponent(id)}`, {
     method: 'DELETE',
+    headers: getAuthHeaders(),
   });
   if (!res.ok) return handleApiError(res, 'Failed to delete asset');
   return res.json();
 }
 
-export async function uploadAssetImage(file: File): Promise<{ key: string }> {
+export async function uploadAssetImage(file: File, assetId?: string): Promise<{ key: string }> {
   const formData = new FormData();
   formData.append('file', file);
+  if (assetId) formData.append('asset_id', assetId);
   const res = await fetch(`${API_BASE}/api/assets/upload`, {
     method: 'POST',
+    headers: getAuthHeaders(),
     body: formData,
   });
   if (!res.ok) return handleApiError(res, 'Failed to upload image');

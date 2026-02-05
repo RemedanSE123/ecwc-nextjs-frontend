@@ -1,17 +1,94 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Loader2 } from 'lucide-react';
+import { getSession, isSessionExpired, clearSession, touchSession } from '@/lib/auth';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+  const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
+
+  const redirectToSignIn = useCallback(async () => {
+    const session = getSession();
+    if (session?.user) {
+      try {
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+          'X-User-Phone': session.user.phone,
+          'X-User-Name': session.user.name,
+        };
+        if (session.sessionId) headers['X-Session-Id'] = session.sessionId;
+        await fetch('/api/audit', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ action: 'logout', details: { reason: 'inactivity' } }),
+        });
+      } catch (err) {
+        if (typeof console !== 'undefined') console.warn('Audit log (logout) failed:', err);
+      }
+    }
+    clearSession();
+    const returnUrl = pathname ? encodeURIComponent(pathname) : '';
+    router.replace(`/sign-in${returnUrl ? `?returnUrl=${returnUrl}` : ''}`);
+  }, [router, pathname]);
+
+  // Auth check on mount and pathname change
+  useEffect(() => {
+    const session = getSession();
+    if (!session) {
+      redirectToSignIn();
+      return;
+    }
+    if (isSessionExpired(session)) {
+      redirectToSignIn();
+      return;
+    }
+    setAuthChecked(true);
+  }, [pathname, redirectToSignIn]);
+
+  // Inactivity check every 60s
+  useEffect(() => {
+    if (!authChecked) return;
+    const interval = setInterval(() => {
+      const session = getSession();
+      if (!session || isSessionExpired(session)) {
+        redirectToSignIn();
+      }
+    }, 60 * 1000);
+    return () => clearInterval(interval);
+  }, [authChecked, redirectToSignIn]);
+
+  // Touch session on user activity
+  useEffect(() => {
+    if (!authChecked) return;
+    const handleActivity = () => touchSession();
+    window.addEventListener('click', handleActivity);
+    window.addEventListener('keydown', handleActivity);
+    window.addEventListener('scroll', handleActivity);
+    return () => {
+      window.removeEventListener('click', handleActivity);
+      window.removeEventListener('keydown', handleActivity);
+      window.removeEventListener('scroll', handleActivity);
+    };
+  }, [authChecked]);
 
   const toggleSidebarCollapse = () => {
     setSidebarCollapsed(!sidebarCollapsed);
   };
+
+  if (!authChecked) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-50">
+        <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
@@ -29,7 +106,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } lg:translate-x-0 transition-transform duration-300 ease-in-out`}
       >
-        <Sidebar isCollapsed={sidebarCollapsed} onToggleCollapse={toggleSidebarCollapse} />
+        <Sidebar
+          isCollapsed={sidebarCollapsed}
+          onToggleCollapse={toggleSidebarCollapse}
+          userPhone={getSession()?.user?.phone ?? null}
+        />
       </div>
 
       {/* Main Content */}

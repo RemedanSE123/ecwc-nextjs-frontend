@@ -1,19 +1,91 @@
 'use client';
 
-import { Search, Bell, User, ChevronDown, Settings, LogOut, Menu } from 'lucide-react';
+import { Search, Bell, User, ChevronDown, Settings, LogOut, Menu, Megaphone } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Image from 'next/image';
+import { getSession, clearSession } from '@/lib/auth';
+
+interface AnnouncementItem {
+  id: number;
+  title: string;
+  body: string;
+  created_by_name: string;
+  created_at: string;
+}
+
+function formatAgo(iso: string): string {
+  try {
+    const d = new Date(iso);
+    const sec = Math.floor((Date.now() - d.getTime()) / 1000);
+    if (sec < 60) return 'Just now';
+    if (sec < 3600) return `${Math.floor(sec / 60)}m ago`;
+    if (sec < 86400) return `${Math.floor(sec / 3600)}h ago`;
+    if (sec < 604800) return `${Math.floor(sec / 86400)}d ago`;
+    return d.toLocaleDateString();
+  } catch {
+    return '';
+  }
+}
 
 interface HeaderProps {
   sidebarCollapsed?: boolean;
 }
 
 export default function Header({ sidebarCollapsed = false }: HeaderProps) {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [userName, setUserName] = useState<string>('');
+  const [userPhone, setUserPhone] = useState<string>('');
+  const [announcements, setAnnouncements] = useState<AnnouncementItem[]>([]);
+  const [announcementsLoading, setAnnouncementsLoading] = useState(false);
   const notificationsRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const session = getSession();
+    if (session?.user) {
+      setUserName(session.user.name);
+      setUserPhone(session.user.phone);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!notificationsOpen) return;
+    setAnnouncementsLoading(true);
+    fetch('/api/announcements?limit=5')
+      .then((res) => (res.ok ? res.json() : { data: [] }))
+      .then((json) => setAnnouncements(json.data ?? []))
+      .catch(() => setAnnouncements([]))
+      .finally(() => setAnnouncementsLoading(false));
+  }, [notificationsOpen]);
+
+  const handleSignOut = async () => {
+    const session = getSession();
+    if (session?.user) {
+      try {
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+          'X-User-Phone': session.user.phone,
+          'X-User-Name': session.user.name,
+        };
+        if (session.sessionId) headers['X-Session-Id'] = session.sessionId;
+        await fetch('/api/audit', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ action: 'logout', details: { reason: 'manual' } }),
+        });
+      } catch (err) {
+        if (typeof console !== 'undefined') console.warn('Audit log (logout) failed:', err);
+      }
+    }
+    clearSession();
+    setUserMenuOpen(false);
+    router.replace('/sign-in');
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -71,35 +143,48 @@ export default function Header({ sidebarCollapsed = false }: HeaderProps) {
           <button
             onClick={() => setNotificationsOpen(!notificationsOpen)}
             className="relative p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
-            aria-label="Notifications"
+            aria-label="Announcements"
           >
             <Bell className="w-4 h-4" />
-            <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full border border-white"></span>
+            {announcements.length > 0 && (
+              <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-green-500 rounded-full border border-white" title="Announcements" />
+            )}
           </button>
 
           {notificationsOpen && (
-            <div className="absolute right-0 top-full mt-1.5 w-72 bg-white rounded-md shadow-lg border border-gray-200 py-0.5 z-50">
-              <div className="px-3 py-2.5 border-b border-gray-100">
-                <h3 className="text-[12px] font-semibold text-gray-900">Notifications</h3>
+            <div className="absolute right-0 top-full mt-1.5 w-80 bg-white dark:bg-gray-900 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 py-0.5 z-50">
+              <div className="px-3 py-2.5 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2">
+                <Megaphone className="w-4 h-4 text-green-600" />
+                <h3 className="text-[12px] font-semibold text-gray-900 dark:text-gray-100">Announcements</h3>
               </div>
-              <div className="max-h-72 overflow-y-auto">
-                <div className="px-3 py-2.5 hover:bg-gray-50 cursor-pointer border-b border-gray-50">
-                  <p className="text-[11px] text-gray-900">New maintenance request received</p>
-                  <p className="text-[10px] text-gray-500 mt-0.5">2 minutes ago</p>
-                </div>
-                <div className="px-3 py-2.5 hover:bg-gray-50 cursor-pointer border-b border-gray-50">
-                  <p className="text-[11px] text-gray-900">Equipment status updated</p>
-                  <p className="text-[10px] text-gray-500 mt-0.5">15 minutes ago</p>
-                </div>
-                <div className="px-3 py-2.5 hover:bg-gray-50 cursor-pointer">
-                  <p className="text-[11px] text-gray-900">Approval required for request #1234</p>
-                  <p className="text-[10px] text-gray-500 mt-0.5">1 hour ago</p>
-                </div>
+              <div className="max-h-80 overflow-y-auto">
+                {announcementsLoading ? (
+                  <div className="px-3 py-4 text-center text-[11px] text-gray-500">Loading…</div>
+                ) : announcements.length === 0 ? (
+                  <div className="px-3 py-4 text-center text-[11px] text-gray-500">No announcements yet.</div>
+                ) : (
+                  announcements.map((a) => (
+                    <Link
+                      key={a.id}
+                      href="/announcements"
+                      onClick={() => setNotificationsOpen(false)}
+                      className="block px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-50 dark:border-gray-800 last:border-b-0 transition-colors"
+                    >
+                      <p className="text-[11px] font-medium text-gray-900 dark:text-gray-100 line-clamp-1">{a.title}</p>
+                      <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">{a.body}</p>
+                      <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">{a.created_by_name} · {formatAgo(a.created_at)}</p>
+                    </Link>
+                  ))
+                )}
               </div>
-              <div className="px-3 py-1.5 border-t border-gray-100">
-                <button className="text-[11px] text-gray-600 hover:text-gray-900 w-full text-center py-1.5">
-                  View all notifications
-                </button>
+              <div className="px-3 py-2 border-t border-gray-100 dark:border-gray-800">
+                <Link
+                  href="/announcements"
+                  onClick={() => setNotificationsOpen(false)}
+                  className="block text-center text-[11px] font-medium text-green-600 dark:text-green-400 hover:underline py-1.5"
+                >
+                  View all announcements
+                </Link>
               </div>
             </div>
           )}
@@ -115,8 +200,8 @@ export default function Header({ sidebarCollapsed = false }: HeaderProps) {
               <User className="w-3.5 h-3.5" />
             </div>
             <div className="hidden lg:flex flex-col items-start">
-              <span className="text-[11px] font-medium text-gray-900 leading-tight">John Doe</span>
-              <span className="text-[9px] text-gray-500 leading-tight">Equipment Dept.</span>
+              <span className="text-[11px] font-medium text-gray-900 leading-tight">{userName || 'User'}</span>
+              <span className="text-[9px] text-gray-500 leading-tight">{userPhone || ''}</span>
             </div>
             <ChevronDown className={`w-3.5 h-3.5 text-gray-400 hidden lg:block transition-transform duration-200 ${userMenuOpen ? 'rotate-180' : ''}`} />
           </button>
@@ -124,8 +209,8 @@ export default function Header({ sidebarCollapsed = false }: HeaderProps) {
           {userMenuOpen && (
             <div className="absolute right-0 top-full mt-1.5 w-52 bg-white rounded-md shadow-lg border border-gray-200 py-0.5 z-50">
               <div className="px-3 py-2.5 border-b border-gray-100">
-                <p className="text-[11px] font-medium text-gray-900">John Doe</p>
-                <p className="text-[10px] text-gray-500 mt-0.5">john.doe@ecwc.gov.et</p>
+                <p className="text-[11px] font-medium text-gray-900">{userName || 'User'}</p>
+                <p className="text-[10px] text-gray-500 mt-0.5">{userPhone || ''}</p>
               </div>
               <button className="w-full px-3 py-2 text-left text-[11px] text-gray-700 hover:bg-gray-50 flex items-center gap-2.5 transition-colors">
                 <User className="w-3.5 h-3.5 text-gray-400" />
@@ -136,7 +221,11 @@ export default function Header({ sidebarCollapsed = false }: HeaderProps) {
                 <span>Settings</span>
               </button>
               <div className="border-t border-gray-100 my-0.5"></div>
-              <button className="w-full px-3 py-2 text-left text-[11px] text-red-600 hover:bg-red-50 flex items-center gap-2.5 transition-colors">
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="w-full px-3 py-2 text-left text-[11px] text-red-600 hover:bg-red-50 flex items-center gap-2.5 transition-colors"
+              >
                 <LogOut className="w-3.5 h-3.5" />
                 <span>Sign Out</span>
               </button>

@@ -79,7 +79,7 @@ export default function AssetForm({
     setError(null);
     try {
       setSaving(true);
-      const { key } = await uploadAssetImage(file);
+      const { key } = await uploadAssetImage(file, asset?.id);
       setImageKey(key);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed');

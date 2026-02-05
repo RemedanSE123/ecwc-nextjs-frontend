@@ -1,24 +1,25 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { 
   Home,
   Loader2, 
   Eye, 
   EyeOff, 
-  Mail, 
+  Phone, 
   Lock 
 } from "lucide-react"
 import { motion } from "framer-motion"
+import { validateUser, setSession, getSession, isSessionExpired, getAuthHeaders } from "@/lib/auth"
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -26,20 +27,29 @@ const fadeInUp = {
   transition: { duration: 0.5 }
 }
 
-export default function SignInPage() {
+function SignInForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const returnUrl = searchParams.get("returnUrl") || "/equipment/dashboard"
   const [formData, setFormData] = useState({
-    email: "",
+    phone: "",
     password: "",
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [showPassword, setShowPassword] = useState(false)
 
-  // Always light mode on sign-in (ignore landing page theme)
   useEffect(() => {
     document.documentElement.classList.remove("dark")
   }, [])
+
+  // If already logged in, redirect to dashboard or returnUrl
+  useEffect(() => {
+    const session = getSession()
+    if (session && !isSessionExpired(session)) {
+      router.replace(returnUrl || "/equipment/dashboard")
+    }
+  }, [router, returnUrl])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({
@@ -51,15 +61,29 @@ export default function SignInPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+    if (formData.password.length !== 6 || !/^\d{6}$/.test(formData.password)) {
+      setError("Password must be exactly 6 digits.")
+      return
+    }
     setIsLoading(true)
-
-    // Frontend-only template - no backend validation
-    setTimeout(() => {
-      console.log('Login attempt:', formData)
+    const user = validateUser(formData.phone.trim(), formData.password)
+    if (!user) {
+      setError("Invalid phone number or password. Only whitelisted accounts can sign in.")
       setIsLoading(false)
-      // Redirect to dashboard (frontend template - no actual auth)
-      router.push('/dashboard')
-    }, 1000)
+      return
+    }
+    setSession(user)
+    try {
+      await fetch('/api/audit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({ action: 'login' }),
+      })
+    } catch (err) {
+      if (typeof console !== 'undefined') console.warn('Audit log (login) failed:', err)
+    }
+    router.push(returnUrl)
+    setIsLoading(false)
   }
 
   return (
@@ -138,16 +162,17 @@ export default function SignInPage() {
                 )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-[#70c82a]" />
-                    Email Address *
+                  <Label htmlFor="phone" className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-[#70c82a]" />
+                    Phone Number *
                   </Label>
                   <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    placeholder="john.doe@ecwc.gov.et"
-                    value={formData.email}
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    inputMode="numeric"
+                    placeholder="e.g. 0911111111"
+                    value={formData.phone}
                     onChange={handleChange}
                     required
                     disabled={isLoading}
@@ -158,17 +183,18 @@ export default function SignInPage() {
                 <div className="space-y-2">
                   <Label htmlFor="password" className="flex items-center gap-2">
                     <Lock className="h-4 w-4 text-[#70c82a]" />
-                    Password *
+                    Password (6 digits) *
                   </Label>
                   <div className="relative">
                     <Input
                       id="password"
                       name="password"
                       type={showPassword ? "text" : "password"}
-                      placeholder="Enter your password"
+                      placeholder="6-digit password"
                       value={formData.password}
                       onChange={handleChange}
                       required
+                      maxLength={6}
                       disabled={isLoading}
                       className="bg-background/50 pr-10 h-9 text-sm"
                     />
@@ -188,12 +214,6 @@ export default function SignInPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-end">
-                  <Link href="/forgot-password" className="text-sm text-[#70c82a] hover:underline font-medium">
-                    Forgot password?
-                  </Link>
-                </div>
-
                 <Button 
                   type="submit" 
                   className="w-full bg-[#70c82a] hover:bg-[#5aa022] text-white" 
@@ -210,17 +230,51 @@ export default function SignInPage() {
                 </Button>
               </form>
             </CardContent>
-            <CardFooter className="flex flex-col space-y-4 relative z-10 pt-4 pb-8 mb-2">
-              <div className="text-sm text-muted-foreground text-center leading-normal">
-                Don't have an account?{" "}
-                <Link href="/sign-up" className="text-[#70c82a] hover:underline font-medium">
-                  Sign up
-                </Link>
-              </div>
+            <CardFooter className="relative z-10 pt-4 pb-8 mb-2">
+              <p className="text-xs text-muted-foreground text-center w-full">
+                Only whitelisted accounts can sign in. Contact admin for access.
+              </p>
             </CardFooter>
           </Card>
         </motion.div>
       </div>
     </div>
+  )
+}
+
+function SignInPageFallback() {
+  return (
+    <div className="h-screen bg-background flex flex-col overflow-hidden">
+      <div className="absolute top-4 left-4 z-50">
+        <Link
+          href="/"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-background/80 dark:bg-zinc-900/80 border border-[#70c82a]/20 hover:border-[#70c82a] hover:bg-[#70c82a]/5 transition-all backdrop-blur-sm"
+        >
+          <Home className="h-4 w-4 text-[#70c82a]" />
+          <span className="text-sm font-medium text-foreground">Back to Home</span>
+        </Link>
+      </div>
+      <div className="flex-1 flex items-center justify-center px-4 py-8 bg-gradient-to-br from-[#70c82a]/5 via-background to-background dark:from-[#70c82a]/10">
+        <Card className="w-full max-w-md border border-[#70c82a]/20 animate-pulse">
+          <CardHeader>
+            <div className="h-8 w-32 bg-muted rounded" />
+            <div className="h-4 w-48 bg-muted rounded mt-2" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="h-10 bg-muted rounded" />
+            <div className="h-10 bg-muted rounded" />
+            <div className="h-10 bg-muted rounded" />
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={<SignInPageFallback />}>
+      <SignInForm />
+    </Suspense>
   )
 }

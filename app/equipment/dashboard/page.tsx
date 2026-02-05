@@ -259,6 +259,7 @@ export default function EquipmentDashboardPage() {
   const totalIdle = statusSummary?.grandTotal?.idle ?? 0;
   const totalDown = total - totalOp - totalIdle;
   const totalAvailability = total ? Math.round((totalOp / total) * 100) : 0;
+  const totalProjectSites = stats?.byLocation?.filter((l) => l.project_location !== 'Unassigned')?.length ?? 0;
 
   const handleExportExcel = () => {
     if (!stats) return;
@@ -295,95 +296,76 @@ export default function EquipmentDashboardPage() {
     <Layout>
       <TooltipProvider>
         <div id="equipment-dashboard-pdf" ref={pdfRef} className="space-y-5">
-          {/* Row 1: Title + Overview | Total Equipment */}
+          {/* Row 1: Title + Fleet card in same row */}
           <motion.div
             initial={{ opacity: 0, y: -15 }}
             animate={{ opacity: 1, y: 0 }}
             className="flex flex-col lg:flex-row lg:items-stretch gap-3"
           >
-            {/* Title block */}
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gradient-to-br from-[#16A34A]/15 via-[#15803D]/10 to-[#166534]/5 dark:from-[#16A34A]/20 dark:via-[#15803D]/15 dark:to-[#166534]/10 border border-[#16A34A]/30 shadow-sm w-fit min-w-[180px]">
-              <div className="p-1.5 rounded-md bg-[#16A34A]/20 dark:bg-[#16A34A]/25">
-                <LayoutDashboard className="h-4 w-4 text-[#16A34A]" />
+            {/* Title block — same row as card */}
+            <div className="flex items-center gap-3 shrink-0 rounded-xl border border-border/80 bg-card px-4 py-3 shadow-sm lg:min-w-[220px]">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted/80">
+                <LayoutDashboard className="h-5 w-5 text-muted-foreground" />
               </div>
-              <div>
-                <h1 className="text-base font-bold text-foreground tracking-tight">Equipment Dashboard</h1>
-                <p className="text-[11px] text-muted-foreground">Overview of all 6 equipment categories</p>
+              <div className="min-w-0">
+                <h1 className="text-base font-semibold text-foreground tracking-tight">Equipment Dashboard</h1>
+                <p className="text-xs text-muted-foreground mt-0.5">Overview of all 6 equipment categories</p>
               </div>
             </div>
-            {/* Total Equipment card */}
-            <div className="flex-1 min-w-0 w-full">
-              {loading ? (
-                <Skeleton className="h-[68px] w-full rounded-xl" />
-              ) : (
-                <Card
-                  className="overflow-hidden border-0 shadow-lg rounded-xl bg-card/95 backdrop-blur-sm"
-                  style={{
-                    borderLeft: '4px solid',
-                    borderLeftColor: '#16A34A',
-                    boxShadow: '0 4px 24px -4px rgba(22, 163, 74, 0.15), 0 0 0 1px rgba(0,0,0,0.04)',
-                  }}
-                >
-                  <CardContent className="p-0">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-0 min-h-[68px]">
-                      {/* Column 1 */}
-                      <div className="flex items-center gap-3 p-3 sm:border-r border-border/40 sm:border-b-0 border-b bg-gradient-to-r from-[#16A34A]/10 via-[#16A34A]/5 to-transparent">
-                        <div className="p-2 rounded-lg bg-gradient-to-br from-[#16A34A]/25 to-[#15803D]/15 ring-1 ring-[#16A34A]/20">
-                          <LayoutDashboard className="h-5 w-5 text-[#16A34A]" />
-                        </div>
-                        <div>
-                          <p className="font-bold text-sm text-foreground tracking-tight">Total Equipment</p>
-                          <p className="text-[10px] text-muted-foreground/90 mt-0.5 font-medium">Fleet overview</p>
-                        </div>
+
+            {/* Total Equipment / Fleet card */}
+            {loading ? (
+              <Skeleton className="h-32 flex-1 min-w-0 rounded-xl" />
+            ) : (
+              <Card className="flex-1 min-w-0 overflow-hidden rounded-xl border border-border/80 bg-card shadow-sm">
+                <CardContent className="p-0">
+                  <div className="flex flex-col sm:flex-row sm:items-stretch">
+                    {/* Left: label + big number */}
+                    <div className="flex items-center gap-4 p-5 sm:p-6 sm:border-r border-border/60 basis-full sm:basis-auto sm:min-w-[200px]">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-muted/80">
+                        <LayoutDashboard className="h-6 w-6 text-muted-foreground" />
                       </div>
-                      {/* Column 2 */}
-                      <div className="flex flex-col items-center justify-center gap-1 py-3 sm:border-r border-border/40 sm:border-b-0 border-b px-4 bg-gradient-to-b from-[#16A34A]/5 to-transparent">
-                        <p className="text-3xl font-black tabular-nums tracking-tight bg-gradient-to-br from-[#16A34A] via-[#15803D] to-[#166534] dark:from-green-400 dark:via-green-500 dark:to-green-600 bg-clip-text text-transparent">
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Total Equipment</p>
+                        <p className="text-[11px] text-muted-foreground/80 mt-0.5">Fleet overview</p>
+                        <p className="text-3xl sm:text-4xl font-bold tabular-nums text-foreground mt-2">
                           {total.toLocaleString()}
                         </p>
-                        <span className="inline-flex items-center rounded-full bg-[#16A34A]/15 px-2 py-0.5 text-[10px] font-semibold text-[#16A34A] uppercase tracking-wider">
+                        <span className="inline-block mt-1 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                           Total Fleet
                         </span>
                       </div>
-                      {/* Column 3: KPIs */}
-                      <div className="grid grid-cols-2 gap-1.5 p-3">
-                        <div className="flex items-center gap-1.5 rounded-md px-2 py-1 bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/20">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-                          <div>
-                            <span className="block text-[8px] uppercase tracking-wider text-muted-foreground">OP</span>
-                            <span className="font-bold text-emerald-600 dark:text-emerald-400 tabular-nums text-xs">{totalOp}</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1.5 rounded-md px-2 py-1 bg-cyan-500/10 dark:bg-cyan-500/15 border border-cyan-500/20">
-                          <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 shrink-0" />
-                          <div>
-                            <span className="block text-[8px] uppercase tracking-wider text-muted-foreground">Idle</span>
-                            <span className="font-bold text-cyan-600 dark:text-cyan-400 tabular-nums text-xs">{totalIdle}</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1.5 rounded-md px-2 py-1 bg-green-500/10 dark:bg-green-500/15 border border-green-500/20">
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
-                          <div>
-                            <span className="block text-[8px] uppercase tracking-wider text-muted-foreground">Avail</span>
-                            <span className="font-bold text-green-600 dark:text-green-400 tabular-nums text-xs">{totalAvailability}%</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1.5 rounded-md px-2 py-1 bg-red-500/10 dark:bg-red-500/15 border border-red-500/20">
-                          <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
-                          <div>
-                            <span className="block text-[8px] uppercase tracking-wider text-muted-foreground">Down</span>
-                            <span className="font-bold text-red-600 dark:text-red-400 tabular-nums text-xs">{totalDown}</span>
-                          </div>
-                        </div>
+                    </div>
+                    {/* Right: KPIs in a row */}
+                    <div className="flex flex-wrap items-stretch gap-0 border-t sm:border-t-0 sm:border-l border-border/60 bg-muted/30">
+                      <div className="flex flex-1 min-w-[100px] flex-col justify-center border-b sm:border-b-0 sm:border-r border-border/40 px-4 py-3 last:border-0">
+                        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">OP</span>
+                        <span className="mt-0.5 text-lg font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">{totalOp}</span>
+                      </div>
+                      <div className="flex flex-1 min-w-[100px] flex-col justify-center border-b sm:border-b-0 sm:border-r border-border/40 px-4 py-3 last:border-0">
+                        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Idle</span>
+                        <span className="mt-0.5 text-lg font-semibold tabular-nums text-cyan-600 dark:text-cyan-400">{totalIdle}</span>
+                      </div>
+                      <div className="flex flex-1 min-w-[100px] flex-col justify-center border-b sm:border-b-0 sm:border-r border-border/40 px-4 py-3 last:border-0">
+                        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Avail</span>
+                        <span className="mt-0.5 text-lg font-semibold tabular-nums text-green-600 dark:text-green-400">{totalAvailability}%</span>
+                      </div>
+                      <div className="flex flex-1 min-w-[100px] flex-col justify-center border-b sm:border-b-0 sm:border-r border-border/40 px-4 py-3 last:border-0">
+                        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Down</span>
+                        <span className="mt-0.5 text-lg font-semibold tabular-nums text-red-600 dark:text-red-400">{totalDown}</span>
+                      </div>
+                      <div className="flex flex-1 min-w-[100px] flex-col justify-center px-4 py-3">
+                        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Project sites</span>
+                        <span className="mt-0.5 text-lg font-semibold tabular-nums text-violet-600 dark:text-violet-400">{totalProjectSites}</span>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </motion.div>
 
-          {/* Row 2: Plant, Auxiliary, Light Vehicles - 3 cards per row */}
+          {/* Row 2: Plant, Machinery, Heavy Vehicles - 3 cards per row */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {loading ? (
               [...Array(3)].map((_, i) => <Skeleton key={i} className="h-36 rounded-xl" />)
@@ -408,7 +390,7 @@ export default function EquipmentDashboardPage() {
             )}
           </div>
 
-          {/* Row 3: Heavy Vehicles, Machinery, Factory Equipment - 3 cards per row */}
+          {/* Row 3: Light Vehicles, Factory Equipment, Auxiliary - 3 cards per row */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {loading ? (
               [...Array(3)].map((_, i) => <Skeleton key={i} className="h-36 rounded-xl" />)

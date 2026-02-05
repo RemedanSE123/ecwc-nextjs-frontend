@@ -80,11 +80,12 @@ export const SLUG_TO_DB_CATEGORY: Record<string, string> = {
   'factory-equipment': 'Factory Equipment',
 };
 
+/** Order: Plant, Machinery, Heavy Vehicles, Light Vehicles, Factory Equipment, Auxiliary */
 export const EQUIPMENT_CATEGORIES = [
-  { slug: 'plant-equipment', name: 'Plant Equipment', dbCategory: SLUG_TO_DB_CATEGORY['plant-equipment']! },
-  { slug: 'auxiliary-equipment', name: 'Auxiliary Equipment', dbCategory: SLUG_TO_DB_CATEGORY['auxiliary-equipment']! },
-  { slug: 'light-vehicles', name: 'Light Vehicles', dbCategory: SLUG_TO_DB_CATEGORY['light-vehicles']! },
-  { slug: 'heavy-vehicles', name: 'Heavy Vehicles', dbCategory: SLUG_TO_DB_CATEGORY['heavy-vehicles']! },
+  { slug: 'plant-equipment', name: 'Plant', dbCategory: SLUG_TO_DB_CATEGORY['plant-equipment']! },
   { slug: 'machinery', name: 'Machinery', dbCategory: SLUG_TO_DB_CATEGORY['machinery']! },
+  { slug: 'heavy-vehicles', name: 'Heavy Vehicles', dbCategory: SLUG_TO_DB_CATEGORY['heavy-vehicles']! },
+  { slug: 'light-vehicles', name: 'Light Vehicles', dbCategory: SLUG_TO_DB_CATEGORY['light-vehicles']! },
   { slug: 'factory-equipment', name: 'Factory Equipment', dbCategory: SLUG_TO_DB_CATEGORY['factory-equipment']! },
+  { slug: 'auxiliary-equipment', name: 'Auxiliary Equipment', dbCategory: SLUG_TO_DB_CATEGORY['auxiliary-equipment']! },
 ] as const;

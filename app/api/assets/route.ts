@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { SLUG_TO_DB_CATEGORY } from '@/types/asset';
+import { getUserFromRequest, getSessionIdFromRequest, insertAuditLog } from '@/lib/audit';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,6 +18,13 @@ const ASSET_COLUMNS = [
 
 export async function POST(request: NextRequest) {
   try {
+    const user = getUserFromRequest(request);
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Unauthorized', detail: 'Valid X-User-Phone and X-User-Name required' },
+        { status: 401 }
+      );
+    }
     const body = await request.json();
     const category = body.category ?? null;
     const description = (body.description ?? '').trim() || null;
@@ -40,6 +48,22 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+    const inserted = rows[0] as Record<string, unknown>;
+    const newId = inserted?.id;
+    const createdFields: Record<string, string | null> = {};
+    for (const col of ASSET_COLUMNS) {
+      const v = inserted[col];
+      createdFields[col] = v == null ? null : String(v);
+    }
+    await insertAuditLog({
+      user_phone: user.phone,
+      user_name: user.name,
+      action: 'asset_create',
+      entity_type: 'asset',
+      entity_id: newId != null ? String(newId) : null,
+      details: { created_fields: createdFields },
+      session_id: getSessionIdFromRequest(request),
+    });
     return NextResponse.json(rows[0], { status: 201 });
   } catch (err) {
     const msg = getErrorMessage(err);
