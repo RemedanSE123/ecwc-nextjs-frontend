@@ -179,13 +179,9 @@ export default function Sidebar({ isCollapsed = false, onToggleCollapse, userPho
       {/* Soft Glow / Light Blob */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
       
-      {/* Header: full-size logo centered with left/right accents */}
-      <div className="h-[3.675rem] border-b border-white/20 flex items-center relative z-10 overflow-hidden">
-        {/* Left accent */}
-        <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white/15 via-white/5 to-transparent" />
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-px h-3/4 bg-gradient-to-b from-transparent via-white/30 to-transparent" />
-        {/* Logo */}
-        <div className="absolute inset-0 flex items-center justify-center pl-2 pr-10">
+      {/* Header: full-size logo centered */}
+      <div className="h-[3.675rem] border-b border-white/20 flex items-center relative z-10">
+        <div className="absolute inset-0 flex items-center justify-center pl-1 pr-10">
           <div className="relative w-full h-full">
             <Image
               src="/slogo.png"
@@ -197,9 +193,6 @@ export default function Sidebar({ isCollapsed = false, onToggleCollapse, userPho
             />
           </div>
         </div>
-        {/* Right accent */}
-        <div className="absolute right-10 top-0 bottom-0 w-8 bg-gradient-to-l from-white/15 via-white/5 to-transparent" />
-        <div className="absolute right-10 top-1/2 -translate-y-1/2 w-px h-3/4 bg-gradient-to-b from-transparent via-white/30 to-transparent" />
         {onToggleCollapse && (
           <button
             onClick={onToggleCollapse}

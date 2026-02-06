@@ -191,21 +191,13 @@ export default function AssetForm({
     try {
       const payloadForm = { ...form, description: descriptionValue };
       if (isEdit && asset) {
-        const payload = {
-          ...payloadForm,
-          descriptionOther: undefined,
-          image_s3_key: imageKey,
-        };
-        delete (payload as Record<string, unknown>)['descriptionOther'];
+        const { descriptionOther: _do, ...rest } = payloadForm as Record<string, unknown>;
+        const payload = { ...rest, image_s3_key: imageKey };
         const updated = await updateAsset(asset.id, payload);
         onSuccess(updated);
       } else {
-        const payload: CreateAssetPayload = {
-          ...payloadForm,
-          descriptionOther: undefined,
-          image_s3_key: imageKey ?? undefined,
-        };
-        delete (payload as Record<string, unknown>)['descriptionOther'];
+        const { descriptionOther: _do, ...rest } = payloadForm as Record<string, unknown>;
+        const payload: CreateAssetPayload = { ...rest, image_s3_key: imageKey ?? undefined } as CreateAssetPayload;
         const created = await createAsset(payload);
         onSuccess(created);
       }

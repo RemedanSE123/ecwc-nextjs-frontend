@@ -81,7 +81,7 @@ function MultiSelectFilter({
           <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="max-h-[280px] overflow-y-auto" modal={false}>
+      <DropdownMenuContent align="start" className="max-h-[280px] overflow-y-auto">
         <DropdownMenuLabel className="flex flex-col gap-1.5 text-xs">
           <div className="flex items-center justify-between gap-2">
             <span>{placeholder}</span>
