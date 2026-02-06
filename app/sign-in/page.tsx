@@ -4,7 +4,7 @@ import type React from "react"
 import { useState, useEffect, Suspense } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -29,8 +29,6 @@ const fadeInUp = {
 
 function SignInForm() {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const returnUrl = searchParams.get("returnUrl") || "/equipment/dashboard"
   const [formData, setFormData] = useState({
     phone: "",
     password: "",
@@ -43,13 +41,13 @@ function SignInForm() {
     document.documentElement.classList.remove("dark")
   }, [])
 
-  // If already logged in, redirect to dashboard or returnUrl
+  // If already logged in, redirect to equipment dashboard (default post-login page)
   useEffect(() => {
     const session = getSession()
     if (session && !isSessionExpired(session)) {
-      router.replace(returnUrl || "/equipment/dashboard")
+      router.replace("/equipment/dashboard")
     }
-  }, [router, returnUrl])
+  }, [router])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({
@@ -82,7 +80,7 @@ function SignInForm() {
     } catch (err) {
       if (typeof console !== 'undefined') console.warn('Audit log (login) failed:', err)
     }
-    router.push(returnUrl)
+    router.push("/equipment/dashboard")
     setIsLoading(false)
   }
 
@@ -107,7 +105,7 @@ function SignInForm() {
           variants={fadeInUp}
           className="w-full max-w-md"
         >
-          <Card className="border-0 shadow-2xl bg-gradient-to-br from-background/95 via-background/90 to-muted/30 dark:from-zinc-950/95 dark:via-zinc-950/90 dark:to-zinc-900/30 relative overflow-visible border border-[#70c82a]/20 backdrop-blur-xl">
+          <Card className="shadow-2xl bg-gradient-to-br from-background/95 via-background/90 to-muted/30 dark:from-zinc-950/95 dark:via-zinc-950/90 dark:to-zinc-900/30 relative overflow-visible border border-[#70c82a]/20 backdrop-blur-xl">
             <div className="absolute inset-0 bg-gradient-to-br from-[#70c82a]/10 via-[#70c82a]/5 to-[#5aa022]/10 dark:from-[#70c82a]/15 dark:via-[#70c82a]/10 dark:to-[#5aa022]/15" />
             <div className="absolute top-0 right-0 w-64 h-64 bg-[#70c82a]/5 rounded-full blur-3xl"></div>
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#5aa022]/5 rounded-full blur-3xl"></div>
@@ -171,7 +169,7 @@ function SignInForm() {
                     name="phone"
                     type="tel"
                     inputMode="numeric"
-                    placeholder="e.g. 0911111111"
+                    placeholder="e.g. 09********"
                     value={formData.phone}
                     onChange={handleChange}
                     required

@@ -9,35 +9,109 @@ function getErrorMessage(err: unknown): string {
   return String(err);
 }
 
+function getParamValues(searchParams: URLSearchParams, key: string): string[] {
+  const all = searchParams.getAll(key);
+  if (all.length > 0) return all.map((v) => v.trim()).filter(Boolean);
+  const single = searchParams.get(key);
+  if (single?.trim()) return [single.trim()];
+  return [];
+}
+
+/** Build WHERE clause and params from same filter params as GET /api/assets (cascading facets). */
+function buildFacetWhere(request: NextRequest): { whereClause: string; params: (string | number)[] } {
+  const { searchParams } = new URL(request.url);
+  const categoryArr = getParamValues(searchParams, 'category');
+  const categoryGroup = searchParams.get('category_group') || undefined;
+  const statusArr = getParamValues(searchParams, 'status');
+  const project_locationArr = getParamValues(searchParams, 'project_location');
+  const makeArr = getParamValues(searchParams, 'make');
+  const modelArr = getParamValues(searchParams, 'model');
+  const ownershipArr = getParamValues(searchParams, 'ownership');
+  const descriptionArr = getParamValues(searchParams, 'description');
+  const responsible_person_name = searchParams.get('responsible_person_name') || undefined;
+  const search = searchParams.get('search') || undefined;
+
+  const conditions: string[] = ['1=1'];
+  const params: (string | number)[] = [];
+  let idx = 1;
+
+  if (categoryGroup) {
+    const dbCategory = SLUG_TO_DB_CATEGORY[categoryGroup];
+    if (dbCategory) {
+      conditions.push(`category = $${idx}`);
+      params.push(dbCategory);
+      idx++;
+    }
+  } else if (categoryArr.length > 0) {
+    conditions.push(`(category = ${categoryArr.map((_, i) => `$${idx + i}`).join(' OR category = ')})`);
+    categoryArr.forEach((v) => params.push(v));
+    idx += categoryArr.length;
+  }
+  if (statusArr.length > 0) {
+    conditions.push(`(status = ${statusArr.map((_, i) => `$${idx + i}`).join(' OR status = ')})`);
+    statusArr.forEach((v) => params.push(v));
+    idx += statusArr.length;
+  }
+  if (project_locationArr.length > 0) {
+    conditions.push(`(project_location = ${project_locationArr.map((_, i) => `$${idx + i}`).join(' OR project_location = ')})`);
+    project_locationArr.forEach((v) => params.push(v));
+    idx += project_locationArr.length;
+  }
+  if (makeArr.length > 0) {
+    conditions.push(`(make = ${makeArr.map((_, i) => `$${idx + i}`).join(' OR make = ')})`);
+    makeArr.forEach((v) => params.push(v));
+    idx += makeArr.length;
+  }
+  if (modelArr.length > 0) {
+    conditions.push(`(model = ${modelArr.map((_, i) => `$${idx + i}`).join(' OR model = ')})`);
+    modelArr.forEach((v) => params.push(v));
+    idx += modelArr.length;
+  }
+  if (ownershipArr.length > 0) {
+    conditions.push(`(ownership = ${ownershipArr.map((_, i) => `$${idx + i}`).join(' OR ownership = ')})`);
+    ownershipArr.forEach((v) => params.push(v));
+    idx += ownershipArr.length;
+  }
+  if (descriptionArr.length > 0) {
+    conditions.push(`(description = ${descriptionArr.map((_, i) => `$${idx + i}`).join(' OR description = ')})`);
+    descriptionArr.forEach((v) => params.push(v));
+    idx += descriptionArr.length;
+  }
+  if (responsible_person_name) {
+    conditions.push(`responsible_person_name ILIKE $${idx}`);
+    params.push(responsible_person_name);
+    idx++;
+  }
+  if (search) {
+    const pattern = `%${search}%`;
+    conditions.push(`(
+      description ILIKE $${idx} OR asset_no ILIKE $${idx + 1} OR
+      serial_no ILIKE $${idx + 2} OR make ILIKE $${idx + 3} OR
+      model ILIKE $${idx + 4} OR responsible_person_name ILIKE $${idx + 5}
+    )`);
+    params.push(pattern, pattern, pattern, pattern, pattern, pattern);
+    idx += 6;
+  }
+
+  return { whereClause: conditions.join(' AND '), params };
+}
+
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const categoryGroup = searchParams.get('category_group') || undefined;
-    const dbCategory = categoryGroup ? SLUG_TO_DB_CATEGORY[categoryGroup] : null;
-
-    const baseWhere = dbCategory ? 'WHERE category = $1' : '';
-    const categoryWhere = baseWhere ? `${baseWhere}` : "WHERE category IS NOT NULL AND TRIM(category::text) != ''";
-    const descWhere = baseWhere ? `${baseWhere} AND description IS NOT NULL AND TRIM(description::text) != ''` : "WHERE description IS NOT NULL AND TRIM(description::text) != ''";
-    const statusWhere = baseWhere ? `${baseWhere} AND status IS NOT NULL AND TRIM(status::text) != ''` : "WHERE status IS NOT NULL AND TRIM(status::text) != ''";
-    const locWhere = baseWhere ? `${baseWhere} AND project_location IS NOT NULL AND TRIM(project_location::text) != ''` : "WHERE project_location IS NOT NULL AND TRIM(project_location::text) != ''";
-    const makeWhere = baseWhere ? `${baseWhere} AND make IS NOT NULL AND TRIM(make::text) != ''` : "WHERE make IS NOT NULL AND TRIM(make::text) != ''";
-    const modelWhere = baseWhere ? `${baseWhere} AND model IS NOT NULL AND TRIM(model::text) != ''` : "WHERE model IS NOT NULL AND TRIM(model::text) != ''";
-    const ownWhere = baseWhere ? `${baseWhere} AND ownership IS NOT NULL AND TRIM(ownership::text) != ''` : "WHERE ownership IS NOT NULL AND TRIM(ownership::text) != ''";
-    const respWhere = baseWhere ? `${baseWhere} AND responsible_person_name IS NOT NULL AND TRIM(responsible_person_name::text) != ''` : "WHERE responsible_person_name IS NOT NULL AND TRIM(responsible_person_name::text) != ''";
-    const params = dbCategory ? [dbCategory] : [];
+    const { whereClause, params } = buildFacetWhere(request);
 
     const [categoryRes, descriptionRes, statusRes, locationRes, makeRes, modelRes, ownershipRes, responsibleRes] = await Promise.all([
-      query<{ category: string }>(`SELECT DISTINCT category FROM asset_master ${categoryWhere} ORDER BY category`, params),
-      query<{ description: string }>(`SELECT DISTINCT description FROM asset_master ${descWhere} ORDER BY description LIMIT 500`, params),
-      query<{ status: string }>(`SELECT DISTINCT status FROM asset_master ${statusWhere} ORDER BY status`, params),
-      query<{ project_location: string }>(`SELECT DISTINCT project_location FROM asset_master ${locWhere} ORDER BY project_location`, params),
-      query<{ make: string }>(`SELECT DISTINCT make FROM asset_master ${makeWhere} ORDER BY make`, params),
-      query<{ model: string }>(`SELECT DISTINCT model FROM asset_master ${modelWhere} ORDER BY model`, params),
-      query<{ ownership: string }>(`SELECT DISTINCT ownership FROM asset_master ${ownWhere} ORDER BY ownership`, params),
-      query<{ responsible_person_name: string }>(`SELECT DISTINCT responsible_person_name FROM asset_master ${respWhere} ORDER BY responsible_person_name`, params),
+      query<{ category: string }>(`SELECT DISTINCT category FROM asset_master WHERE ${whereClause} AND category IS NOT NULL AND TRIM(category::text) != '' ORDER BY category`, params),
+      query<{ description: string }>(`SELECT DISTINCT description FROM asset_master WHERE ${whereClause} AND description IS NOT NULL AND TRIM(description::text) != '' ORDER BY description LIMIT 500`, params),
+      query<{ status: string }>(`SELECT DISTINCT status FROM asset_master WHERE ${whereClause} AND status IS NOT NULL AND TRIM(status::text) != '' ORDER BY status`, params),
+      query<{ project_location: string }>(`SELECT DISTINCT project_location FROM asset_master WHERE ${whereClause} AND project_location IS NOT NULL AND TRIM(project_location::text) != '' ORDER BY project_location`, params),
+      query<{ make: string }>(`SELECT DISTINCT make FROM asset_master WHERE ${whereClause} AND make IS NOT NULL AND TRIM(make::text) != '' ORDER BY make`, params),
+      query<{ model: string }>(`SELECT DISTINCT model FROM asset_master WHERE ${whereClause} AND model IS NOT NULL AND TRIM(model::text) != '' ORDER BY model`, params),
+      query<{ ownership: string }>(`SELECT DISTINCT ownership FROM asset_master WHERE ${whereClause} AND ownership IS NOT NULL AND TRIM(ownership::text) != '' ORDER BY ownership`, params),
+      query<{ responsible_person_name: string }>(`SELECT DISTINCT responsible_person_name FROM asset_master WHERE ${whereClause} AND responsible_person_name IS NOT NULL AND TRIM(responsible_person_name::text) != '' ORDER BY responsible_person_name`, params),
     ]);
 
-    const toStrings = <T extends Record<string, unknown>>(rows: T[], key: keyof T): string[] =>
+    const toStrings = <T extends Record<string, unknown>>(rows: T[] | undefined, key: keyof T): string[] =>
       (rows ?? []).map((r) => r[key] as unknown).filter((v): v is string => v != null && String(v).trim() !== '');
 
     return NextResponse.json({

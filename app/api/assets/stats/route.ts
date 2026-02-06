@@ -51,11 +51,20 @@ export async function GET(request: NextRequest) {
       params
     );
 
+    const locationCondition = `${categoryFilter ? categoryFilter + ' AND' : 'WHERE'} (project_location IS NOT NULL AND TRIM(project_location) != '' AND project_location != 'Unassigned')`;
+    const uniqueSitesRes = await query<{ unique_project_sites: number }>(
+      `SELECT COUNT(DISTINCT project_location)::int as unique_project_sites
+       FROM asset_master ${locationCondition}`,
+      params
+    );
+    const uniqueProjectSites = uniqueSitesRes?.[0]?.unique_project_sites ?? 0;
+
     return NextResponse.json({
       total: totalCount,
       byCategory,
       byStatus,
       byLocation,
+      uniqueProjectSites,
     });
   } catch (err) {
     const msg = getErrorMessage(err);

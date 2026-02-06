@@ -11,7 +11,7 @@ interface ImageLightboxProps {
 
 export default function ImageLightbox({ src, alt = '', onClose }: ImageLightboxProps) {
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center" onClick={onClose}>
       <Button
         variant="ghost"
         size="icon"
@@ -23,7 +23,7 @@ export default function ImageLightbox({ src, alt = '', onClose }: ImageLightboxP
       <img
         src={src}
         alt={alt}
-        className="max-w-[90vw] max-h-[90vh] object-contain"
+        className="max-w-[90vw] max-h-[90vh] object-contain z-10"
         onClick={(e) => e.stopPropagation()}
       />
     </div>

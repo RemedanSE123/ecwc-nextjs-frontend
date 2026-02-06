@@ -21,12 +21,12 @@ function buildAssetsQuery(filters: AssetFilters): string {
     const arr = Array.isArray(val) ? val : [val];
     arr.filter((v) => v !== '').forEach((v) => search.append(k, v));
   };
-  set('category', filters.category);
   set('category_group', filters.category_group);
   set('search', filters.search);
   set('responsible_person_name', filters.responsible_person_name);
   set('page', String(filters.page ?? 1));
   set('limit', String(filters.limit ?? 20));
+  appendAll('category', filters.category);
   MULTI_KEYS.forEach((k) => appendAll(k, filters[k]));
   return search.toString();
 }
@@ -104,11 +104,32 @@ export async function fetchStatusSummary(categoryGroup?: string): Promise<Status
   return res.json();
 }
 
-export async function fetchAssetFacets(categoryGroup?: string): Promise<AssetFacets> {
-  const params = new URLSearchParams();
-  if (categoryGroup) params.set('category_group', categoryGroup);
-  const q = params.toString() ? `?${params}` : '';
-  const res = await fetch(`${API_BASE}/api/assets/facets${q}`);
+/** Build query string for facets (same filter params as list, no page/limit) so facets are cascaded. */
+function buildFacetsQuery(filters: AssetFilters): string {
+  const search = new URLSearchParams();
+  const set = (k: string, v: string | number | undefined) => {
+    if (v !== undefined && v !== '' && v !== null) search.set(k, String(v));
+  };
+  const appendAll = (k: string, val: string | string[] | undefined) => {
+    if (val == null) return;
+    const arr = Array.isArray(val) ? val : [val];
+    arr.filter((v) => v !== '').forEach((v) => search.append(k, v));
+  };
+  set('category_group', filters.category_group);
+  set('search', filters.search);
+  set('responsible_person_name', filters.responsible_person_name);
+  appendAll('category', filters.category);
+  MULTI_KEYS.forEach((k) => appendAll(k, filters[k]));
+  return search.toString();
+}
+
+export async function fetchAssetFacets(filtersOrGroup?: AssetFilters | string): Promise<AssetFacets> {
+  const filters: AssetFilters =
+    typeof filtersOrGroup === 'string'
+      ? { category_group: filtersOrGroup }
+      : filtersOrGroup ?? {};
+  const q = buildFacetsQuery(filters);
+  const res = await fetch(`${API_BASE}/api/assets/facets${q ? `?${q}` : ''}`);
   if (!res.ok) return handleApiError(res, 'Failed to fetch filter options');
   return res.json();
 }

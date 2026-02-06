@@ -18,7 +18,7 @@ export interface Asset {
 }
 
 export interface AssetFilters {
-  category?: string;
+  category?: string | string[];
   category_group?: string;  // slug e.g. plant-equipment
   status?: string | string[];
   project_location?: string | string[];
@@ -61,6 +61,8 @@ export interface AssetStats {
   byCategory: { category: string; count: number; operational?: number }[];
   byStatus: { status: string; count: number }[];
   byLocation: { project_location: string; count: number }[];
+  /** Number of distinct project_location values (excluding null, empty, Unassigned). */
+  uniqueProjectSites?: number;
 }
 
 export interface AssetReportData {

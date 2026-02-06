@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,7 +17,8 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { AUTH_ACCOUNTS } from '@/lib/auth';
 import { exportAssetsToCsv } from '@/lib/export-utils';
-import { History, Download, ChevronLeft, ChevronRight, X, User, Clock, Hash, Activity, FileText } from 'lucide-react';
+import { History, Download, ChevronLeft, ChevronRight, X, User, Clock, Hash, Activity, FileText, Columns, Calendar, FilterX, Filter } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const ACTIONS = [
   { value: '', label: 'All actions' },
@@ -76,6 +77,27 @@ function formatDateTime(iso: string): string {
 function formatAction(action: string): string {
   const found = ACTIONS.find((a) => a.value === action);
   return found?.label ?? action;
+}
+
+/** Badge style by action type for table and modal */
+function getActionBadgeClass(action: string): string {
+  const base = 'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold';
+  switch (action) {
+    case 'login':
+      return `${base} bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/50`;
+    case 'logout':
+      return `${base} bg-slate-100 text-slate-700 dark:bg-slate-800/50 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/50`;
+    case 'asset_create':
+      return `${base} bg-blue-100 text-blue-800 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/50`;
+    case 'asset_update':
+      return `${base} bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300 border border-amber-200/60 dark:border-amber-800/50`;
+    case 'asset_delete':
+      return `${base} bg-red-100 text-red-800 dark:bg-red-950/50 dark:text-red-300 border border-red-200/60 dark:border-red-800/50`;
+    case 'asset_upload':
+      return `${base} bg-violet-100 text-violet-800 dark:bg-violet-950/50 dark:text-violet-300 border border-violet-200/60 dark:border-violet-800/50`;
+    default:
+      return `${base} bg-muted text-muted-foreground border border-border`;
+  }
 }
 
 const DETAIL_KEY_ORDER = [
@@ -304,6 +326,26 @@ export default function AuditPage() {
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [selectedRow, setSelectedRow] = useState<AuditLogEntry | null>(null);
+  const [showEntityId, setShowEntityId] = useState(false);
+  const [showSessionId, setShowSessionId] = useState(false);
+  const [showPhoneNumber, setShowPhoneNumber] = useState(false);
+  const [showEntityType, setShowEntityType] = useState(false);
+  const [showEntityTypeFilter, setShowEntityTypeFilter] = useState(false);
+  const [showSessionFilter, setShowSessionFilter] = useState(false);
+  const fromDateInputRef = useRef<HTMLInputElement>(null);
+  const toDateInputRef = useRef<HTMLInputElement>(null);
+
+  const hasActiveFilters = !!(userPhone || action || entityType || sessionIdFilter || fromDate || toDate || sort !== 'created_at_desc');
+  const clearFilters = () => {
+    setUserPhone('');
+    setAction('');
+    setEntityType('');
+    setSessionIdFilter('');
+    setFromDate('');
+    setToDate('');
+    setSort('created_at_desc');
+    setPage(1);
+  };
 
   const fetchAudit = useCallback(async () => {
     setLoading(true);
@@ -312,8 +354,14 @@ export default function AuditPage() {
     if (action) params.set('action', action);
     if (entityType) params.set('entity_type', entityType);
     if (sessionIdFilter) params.set('session_id', sessionIdFilter);
-    if (fromDate) params.set('from_date', fromDate);
-    if (toDate) params.set('to_date', toDate);
+    if (fromDate && fromDate.trim()) {
+      const from = new Date(fromDate.trim());
+      if (!isNaN(from.getTime())) params.set('from_date', from.toISOString());
+    }
+    if (toDate && toDate.trim()) {
+      const to = new Date(toDate.trim());
+      if (!isNaN(to.getTime())) params.set('to_date', to.toISOString());
+    }
     params.set('page', String(page));
     params.set('limit', String(limit));
     params.set('sort', sort);
@@ -358,28 +406,56 @@ export default function AuditPage() {
 
   return (
     <Layout>
-      <div className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <History className="h-5 w-5 text-muted-foreground" />
-            <h1 className="text-xl font-semibold text-foreground">Audit Trail</h1>
+      <div className="space-y-6">
+        {/* Hero header */}
+        <div className="relative overflow-hidden rounded-xl border border-border/80 bg-gradient-to-br from-emerald-50/80 via-teal-50/40 to-slate-50/60 dark:from-emerald-950/30 dark:via-teal-950/20 dark:to-slate-950/40 shadow-sm">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(16,185,129,0.15),transparent)] dark:bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(16,185,129,0.08),transparent)]" />
+          <div className="relative flex flex-wrap items-center justify-between gap-4 p-5">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/15 dark:bg-emerald-400/10 border border-emerald-200/50 dark:border-emerald-800/50 shadow-inner">
+                <History className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">Audit Trail</h1>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  Track logins, asset changes, and activity across your team
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {total > 0 && (
+                <span className="rounded-lg bg-background/80 dark:bg-background/60 px-3 py-1.5 text-xs font-semibold tabular-nums text-muted-foreground border border-border/60">
+                  {total.toLocaleString()} record{total !== 1 ? 's' : ''}
+                </span>
+              )}
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleExportCsv}
+                disabled={!data.length || exporting}
+                className="gap-2 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white shadow-sm"
+              >
+                <Download className="h-4 w-4" />
+                {exporting ? 'Exporting...' : 'Export CSV'}
+              </Button>
+            </div>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleExportCsv}
-            disabled={!data.length || exporting}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            {exporting ? 'Exporting...' : 'Export to CSV'}
-          </Button>
         </div>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Filters</CardTitle>
+        <Card className="border-border/80 shadow-sm overflow-hidden bg-gradient-to-b from-card to-muted/20 dark:to-muted/10">
+          <CardHeader className="pb-3 flex flex-row items-center justify-between gap-2 border-b border-border/60 bg-muted/20 dark:bg-muted/10">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Filter className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              Filters
+            </CardTitle>
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10">
+                <FilterX className="h-4 w-4" />
+                Clear filters
+              </Button>
+            )}
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 pt-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
               <div className="space-y-2">
                 <Label className="text-xs">User</Label>
@@ -412,47 +488,77 @@ export default function AuditPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label className="text-xs">Entity type</Label>
-                <Select value={entityType || 'all'} onValueChange={(v) => setEntityType(v === 'all' ? '' : v)}>
-                  <SelectTrigger className="h-9">
-                    <SelectValue placeholder="All" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ENTITY_TYPES.map((e) => (
-                      <SelectItem key={e.value || 'all'} value={e.value || 'all'}>
-                        {e.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs">Session ID</Label>
-                <Input
-                  placeholder="Filter by session (one login)"
-                  value={sessionIdFilter}
-                  onChange={(e) => setSessionIdFilter(e.target.value.trim())}
-                  className="h-9 font-mono text-xs"
-                />
-              </div>
+              {showEntityTypeFilter && (
+                <div className="space-y-2">
+                  <Label className="text-xs">Entity type</Label>
+                  <Select value={entityType || 'all'} onValueChange={(v) => setEntityType(v === 'all' ? '' : v)}>
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="All" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ENTITY_TYPES.map((e) => (
+                        <SelectItem key={e.value || 'all'} value={e.value || 'all'}>
+                          {e.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              {showSessionFilter && (
+                <div className="space-y-2">
+                  <Label className="text-xs">Filter by session (one login)</Label>
+                  <Input
+                    placeholder="Session ID"
+                    value={sessionIdFilter}
+                    onChange={(e) => setSessionIdFilter(e.target.value.trim())}
+                    className="h-9 font-mono text-xs"
+                  />
+                </div>
+              )}
               <div className="space-y-2">
                 <Label className="text-xs">From date</Label>
-                <Input
-                  type="datetime-local"
-                  value={fromDate}
-                  onChange={(e) => setFromDate(e.target.value)}
-                  className="h-9"
-                />
+                <div
+                  className="flex h-9 items-center gap-2 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 cursor-pointer"
+                  onClick={() => {
+                    fromDateInputRef.current?.focus();
+                    if (typeof (fromDateInputRef.current as HTMLInputElement & { showPicker?: () => void })?.showPicker === 'function') {
+                      (fromDateInputRef.current as HTMLInputElement & { showPicker?: () => void }).showPicker?.();
+                    }
+                  }}
+                >
+                  <Calendar className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <input
+                    ref={fromDateInputRef}
+                    type="datetime-local"
+                    value={fromDate}
+                    onChange={(e) => setFromDate(e.target.value)}
+                    className="flex-1 min-w-0 bg-transparent border-0 p-0 text-foreground outline-none cursor-pointer [color-scheme:inherit]"
+                    title="Click to open calendar and time"
+                  />
+                </div>
               </div>
               <div className="space-y-2">
                 <Label className="text-xs">To date</Label>
-                <Input
-                  type="datetime-local"
-                  value={toDate}
-                  onChange={(e) => setToDate(e.target.value)}
-                  className="h-9"
-                />
+                <div
+                  className="flex h-9 items-center gap-2 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 cursor-pointer"
+                  onClick={() => {
+                    toDateInputRef.current?.focus();
+                    if (typeof (toDateInputRef.current as HTMLInputElement & { showPicker?: () => void })?.showPicker === 'function') {
+                      (toDateInputRef.current as HTMLInputElement & { showPicker?: () => void }).showPicker?.();
+                    }
+                  }}
+                >
+                  <Calendar className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <input
+                    ref={toDateInputRef}
+                    type="datetime-local"
+                    value={toDate}
+                    onChange={(e) => setToDate(e.target.value)}
+                    className="flex-1 min-w-0 bg-transparent border-0 p-0 text-foreground outline-none cursor-pointer [color-scheme:inherit]"
+                    title="Click to open calendar and time"
+                  />
+                </div>
               </div>
               <div className="space-y-2">
                 <Label className="text-xs">Sort</Label>
@@ -470,30 +576,92 @@ export default function AuditPage() {
                 </Select>
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Label className="text-xs">Page size</Label>
-              <Select value={String(limit)} onValueChange={(v) => { setLimit(Number(v)); setPage(1); }}>
-                <SelectTrigger className="h-9 w-20">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {PAGE_SIZES.map((n) => (
-                    <SelectItem key={n} value={String(n)}>
-                      {n}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="space-y-3 pt-2 border-t border-border">
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-xs font-medium text-muted-foreground">Show filters</span>
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox
+                    type="checkbox"
+                    checked={showEntityTypeFilter}
+                    onChange={(e) => setShowEntityTypeFilter(e.target.checked)}
+                  />
+                  <span className="text-xs">Entity type</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox
+                    type="checkbox"
+                    checked={showSessionFilter}
+                    onChange={(e) => setShowSessionFilter(e.target.checked)}
+                  />
+                  <span className="text-xs">Filter by session (one login)</span>
+                </label>
+              </div>
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Columns className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-xs font-medium text-muted-foreground">Show columns</span>
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox
+                    type="checkbox"
+                    checked={showEntityId}
+                    onChange={(e) => setShowEntityId(e.target.checked)}
+                  />
+                  <span className="text-xs">Entity ID</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox
+                    type="checkbox"
+                    checked={showSessionId}
+                    onChange={(e) => setShowSessionId(e.target.checked)}
+                  />
+                  <span className="text-xs">Filter by session (one login)</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox
+                    type="checkbox"
+                    checked={showPhoneNumber}
+                    onChange={(e) => setShowPhoneNumber(e.target.checked)}
+                  />
+                  <span className="text-xs">Phone number</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox
+                    type="checkbox"
+                    checked={showEntityType}
+                    onChange={(e) => setShowEntityType(e.target.checked)}
+                  />
+                  <span className="text-xs">Entity type</span>
+                </label>
+                <div className="flex flex-wrap items-center gap-2 ml-auto">
+                  <Label className="text-xs">Page size</Label>
+                  <Select value={String(limit)} onValueChange={(v) => { setLimit(Number(v)); setPage(1); }}>
+                    <SelectTrigger className="h-9 w-20">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PAGE_SIZES.map((n) => (
+                        <SelectItem key={n} value={String(n)}>
+                          {n}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-border/80 shadow-sm overflow-hidden">
           <CardContent className="p-0">
             {loading ? (
-              <div className="p-6 space-y-3">
-                {[...Array(5)].map((_, i) => (
-                  <Skeleton key={i} className="h-14 w-full" />
+              <div className="p-8 space-y-3">
+                {[...Array(6)].map((_, i) => (
+                  <Skeleton key={i} className="h-14 w-full rounded-lg" />
                 ))}
               </div>
             ) : (
@@ -501,23 +669,29 @@ export default function AuditPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse">
                     <thead>
-                      <tr className="bg-muted/70 border-b-2 border-border">
-                        <th className="text-left p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Record ID</th>
-                        <th className="text-left p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date &amp; time</th>
-                        <th className="text-left p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">User name</th>
-                        <th className="text-left p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Phone number</th>
-                        <th className="text-left p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Session ID</th>
-                        <th className="text-left p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Action</th>
-                        <th className="text-left p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Entity type</th>
-                        <th className="text-left p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Entity ID</th>
-                        <th className="text-left p-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Details</th>
+                      <tr className="bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-700 dark:to-teal-700 text-white">
+                        <th className="text-left p-4 text-xs font-semibold uppercase tracking-wider">Record ID</th>
+                        <th className="text-left p-4 text-xs font-semibold uppercase tracking-wider">Date &amp; time</th>
+                        <th className="text-left p-4 text-xs font-semibold uppercase tracking-wider">User name</th>
+                        {showPhoneNumber && <th className="text-left p-4 text-xs font-semibold uppercase tracking-wider">Phone number</th>}
+                        {showSessionId && <th className="text-left p-4 text-xs font-semibold uppercase tracking-wider">Session ID</th>}
+                        <th className="text-left p-4 text-xs font-semibold uppercase tracking-wider">Action</th>
+                        {showEntityType && <th className="text-left p-4 text-xs font-semibold uppercase tracking-wider">Entity type</th>}
+                        {showEntityId && <th className="text-left p-4 text-xs font-semibold uppercase tracking-wider">Entity ID</th>}
+                        <th className="text-left p-4 text-xs font-semibold uppercase tracking-wider">Details</th>
                       </tr>
                     </thead>
                     <tbody>
                       {data.length === 0 ? (
                         <tr>
-                          <td colSpan={9} className="p-8 text-center text-muted-foreground">
-                            No audit entries found.
+                          <td colSpan={5 + (showPhoneNumber ? 1 : 0) + (showSessionId ? 1 : 0) + (showEntityType ? 1 : 0) + (showEntityId ? 1 : 0)} className="p-12 text-center">
+                            <div className="flex flex-col items-center gap-3 text-muted-foreground">
+                              <div className="rounded-full bg-muted/80 p-4">
+                                <History className="h-8 w-8 text-muted-foreground/70" />
+                              </div>
+                              <p className="text-sm font-medium">No audit entries found</p>
+                              <p className="text-xs max-w-sm">Try adjusting your filters or date range.</p>
+                            </div>
                           </td>
                         </tr>
                       ) : (
@@ -528,33 +702,36 @@ export default function AuditPage() {
                             tabIndex={0}
                             onClick={() => setSelectedRow(row)}
                             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedRow(row); } }}
-                            className={`border-b border-border hover:bg-muted/20 cursor-pointer ${idx % 2 === 1 ? 'bg-muted/5' : ''}`}
+                            className={`border-b border-border/60 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 cursor-pointer transition-colors ${idx % 2 === 1 ? 'bg-muted/30' : 'bg-background'}`}
                           >
-                            <td className="p-4 text-sm tabular-nums text-muted-foreground">{row.id}</td>
-                            <td className="p-4 text-sm tabular-nums whitespace-nowrap">{formatDateTime(row.created_at)}</td>
-                            <td className="p-4 text-sm font-medium">{row.user_name}</td>
-                            <td className="p-4 text-sm font-mono text-muted-foreground">{row.user_phone}</td>
-                            <td className="p-4 text-xs font-mono max-w-[12rem]" onClick={(e) => e.stopPropagation()}>
-                              {row.session_id ? (
-                                <button
-                                  type="button"
-                                  onClick={() => { setSessionIdFilter(row.session_id!); setPage(1); }}
-                                  className="text-left hover:underline text-green-600 dark:text-green-400 break-all"
-                                  title="Click to filter by this session"
-                                >
-                                  {row.session_id}
-                                </button>
-                              ) : (
-                                <span className="text-muted-foreground">—</span>
-                              )}
+                            <td className="p-4 text-sm tabular-nums text-muted-foreground font-medium">{row.id}</td>
+                            <td className="p-4 text-sm tabular-nums whitespace-nowrap text-foreground/90">{formatDateTime(row.created_at)}</td>
+                            <td className="p-4 text-sm font-semibold text-foreground">{row.user_name}</td>
+                            {showPhoneNumber && <td className="p-4 text-sm font-mono text-muted-foreground">{row.user_phone}</td>}
+                            {showSessionId && (
+                              <td className="p-4 text-xs font-mono max-w-[12rem]" onClick={(e) => e.stopPropagation()}>
+                                {row.session_id ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => { setSessionIdFilter(row.session_id!); setPage(1); }}
+                                    className="text-left hover:underline text-emerald-600 dark:text-emerald-400 break-all font-medium"
+                                    title="Click to filter by this session"
+                                  >
+                                    {row.session_id}
+                                  </button>
+                                ) : (
+                                  <span className="text-muted-foreground">—</span>
+                                )}
+                              </td>
+                            )}
+                            <td className="p-4">
+                              <span className={getActionBadgeClass(row.action)}>{formatAction(row.action)}</span>
                             </td>
-                            <td className="p-4 text-sm font-medium">{formatAction(row.action)}</td>
-                            <td className="p-4 text-sm">{row.entity_type ?? <span className="text-muted-foreground">—</span>}</td>
-                            <td className="p-4 text-sm font-mono">{row.entity_id ?? <span className="text-muted-foreground">—</span>}</td>
-                            <td className="p-4 text-sm min-w-[10rem] max-w-md align-top max-h-48 overflow-y-auto">
-                              <p className="text-xs text-muted-foreground mb-1.5 leading-snug">{getPlainEnglishSummary(row)}</p>
-                              {formatDetails(row.details)}
-                              <span className="block mt-1 text-green-600 dark:text-green-400 text-xs font-medium">Click row for full flow →</span>
+                            {showEntityType && <td className="p-4 text-sm">{row.entity_type ?? <span className="text-muted-foreground">—</span>}</td>}
+                            {showEntityId && <td className="p-4 text-sm font-mono">{row.entity_id ?? <span className="text-muted-foreground">—</span>}</td>}
+                            <td className="p-4 text-sm min-w-[10rem] max-w-md align-top h-16 max-h-16 overflow-hidden">
+                              <p className="text-xs text-muted-foreground leading-snug line-clamp-2">{getPlainEnglishSummary(row)}</p>
+                              <span className="block mt-0.5 text-emerald-600 dark:text-emerald-400 text-xs font-medium">Click row for full detail →</span>
                             </td>
                           </tr>
                         ))
@@ -563,27 +740,29 @@ export default function AuditPage() {
                   </table>
                 </div>
                 {totalPages > 1 && (
-                  <div className="flex items-center justify-between gap-4 p-3 border-t border-border">
-                    <span className="text-xs text-muted-foreground">
-                      Showing {(page - 1) * limit + 1}–{Math.min(page * limit, total)} of {total}
+                  <div className="flex items-center justify-between gap-4 px-4 py-3 border-t border-border/60 bg-muted/20 dark:bg-muted/10">
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                      Showing <span className="font-semibold text-foreground">{(page - 1) * limit + 1}–{Math.min(page * limit, total)}</span> of {total.toLocaleString()}
                     </span>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 rounded-lg border border-border/60 bg-background p-0.5 shadow-sm">
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
                         onClick={() => setPage((p) => Math.max(1, p - 1))}
                         disabled={page <= 1}
+                        className="h-8 px-2 rounded-md"
                       >
                         <ChevronLeft className="h-4 w-4" />
                       </Button>
-                      <span className="text-xs tabular-nums">
+                      <span className="min-w-[6rem] text-center text-xs font-medium tabular-nums px-2">
                         Page {page} of {totalPages}
                       </span>
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
                         onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                         disabled={page >= totalPages}
+                        className="h-8 px-2 rounded-md"
                       >
                         <ChevronRight className="h-4 w-4" />
                       </Button>
@@ -598,39 +777,45 @@ export default function AuditPage() {
         {/* Detail flow popup — click any row to see full flow */}
         {selectedRow && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
             onClick={() => setSelectedRow(null)}
             role="dialog"
             aria-modal="true"
             aria-label="Audit record details"
           >
             <Card
-              className="w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col shadow-2xl"
+              className="w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col shadow-2xl border-2 border-emerald-200/50 dark:border-emerald-800/50"
               onClick={(e) => e.stopPropagation()}
             >
-              <CardHeader className="flex flex-row items-start justify-between gap-4 border-b bg-muted/30 pb-4">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Activity className="h-5 w-5 text-green-600" />
-                  Audit record #{selectedRow.id}
+              <CardHeader className="flex flex-row items-start justify-between gap-4 border-b border-border/60 bg-gradient-to-r from-emerald-50/80 to-teal-50/50 dark:from-emerald-950/40 dark:to-teal-950/30 pb-4">
+                <CardTitle className="text-lg flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/20 dark:bg-emerald-400/10 border border-emerald-200/50 dark:border-emerald-800/50">
+                    <Activity className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <span>Audit record <span className="font-mono text-emerald-700 dark:text-emerald-300">#{selectedRow.id}</span></span>
                 </CardTitle>
-                <Button variant="ghost" size="icon" onClick={() => setSelectedRow(null)} aria-label="Close">
+                <Button variant="ghost" size="icon" onClick={() => setSelectedRow(null)} aria-label="Close" className="rounded-full hover:bg-destructive/10 hover:text-destructive">
                   <X className="h-4 w-4" />
                 </Button>
               </CardHeader>
-              <CardContent className="p-0 overflow-y-auto flex-1">
+              <CardContent className="p-0 overflow-y-auto flex-1 bg-muted/5">
                 <div className="p-4 space-y-4">
-                  <p className="text-sm font-medium text-foreground bg-muted/50 rounded-lg border border-border p-3 leading-relaxed">
+                  <p className="text-sm font-medium text-foreground bg-background rounded-xl border border-border shadow-sm p-4 leading-relaxed">
                     {getPlainEnglishSummary(selectedRow)}
                   </p>
-                  <div className="flex items-start gap-3 rounded-lg border bg-card p-3">
-                    <Clock className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                  <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-card p-3 shadow-sm">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800/50">
+                      <Clock className="h-4 w-4 text-slate-600 dark:text-slate-400" />
+                    </div>
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">When</p>
                       <p className="text-sm font-medium mt-0.5">{formatDateTime(selectedRow.created_at)}</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3 rounded-lg border bg-card p-3">
-                    <User className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                  <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-card p-3 shadow-sm">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                      <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    </div>
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Who</p>
                       <p className="text-sm font-medium mt-0.5">{selectedRow.user_name}</p>
@@ -638,15 +823,17 @@ export default function AuditPage() {
                     </div>
                   </div>
                   {selectedRow.session_id && (
-                    <div className="flex items-start gap-3 rounded-lg border bg-card p-3">
-                      <Hash className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                    <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-card p-3 shadow-sm">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-100 dark:bg-violet-900/30">
+                        <Hash className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+                      </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Session ID</p>
                         <p className="text-xs font-mono break-all mt-0.5">{selectedRow.session_id}</p>
                         <Button
                           variant="link"
                           size="sm"
-                          className="h-auto p-0 mt-1 text-green-600"
+                          className="h-auto p-0 mt-1 text-emerald-600 dark:text-emerald-400 font-medium"
                           onClick={() => { setSessionIdFilter(selectedRow.session_id!); setPage(1); setSelectedRow(null); }}
                         >
                           Filter by this session
@@ -654,16 +841,20 @@ export default function AuditPage() {
                       </div>
                     </div>
                   )}
-                  <div className="flex items-start gap-3 rounded-lg border bg-card p-3">
-                    <Activity className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                  <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-card p-3 shadow-sm">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/30">
+                      <Activity className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                    </div>
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Action</p>
-                      <p className="text-sm font-medium mt-0.5">{formatAction(selectedRow.action)}</p>
+                      <p className="mt-0.5"><span className={getActionBadgeClass(selectedRow.action)}>{formatAction(selectedRow.action)}</span></p>
                     </div>
                   </div>
                   {(selectedRow.entity_type || selectedRow.entity_id) && (
-                    <div className="flex items-start gap-3 rounded-lg border bg-card p-3">
-                      <FileText className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                    <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-card p-3 shadow-sm">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-100 dark:bg-teal-900/30">
+                        <FileText className="h-4 w-4 text-teal-600 dark:text-teal-400" />
+                      </div>
                       <div>
                         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Entity</p>
                         <p className="text-sm mt-0.5">
@@ -674,7 +865,7 @@ export default function AuditPage() {
                       </div>
                     </div>
                   )}
-                  <div className="rounded-lg border bg-card p-3">
+                  <div className="rounded-xl border border-border/60 bg-card p-3 shadow-sm">
                     <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Details</p>
                     {selectedRow.details && typeof selectedRow.details === 'object' && Object.keys(selectedRow.details).length > 0 ? (
                       formatDetails(selectedRow.details)

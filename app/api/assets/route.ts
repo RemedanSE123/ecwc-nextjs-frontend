@@ -86,7 +86,7 @@ function getParamValues(searchParams: URLSearchParams, key: string): string[] {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const category = searchParams.get('category') || undefined;
+    const categoryArr = getParamValues(searchParams, 'category');
     const categoryGroup = searchParams.get('category_group') || undefined;
     const statusArr = getParamValues(searchParams, 'status');
     const project_locationArr = getParamValues(searchParams, 'project_location');
@@ -104,11 +104,17 @@ export async function GET(request: NextRequest) {
     const params: (string | number)[] = [];
     let idx = 1;
 
-    const dbCategory = categoryGroup ? SLUG_TO_DB_CATEGORY[categoryGroup] : category;
-    if (dbCategory) {
-      conditions.push(`category = $${idx}`);
-      params.push(dbCategory);
-      idx++;
+    if (categoryGroup) {
+      const dbCategory = SLUG_TO_DB_CATEGORY[categoryGroup];
+      if (dbCategory) {
+        conditions.push(`category = $${idx}`);
+        params.push(dbCategory);
+        idx++;
+      }
+    } else if (categoryArr.length > 0) {
+      conditions.push(`(category = ${categoryArr.map((_, i) => `$${idx + i}`).join(' OR category = ')})`);
+      categoryArr.forEach((v) => params.push(v));
+      idx += categoryArr.length;
     }
     if (statusArr.length > 0) {
       conditions.push(`(status = ${statusArr.map((_, i) => `$${idx + i}`).join(' OR status = ')})`);

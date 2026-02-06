@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useMemo } from 'react';
 import { FULL_ACCESS_PHONES, NO_OVERVIEW_PHONES, ASSETS_AND_MAP_PHONES } from '@/lib/auth';
@@ -28,7 +29,6 @@ import {
   Megaphone,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 
 function BrIcon({ className }: { className?: string }) {
   return <span className={className} style={{ fontWeight: 700, fontSize: '0.75rem' }}>Br</span>;
@@ -59,7 +59,7 @@ const navigation: NavItem[] = [
     ],
   },
   {
-    name: 'Forms',
+    name: 'Time Sheet',
     href: '/forms',
     icon: ClipboardList,
     children: [
@@ -169,51 +169,54 @@ export default function Sidebar({ isCollapsed = false, onToggleCollapse, userPho
   };
 
   return (
-    <div className={`${isCollapsed ? 'w-14' : 'w-52'} bg-gradient-to-b from-[#16A34A] via-[#15803D] to-[#166534] text-white flex flex-col h-screen transition-all duration-300 ease-in-out shadow-xl relative overflow-hidden font-[var(--font-dm-sans)]`}>
+    <div className={`${isCollapsed ? 'w-14' : 'w-52'} bg-gradient-to-b from-[#0d5c32] via-[#0a4d28] to-[#064320] text-white flex flex-col h-screen transition-all duration-300 ease-in-out shadow-xl relative overflow-hidden font-[var(--font-dm-sans)]`}>
       
       {/* Subtle Dot Pattern (Texture) */}
-      <div className="absolute inset-0 opacity-5">
+      <div className="absolute inset-0 opacity-[0.06]">
         <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_20%,_white_2px,_transparent_2px)] bg-[length:40px_40px]"></div>
       </div>
       
       {/* Soft Glow / Light Blob */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
       
-      {/* Header Section */}
-      <div className="h-[3.675rem] border-b border-white/10 flex items-center relative z-10">
-        {/* Dark Header Background */}
-        <div className="absolute inset-0 bg-black/20"></div>
-        <div className="relative w-full h-full px-3 flex items-center">
-          {!isCollapsed && (
-            <div className="flex flex-col">
-              <span className="text-[14px] font-extrabold text-white leading-tight tracking-wide drop-shadow-md">
-                ECWC PEMS
-              </span>
-              <span className="text-[9px] text-green-200/80 leading-tight">
-                Plant Equipment Management System
-              </span>
-            </div>
-          )}
+      {/* Header: full-size logo centered with left/right accents */}
+      <div className="h-[3.675rem] border-b border-white/20 flex items-center relative z-10 overflow-hidden">
+        {/* Left accent */}
+        <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white/15 via-white/5 to-transparent" />
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-px h-3/4 bg-gradient-to-b from-transparent via-white/30 to-transparent" />
+        {/* Logo */}
+        <div className="absolute inset-0 flex items-center justify-center pl-2 pr-10">
+          <div className="relative w-full h-full">
+            <Image
+              src="/slogo.png"
+              alt="ECWC"
+              fill
+              sizes="(min-width: 208px) 192px, 52px"
+              className="object-contain object-center"
+              priority
+            />
+          </div>
         </div>
-        
-        {/* Collapse Toggle Button */}
+        {/* Right accent */}
+        <div className="absolute right-10 top-0 bottom-0 w-8 bg-gradient-to-l from-white/15 via-white/5 to-transparent" />
+        <div className="absolute right-10 top-1/2 -translate-y-1/2 w-px h-3/4 bg-gradient-to-b from-transparent via-white/30 to-transparent" />
         {onToggleCollapse && (
           <button
             onClick={onToggleCollapse}
-            className="absolute top-1/2 -translate-y-1/2 right-1.5 p-1 rounded-md hover:bg-white/10 transition-all duration-200"
+            className="absolute top-1/2 -translate-y-1/2 right-2 p-1.5 rounded hover:bg-white/10 transition-colors z-10"
             title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             {isCollapsed ? (
-              <ChevronsRight className="w-3.5 h-3.5 text-white/70" />
+              <ChevronsRight className="w-4 h-4 text-white/80" />
             ) : (
-              <ChevronsLeft className="w-3.5 h-3.5 text-white/70" />
+              <ChevronsLeft className="w-4 h-4 text-white/80" />
             )}
           </button>
         )}
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-2.5 py-3 relative z-10">
+      <nav className="flex-1 overflow-y-auto overflow-x-hidden px-2.5 py-3 relative z-10 sidebar-scrollbar">
         <ul className="space-y-0.5">
           {visibleNav.map((item) => {
             const hasChildren = item.children && item.children.length > 0;

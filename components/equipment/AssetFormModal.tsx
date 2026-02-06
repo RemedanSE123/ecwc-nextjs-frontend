@@ -8,6 +8,8 @@ import AssetForm from './AssetForm';
 interface AssetFormModalProps {
   asset?: Asset | null;
   defaultCategory?: string;
+  /** Category group slug (e.g. plant-equipment) for fetching description/other options by category. */
+  categoryGroup?: string;
   onSuccess: (asset: Asset) => void;
   onClose: () => void;
 }
@@ -15,12 +17,13 @@ interface AssetFormModalProps {
 export default function AssetFormModal({
   asset,
   defaultCategory,
+  categoryGroup,
   onSuccess,
   onClose,
 }: AssetFormModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="absolute inset-0" onClick={onClose} />
       <div
         className="relative z-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl border bg-background shadow-xl"
         onClick={(e) => e.stopPropagation()}
@@ -37,6 +40,7 @@ export default function AssetFormModal({
           <AssetForm
             asset={asset}
             defaultCategory={defaultCategory}
+            categoryGroup={categoryGroup}
             onSuccess={(a) => {
               onSuccess(a);
               onClose();

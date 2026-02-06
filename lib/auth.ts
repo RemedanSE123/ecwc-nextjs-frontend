@@ -35,6 +35,14 @@ export const NO_OVERVIEW_PHONES = ['0912293712'];
 /** Only ECWC Assets (expanded) + Compound Map */
 export const ASSETS_AND_MAP_PHONES = ['0927763207', '0921133084', '0980194463'];
 
+/** Can only view announcements, not create/send (Biruh, Tilaye, Hagos). */
+export const ANNOUNCEMENT_VIEW_ONLY_PHONES = ['0927763207', '0921133084', '0980194463'];
+
+export function canSendAnnouncement(phone: string): boolean {
+  const normalized = phone.replace(/\s/g, '');
+  return !ANNOUNCEMENT_VIEW_ONLY_PHONES.includes(normalized);
+}
+
 export function validateUser(phone: string, password: string): AuthUser | null {
   const normalizedPhone = phone.replace(/\s/g, '');
   const account = AUTH_ACCOUNTS.find(

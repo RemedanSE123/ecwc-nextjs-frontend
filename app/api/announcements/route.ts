@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { getUserFromRequest } from '@/lib/audit';
+import { canSendAnnouncement } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -62,6 +63,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Unauthorized', detail: 'Valid X-User-Phone and X-User-Name required' },
         { status: 401 }
+      );
+    }
+    if (!canSendAnnouncement(user.phone)) {
+      return NextResponse.json(
+        { error: 'Forbidden', detail: 'You can only view announcements, not create them.' },
+        { status: 403 }
       );
     }
     const body = await request.json();

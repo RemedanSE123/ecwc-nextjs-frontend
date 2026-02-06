@@ -89,7 +89,7 @@ export default function DashboardPage() {
   const underRepair = getStatusCount(stats?.byStatus ?? [], /repair|maintenance/i);
   const idle = getStatusCount(stats?.byStatus ?? [], /idle|available/i);
   const downAccident = getStatusCount(stats?.byStatus ?? [], /down|accident|broken|out/i);
-  const activeSites = stats?.byLocation?.filter((l) => l.project_location !== "Unassigned")?.length ?? 0;
+  const activeSites = stats?.uniqueProjectSites ?? stats?.byLocation?.filter((l) => l.project_location !== "Unassigned")?.length ?? 0;
   const opPct = total ? Math.round((operational / total) * 100) : 0;
 
   const handleExportExcel = () => {

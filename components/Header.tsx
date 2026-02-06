@@ -2,10 +2,10 @@
 
 import { Search, Bell, User, ChevronDown, Settings, LogOut, Menu, Megaphone } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { getSession, clearSession } from '@/lib/auth';
+import { getUnreadCount, markAnnouncementsAsSeen } from '@/lib/announcements-seen';
 
 interface AnnouncementItem {
   id: number;
@@ -35,6 +35,7 @@ interface HeaderProps {
 
 export default function Header({ sidebarCollapsed = false }: HeaderProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [searchQuery, setSearchQuery] = useState('');
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -42,6 +43,7 @@ export default function Header({ sidebarCollapsed = false }: HeaderProps) {
   const [userPhone, setUserPhone] = useState<string>('');
   const [announcements, setAnnouncements] = useState<AnnouncementItem[]>([]);
   const [announcementsLoading, setAnnouncementsLoading] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const notificationsRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
@@ -53,15 +55,42 @@ export default function Header({ sidebarCollapsed = false }: HeaderProps) {
     }
   }, []);
 
+  // Fetch announcements for dropdown and for unread badge (need list to compute count)
   useEffect(() => {
     if (!notificationsOpen) return;
+    setUnreadCount(0); // clear badge as soon as user opens dropdown (mark as seen after fetch)
     setAnnouncementsLoading(true);
-    fetch('/api/announcements?limit=5')
+    fetch('/api/announcements?limit=30')
       .then((res) => (res.ok ? res.json() : { data: [] }))
-      .then((json) => setAnnouncements(json.data ?? []))
+      .then((json) => {
+        const data = json.data ?? [];
+        setAnnouncements(data);
+        if (data.length > 0) {
+          markAnnouncementsAsSeen(data.map((a: AnnouncementItem) => a.id));
+          setUnreadCount(0);
+        }
+      })
       .catch(() => setAnnouncements([]))
       .finally(() => setAnnouncementsLoading(false));
   }, [notificationsOpen]);
+
+  // Fetch announcements for unread badge when dropdown is closed (and on route change so badge updates after visiting /announcements)
+  useEffect(() => {
+    if (notificationsOpen) return;
+    fetch('/api/announcements?limit=50')
+      .then((res) => (res.ok ? res.json() : { data: [] }))
+      .then((json) => {
+        const data = json.data ?? [];
+        setUnreadCount(getUnreadCount(data));
+      })
+      .catch(() => setUnreadCount(0));
+  }, [notificationsOpen, pathname]);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = searchQuery.trim();
+    if (q) router.push(`/equipment/dashboard?search=${encodeURIComponent(q)}`);
+  };
 
   const handleSignOut = async () => {
     const session = getSession();
@@ -107,37 +136,34 @@ export default function Header({ sidebarCollapsed = false }: HeaderProps) {
         sidebarCollapsed ? 'lg:left-14' : 'lg:left-52'
       }`}
     >
-      {/* Left - Logo */}
-      <div className="flex items-center">
-        <div className="relative w-20 h-12">
-          <Image
-            src="/flogo.png"
-            alt="ECWC Logo"
-            fill
-            sizes="80px"
-            className="object-contain drop-shadow-sm"
-            priority
-            quality={100}
-          />
+      {/* Left - ECWC + PEMS subtitle */}
+      <div className="flex items-center min-w-0 flex-1 justify-start">
+        <div className="flex flex-col min-w-0">
+          <span className="text-[13px] font-bold text-gray-900 dark:text-gray-100 leading-tight tracking-tight truncate">
+            Ethiopian Construction Works Corporation
+          </span>
+          <span className="text-[10px] text-gray-500 dark:text-gray-400 leading-tight">
+            Plant Equipment Management System
+          </span>
         </div>
       </div>
 
-      {/* Search Section - Centered */}
-      <div className="flex-1 flex justify-center px-3">
-        <div className="relative group w-full max-w-sm">
+      {/* Search - visually centered in header */}
+      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md px-4 pointer-events-none">
+        <form onSubmit={handleSearch} className="pointer-events-auto relative group">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 group-focus-within:text-green-600 transition-colors pointer-events-none z-10" />
           <input
             type="text"
-            placeholder="Search equipment, requests..."
+            placeholder="Search equipment, asset no., make, model..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-9 pr-9 py-1.5 text-[11px] border border-gray-200 rounded-full bg-white shadow-sm hover:shadow-md focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-green-600/20 focus:border-green-600 transition-all duration-200 text-gray-900 placeholder:text-gray-400"
           />
-        </div>
+        </form>
       </div>
 
       {/* Right Actions - Compact */}
-      <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
+      <div className="flex items-center gap-2 flex-shrink-0 flex-1 justify-end">
         {/* Notifications */}
         <div className="relative" ref={notificationsRef}>
           <button
@@ -146,8 +172,13 @@ export default function Header({ sidebarCollapsed = false }: HeaderProps) {
             aria-label="Announcements"
           >
             <Bell className="w-4 h-4" />
-            {announcements.length > 0 && (
-              <span className="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-green-500 rounded-full border border-white" title="Announcements" />
+            {unreadCount > 0 && (
+              <span
+                className="absolute -top-0.5 -right-0.5 min-w-[1.25rem] h-5 px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-semibold border-2 border-white dark:border-gray-900"
+                title={`${unreadCount} unread announcement${unreadCount !== 1 ? 's' : ''}`}
+              >
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
             )}
           </button>
 
