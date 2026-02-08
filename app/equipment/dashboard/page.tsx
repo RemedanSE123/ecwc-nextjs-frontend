@@ -47,6 +47,10 @@ import {
   ChevronDown,
   Drill,
   Factory,
+  BarChart3,
+  MapPin,
+  PieChart as PieChartIcon,
+  Activity,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -107,7 +111,7 @@ function ChartTooltip({
   const name = String(p?.name ?? '');
   const text = render ? render(value, name, p?.payload) : `${name}: ${value.toLocaleString()}`;
   return (
-    <div className="rounded-lg border border-border bg-background px-3 py-2 shadow-lg text-xs font-medium text-foreground">
+    <div className="rounded-xl border border-border/80 bg-background/95 backdrop-blur-sm px-3 py-2.5 shadow-xl text-xs font-medium text-foreground ring-1 ring-black/5">
       {text}
     </div>
   );
@@ -129,7 +133,7 @@ function CategoryCard({ slug, name, icon: Icon, color, stats, pct, index }: Cate
   const card = (
     <Link href={`/equipment/${slug}`} className="block">
       <Card
-        className="overflow-visible border border-border/80 shadow-sm hover:shadow-md transition-all duration-300 group relative bg-card rounded-lg"
+        className="overflow-visible border border-border/80 shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 group relative bg-card rounded-xl"
         style={{ borderLeftWidth: '4px', borderLeftColor: color }}
       >
         <CardContent className="p-0">
@@ -554,15 +558,18 @@ export default function EquipmentDashboardPage() {
       fill: getStatusColor(s?.status),
     })) ?? [];
 
+  /* Attractive 6-color palette for location chart (teal → blue → violet → rose → amber → emerald) */
+  const LOCATION_CHART_COLORS = ['#0d9488', '#2563eb', '#7c3aed', '#e11d48', '#d97706', '#059669'];
   const locationChartData =
     report?.locationBreakdown
       ?.filter((l) => l.location !== 'Unassigned' && (l.location?.trim() ?? '') !== '')
-      .slice(0, 8)
+      .sort((a, b) => (b.total ?? 0) - (a.total ?? 0))
+      .slice(0, 6)
       .map((l, i) => ({
         name: (l.location ?? '').length > 18 ? (l.location ?? '').slice(0, 16) + '…' : l.location ?? '',
         fullName: l.location ?? '',
         count: l.total ?? 0,
-        fill: COLORS[i % COLORS.length],
+        fill: LOCATION_CHART_COLORS[i % LOCATION_CHART_COLORS.length],
       })) ?? [];
 
   return (
@@ -591,9 +598,9 @@ export default function EquipmentDashboardPage() {
                     </div>
 
                     {/* Column 2: Total Fleet — primary accent only (count-up animation) */}
-                    <div className="flex flex-col items-center justify-center rounded-2xl bg-primary/10 dark:bg-primary/15 border border-primary/20 px-5 py-6 sm:px-10 sm:py-8 min-w-0">
+                    <div className="flex flex-col items-center justify-center rounded-2xl bg-primary/10 dark:bg-primary/15 border border-primary/20 px-5 py-6 sm:px-10 sm:py-8 min-w-0 shadow-inner ring-2 ring-primary/10">
                       <span className="text-xs sm:text-sm font-bold uppercase tracking-[0.2em] text-muted-foreground">Total Fleet</span>
-                      <p className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold tabular-nums text-foreground mt-2 tracking-tight">
+                      <p className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold tabular-nums text-foreground mt-2 tracking-tight drop-shadow-sm">
                         {animatedTotal.toLocaleString()}
                       </p>
                       <span className="text-sm text-muted-foreground mt-1.5 font-medium">Equipment units</span>
@@ -743,29 +750,44 @@ export default function EquipmentDashboardPage() {
             )}
           </div>
 
-          {/* Tabs: Overview | Charts | Reports | All Assets — centered, larger */}
+          {/* Tabs: Overview | Charts | Reports | All Assets — polished pill style */}
           <Tabs defaultValue="overview" className="space-y-3">
             <div className="flex justify-start">
-              <TabsList className="inline-flex bg-muted/60 p-1.5 rounded-xl text-base">
-                <TabsTrigger value="overview" className="rounded-lg px-5 py-2.5 text-sm font-semibold data-[state=active]:bg-[#16A34A] data-[state=active]:text-white data-[state=active]:shadow">
+              <TabsList className="inline-flex bg-muted/70 dark:bg-muted/40 p-1.5 rounded-2xl text-base shadow-inner border border-border/50">
+                <TabsTrigger
+                  value="overview"
+                  className="rounded-xl px-5 py-2.5 text-sm font-semibold transition-all duration-200 data-[state=active]:bg-[#16A34A] data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:scale-[1.02] hover:bg-muted"
+                >
                   Overview
                 </TabsTrigger>
-                <TabsTrigger value="charts" className="rounded-lg px-5 py-2.5 text-sm font-semibold data-[state=active]:bg-[#16A34A] data-[state=active]:text-white data-[state=active]:shadow">
+                <TabsTrigger
+                  value="charts"
+                  className="rounded-xl px-5 py-2.5 text-sm font-semibold transition-all duration-200 data-[state=active]:bg-[#16A34A] data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:scale-[1.02] hover:bg-muted"
+                >
                   Charts & Graphs
                 </TabsTrigger>
-                <TabsTrigger value="reports" className="rounded-lg px-5 py-2.5 text-sm font-semibold data-[state=active]:bg-[#16A34A] data-[state=active]:text-white data-[state=active]:shadow">
+                <TabsTrigger
+                  value="reports"
+                  className="rounded-xl px-5 py-2.5 text-sm font-semibold transition-all duration-200 data-[state=active]:bg-[#16A34A] data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:scale-[1.02] hover:bg-muted"
+                >
                   Report
                 </TabsTrigger>
-                <TabsTrigger value="all-assets" className="rounded-lg px-5 py-2.5 text-sm font-semibold data-[state=active]:bg-[#16A34A] data-[state=active]:text-white data-[state=active]:shadow">
+                <TabsTrigger
+                  value="all-assets"
+                  className="rounded-xl px-5 py-2.5 text-sm font-semibold transition-all duration-200 data-[state=active]:bg-[#16A34A] data-[state=active]:text-white data-[state=active]:shadow-md data-[state=active]:scale-[1.02] hover:bg-muted"
+                >
                   All Assets
                 </TabsTrigger>
               </TabsList>
             </div>
 
             <TabsContent value="overview" className="space-y-3">
-              <Card className="shadow-md">
-                <CardHeader className="py-3">
-                  <CardTitle className="text-sm">Top Locations</CardTitle>
+              <Card className="shadow-lg rounded-xl border border-border/80 overflow-hidden">
+                <CardHeader className="py-3.5 bg-gradient-to-r from-emerald-50/80 to-green-50/60 dark:from-emerald-950/30 dark:to-green-950/20 border-b border-border/60">
+                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    Top Locations
+                  </CardTitle>
                   <CardDescription>Assets by project location (12 visible, scrollable). Total split by Plant, Machinery, Heavy, Light, Factory, Auxiliary; then OP, Idle, Down.</CardDescription>
                 </CardHeader>
                 <CardContent className="p-0">
@@ -1029,145 +1051,153 @@ export default function EquipmentDashboardPage() {
 
             <TabsContent value="charts" className="space-y-4 overflow-hidden">
               {/* Column 1: Bar charts | Column 2: Pie & Donuts — no duplicate data */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 min-w-0">
-                {/* ——— COLUMN 1: Bar charts only ——— */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+                className="grid grid-cols-1 lg:grid-cols-2 gap-4 min-w-0"
+              >
+                {/* ——— COLUMN 1: Category Distribution + Project Locations ——— */}
                 <div className="space-y-4 min-w-0">
-                  <Card className="shadow-lg overflow-hidden border-0 bg-gradient-to-br from-sky-50/50 to-blue-50/30 dark:from-sky-950/20 dark:to-blue-950/10 min-w-0">
-                  <CardHeader className="py-3 border-b bg-sky-50/50 dark:bg-sky-950/30">
-                    <CardTitle className="text-sm font-semibold text-sky-900 dark:text-sky-100">Equipment Categories (Bar)</CardTitle>
-                    <CardDescription>Asset count per category</CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-3 min-w-0 overflow-hidden">
-                    <div className="h-[260px] min-w-0 w-full">
-                      {loading ? (
-                        <Skeleton className="h-full w-full" />
-                      ) : chartData.length ? (
-                        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                          <BarChart data={chartData} margin={{ top: 12, right: 12, left: 0, bottom: 4 }}>
-                            <defs>
-                              {chartData.map((_, i) => (
-                                <linearGradient key={i} id={`cat-bar-grad-${i}`} x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="0%" stopColor={COLORS[i % COLORS.length]} stopOpacity={1} />
-                                  <stop offset="100%" stopColor={COLORS[i % COLORS.length]} stopOpacity={0.7} />
-                                </linearGradient>
-                              ))}
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                            <XAxis dataKey="name" tick={{ fontSize: 10 }} tickLine={false} />
-                            <YAxis tick={{ fontSize: 11 }} tickLine={false} tickFormatter={(v) => Number(v).toLocaleString()} />
-                            <RechartsTooltip
-                              content={(p) => (
-                                <ChartTooltip
-                                  {...p}
-                                  render={(value, name) =>
-                                    `${name}: ${value.toLocaleString()}${total ? ` (${((value / total) * 100).toFixed(1)}%)` : ''}`
-                                  }
-                                />
-                              )}
-                            />
-                            <Bar dataKey="count" radius={[6, 6, 0, 0]} maxBarSize={40}>
-                              {chartData.map((entry, i) => (
-                                <Cell key={entry.name ?? i} fill={`url(#cat-bar-grad-${i})`} stroke="rgba(255,255,255,0.4)" strokeWidth={1} />
-                              ))}
-                              <LabelList dataKey="count" position="top" formatter={(v: unknown) => Number(v ?? 0).toLocaleString()} style={{ fontSize: 10, fontWeight: 600 }} />
-                            </Bar>
-                          </BarChart>
-                        </ResponsiveContainer>
-                      ) : (
-                        <div className="h-full flex items-center justify-center text-muted-foreground text-sm">No data</div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+                  {/* Category Distribution — Donut (moved from column 2) */}
+                  <Card className="shadow-xl overflow-hidden rounded-xl border-l-4 border-l-teal-500 border border-teal-200/50 dark:border-teal-800/40 bg-gradient-to-br from-emerald-50/70 to-teal-50/50 dark:from-emerald-950/30 dark:to-teal-950/20 min-w-0 hover:shadow-2xl transition-shadow duration-300">
+                    <CardHeader className="py-3.5 border-b border-teal-200/50 dark:border-teal-800/40 bg-gradient-to-r from-teal-50/80 to-emerald-50/60 dark:from-teal-950/40 dark:to-emerald-950/30">
+                      <CardTitle className="text-sm font-semibold text-emerald-900 dark:text-emerald-100 flex items-center gap-2">
+                        <PieChartIcon className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                        Category Distribution
+                      </CardTitle>
+                      <CardDescription>Share of total assets by category</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-3 min-w-0 overflow-hidden">
+                      <div className="flex gap-4 h-[260px] min-w-0 w-full">
+                        {loading ? (
+                          <Skeleton className="flex-1 h-full" />
+                        ) : pieData.length ? (
+                          <>
+                            <div className="flex-1 min-w-0" style={{ filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.12))' }}>
+                              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                                <PieChart margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
+                                  <defs>
+                                    {pieData.map((d, i) => (
+                                      <linearGradient key={i} id={`donut-grad-${i}`} x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor={d.fill} stopOpacity={1} />
+                                        <stop offset="50%" stopColor={d.fill} stopOpacity={0.85} />
+                                        <stop offset="100%" stopColor={d.fill} stopOpacity={0.65} />
+                                      </linearGradient>
+                                    ))}
+                                  </defs>
+                                  <Pie
+                                    data={pieData.map((d, i) => ({ ...d, fill: `url(#donut-grad-${i})` }))}
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={48}
+                                    outerRadius={78}
+                                    paddingAngle={4}
+                                    dataKey="value"
+                                    nameKey="name"
+                                  >
+                                    {pieData.map((_, i) => (
+                                      <Cell key={i} fill={`url(#donut-grad-${i})`} stroke="rgba(255,255,255,0.9)" strokeWidth={2} />
+                                    ))}
+                                  </Pie>
+                                  <RechartsTooltip
+                                    content={(props) => (
+                                      <ChartTooltip
+                                        {...props}
+                                        render={(value, name) => {
+                                          const pct = total && value > 0 ? ((value / total) * 100).toFixed(1) : '0';
+                                          return `${name}: ${value.toLocaleString()} (${pct}%)`;
+                                        }}
+                                      />
+                                    )}
+                                  />
+                                </PieChart>
+                              </ResponsiveContainer>
+                            </div>
+                            <div className="flex flex-col justify-center gap-1.5 w-[200px] shrink-0 border-l border-border/80 pl-3 overflow-y-auto">
+                              {pieData.map((d, i) => {
+                                const pct = total && d.value > 0 ? ((d.value / total) * 100).toFixed(1) : '0';
+                                return (
+                                  <div key={i} className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-2 text-xs min-w-0">
+                                    <span className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: d.fill }} />
+                                    <span className="font-medium text-foreground truncate">{d.name}</span>
+                                    <span className="tabular-nums font-semibold text-foreground">{d.value.toLocaleString()}</span>
+                                    <span className="tabular-nums text-muted-foreground shrink-0">({pct}%)</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </>
+                        ) : (
+                          <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">No data</div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
 
-                  <Card className="shadow-lg overflow-hidden border-0 bg-gradient-to-br from-amber-50/50 to-orange-50/30 dark:from-amber-950/20 dark:to-orange-950/10 min-w-0">
-                  <CardHeader className="py-3 border-b bg-amber-50/50 dark:bg-amber-950/30">
-                    <CardTitle className="text-sm font-semibold text-amber-900 dark:text-amber-100">Status Distribution</CardTitle>
-                    <CardDescription>Assets by status (OP, Idle, Down, etc.)</CardDescription>
+                {/* Top Project Locations - Horizontal Bar (spans 2 columns, top 6) — attractive colors & graph */}
+                <Card className="shadow-xl overflow-hidden rounded-xl border-l-4 border-l-violet-500 border border-violet-200/50 dark:border-violet-800/40 bg-gradient-to-br from-violet-50/70 via-purple-50/40 to-fuchsia-50/30 dark:from-violet-950/30 dark:via-purple-950/20 dark:to-fuchsia-950/10 min-w-0 lg:col-span-2 hover:shadow-2xl transition-shadow duration-300">
+                  <CardHeader className="py-3.5 border-b border-violet-200/50 dark:border-violet-800/40 bg-gradient-to-r from-violet-100/80 to-purple-100/60 dark:from-violet-900/50 dark:to-purple-900/40">
+                    <CardTitle className="text-sm font-semibold text-violet-900 dark:text-violet-100 flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+                      Asset Count by Project Location
+                    </CardTitle>
+                    <CardDescription>Top 6 sites by number of deployed assets</CardDescription>
                   </CardHeader>
                   <CardContent className="pt-3 min-w-0 overflow-hidden">
-                    <div className="h-[260px] min-w-0 w-full">
+                    <div className="h-[260px] min-w-0 w-full flex flex-col">
                       {loading ? (
-                        <Skeleton className="h-full w-full" />
-                      ) : statusChartData.length ? (
-                        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                          <BarChart data={statusChartData} margin={{ top: 12, right: 12, left: 0, bottom: 4 }}>
-                            <defs>
-                              {statusChartData.map((_, i) => (
-                                <linearGradient key={i} id={`status-bar-grad-${i}`} x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="0%" stopColor={statusChartData[i]?.fill ?? STATUS_COLORS.default} stopOpacity={1} />
-                                  <stop offset="100%" stopColor={statusChartData[i]?.fill ?? STATUS_COLORS.default} stopOpacity={0.7} />
-                                </linearGradient>
-                              ))}
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                            <XAxis dataKey="name" tick={{ fontSize: 9 }} tickLine={false} angle={-25} textAnchor="end" height={45} />
-                            <YAxis tick={{ fontSize: 11 }} tickLine={false} tickFormatter={(v) => Number(v).toLocaleString()} />
-                            <RechartsTooltip
-                              content={(p) => (
-                                <ChartTooltip
-                                  {...p}
-                                  render={(value, name) => `${name}: ${value.toLocaleString()} assets`}
-                                />
-                              )}
-                            />
-                            <Bar dataKey="count" radius={[6, 6, 0, 0]} maxBarSize={36}>
-                              {statusChartData.map((entry, i) => (
-                                <Cell key={entry.name ?? i} fill={`url(#status-bar-grad-${i})`} stroke="rgba(255,255,255,0.4)" strokeWidth={1} />
-                              ))}
-                              <LabelList dataKey="count" position="top" formatter={(v: unknown) => Number(v ?? 0).toLocaleString()} style={{ fontSize: 9, fontWeight: 600 }} />
-                            </Bar>
-                          </BarChart>
-                        </ResponsiveContainer>
-                      ) : (
-                        <div className="h-full flex items-center justify-center text-muted-foreground text-sm">No data</div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Top Project Locations - Horizontal Bar */}
-                <Card className="shadow-lg overflow-hidden border-0 bg-gradient-to-br from-violet-50/50 to-purple-50/30 dark:from-violet-950/20 dark:to-purple-950/10 min-w-0">
-                  <CardHeader className="py-3 border-b bg-violet-50/50 dark:bg-violet-950/30">
-                    <CardTitle className="text-sm font-semibold text-violet-900 dark:text-violet-100">Top Project Locations</CardTitle>
-                    <CardDescription>Assets deployed per site · top 8</CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-3 min-w-0 overflow-hidden">
-                    <div className="h-[260px] min-w-0 w-full">
-                      {loading ? (
-                        <Skeleton className="h-full w-full" />
+                        <Skeleton className="flex-1 min-h-0 w-full" />
                       ) : locationChartData.length ? (
-                        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                          <BarChart data={locationChartData} layout="vertical" margin={{ top: 8, right: 40, left: 0, bottom: 4 }}>
-                            <defs>
-                              {locationChartData.map((_, i) => (
-                                <linearGradient key={i} id={`loc-bar-grad-${i}`} x1="0" y1="0" x2="1" y2="0">
-                                  <stop offset="0%" stopColor={locationChartData[i]?.fill ?? COLORS[i % COLORS.length]} stopOpacity={0.9} />
-                                  <stop offset="100%" stopColor={locationChartData[i]?.fill ?? COLORS[i % COLORS.length]} stopOpacity={0.6} />
-                                </linearGradient>
-                              ))}
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
-                            <XAxis type="number" tick={{ fontSize: 11 }} tickLine={false} tickFormatter={(v) => Number(v).toLocaleString()} />
-                            <YAxis type="category" dataKey="name" width={90} tick={{ fontSize: 10 }} tickLine={false} />
-                            <RechartsTooltip
-                              content={(p) => (
-                                <ChartTooltip
-                                  {...p}
-                                  render={(value, _n, payload) => `${(payload?.fullName as string) ?? ''}: ${value.toLocaleString()} assets`}
+                        <>
+                          <div className="flex-1 min-h-0 w-full rounded-lg bg-white/50 dark:bg-black/10 p-2 ring-1 ring-violet-100/60 dark:ring-violet-500/20">
+                            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                              <BarChart data={locationChartData} layout="vertical" margin={{ top: 12, right: 48, left: 8, bottom: 12 }}>
+                                <defs>
+                                  {locationChartData.map((_, i) => {
+                                    const c = locationChartData[i]?.fill ?? LOCATION_CHART_COLORS[i % LOCATION_CHART_COLORS.length];
+                                    return (
+                                      <linearGradient key={i} id={`loc-bar-grad-${i}`} x1="0" y1="0" x2="1" y2="0">
+                                        <stop offset="0%" stopColor={c} stopOpacity={1} />
+                                        <stop offset="50%" stopColor={c} stopOpacity={0.85} />
+                                        <stop offset="100%" stopColor={c} stopOpacity={0.6} />
+                                      </linearGradient>
+                                    );
+                                  })}
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(139,92,246,0.18)" horizontal={false} vertical={true} />
+                                <XAxis type="number" tick={{ fontSize: 11, fill: 'hsl(var(--foreground))' }} tickLine={false} tickFormatter={(v) => Number(v).toLocaleString()} />
+                                <YAxis type="category" dataKey="name" width={0} tick={false} axisLine={false} tickLine={false} />
+                                <RechartsTooltip
+                                  content={(p) => (
+                                    <ChartTooltip
+                                      {...p}
+                                      render={(value, _n, payload) => `${(payload?.fullName as string) ?? ''}: ${value.toLocaleString()} assets`}
+                                    />
+                                  )}
                                 />
-                              )}
-                            />
-                            <Bar dataKey="count" radius={[0, 6, 6, 0]} maxBarSize={24}>
+                                <Bar dataKey="count" radius={[0, 10, 10, 0]} maxBarSize={36}>
+                                  {locationChartData.map((entry, i) => (
+                                    <Cell key={entry.name ?? i} fill={`url(#loc-bar-grad-${i})`} stroke="rgba(255,255,255,0.5)" strokeWidth={1.5} />
+                                  ))}
+                                  <LabelList dataKey="count" position="right" formatter={(v: unknown) => Number(v ?? 0).toLocaleString()} style={{ fontSize: 11, fontWeight: 700 }} />
+                                </Bar>
+                              </BarChart>
+                            </ResponsiveContainer>
+                          </div>
+                          <div className="shrink-0 border-t border-violet-200/50 dark:border-violet-800/40 pt-2 mt-1">
+                            <div className="grid grid-cols-3 gap-x-3 gap-y-1">
                               {locationChartData.map((entry, i) => (
-                                <Cell key={entry.name ?? i} fill={`url(#loc-bar-grad-${i})`} stroke="rgba(255,255,255,0.3)" strokeWidth={1} />
+                                <div key={i} className="flex items-center gap-1.5 text-xs min-w-0" title={entry.fullName}>
+                                  <span className="w-3 h-3 rounded-md shrink-0 shadow-sm" style={{ backgroundColor: entry.fill ?? LOCATION_CHART_COLORS[i % LOCATION_CHART_COLORS.length] }} />
+                                  <span className="text-foreground/90 truncate font-medium">{entry.fullName}</span>
+                                </div>
                               ))}
-                              <LabelList dataKey="count" position="right" formatter={(v: unknown) => Number(v ?? 0).toLocaleString()} style={{ fontSize: 10, fontWeight: 600 }} />
-                            </Bar>
-                          </BarChart>
-                        </ResponsiveContainer>
+                            </div>
+                          </div>
+                        </>
                       ) : (
-                        <div className="h-full flex items-center justify-center text-muted-foreground text-sm">No location data</div>
+                        <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">No location data</div>
                       )}
                     </div>
                   </CardContent>
@@ -1273,9 +1303,12 @@ export default function EquipmentDashboardPage() {
                   </Card>
 
                   {/* 2. Down in Detail — Donut */}
-                  <Card className="shadow-lg overflow-hidden border-0 bg-gradient-to-br from-destructive/5 via-card to-red-50/20 dark:from-destructive/10 dark:to-red-950/20 min-w-0">
-                    <CardHeader className="py-3 border-b bg-destructive/5 dark:bg-destructive/10">
-                      <CardTitle className="text-sm font-semibold text-foreground">Down in Detail</CardTitle>
+                  <Card className="shadow-xl overflow-hidden rounded-xl border-l-4 border-l-rose-500 border border-rose-200/50 dark:border-rose-800/40 bg-gradient-to-br from-destructive/5 via-card to-red-50/30 dark:from-destructive/10 dark:to-red-950/25 min-w-0 hover:shadow-2xl transition-shadow duration-300">
+                    <CardHeader className="py-3.5 border-b border-rose-200/50 dark:border-rose-800/40 bg-gradient-to-r from-rose-50/80 to-red-50/60 dark:from-rose-950/40 dark:to-red-950/30">
+                      <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+                        <PieChartIcon className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+                        Down in Detail
+                      </CardTitle>
                       <CardDescription>Out-of-service breakdown</CardDescription>
                     </CardHeader>
                     <CardContent className="pt-3 min-w-0 overflow-hidden">
@@ -1372,81 +1405,8 @@ export default function EquipmentDashboardPage() {
                       </div>
                     </CardContent>
                   </Card>
-
-                  {/* 3. Category Distribution — Donut */}
-                  <Card className="shadow-lg overflow-hidden border-0 bg-gradient-to-br from-emerald-50/50 to-teal-50/30 dark:from-emerald-950/20 dark:to-teal-950/10 min-w-0">
-                    <CardHeader className="py-3 border-b bg-emerald-50/50 dark:bg-emerald-950/30">
-                      <CardTitle className="text-sm font-semibold text-emerald-900 dark:text-emerald-100">Category Distribution</CardTitle>
-                      <CardDescription>Share of total assets by category</CardDescription>
-                    </CardHeader>
-                    <CardContent className="pt-3 min-w-0 overflow-hidden">
-                      <div className="flex gap-4 h-[260px] min-w-0 w-full">
-                        {loading ? (
-                          <Skeleton className="flex-1 h-full" />
-                        ) : pieData.length ? (
-                          <>
-                            <div className="flex-1 min-w-0" style={{ filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.12))' }}>
-                              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                                <PieChart margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
-                                  <defs>
-                                    {pieData.map((d, i) => (
-                                      <linearGradient key={i} id={`donut-grad-${i}`} x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%" stopColor={d.fill} stopOpacity={1} />
-                                        <stop offset="50%" stopColor={d.fill} stopOpacity={0.85} />
-                                        <stop offset="100%" stopColor={d.fill} stopOpacity={0.65} />
-                                      </linearGradient>
-                                    ))}
-                                  </defs>
-                                  <Pie
-                                    data={pieData.map((d, i) => ({ ...d, fill: `url(#donut-grad-${i})` }))}
-                                    cx="50%"
-                                    cy="50%"
-                                    innerRadius={48}
-                                    outerRadius={78}
-                                    paddingAngle={4}
-                                    dataKey="value"
-                                    nameKey="name"
-                                  >
-                                    {pieData.map((_, i) => (
-                                      <Cell key={i} fill={`url(#donut-grad-${i})`} stroke="rgba(255,255,255,0.9)" strokeWidth={2} />
-                                    ))}
-                                  </Pie>
-                                  <RechartsTooltip
-                                    content={(props) => (
-                                      <ChartTooltip
-                                        {...props}
-                                        render={(value, name) => {
-                                          const pct = total && value > 0 ? ((value / total) * 100).toFixed(1) : '0';
-                                          return `${name}: ${value.toLocaleString()} (${pct}%)`;
-                                        }}
-                                      />
-                                    )}
-                                  />
-                                </PieChart>
-                              </ResponsiveContainer>
-                            </div>
-                            <div className="flex flex-col justify-center gap-1.5 w-[200px] shrink-0 border-l border-border/80 pl-3 overflow-y-auto">
-                              {pieData.map((d, i) => {
-                                const pct = total && d.value > 0 ? ((d.value / total) * 100).toFixed(1) : '0';
-                                return (
-                                  <div key={i} className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-2 text-xs min-w-0">
-                                    <span className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: d.fill }} />
-                                    <span className="font-medium text-foreground truncate">{d.name}</span>
-                                    <span className="tabular-nums font-semibold text-foreground">{d.value.toLocaleString()}</span>
-                                    <span className="tabular-nums text-muted-foreground shrink-0">({pct}%)</span>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </>
-                        ) : (
-                          <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">No data</div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
                 </div>
-              </div>
+              </motion.div>
             </TabsContent>
 
             <TabsContent value="reports" className="space-y-3">
