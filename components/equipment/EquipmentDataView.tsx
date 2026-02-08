@@ -360,8 +360,8 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
     const order = assetsTableSortOrder === 'asc' ? 1 : -1;
     const strKeys = ['project_location', 'asset_no', 'description', 'category', 'status'];
     return [...data].sort((a, b) => {
-      const va = (a as Record<string, unknown>)[key];
-      const vb = (b as Record<string, unknown>)[key];
+      const va = (a as unknown as Record<string, unknown>)[key];
+      const vb = (b as unknown as Record<string, unknown>)[key];
       if (strKeys.includes(key)) {
         const sa = String(va ?? '').trim().toLowerCase();
         const sb = String(vb ?? '').trim().toLowerCase();
