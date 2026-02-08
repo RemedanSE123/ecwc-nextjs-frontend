@@ -47,16 +47,81 @@ export async function GET(request: NextRequest) {
       percentage: statusTotal ? Math.round((r.total / statusTotal) * 100) : 0,
     }));
 
-    const locationRows = await query<{ location: string; total: number }>(
-      `SELECT COALESCE(project_location, 'Unassigned') as location, COUNT(*)::int as total
+    const locationExpr = `COALESCE(NULLIF(TRIM(project_location), ''), 'Unassigned')`;
+    const locationRows = await query<{ location: string; total: number; op: number; idle: number }>(
+      `SELECT
+         ${locationExpr} AS location,
+         COUNT(*)::int AS total,
+         COUNT(*) FILTER (WHERE LOWER(TRIM(COALESCE(status, ''))) = 'op')::int AS op,
+         COUNT(*) FILTER (WHERE LOWER(TRIM(COALESCE(status, ''))) IN ('idle', '0', 'unknown'))::int AS idle
        FROM asset_master ${categoryFilter}
-       GROUP BY project_location ORDER BY total DESC LIMIT 15`,
+       GROUP BY ${locationExpr}
+       ORDER BY location ASC`,
       params
     );
-    const locationBreakdown = locationRows.map((r: { location: string; total: number }) => ({
-      location: r.location,
-      total: r.total,
-    }));
+
+    const locCatRows = await query<{ location: string; category: string; count: number }>(
+      `SELECT
+         ${locationExpr} AS location,
+         TRIM(category) AS category,
+         COUNT(*)::int AS count
+       FROM asset_master ${categoryFilter}
+       GROUP BY ${locationExpr}, TRIM(category)`,
+      params
+    );
+
+    type CatKey = 'plant' | 'machinery' | 'heavy_vehicle' | 'light_vehicles' | 'factory_equipment' | 'auxiliary';
+    function categoryToKey(cat: string): CatKey | null {
+      const n = cat.trim().toLowerCase();
+      const exact: Record<string, CatKey> = {
+        'plant': 'plant',
+        'machinery': 'machinery',
+        'heavy vehicle': 'heavy_vehicle',
+        'light vehicles & bus': 'light_vehicles',
+        'factory equipment': 'factory_equipment',
+        'auxillary': 'auxiliary',
+        'auxiliary': 'auxiliary',
+      };
+      if (exact[n]) return exact[n];
+      if (n.includes('plant')) return 'plant';
+      if (n.includes('machinery')) return 'machinery';
+      if (n.includes('heavy')) return 'heavy_vehicle';
+      if (n.includes('light') && (n.includes('vehicle') || n.includes('bus'))) return 'light_vehicles';
+      if (n.includes('factory')) return 'factory_equipment';
+      if (n.includes('auxil')) return 'auxiliary';
+      return null;
+    }
+
+    const catByLoc = new Map<string, { plant: number; machinery: number; heavy_vehicle: number; light_vehicles: number; factory_equipment: number; auxiliary: number }>();
+    for (const r of locCatRows) {
+      const loc = (r.location ?? '').trim() || 'Unassigned';
+      if (!catByLoc.has(loc)) {
+        catByLoc.set(loc, { plant: 0, machinery: 0, heavy_vehicle: 0, light_vehicles: 0, factory_equipment: 0, auxiliary: 0 });
+      }
+      const key = categoryToKey(r.category ?? '');
+      if (key) {
+        const row = catByLoc.get(loc)!;
+        (row as Record<string, number>)[key] = (r.count ?? 0) + (row as Record<string, number>)[key];
+      }
+    }
+
+    const locationBreakdown = locationRows.map((r) => {
+      const op = r.op ?? 0;
+      const idle = r.idle ?? 0;
+      const total = r.total ?? 0;
+      const loc = (r.location ?? '').trim() || 'Unassigned';
+      const cats = catByLoc.get(loc) ?? {
+        plant: 0, machinery: 0, heavy_vehicle: 0, light_vehicles: 0, factory_equipment: 0, auxiliary: 0,
+      };
+      return {
+        location: r.location,
+        total,
+        op,
+        idle,
+        down: Math.max(0, total - op - idle),
+        ...cats,
+      };
+    });
 
     const recentParams = [...params, 10];
     const limitIdx = params.length + 1;

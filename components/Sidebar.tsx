@@ -75,8 +75,7 @@ const navigation: NavItem[] = [
   { name: 'Announcements', href: '/announcements', icon: Megaphone },
   { name: 'Audit Trail', href: '/audit', icon: History },
 
-  { name: 'Settings', href: '/settings', icon: Settings },
-  { name: 'Help & Support', href: '/help', icon: HelpCircle },
+ 
 ];
 
 interface SidebarProps {
@@ -179,15 +178,15 @@ export default function Sidebar({ isCollapsed = false, onToggleCollapse, userPho
       {/* Soft Glow / Light Blob */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
       
-      {/* Header: full-size logo centered */}
+      {/* Header: logo as large as possible within same height as main header (3.675rem) */}
       <div className="h-[3.675rem] border-b border-white/20 flex items-center relative z-10">
-        <div className="absolute inset-0 flex items-center justify-center pl-1 pr-10">
-          <div className="relative w-full h-full">
+        <div className="absolute inset-0 flex items-center justify-center pl-2 pr-9 py-1">
+          <div className="relative w-full max-w-[180px] h-full min-h-0">
             <Image
               src="/slogo.png"
               alt="ECWC"
               fill
-              sizes="(min-width: 208px) 192px, 52px"
+              sizes="(min-width: 208px) 180px, 48px"
               className="object-contain object-center"
               priority
             />

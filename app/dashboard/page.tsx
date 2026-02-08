@@ -401,6 +401,7 @@ export default function DashboardPage() {
                       ) : report?.locationBreakdown?.length ? (
                         report.locationBreakdown
                           .filter((l) => l.location !== "Unassigned")
+                          .sort((a, b) => (a.location ?? '').localeCompare(b.location ?? '', undefined, { sensitivity: 'base' }))
                           .slice(0, 5)
                           .map((site, i) => {
                             const pct = total ? Math.round((site.total / total) * 100) : 0;

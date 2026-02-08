@@ -169,7 +169,7 @@ export async function GET(request: NextRequest) {
     const total = countRes?.[0]?.total ?? 0;
 
     params.push(limit, offset);
-    const dataQuery = `SELECT * FROM asset_master WHERE ${whereClause} ORDER BY created_at DESC LIMIT $${idx} OFFSET $${idx + 1}`;
+    const dataQuery = `SELECT * FROM asset_master WHERE ${whereClause} ORDER BY project_location ASC NULLS LAST, created_at DESC LIMIT $${idx} OFFSET $${idx + 1}`;
     const data = await query(dataQuery, params);
 
     return NextResponse.json({

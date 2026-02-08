@@ -407,13 +407,13 @@ export default function AuditPage() {
   return (
     <Layout>
       <div className="space-y-6">
-        {/* Hero header */}
-        <div className="relative overflow-hidden rounded-xl border border-border/80 bg-gradient-to-br from-emerald-50/80 via-teal-50/40 to-slate-50/60 dark:from-emerald-950/30 dark:via-teal-950/20 dark:to-slate-950/40 shadow-sm">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(16,185,129,0.15),transparent)] dark:bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(16,185,129,0.08),transparent)]" />
+        {/* Hero header — sidebar green theme */}
+        <div className="relative overflow-hidden rounded-xl border border-[#16A34A]/20 bg-gradient-to-br from-[#16A34A]/10 via-[#15803D]/5 to-slate-50/60 dark:from-[#0d5c32]/30 dark:via-[#0a4d28]/20 dark:to-slate-950/40 shadow-sm">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(22,163,74,0.12),transparent)] dark:bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(22,163,74,0.1),transparent)]" />
           <div className="relative flex flex-wrap items-center justify-between gap-4 p-5">
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/15 dark:bg-emerald-400/10 border border-emerald-200/50 dark:border-emerald-800/50 shadow-inner">
-                <History className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#16A34A]/15 dark:bg-[#16A34A]/20 border border-[#16A34A]/30 dark:border-[#15803D]/50 shadow-inner">
+                <History className="h-6 w-6 text-[#15803D] dark:text-[#16A34A]" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold tracking-tight text-foreground">Audit Trail</h1>
@@ -433,7 +433,7 @@ export default function AuditPage() {
                 size="sm"
                 onClick={handleExportCsv}
                 disabled={!data.length || exporting}
-                className="gap-2 bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white shadow-sm"
+                className="gap-2 bg-[#16A34A] hover:bg-[#15803D] dark:bg-[#16A34A] dark:hover:bg-[#15803D] text-white shadow-sm"
               >
                 <Download className="h-4 w-4" />
                 {exporting ? 'Exporting...' : 'Export CSV'}
@@ -442,41 +442,41 @@ export default function AuditPage() {
           </div>
         </div>
 
-        <Card className="border-border/80 shadow-sm overflow-hidden bg-gradient-to-b from-card to-muted/20 dark:to-muted/10">
-          <CardHeader className="pb-3 flex flex-row items-center justify-between gap-2 border-b border-border/60 bg-muted/20 dark:bg-muted/10">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Filter className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+        <Card className="border-[#16A34A]/20 shadow-md overflow-visible rounded-xl bg-gradient-to-b from-card to-[#16A34A]/5 dark:to-[#0d5c32]/10">
+          <CardHeader className="pb-3 flex flex-row items-center justify-between gap-2 border-b border-[#16A34A]/20 bg-[#16A34A]/10 dark:bg-[#0d5c32]/20 rounded-t-xl">
+            <CardTitle className="text-base flex items-center gap-2 text-foreground">
+              <Filter className="h-4 w-4 text-[#15803D] dark:text-[#16A34A]" />
               Filters
             </CardTitle>
             {hasActiveFilters && (
-              <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10">
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1.5 text-muted-foreground hover:text-[#15803D] hover:bg-[#16A34A]/10 dark:hover:bg-[#16A34A]/20">
                 <FilterX className="h-4 w-4" />
                 Clear filters
               </Button>
             )}
           </CardHeader>
           <CardContent className="space-y-4 pt-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-              <div className="space-y-2">
-                <Label className="text-xs">User</Label>
-                <Select value={userPhone || 'all'} onValueChange={(v) => setUserPhone(v === 'all' ? '' : v)}>
-                  <SelectTrigger className="h-9">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-6">
+              <div className="min-w-0 space-y-2 p-3 rounded-lg bg-background/60 dark:bg-muted/20 border border-border/60 hover:border-[#16A34A]/30 transition-colors">
+                <Label className="text-xs font-medium text-foreground">User</Label>
+                <Select value={userPhone || 'all'} onValueChange={(v) => setUserPhone(v === 'all' ? '' : v)} className="w-full min-w-0" dropdownMinWidth={280}>
+                  <SelectTrigger className="h-9 rounded-md border-border/80 focus:ring-2 focus:ring-[#16A34A]/30 focus:border-[#16A34A]">
                     <SelectValue placeholder="All users" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All users</SelectItem>
                     {AUTH_ACCOUNTS.map((a) => (
-                      <SelectItem key={a.phone} value={a.phone}>
-                        {a.name} ({a.phone})
+                      <SelectItem key={a.phone} value={a.phone} className="whitespace-nowrap">
+                        {a.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label className="text-xs">Action</Label>
+              <div className="min-w-0 space-y-2 p-3 rounded-lg bg-background/60 dark:bg-muted/20 border border-border/60 hover:border-[#16A34A]/30 transition-colors">
+                <Label className="text-xs font-medium text-foreground">Action</Label>
                 <Select value={action || 'all'} onValueChange={(v) => setAction(v === 'all' ? '' : v)}>
-                  <SelectTrigger className="h-9">
+                  <SelectTrigger className="h-9 rounded-md border-border/80 focus:ring-2 focus:ring-[#16A34A]/30 focus:border-[#16A34A]">
                     <SelectValue placeholder="All actions" />
                   </SelectTrigger>
                   <SelectContent>
@@ -489,10 +489,10 @@ export default function AuditPage() {
                 </Select>
               </div>
               {showEntityTypeFilter && (
-                <div className="space-y-2">
-                  <Label className="text-xs">Entity type</Label>
+                <div className="min-w-0 space-y-2 p-3 rounded-lg bg-background/60 dark:bg-muted/20 border border-border/60 hover:border-[#16A34A]/30 transition-colors">
+                  <Label className="text-xs font-medium text-foreground">Entity type</Label>
                   <Select value={entityType || 'all'} onValueChange={(v) => setEntityType(v === 'all' ? '' : v)}>
-                    <SelectTrigger className="h-9">
+                    <SelectTrigger className="h-9 rounded-md border-border/80 focus:ring-2 focus:ring-[#16A34A]/30 focus:border-[#16A34A]">
                       <SelectValue placeholder="All" />
                     </SelectTrigger>
                     <SelectContent>
@@ -506,20 +506,20 @@ export default function AuditPage() {
                 </div>
               )}
               {showSessionFilter && (
-                <div className="space-y-2">
-                  <Label className="text-xs">Filter by session (one login)</Label>
+                <div className="min-w-0 space-y-2 p-3 rounded-lg bg-background/60 dark:bg-muted/20 border border-border/60 hover:border-[#16A34A]/30 transition-colors">
+                  <Label className="text-xs font-medium text-foreground">Filter by session (one login)</Label>
                   <Input
                     placeholder="Session ID"
                     value={sessionIdFilter}
                     onChange={(e) => setSessionIdFilter(e.target.value.trim())}
-                    className="h-9 font-mono text-xs"
+                    className="h-9 font-mono text-xs rounded-md border-border/80 focus-visible:ring-2 focus-visible:ring-[#16A34A]/30 focus-visible:border-[#16A34A]"
                   />
                 </div>
               )}
-              <div className="space-y-2">
-                <Label className="text-xs">From date</Label>
+              <div className="min-w-0 space-y-2 p-3 rounded-lg bg-background/60 dark:bg-muted/20 border border-border/60 hover:border-[#16A34A]/30 transition-colors">
+                <Label className="text-xs font-medium text-foreground">From date</Label>
                 <div
-                  className="flex h-9 items-center gap-2 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 cursor-pointer"
+                  className="flex h-9 items-center gap-2 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-[#16A34A]/30 focus-within:border-[#16A34A] cursor-pointer"
                   onClick={() => {
                     fromDateInputRef.current?.focus();
                     if (typeof (fromDateInputRef.current as HTMLInputElement & { showPicker?: () => void })?.showPicker === 'function') {
@@ -538,10 +538,10 @@ export default function AuditPage() {
                   />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label className="text-xs">To date</Label>
+              <div className="min-w-0 space-y-2 p-3 rounded-lg bg-background/60 dark:bg-muted/20 border border-border/60 hover:border-[#16A34A]/30 transition-colors">
+                <Label className="text-xs font-medium text-foreground">To date</Label>
                 <div
-                  className="flex h-9 items-center gap-2 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 cursor-pointer"
+                  className="flex h-9 items-center gap-2 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-[#16A34A]/30 focus-within:border-[#16A34A] cursor-pointer"
                   onClick={() => {
                     toDateInputRef.current?.focus();
                     if (typeof (toDateInputRef.current as HTMLInputElement & { showPicker?: () => void })?.showPicker === 'function') {
@@ -560,10 +560,10 @@ export default function AuditPage() {
                   />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label className="text-xs">Sort</Label>
+              <div className="min-w-0 space-y-2 p-3 rounded-lg bg-background/60 dark:bg-muted/20 border border-border/60 hover:border-[#16A34A]/30 transition-colors">
+                <Label className="text-xs font-medium text-foreground">Sort</Label>
                 <Select value={sort} onValueChange={setSort}>
-                  <SelectTrigger className="h-9">
+                  <SelectTrigger className="h-9 rounded-md border-border/80 focus:ring-2 focus:ring-[#16A34A]/30 focus:border-[#16A34A]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -576,10 +576,10 @@ export default function AuditPage() {
                 </Select>
               </div>
             </div>
-            <div className="space-y-3 pt-2 border-t border-border">
+            <div className="space-y-3 pt-2 border-t border-[#16A34A]/20">
               <div className="flex flex-wrap items-center gap-4">
                 <div className="flex items-center gap-2">
-                  <Filter className="h-4 w-4 text-muted-foreground" />
+                  <Filter className="h-4 w-4 text-[#15803D] dark:text-[#16A34A]" />
                   <span className="text-xs font-medium text-muted-foreground">Show filters</span>
                 </div>
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -601,7 +601,7 @@ export default function AuditPage() {
               </div>
               <div className="flex flex-wrap items-center gap-4">
                 <div className="flex items-center gap-2">
-                  <Columns className="h-4 w-4 text-muted-foreground" />
+                  <Columns className="h-4 w-4 text-[#15803D] dark:text-[#16A34A]" />
                   <span className="text-xs font-medium text-muted-foreground">Show columns</span>
                 </div>
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -669,7 +669,7 @@ export default function AuditPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse">
                     <thead>
-                      <tr className="bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-700 dark:to-teal-700 text-white">
+                      <tr className="bg-gradient-to-r from-[#16A34A] to-[#15803D] dark:from-[#0d5c32] dark:to-[#0a4d28] text-white">
                         <th className="text-left p-4 text-xs font-semibold uppercase tracking-wider">Record ID</th>
                         <th className="text-left p-4 text-xs font-semibold uppercase tracking-wider">Date &amp; time</th>
                         <th className="text-left p-4 text-xs font-semibold uppercase tracking-wider">User name</th>
@@ -702,7 +702,7 @@ export default function AuditPage() {
                             tabIndex={0}
                             onClick={() => setSelectedRow(row)}
                             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSelectedRow(row); } }}
-                            className={`border-b border-border/60 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 cursor-pointer transition-colors ${idx % 2 === 1 ? 'bg-muted/30' : 'bg-background'}`}
+                            className={`border-b border-border/60 hover:bg-[#16A34A]/10 dark:hover:bg-[#16A34A]/20 cursor-pointer transition-colors ${idx % 2 === 1 ? 'bg-muted/30' : 'bg-background'}`}
                           >
                             <td className="p-4 text-sm tabular-nums text-muted-foreground font-medium">{row.id}</td>
                             <td className="p-4 text-sm tabular-nums whitespace-nowrap text-foreground/90">{formatDateTime(row.created_at)}</td>
@@ -714,7 +714,7 @@ export default function AuditPage() {
                                   <button
                                     type="button"
                                     onClick={() => { setSessionIdFilter(row.session_id!); setPage(1); }}
-                                    className="text-left hover:underline text-emerald-600 dark:text-emerald-400 break-all font-medium"
+                                    className="text-left hover:underline text-[#15803D] dark:text-[#16A34A] break-all font-medium"
                                     title="Click to filter by this session"
                                   >
                                     {row.session_id}

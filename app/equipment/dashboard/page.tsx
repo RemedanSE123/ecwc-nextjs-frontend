@@ -9,19 +9,13 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
-import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Checkbox } from '@/components/ui/checkbox';
 import { fetchAssetStats, fetchAssetReports, fetchStatusSummary } from '@/lib/api/assets';
 import EquipmentDataView from '@/components/equipment/EquipmentDataView';
 import { exportStatsToExcel, exportToPdf } from '@/lib/export-utils';
@@ -38,7 +32,6 @@ import {
   PieChart,
   Pie,
   Cell,
-  Legend,
   LabelList,
 } from 'recharts';
 import {
@@ -50,13 +43,22 @@ import {
   FileSpreadsheet,
   FileDown,
   ChevronRight,
+  ChevronUp,
+  ChevronDown,
   Drill,
   Factory,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-/* Cohesive palette: slate/primary family so colors work together */
-const COLORS = ['#475569', '#64748b', '#0f766e', '#0369a1', '#1e40af', '#4f46e5'];
+/* Maximally different colors per category — high contrast, spread across spectrum */
+const COLORS = [
+  '#00c853', /* 1 Plant — bright green */
+  '#2962ff', /* 2 Machinery — blue */
+  '#ff1744', /* 3 Heavy Vehicles — red */
+  '#ff9100', /* 4 Light Vehicles — orange */
+  '#aa00ff', /* 5 Factory Equipment — purple */
+  '#00e5ff', /* 6 Auxiliary Equipment — cyan */
+];
 
 const iconMap: Record<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
   'plant-equipment': Wrench,
@@ -123,12 +125,12 @@ interface CategoryCardProps {
 
 function CategoryCard({ slug, name, icon: Icon, color, stats, pct, index }: CategoryCardProps) {
   const [showDownPopup, setShowDownPopup] = useState(false);
-  const availability = stats.total ? Math.round((stats.op / stats.total) * 100) : 0;
+  const downPct = stats.total ? Math.round((stats.down / stats.total) * 100) : 0;
   const card = (
     <Link href={`/equipment/${slug}`} className="block">
       <Card
-        className="overflow-visible border border-border/80 shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-300 group relative bg-card rounded-lg"
-        style={{ borderLeftWidth: '3px', borderLeftColor: color }}
+        className="overflow-visible border border-border/80 shadow-sm hover:shadow-md transition-all duration-300 group relative bg-card rounded-lg"
+        style={{ borderLeftWidth: '4px', borderLeftColor: color }}
       >
         <CardContent className="p-0">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-0">
@@ -146,31 +148,26 @@ function CategoryCard({ slug, name, icon: Icon, color, stats, pct, index }: Cate
                 <p className="text-[11px] text-muted-foreground mt-0.5">{pct}% of fleet</p>
               </div>
             </div>
-            {/* Column 2: OP, Idle, Availability, Down — unified palette */}
+            {/* Column 2: OP (green), Idle (blue), Down count (red), Down % (red) */}
             <div className="flex flex-col justify-center gap-1 p-3">
               <div className="flex items-center gap-1.5 text-xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0 opacity-80" />
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
                 <span className="text-muted-foreground text-[11px]">OP:</span>
-                <span className="font-semibold text-primary tabular-nums">{stats.op}</span>
+                <span className="font-semibold text-green-600 dark:text-green-400 tabular-nums">{stats.op}</span>
               </div>
               <div className="flex items-center gap-1.5 text-xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/60 shrink-0" />
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
                 <span className="text-muted-foreground text-[11px]">Idle:</span>
-                <span className="font-semibold text-muted-foreground tabular-nums">{stats.idle}</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0 opacity-80" />
-                <span className="text-muted-foreground text-[11px]">Availability:</span>
-                <span className="font-semibold text-primary tabular-nums">{availability}%</span>
+                <span className="font-semibold text-blue-600 dark:text-blue-400 tabular-nums">{stats.idle}</span>
               </div>
               <div
                 className="relative z-[100] flex items-center gap-1.5 text-xs w-fit"
                 onMouseEnter={() => setShowDownPopup(true)}
                 onMouseLeave={() => setShowDownPopup(false)}
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-destructive/80 shrink-0" />
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
                 <span className="text-muted-foreground text-[11px]">Down:</span>
-                <span className="font-semibold text-destructive tabular-nums cursor-help underline decoration-dotted decoration-destructive/50 underline-offset-1">
+                <span className="font-semibold text-red-600 dark:text-red-400 tabular-nums cursor-help underline decoration-dotted decoration-red-500/50 underline-offset-1">
                   {stats.down}
                 </span>
                 {showDownPopup && (
@@ -180,7 +177,7 @@ function CategoryCard({ slug, name, icon: Icon, color, stats, pct, index }: Cate
                     onMouseEnter={() => setShowDownPopup(true)}
                     onMouseLeave={() => setShowDownPopup(false)}
                   >
-                    <div className="px-3 py-2 bg-destructive/10 border-b border-border font-semibold text-xs text-destructive">
+                    <div className="px-3 py-2 bg-red-500/10 border-b border-border font-semibold text-xs text-red-600 dark:text-red-400">
                       Down breakdown
                     </div>
                     <div className="p-2 space-y-1 max-h-44 overflow-y-auto">
@@ -191,7 +188,7 @@ function CategoryCard({ slug, name, icon: Icon, color, stats, pct, index }: Cate
                             className="flex justify-between items-center gap-2 py-1 px-2 rounded text-xs hover:bg-muted/50"
                           >
                             <span className="text-foreground">{d.label}</span>
-                            <span className="font-bold tabular-nums text-destructive">{d.count}</span>
+                            <span className="font-bold tabular-nums text-red-600 dark:text-red-400">{d.count}</span>
                           </div>
                         ))
                       ) : (
@@ -200,6 +197,11 @@ function CategoryCard({ slug, name, icon: Icon, color, stats, pct, index }: Cate
                     </div>
                   </div>
                 )}
+              </div>
+              <div className="flex items-center gap-1.5 text-xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
+                <span className="text-muted-foreground text-[11px]">Down:</span>
+                <span className="font-semibold text-red-600 dark:text-red-400 tabular-nums">{downPct}%</span>
               </div>
             </div>
           </div>
@@ -260,15 +262,24 @@ export default function EquipmentDashboardPage() {
   const [report, setReport] = useState<AssetReportData | null>(null);
   const [statusSummary, setStatusSummary] = useState<Awaited<ReturnType<typeof fetchStatusSummary>> | null>(null);
   const [statusSummaryReport, setStatusSummaryReport] = useState<Awaited<ReturnType<typeof fetchStatusSummary>> | null>(null);
-  type ReportFilterValue = 'overall' | (typeof EQUIPMENT_CATEGORIES)[number]['slug'];
-  const [reportFilter, setReportFilter] = useState<ReportFilterValue>('overall');
-  const [reportLoading, setReportLoading] = useState(false);
+  /** Click selection: clicking a pill shows this scope (Overall or single category). */
+  const [primaryReportScope, setPrimaryReportScope] = useState<'overall' | string>('overall');
+  /** Checkboxes: when 2+ checked, report = combined; otherwise use primaryReportScope. */
+  const [combinedCheckboxes, setCombinedCheckboxes] = useState<string[]>([]);
+  /** Report table header sort (all views) */
+  const [reportTableSortBy, setReportTableSortBy] = useState<string>('total');
+  const [reportTableSortOrder, setReportTableSortOrder] = useState<'asc' | 'desc'>('desc');
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [fleetDownPopup, setFleetDownPopup] = useState<{ top: number; left: number } | null>(null);
   const fleetDownTriggerRef = useRef<HTMLDivElement>(null);
   const fleetDownPopupCloseRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pdfRef = useRef<HTMLDivElement>(null);
+  const [animatedTotal, setAnimatedTotal] = useState(0);
+  const locationSortColumns = ['location', 'plant', 'machinery', 'heavy_vehicle', 'light_vehicles', 'factory_equipment', 'auxiliary', 'total', 'op', 'idle', 'down'] as const;
+  type LocationSortBy = (typeof locationSortColumns)[number];
+  const [locationSortBy, setLocationSortBy] = useState<LocationSortBy>('location');
+  const [locationSortOrder, setLocationSortOrder] = useState<'asc' | 'desc'>('asc');
 
   useEffect(() => {
     Promise.all([fetchAssetStats(), fetchAssetReports(), fetchStatusSummary(), fetchStatusSummary()])
@@ -282,25 +293,12 @@ export default function EquipmentDashboardPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const reportFilterInitialized = useRef(false);
   useEffect(
     () => () => {
       if (fleetDownPopupCloseRef.current) clearTimeout(fleetDownPopupCloseRef.current);
     },
     []
   );
-  useEffect(() => {
-    if (!reportFilterInitialized.current) {
-      reportFilterInitialized.current = true;
-      return;
-    }
-    const group = reportFilter === 'overall' ? undefined : reportFilter;
-    setReportLoading(true);
-    fetchStatusSummary(group)
-      .then(setStatusSummaryReport)
-      .catch(console.error)
-      .finally(() => setReportLoading(false));
-  }, [reportFilter]);
 
   const total = stats?.total ?? 0;
   const totalOp = statusSummary?.grandTotal?.op ?? 0;
@@ -320,41 +318,186 @@ export default function EquipmentDashboardPage() {
     return parts.sort((a, b) => b.count - a.count);
   })();
 
-  /** When Overall: show only 6 main category rows (aggregated). Otherwise use API rows as-is. */
+  // Count-up animation for Total Fleet: smooth count from 0 to total
+  useEffect(() => {
+    if (loading) {
+      setAnimatedTotal(0);
+      return;
+    }
+    const target = total;
+    if (target <= 0) {
+      setAnimatedTotal(0);
+      return;
+    }
+    setAnimatedTotal(0);
+    const durationMs = 2000; // 2s for a smooth, visible count
+    // easeOutExpo: fast start, smooth gentle settle at the end
+    const easeOutExpo = (t: number) => (t >= 1 ? 1 : 1 - Math.pow(2, -10 * t));
+    let rafId: number;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const elapsed = now - start;
+      const t = Math.min(elapsed / durationMs, 1);
+      const eased = easeOutExpo(t);
+      const value = t >= 1 ? target : Math.round(eased * target);
+      setAnimatedTotal(value);
+      if (t < 1) {
+        rafId = requestAnimationFrame(tick);
+      }
+    };
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+  }, [total, loading]);
+
+  const NUM_KEYS_REPORT = ['op', 'idle', 'ur', 'down', 'hr', 'ui', 'wi', 'uc', 'rfd', 'afd', 'accident', 'other'] as const;
+
+  const effectiveReportSlugs = combinedCheckboxes.length >= 2
+    ? combinedCheckboxes
+    : primaryReportScope === 'overall'
+      ? ['overall']
+      : [primaryReportScope];
+  const isCombinedView = combinedCheckboxes.length >= 2;
+
+  /** Rows for report table: Overall = aggregated by category; single/multi = filter to selected categories. */
   const reportTableRows = useMemo(() => {
     if (!statusSummaryReport?.rows) return [];
-    if (reportFilter !== 'overall') return statusSummaryReport.rows;
-    const NUM_KEYS = ['op', 'idle', 'ur', 'down', 'hr', 'ui', 'wi', 'uc', 'rfd', 'afd', 'accident', 'other'] as const;
-    return EQUIPMENT_CATEGORIES.map((cat, index) => {
-      const categoryRows = statusSummaryReport.rows.filter((r) => r.category === cat.dbCategory);
-      const agg = categoryRows.reduce<Record<string, number>>(
-        (acc, row) => {
-          NUM_KEYS.forEach((k) => { acc[k] = (acc[k] ?? 0) + (row[k] ?? 0); });
-          acc.total = (acc.total ?? 0) + (row.total ?? 0);
-          return acc;
-        },
-        { total: 0 }
-      );
-      return {
-        no: index + 1,
-        description: cat.name,
-        category: cat.dbCategory,
-        op: agg.op ?? 0,
-        idle: agg.idle ?? 0,
-        ur: agg.ur ?? 0,
-        down: agg.down ?? 0,
-        hr: agg.hr ?? 0,
-        ui: agg.ui ?? 0,
-        wi: agg.wi ?? 0,
-        uc: agg.uc ?? 0,
-        rfd: agg.rfd ?? 0,
-        afd: agg.afd ?? 0,
-        accident: agg.accident ?? 0,
-        other: agg.other ?? 0,
-        total: agg.total ?? 0,
-      };
+    const isOverall = effectiveReportSlugs.length === 0 || effectiveReportSlugs.includes('overall');
+    const dbCategories = isOverall
+      ? EQUIPMENT_CATEGORIES.map((c) => c.dbCategory)
+      : effectiveReportSlugs
+          .filter((s) => s !== 'overall')
+          .map((s) => EQUIPMENT_CATEGORIES.find((c) => c.slug === s)?.dbCategory)
+          .filter(Boolean) as string[];
+
+    let rows: Array<{ no: number; description: string; category: string; op?: number; idle?: number; ur?: number; down?: number; hr?: number; ui?: number; wi?: number; uc?: number; rfd?: number; afd?: number; accident?: number; other?: number; total?: number }>;
+    if (isOverall) {
+      rows = EQUIPMENT_CATEGORIES.map((cat, index) => {
+        const categoryRows = statusSummaryReport.rows.filter((r) => r.category === cat.dbCategory);
+        const agg = categoryRows.reduce<Record<string, number>>(
+          (acc, row) => {
+            NUM_KEYS_REPORT.forEach((k) => { acc[k] = (acc[k] ?? 0) + (row[k] ?? 0); });
+            acc.total = (acc.total ?? 0) + (row.total ?? 0);
+            return acc;
+          },
+          { total: 0 }
+        );
+        return {
+          no: index + 1,
+          description: cat.name,
+          category: cat.dbCategory,
+          op: agg.op ?? 0,
+          idle: agg.idle ?? 0,
+          ur: agg.ur ?? 0,
+          down: agg.down ?? 0,
+          hr: agg.hr ?? 0,
+          ui: agg.ui ?? 0,
+          wi: agg.wi ?? 0,
+          uc: agg.uc ?? 0,
+          rfd: agg.rfd ?? 0,
+          afd: agg.afd ?? 0,
+          accident: agg.accident ?? 0,
+          other: agg.other ?? 0,
+          total: agg.total ?? 0,
+        };
+      });
+    } else {
+      let filtered = statusSummaryReport.rows.filter((r) => dbCategories.includes(r.category));
+      rows = filtered.map((row, i) => ({ ...row, no: i + 1 }));
+    }
+
+    const mul = reportTableSortOrder === 'asc' ? 1 : -1;
+    const sortKey = reportTableSortBy;
+    const isNum = ['no', 'op', 'idle', 'ur', 'down', 'hr', 'ui', 'wi', 'uc', 'rfd', 'afd', 'accident', 'total'].includes(sortKey);
+    rows = [...rows].sort((a, b) => {
+      if (isNum) {
+        const va = (a as Record<string, unknown>)[sortKey] ?? 0;
+        const vb = (b as Record<string, unknown>)[sortKey] ?? 0;
+        return mul * (Number(va) - Number(vb));
+      }
+      const va = String((a as Record<string, unknown>)[sortKey] ?? '');
+      const vb = String((b as Record<string, unknown>)[sortKey] ?? '');
+      return mul * va.localeCompare(vb);
     });
-  }, [statusSummaryReport, reportFilter]);
+    return rows.map((row, i) => ({ ...row, no: i + 1 }));
+  }, [statusSummaryReport, effectiveReportSlugs, reportTableSortBy, reportTableSortOrder]);
+
+  /** Grand total for report: when single/multi category, sum from reportTableRows; otherwise use API grandTotal. */
+  const reportGrandTotal = useMemo(() => {
+    const isOverall = effectiveReportSlugs.length === 0 || effectiveReportSlugs.includes('overall');
+    if (isOverall && statusSummaryReport?.grandTotal) return statusSummaryReport.grandTotal;
+    const gt: Record<string, number> = Object.fromEntries([...NUM_KEYS_REPORT.map((k) => [k, 0]), ['total', 0]]);
+    reportTableRows.forEach((row) => {
+      NUM_KEYS_REPORT.forEach((k) => { gt[k] = (gt[k] ?? 0) + (row[k] ?? 0); });
+      gt.total = (gt.total ?? 0) + (row.total ?? 0);
+    });
+    return gt;
+  }, [statusSummaryReport?.grandTotal, effectiveReportSlugs, reportTableRows]);
+
+  /** In combined view, slight background per category section (cycle through these). */
+  const COMBINED_SECTION_BG = [
+    'bg-slate-50/70 dark:bg-slate-900/25',
+    'bg-sky-50/50 dark:bg-sky-950/20',
+    'bg-amber-50/40 dark:bg-amber-950/15',
+    'bg-emerald-50/40 dark:bg-emerald-950/15',
+    'bg-violet-50/40 dark:bg-violet-950/15',
+    'bg-rose-50/40 dark:bg-rose-950/15',
+  ];
+  const reportRowSectionClass = useMemo(() => {
+    if (effectiveReportSlugs.length <= 1) return () => '';
+    const slugToIndex = new Map(effectiveReportSlugs.filter((s) => s !== 'overall').map((s, i) => [s, i]));
+    const dbCategoryToIndex = new Map(
+      EQUIPMENT_CATEGORIES.filter((c) => slugToIndex.has(c.slug)).map((c) => [c.dbCategory, slugToIndex.get(c.slug)!])
+    );
+    return (rowCategory: string) => {
+      const idx = dbCategoryToIndex.get(rowCategory) ?? 0;
+      return COMBINED_SECTION_BG[idx % COMBINED_SECTION_BG.length];
+    };
+  }, [effectiveReportSlugs]);
+
+  /** Top Locations: filtered (no Unassigned), sorted by selected column (location = alphabet, others = by value). */
+  const sortedLocationBreakdown = useMemo(() => {
+    const list = report?.locationBreakdown?.filter((l) => l.location !== 'Unassigned') ?? [];
+    const key = locationSortBy;
+    const mul = locationSortOrder === 'asc' ? 1 : -1;
+    if (key === 'location') {
+      return [...list].sort((a, b) => mul * (a.location ?? '').localeCompare(b.location ?? '', undefined, { sensitivity: 'base' }));
+    }
+    return [...list].sort((a, b) => mul * ((Number(a[key]) ?? 0) - (Number(b[key]) ?? 0)));
+  }, [report?.locationBreakdown, locationSortBy, locationSortOrder]);
+
+  /** Summary row totals from fleet (reportTableRows + reportGrandTotal) so they match KPI cards exactly (fixes Heavy/Light off-by-one). */
+  const topLocationsSummary = useMemo(() => {
+    const isOverall = effectiveReportSlugs.length === 0 || effectiveReportSlugs.includes('overall');
+    if (!isOverall || !reportTableRows.length || !reportGrandTotal) return null;
+    const byCat = new Map<string, number>();
+    reportTableRows.forEach((r) => { byCat.set(r.category, r.total ?? 0); });
+    const gt = reportGrandTotal;
+    const total = gt?.total ?? 0;
+    const op = gt?.op ?? 0;
+    const idle = gt?.idle ?? 0;
+    const down = Math.max(0, total - op - idle);
+    return {
+      plant: byCat.get('Plant') ?? 0,
+      machinery: byCat.get('Machinery') ?? 0,
+      heavy_vehicle: byCat.get('Heavy Vehicle') ?? 0,
+      light_vehicles: byCat.get('Light Vehicles & Bus') ?? 0,
+      factory_equipment: byCat.get('Factory Equipment') ?? 0,
+      auxiliary: byCat.get('Auxillary') ?? 0,
+      total,
+      op,
+      idle,
+      down,
+    };
+  }, [reportTableRows, reportGrandTotal, effectiveReportSlugs]);
+
+  const handleLocationSort = (column: LocationSortBy) => {
+    if (locationSortBy === column) {
+      setLocationSortOrder((o) => (o === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setLocationSortBy(column);
+      setLocationSortOrder(column === 'location' ? 'asc' : 'desc');
+    }
+  };
 
   const handleExportExcel = () => {
     if (!stats) return;
@@ -447,35 +590,37 @@ export default function EquipmentDashboardPage() {
                       <span className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">Active locations</span>
                     </div>
 
-                    {/* Column 2: Total Fleet — primary accent only */}
+                    {/* Column 2: Total Fleet — primary accent only (count-up animation) */}
                     <div className="flex flex-col items-center justify-center rounded-2xl bg-primary/10 dark:bg-primary/15 border border-primary/20 px-5 py-6 sm:px-10 sm:py-8 min-w-0">
                       <span className="text-xs sm:text-sm font-bold uppercase tracking-[0.2em] text-muted-foreground">Total Fleet</span>
                       <p className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold tabular-nums text-foreground mt-2 tracking-tight">
-                        {total.toLocaleString()}
+                        {animatedTotal.toLocaleString()}
                       </p>
                       <span className="text-sm text-muted-foreground mt-1.5 font-medium">Equipment units</span>
                     </div>
 
-                    {/* Column 3: 4 quadrants — neutral + primary + destructive only */}
-                    <div className="grid grid-cols-2 gap-2 sm:gap-3 min-w-0">
-                      <div className="rounded-lg border border-border bg-muted/20 dark:bg-muted/15 px-2.5 py-3 sm:py-4 flex flex-col justify-center text-center">
+                    {/* Column 3: 4 quadrants — row 1: OP, Idle | line | row 2: Avail, Down */}
+                    <div className="grid grid-cols-2 gap-1.5 sm:gap-2 min-w-0">
+                      <div className="rounded-lg border border-green-200 dark:border-green-800/50 bg-green-50/50 dark:bg-green-950/20 px-2.5 py-2 sm:py-2.5 flex flex-col justify-center text-center">
                         <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">OP</span>
-                        <span className="text-base sm:text-lg font-extrabold tabular-nums text-primary mt-1">{totalOp}</span>
+                        <span className="text-base sm:text-lg font-extrabold tabular-nums text-green-600 dark:text-green-500 mt-0.5">{totalOp}</span>
                         <span className="text-[10px] text-muted-foreground leading-tight mt-0.5">Operational</span>
                       </div>
-                      <div className="rounded-lg border border-border bg-muted/20 dark:bg-muted/15 px-2.5 py-3 sm:py-4 flex flex-col justify-center text-center">
+                      <div className="rounded-lg border border-blue-200 dark:border-blue-800/50 bg-blue-50/50 dark:bg-blue-950/20 px-2.5 py-2 sm:py-2.5 flex flex-col justify-center text-center">
                         <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">Idle</span>
-                        <span className="text-base sm:text-lg font-extrabold tabular-nums text-foreground mt-1">{totalIdle}</span>
+                        <span className="text-base sm:text-lg font-extrabold tabular-nums text-blue-600 dark:text-blue-500 mt-0.5">{totalIdle}</span>
                         <span className="text-[10px] text-muted-foreground leading-tight mt-0.5">Standby</span>
                       </div>
-                      <div className="rounded-lg border border-border bg-muted/20 dark:bg-muted/15 px-2.5 py-3 sm:py-4 flex flex-col justify-center text-center">
-                        <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">Avail</span>
-                        <span className="text-base sm:text-lg font-extrabold tabular-nums text-primary mt-1">{totalAvailability}%</span>
-                        <span className="text-[10px] text-muted-foreground leading-tight mt-0.5">Fleet ready</span>
+                      {/* Line between first and second row — minimal space */}
+                      <div className="col-span-2 border-t border-border/80 my-0 shrink-0" />
+                      <div className="rounded-lg border border-border bg-destructive/5 dark:bg-destructive/10 px-2.5 py-2 sm:py-2.5 flex flex-col justify-center text-center">
+                        <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">Down</span>
+                        <span className="text-base sm:text-lg font-extrabold tabular-nums text-destructive mt-0.5">{total ? Math.round((totalDown / total) * 100) : 0}%</span>
+                        <span className="text-[10px] text-muted-foreground leading-tight mt-0.5">Out of service</span>
                       </div>
                       <div
                         ref={fleetDownTriggerRef}
-                        className="relative rounded-lg border border-border bg-destructive/5 dark:bg-destructive/10 px-2.5 py-3 sm:py-4 flex flex-col justify-center text-center cursor-help"
+                        className="relative rounded-lg border border-border bg-destructive/5 dark:bg-destructive/10 px-2.5 py-2 sm:py-2.5 flex flex-col justify-center text-center cursor-help"
                         onMouseEnter={() => {
                           if (fleetDownPopupCloseRef.current) {
                             clearTimeout(fleetDownPopupCloseRef.current);
@@ -618,83 +763,268 @@ export default function EquipmentDashboardPage() {
             </div>
 
             <TabsContent value="overview" className="space-y-3">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                <Card className="shadow-md">
-                  <CardHeader className="py-3">
-                    <CardTitle className="text-sm">Equipment by Category</CardTitle>
-                    <CardDescription>Distribution across 6 equipment types</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {loading ? (
-                      <Skeleton className="h-48" />
-                    ) : stats?.byCategory?.length ? (
-                      <div className="space-y-2">
-                        {stats.byCategory.slice(0, 8).map((c, i) => {
-                          const pct = total ? Math.round((c.count / total) * 100) : 0;
-                          const slug = Object.entries(SLUG_TO_DB_CATEGORY).find(([, v]) => v === c.category)?.[0];
-                          return (
-                            <Link key={c.category} href={slug ? `/equipment/${slug}` : '#'}>
-                              <div className="flex items-center gap-2 p-1.5 rounded-md hover:bg-muted/50 transition-colors group">
-                                <div
-                                  className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                                  style={{ backgroundColor: COLORS[i % COLORS.length] }}
-                                />
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex justify-between text-xs mb-0.5">
-                                    <span className="font-medium truncate">{c.category}</span>
-                                    <span className="text-muted-foreground">{c.count} ({pct}%)</span>
-                                  </div>
-                                  <Progress value={pct} className="h-1.5" />
-                                </div>
-                                {slug && (
-                                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                                )}
-                              </div>
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <p className="text-muted-foreground text-center py-8">No data</p>
-                    )}
-                  </CardContent>
-                </Card>
-
-                <Card className="shadow-md">
-                  <CardHeader className="py-3">
-                    <CardTitle className="text-sm">Top Locations</CardTitle>
-                    <CardDescription>Assets by project location</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {loading ? (
-                      <Skeleton className="h-48" />
-                    ) : report?.locationBreakdown?.length ? (
-                      <div className="space-y-2">
-                        {report.locationBreakdown
-                          .filter((l) => l.location !== 'Unassigned')
-                          .slice(0, 6)
-                          .map((site, i) => {
-                            const pct = total ? Math.round((site.total / total) * 100) : 0;
+              <Card className="shadow-md">
+                <CardHeader className="py-3">
+                  <CardTitle className="text-sm">Top Locations</CardTitle>
+                  <CardDescription>Assets by project location (12 visible, scrollable). Total split by Plant, Machinery, Heavy, Light, Factory, Auxiliary; then OP, Idle, Down.</CardDescription>
+                </CardHeader>
+                <CardContent className="p-0">
+                  {loading ? (
+                    <div className="p-4"><Skeleton className="h-64 w-full" /></div>
+                  ) : sortedLocationBreakdown.length ? (
+                    <div className="overflow-x-auto max-h-[420px] overflow-y-auto">
+                      <table className="w-full text-xs border-collapse min-w-[720px]">
+                        <thead>
+                          <tr className="bg-green-600 text-white text-left text-[11px] font-semibold">
+                            <th className="py-2 px-2 w-10 text-center sticky top-0 left-0 z-30 bg-green-600 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.15)]">No</th>
+                            <th
+                              className="py-2 px-2 whitespace-nowrap cursor-pointer hover:bg-green-700 select-none sticky top-0 z-30 bg-green-600 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.15)]"
+                              style={{ left: '2.5rem' }}
+                              onClick={() => handleLocationSort('location')}
+                              title="Sort by location (A–Z)"
+                            >
+                              <span className="inline-flex items-center gap-0.5">
+                                Location
+                                <span className="inline-flex flex-col leading-none">
+                                  <ChevronUp className={`w-3.5 h-3.5 -mb-0.5 ${locationSortBy === 'location' && locationSortOrder === 'asc' ? 'text-emerald-200 drop-shadow-sm' : 'text-white/50'}`} />
+                                  <ChevronDown className={`w-3.5 h-3.5 -mt-0.5 ${locationSortBy === 'location' && locationSortOrder === 'desc' ? 'text-amber-200 drop-shadow-sm' : 'text-white/50'}`} />
+                                </span>
+                              </span>
+                            </th>
+                            <th
+                              className="py-2 px-2 whitespace-nowrap cursor-pointer hover:bg-green-700 select-none sticky top-0 z-20 bg-green-600"
+                              onClick={() => handleLocationSort('plant')}
+                              title="Sort by Plant"
+                            >
+                              <span className="inline-flex items-center gap-0.5">
+                                Plant
+                                <span className="inline-flex flex-col leading-none">
+                                  <ChevronUp className={`w-3.5 h-3.5 -mb-0.5 ${locationSortBy === 'plant' && locationSortOrder === 'asc' ? 'text-emerald-200 drop-shadow-sm' : 'text-white/50'}`} />
+                                  <ChevronDown className={`w-3.5 h-3.5 -mt-0.5 ${locationSortBy === 'plant' && locationSortOrder === 'desc' ? 'text-amber-200 drop-shadow-sm' : 'text-white/50'}`} />
+                                </span>
+                              </span>
+                            </th>
+                            <th
+                              className="py-2 px-2 whitespace-nowrap cursor-pointer hover:bg-green-700 select-none sticky top-0 z-20 bg-green-600"
+                              onClick={() => handleLocationSort('machinery')}
+                              title="Sort by Machinery"
+                            >
+                              <span className="inline-flex items-center gap-0.5">
+                                Machinery
+                                <span className="inline-flex flex-col leading-none">
+                                  <ChevronUp className={`w-3.5 h-3.5 -mb-0.5 ${locationSortBy === 'machinery' && locationSortOrder === 'asc' ? 'text-emerald-200 drop-shadow-sm' : 'text-white/50'}`} />
+                                  <ChevronDown className={`w-3.5 h-3.5 -mt-0.5 ${locationSortBy === 'machinery' && locationSortOrder === 'desc' ? 'text-amber-200 drop-shadow-sm' : 'text-white/50'}`} />
+                                </span>
+                              </span>
+                            </th>
+                            <th
+                              className="py-2 px-2 whitespace-nowrap cursor-pointer hover:bg-green-700 select-none sticky top-0 z-20 bg-green-600"
+                              onClick={() => handleLocationSort('heavy_vehicle')}
+                              title="Sort by Heavy"
+                            >
+                              <span className="inline-flex items-center gap-0.5">
+                                Heavy
+                                <span className="inline-flex flex-col leading-none">
+                                  <ChevronUp className={`w-3.5 h-3.5 -mb-0.5 ${locationSortBy === 'heavy_vehicle' && locationSortOrder === 'asc' ? 'text-emerald-200 drop-shadow-sm' : 'text-white/50'}`} />
+                                  <ChevronDown className={`w-3.5 h-3.5 -mt-0.5 ${locationSortBy === 'heavy_vehicle' && locationSortOrder === 'desc' ? 'text-amber-200 drop-shadow-sm' : 'text-white/50'}`} />
+                                </span>
+                              </span>
+                            </th>
+                            <th
+                              className="py-2 px-2 whitespace-nowrap cursor-pointer hover:bg-green-700 select-none sticky top-0 z-20 bg-green-600"
+                              onClick={() => handleLocationSort('light_vehicles')}
+                              title="Sort by Light"
+                            >
+                              <span className="inline-flex items-center gap-0.5">
+                                Light
+                                <span className="inline-flex flex-col leading-none">
+                                  <ChevronUp className={`w-3.5 h-3.5 -mb-0.5 ${locationSortBy === 'light_vehicles' && locationSortOrder === 'asc' ? 'text-emerald-200 drop-shadow-sm' : 'text-white/50'}`} />
+                                  <ChevronDown className={`w-3.5 h-3.5 -mt-0.5 ${locationSortBy === 'light_vehicles' && locationSortOrder === 'desc' ? 'text-amber-200 drop-shadow-sm' : 'text-white/50'}`} />
+                                </span>
+                              </span>
+                            </th>
+                            <th
+                              className="py-2 px-2 whitespace-nowrap cursor-pointer hover:bg-green-700 select-none sticky top-0 z-20 bg-green-600"
+                              onClick={() => handleLocationSort('factory_equipment')}
+                              title="Sort by Factory"
+                            >
+                              <span className="inline-flex items-center gap-0.5">
+                                Factory
+                                <span className="inline-flex flex-col leading-none">
+                                  <ChevronUp className={`w-3.5 h-3.5 -mb-0.5 ${locationSortBy === 'factory_equipment' && locationSortOrder === 'asc' ? 'text-emerald-200 drop-shadow-sm' : 'text-white/50'}`} />
+                                  <ChevronDown className={`w-3.5 h-3.5 -mt-0.5 ${locationSortBy === 'factory_equipment' && locationSortOrder === 'desc' ? 'text-amber-200 drop-shadow-sm' : 'text-white/50'}`} />
+                                </span>
+                              </span>
+                            </th>
+                            <th
+                              className="py-2 px-2 whitespace-nowrap cursor-pointer hover:bg-green-700 select-none sticky top-0 z-20 bg-green-600"
+                              onClick={() => handleLocationSort('auxiliary')}
+                              title="Sort by Auxiliary"
+                            >
+                              <span className="inline-flex items-center gap-0.5">
+                                Auxiliary
+                                <span className="inline-flex flex-col leading-none">
+                                  <ChevronUp className={`w-3.5 h-3.5 -mb-0.5 ${locationSortBy === 'auxiliary' && locationSortOrder === 'asc' ? 'text-emerald-200 drop-shadow-sm' : 'text-white/50'}`} />
+                                  <ChevronDown className={`w-3.5 h-3.5 -mt-0.5 ${locationSortBy === 'auxiliary' && locationSortOrder === 'desc' ? 'text-amber-200 drop-shadow-sm' : 'text-white/50'}`} />
+                                </span>
+                              </span>
+                            </th>
+                            <th
+                              className="py-2 px-2 whitespace-nowrap cursor-pointer hover:bg-green-700 select-none sticky top-0 z-20 bg-green-600"
+                              onClick={() => handleLocationSort('total')}
+                              title="Sort by total"
+                            >
+                              <span className="inline-flex items-center gap-0.5">
+                                Total
+                                <span className="inline-flex flex-col leading-none">
+                                  <ChevronUp className={`w-3.5 h-3.5 -mb-0.5 ${locationSortBy === 'total' && locationSortOrder === 'asc' ? 'text-emerald-200 drop-shadow-sm' : 'text-white/50'}`} />
+                                  <ChevronDown className={`w-3.5 h-3.5 -mt-0.5 ${locationSortBy === 'total' && locationSortOrder === 'desc' ? 'text-amber-200 drop-shadow-sm' : 'text-white/50'}`} />
+                                </span>
+                              </span>
+                            </th>
+                            <th
+                              className="py-2 px-2 whitespace-nowrap cursor-pointer hover:bg-green-700 select-none sticky top-0 z-20 bg-green-600"
+                              onClick={() => handleLocationSort('op')}
+                              title="Sort by OP"
+                            >
+                              <span className="inline-flex items-center gap-0.5">
+                                OP
+                                <span className="inline-flex flex-col leading-none">
+                                  <ChevronUp className={`w-3.5 h-3.5 -mb-0.5 ${locationSortBy === 'op' && locationSortOrder === 'asc' ? 'text-emerald-200 drop-shadow-sm' : 'text-white/50'}`} />
+                                  <ChevronDown className={`w-3.5 h-3.5 -mt-0.5 ${locationSortBy === 'op' && locationSortOrder === 'desc' ? 'text-amber-200 drop-shadow-sm' : 'text-white/50'}`} />
+                                </span>
+                              </span>
+                            </th>
+                            <th
+                              className="py-2 px-2 whitespace-nowrap cursor-pointer hover:bg-green-700 select-none sticky top-0 z-20 bg-green-600"
+                              onClick={() => handleLocationSort('idle')}
+                              title="Sort by Idle"
+                            >
+                              <span className="inline-flex items-center gap-0.5">
+                                Idle
+                                <span className="inline-flex flex-col leading-none">
+                                  <ChevronUp className={`w-3.5 h-3.5 -mb-0.5 ${locationSortBy === 'idle' && locationSortOrder === 'asc' ? 'text-emerald-200 drop-shadow-sm' : 'text-white/50'}`} />
+                                  <ChevronDown className={`w-3.5 h-3.5 -mt-0.5 ${locationSortBy === 'idle' && locationSortOrder === 'desc' ? 'text-amber-200 drop-shadow-sm' : 'text-white/50'}`} />
+                                </span>
+                              </span>
+                            </th>
+                            <th
+                              className="py-2 px-2 whitespace-nowrap cursor-pointer hover:bg-green-700 select-none sticky top-0 z-20 bg-green-600"
+                              onClick={() => handleLocationSort('down')}
+                              title="Sort by Down"
+                            >
+                              <span className="inline-flex items-center gap-0.5">
+                                Down
+                                <span className="inline-flex flex-col leading-none">
+                                  <ChevronUp className={`w-3.5 h-3.5 -mb-0.5 ${locationSortBy === 'down' && locationSortOrder === 'asc' ? 'text-emerald-200 drop-shadow-sm' : 'text-white/50'}`} />
+                                  <ChevronDown className={`w-3.5 h-3.5 -mt-0.5 ${locationSortBy === 'down' && locationSortOrder === 'desc' ? 'text-amber-200 drop-shadow-sm' : 'text-white/50'}`} />
+                                </span>
+                              </span>
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {sortedLocationBreakdown.map((row, i) => {
+                            const pctTotal = total ? (row.total / total) * 100 : 0;
+                            const pctOp = row.total ? (row.op / row.total) * 100 : 0;
+                            const pctIdle = row.total ? (row.idle / row.total) * 100 : 0;
+                            const pctDown = row.total ? (row.down / row.total) * 100 : 0;
+                            const plant = row.plant ?? 0;
+                            const machinery = row.machinery ?? 0;
+                            const heavy_vehicle = row.heavy_vehicle ?? 0;
+                            const light_vehicles = row.light_vehicles ?? 0;
+                            const factory_equipment = row.factory_equipment ?? 0;
+                            const auxiliary = row.auxiliary ?? 0;
                             return (
-                              <div key={i} className="flex items-center gap-2">
-                                <div className="flex-1">
-                                  <div className="flex justify-between text-xs mb-0.5">
-                                    <span className="font-medium truncate max-w-[160px]">{site.location}</span>
-                                    <span className="text-green-600 font-semibold">{pct}%</span>
-                                  </div>
-                                  <Progress value={pct} className="h-1.5" />
-                                </div>
-                                <span className="text-[11px] text-muted-foreground w-10 text-right">{site.total}</span>
-                              </div>
+                              <tr key={i} className="border-b border-border/50 hover:bg-muted/30">
+                                <td className="py-1.5 px-2 text-center tabular-nums text-muted-foreground sticky left-0 bg-background z-10 w-10">{i + 1}</td>
+                                <td className="py-1.5 px-2 font-medium truncate max-w-[140px] sticky z-10 bg-background" style={{ left: '2.5rem' }} title={row.location}>{row.location}</td>
+                                <td className="py-1.5 px-2 tabular-nums">{plant}</td>
+                                <td className="py-1.5 px-2 tabular-nums">{machinery}</td>
+                                <td className="py-1.5 px-2 tabular-nums">{heavy_vehicle}</td>
+                                <td className="py-1.5 px-2 tabular-nums">{light_vehicles}</td>
+                                <td className="py-1.5 px-2 tabular-nums">{factory_equipment}</td>
+                                <td className="py-1.5 px-2 tabular-nums">{auxiliary}</td>
+                                <td className="py-1.5 px-2">
+                                  <span className="tabular-nums font-medium">{row.total.toLocaleString()}</span>
+                                  <span className="text-muted-foreground ml-0.5">({pctTotal.toFixed(1)}%)</span>
+                                </td>
+                                <td className="py-1.5 px-2">
+                                  <span className="tabular-nums font-medium text-green-600 dark:text-green-400">{row.op.toLocaleString()}</span>
+                                  <span className="text-muted-foreground ml-0.5">({pctOp.toFixed(1)}%)</span>
+                                </td>
+                                <td className="py-1.5 px-2">
+                                  <span className="tabular-nums font-medium text-blue-600 dark:text-blue-400">{row.idle.toLocaleString()}</span>
+                                  <span className="text-muted-foreground ml-0.5">({pctIdle.toFixed(1)}%)</span>
+                                </td>
+                                <td className="py-1.5 px-2">
+                                  <span className="tabular-nums font-medium text-red-600 dark:text-red-400">{row.down.toLocaleString()}</span>
+                                  <span className="text-muted-foreground ml-0.5">({pctDown.toFixed(1)}%)</span>
+                                </td>
+                              </tr>
                             );
                           })}
-                      </div>
-                    ) : (
-                      <p className="text-muted-foreground text-center py-8">No location data</p>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
+                        </tbody>
+                        <tfoot>
+                          {(() => {
+                            const sum = topLocationsSummary ?? sortedLocationBreakdown.reduce(
+                              (acc, row) => ({
+                                total: acc.total + (row.total ?? 0),
+                                plant: acc.plant + (row.plant ?? 0),
+                                machinery: acc.machinery + (row.machinery ?? 0),
+                                heavy_vehicle: acc.heavy_vehicle + (row.heavy_vehicle ?? 0),
+                                light_vehicles: acc.light_vehicles + (row.light_vehicles ?? 0),
+                                factory_equipment: acc.factory_equipment + (row.factory_equipment ?? 0),
+                                auxiliary: acc.auxiliary + (row.auxiliary ?? 0),
+                                op: acc.op + (row.op ?? 0),
+                                idle: acc.idle + (row.idle ?? 0),
+                                down: acc.down + (row.down ?? 0),
+                              }),
+                              { total: 0, plant: 0, machinery: 0, heavy_vehicle: 0, light_vehicles: 0, factory_equipment: 0, auxiliary: 0, op: 0, idle: 0, down: 0 }
+                            );
+                            const pctTotal = total ? (sum.total / total) * 100 : 0;
+                            const pctOp = sum.total ? (sum.op / sum.total) * 100 : 0;
+                            const pctIdle = sum.total ? (sum.idle / sum.total) * 100 : 0;
+                            const pctDown = sum.total ? (sum.down / sum.total) * 100 : 0;
+                            return (
+                              <tr className="bg-green-100/50 dark:bg-green-900/20 font-semibold border-t-2 border-green-600/30">
+                                <td className="py-2 px-2 sticky left-0 bg-green-100/50 dark:bg-green-900/20 z-10 w-10 text-center">—</td>
+                                <td className="py-2 px-2 sticky bg-green-100/50 dark:bg-green-900/20 z-10" style={{ left: '2.5rem' }}>Total / Summary</td>
+                                <td className="py-2 px-2 tabular-nums">{sum.plant.toLocaleString()}</td>
+                                <td className="py-2 px-2 tabular-nums">{sum.machinery.toLocaleString()}</td>
+                                <td className="py-2 px-2 tabular-nums">{sum.heavy_vehicle.toLocaleString()}</td>
+                                <td className="py-2 px-2 tabular-nums">{sum.light_vehicles.toLocaleString()}</td>
+                                <td className="py-2 px-2 tabular-nums">{sum.factory_equipment.toLocaleString()}</td>
+                                <td className="py-2 px-2 tabular-nums">{sum.auxiliary.toLocaleString()}</td>
+                                <td className="py-2 px-2">
+                                  <span className="tabular-nums">{sum.total.toLocaleString()}</span>
+                                  {total ? (
+                                    <span className="text-muted-foreground ml-0.5">({pctTotal.toFixed(1)}%)</span>
+                                  ) : null}
+                                </td>
+                                <td className="py-2 px-2 tabular-nums">
+                                  <span className="text-green-700 dark:text-green-400 font-bold">{sum.op.toLocaleString()}</span>
+                                  <span className="text-muted-foreground ml-0.5">({pctOp.toFixed(1)}%)</span>
+                                </td>
+                                <td className="py-2 px-2 tabular-nums">
+                                  <span className="text-blue-700 dark:text-blue-400 font-bold">{sum.idle.toLocaleString()}</span>
+                                  <span className="text-muted-foreground ml-0.5">({pctIdle.toFixed(1)}%)</span>
+                                </td>
+                                <td className="py-2 px-2 tabular-nums">
+                                  <span className="text-red-700 dark:text-red-400 font-bold">{sum.down.toLocaleString()}</span>
+                                  <span className="text-muted-foreground ml-0.5">({pctDown.toFixed(1)}%)</span>
+                                </td>
+                              </tr>
+                            );
+                          })()}
+                        </tfoot>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground text-center py-8 px-4">No location data</p>
+                  )}
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <TabsContent value="charts" className="space-y-4 overflow-hidden">
@@ -853,68 +1183,90 @@ export default function EquipmentDashboardPage() {
                       <CardDescription>OP, Idle &amp; Down</CardDescription>
                     </CardHeader>
                     <CardContent className="pt-3 min-w-0 overflow-hidden">
-                      <div className="h-[260px] min-w-0 w-full" style={{ filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.15))' }}>
+                      <div className="flex gap-4 h-[260px] min-w-0 w-full">
                         {loading ? (
-                          <Skeleton className="h-full w-full" />
+                          <Skeleton className="flex-1 h-full" />
                         ) : total > 0 ? (
-                          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                            <PieChart>
-                              <defs>
-                                <linearGradient id="status-pie-op" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="0%" stopColor="#22c55e" stopOpacity={1} />
-                                  <stop offset="50%" stopColor="#16a34a" stopOpacity={1} />
-                                  <stop offset="100%" stopColor="#15803d" stopOpacity={0.9} />
-                                </linearGradient>
-                                <linearGradient id="status-pie-idle" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="0%" stopColor="#94a3b8" stopOpacity={1} />
-                                  <stop offset="50%" stopColor="#64748b" stopOpacity={1} />
-                                  <stop offset="100%" stopColor="#475569" stopOpacity={0.9} />
-                                </linearGradient>
-                                <linearGradient id="status-pie-down" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="0%" stopColor="#f87171" stopOpacity={1} />
-                                  <stop offset="50%" stopColor="#dc2626" stopOpacity={1} />
-                                  <stop offset="100%" stopColor="#b91c1c" stopOpacity={0.9} />
-                                </linearGradient>
-                              </defs>
-                              <Pie
-                                data={[
-                                  { name: 'Operational', value: totalOp, fill: 'url(#status-pie-op)' },
-                                  { name: 'Idle', value: totalIdle, fill: 'url(#status-pie-idle)' },
-                                  { name: 'Down', value: totalDown, fill: 'url(#status-pie-down)' },
-                                ].filter((d) => d.value > 0)}
-                                cx="50%"
-                                cy="50%"
-                                outerRadius={88}
-                                paddingAngle={5}
-                                dataKey="value"
-                                nameKey="name"
-                              >
-                                {[
-                                  { name: 'Operational', value: totalOp, fill: 'url(#status-pie-op)' },
-                                  { name: 'Idle', value: totalIdle, fill: 'url(#status-pie-idle)' },
-                                  { name: 'Down', value: totalDown, fill: 'url(#status-pie-down)' },
-                                ]
-                                  .filter((d) => d.value > 0)
-                                  .map((d, i) => (
-                                    <Cell key={i} fill={d.fill} stroke="rgba(255,255,255,0.95)" strokeWidth={2.5} />
-                                  ))}
-                              </Pie>
-                              <RechartsTooltip
-                                content={(props) => (
-                                  <ChartTooltip
-                                    {...props}
-                                    render={(value, name) => {
-                                      const pct = total ? ((value / total) * 100).toFixed(1) : '0';
-                                      return `${name}: ${value.toLocaleString()} (${pct}%)`;
-                                    }}
+                          <>
+                            <div className="flex-1 min-w-0" style={{ filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.15))' }}>
+                              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                                <PieChart margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
+                                  <defs>
+                                    <linearGradient id="status-pie-op" x1="0" y1="0" x2="0" y2="1">
+                                      <stop offset="0%" stopColor="#22c55e" stopOpacity={1} />
+                                      <stop offset="50%" stopColor="#16a34a" stopOpacity={1} />
+                                      <stop offset="100%" stopColor="#15803d" stopOpacity={0.9} />
+                                    </linearGradient>
+                                    <linearGradient id="status-pie-idle" x1="0" y1="0" x2="0" y2="1">
+                                      <stop offset="0%" stopColor="#94a3b8" stopOpacity={1} />
+                                      <stop offset="50%" stopColor="#64748b" stopOpacity={1} />
+                                      <stop offset="100%" stopColor="#475569" stopOpacity={0.9} />
+                                    </linearGradient>
+                                    <linearGradient id="status-pie-down" x1="0" y1="0" x2="0" y2="1">
+                                      <stop offset="0%" stopColor="#f87171" stopOpacity={1} />
+                                      <stop offset="50%" stopColor="#dc2626" stopOpacity={1} />
+                                      <stop offset="100%" stopColor="#b91c1c" stopOpacity={0.9} />
+                                    </linearGradient>
+                                  </defs>
+                                  <Pie
+                                    data={[
+                                      { name: 'Operational', value: totalOp, fill: 'url(#status-pie-op)' },
+                                      { name: 'Idle', value: totalIdle, fill: 'url(#status-pie-idle)' },
+                                      { name: 'Down', value: totalDown, fill: 'url(#status-pie-down)' },
+                                    ].filter((d) => d.value > 0)}
+                                    cx="50%"
+                                    cy="50%"
+                                    outerRadius={88}
+                                    paddingAngle={5}
+                                    dataKey="value"
+                                    nameKey="name"
+                                  >
+                                    {[
+                                      { name: 'Operational', value: totalOp, fill: 'url(#status-pie-op)' },
+                                      { name: 'Idle', value: totalIdle, fill: 'url(#status-pie-idle)' },
+                                      { name: 'Down', value: totalDown, fill: 'url(#status-pie-down)' },
+                                    ]
+                                      .filter((d) => d.value > 0)
+                                      .map((d, i) => (
+                                        <Cell key={i} fill={d.fill} stroke="rgba(255,255,255,0.95)" strokeWidth={2.5} />
+                                      ))}
+                                  </Pie>
+                                  <RechartsTooltip
+                                    content={(props) => (
+                                      <ChartTooltip
+                                        {...props}
+                                        render={(value, name) => {
+                                          const pct = total ? ((value / total) * 100).toFixed(1) : '0';
+                                          return `${name}: ${value.toLocaleString()} (${pct}%)`;
+                                        }}
+                                      />
+                                    )}
                                   />
-                                )}
-                              />
-                              <Legend formatter={(name) => <span className="text-xs font-medium">{name}</span>} />
-                            </PieChart>
-                          </ResponsiveContainer>
+                                </PieChart>
+                              </ResponsiveContainer>
+                            </div>
+                            <div className="flex flex-col justify-center gap-2 w-[180px] shrink-0 border-l border-border/80 pl-3">
+                              {[
+                                { name: 'Operational', value: totalOp, color: '#16a34a' },
+                                { name: 'Idle', value: totalIdle, color: '#64748b' },
+                                { name: 'Down', value: totalDown, color: '#dc2626' },
+                              ]
+                                .filter((d) => d.value > 0)
+                                .map((d, i) => {
+                                  const pct = total ? ((d.value / total) * 100).toFixed(1) : '0';
+                                  return (
+                                    <div key={i} className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-2 text-xs">
+                                      <span className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: d.color }} />
+                                      <span className="font-medium text-foreground truncate">{d.name}</span>
+                                      <span className="tabular-nums font-semibold text-foreground">{d.value.toLocaleString()}</span>
+                                      <span className="tabular-nums text-muted-foreground">({pct}%)</span>
+                                    </div>
+                                  );
+                                })}
+                            </div>
+                          </>
                         ) : (
-                          <div className="h-full flex items-center justify-center text-muted-foreground text-sm">No data</div>
+                          <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">No data</div>
                         )}
                       </div>
                     </CardContent>
@@ -927,72 +1279,95 @@ export default function EquipmentDashboardPage() {
                       <CardDescription>Out-of-service breakdown</CardDescription>
                     </CardHeader>
                     <CardContent className="pt-3 min-w-0 overflow-hidden">
-                      <div className="h-[260px] min-w-0 w-full" style={{ filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.12))' }}>
+                      <div className="flex gap-4 h-[260px] min-w-0 w-full">
                         {loading ? (
-                          <Skeleton className="h-full w-full" />
+                          <Skeleton className="flex-1 h-full" />
                         ) : fleetDownBreakdown.length > 0 ? (
-                          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                            <PieChart>
-                              <defs>
-                                {fleetDownBreakdown.slice(0, 10).map((_, i) => {
-                                  const base = [
-                                    { h: 0, l: [55, 42, 32] },
-                                    { h: 25, l: [52, 40, 30] },
-                                    { h: 350, l: [50, 38, 28] },
-                                    { h: 15, l: [48, 36, 26] },
-                                    { h: 330, l: [46, 34, 24] },
-                                    { h: 340, l: [44, 32, 22] },
-                                    { h: 320, l: [42, 30, 20] },
-                                    { h: 310, l: [40, 28, 18] },
-                                    { h: 5, l: [38, 26, 16] },
-                                    { h: 355, l: [36, 24, 14] },
-                                  ][i % 10];
-                                  return (
-                                    <linearGradient key={i} id={`down-donut-grad-${i}`} x1="0" y1="0" x2="0" y2="1">
-                                      <stop offset="0%" stopColor={`hsl(${base.h}, 75%, ${base.l[0]}%)`} stopOpacity={1} />
-                                      <stop offset="50%" stopColor={`hsl(${base.h}, 70%, ${base.l[1]}%)`} stopOpacity={1} />
-                                      <stop offset="100%" stopColor={`hsl(${base.h}, 65%, ${base.l[2]}%)`} stopOpacity={0.95} />
-                                    </linearGradient>
-                                  );
-                                })}
-                              </defs>
-                              <Pie
-                                data={fleetDownBreakdown.map((d, i) => ({
-                                  name: d.label,
-                                  value: d.count,
-                                  fill: `url(#down-donut-grad-${i})`,
-                                }))}
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={50}
-                                outerRadius={80}
-                                paddingAngle={4}
-                                dataKey="value"
-                                nameKey="name"
-                              >
-                                {fleetDownBreakdown.map((_, i) => (
-                                  <Cell key={i} fill={`url(#down-donut-grad-${i})`} stroke="rgba(255,255,255,0.9)" strokeWidth={2} />
-                                ))}
-                              </Pie>
-                              <RechartsTooltip
-                                content={(props) => {
-                                  const sum = fleetDownBreakdown.reduce((a, b) => a + b.count, 0);
-                                  return (
-                                    <ChartTooltip
-                                      {...props}
-                                      render={(value, name) => {
-                                        const pct = sum ? ((value / sum) * 100).toFixed(1) : '0';
-                                        return `${name}: ${value.toLocaleString()} (${pct}%)`;
-                                      }}
-                                    />
-                                  );
-                                }}
-                              />
-                              <Legend formatter={(name) => <span className="text-xs font-medium">{name}</span>} />
-                            </PieChart>
-                          </ResponsiveContainer>
+                          <>
+                            <div className="flex-1 min-w-0" style={{ filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.12))' }}>
+                              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                                <PieChart margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
+                                  <defs>
+                                    {fleetDownBreakdown.slice(0, 10).map((_, i) => {
+                                      const base = [
+                                        { h: 0, l: [55, 42, 32] },
+                                        { h: 25, l: [52, 40, 30] },
+                                        { h: 350, l: [50, 38, 28] },
+                                        { h: 15, l: [48, 36, 26] },
+                                        { h: 330, l: [46, 34, 24] },
+                                        { h: 340, l: [44, 32, 22] },
+                                        { h: 320, l: [42, 30, 20] },
+                                        { h: 310, l: [40, 28, 18] },
+                                        { h: 5, l: [38, 26, 16] },
+                                        { h: 355, l: [36, 24, 14] },
+                                      ][i % 10];
+                                      return (
+                                        <linearGradient key={i} id={`down-donut-grad-${i}`} x1="0" y1="0" x2="0" y2="1">
+                                          <stop offset="0%" stopColor={`hsl(${base.h}, 75%, ${base.l[0]}%)`} stopOpacity={1} />
+                                          <stop offset="50%" stopColor={`hsl(${base.h}, 70%, ${base.l[1]}%)`} stopOpacity={1} />
+                                          <stop offset="100%" stopColor={`hsl(${base.h}, 65%, ${base.l[2]}%)`} stopOpacity={0.95} />
+                                        </linearGradient>
+                                      );
+                                    })}
+                                  </defs>
+                                  <Pie
+                                    data={fleetDownBreakdown.map((d, i) => ({
+                                      name: d.label,
+                                      value: d.count,
+                                      fill: `url(#down-donut-grad-${i})`,
+                                    }))}
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={50}
+                                    outerRadius={80}
+                                    paddingAngle={4}
+                                    dataKey="value"
+                                    nameKey="name"
+                                  >
+                                    {fleetDownBreakdown.map((_, i) => (
+                                      <Cell key={i} fill={`url(#down-donut-grad-${i})`} stroke="rgba(255,255,255,0.9)" strokeWidth={2} />
+                                    ))}
+                                  </Pie>
+                                  <RechartsTooltip
+                                    content={(props) => {
+                                      const sum = fleetDownBreakdown.reduce((a, b) => a + b.count, 0);
+                                      return (
+                                        <ChartTooltip
+                                          {...props}
+                                          render={(value, name) => {
+                                            const pct = sum ? ((value / sum) * 100).toFixed(1) : '0';
+                                            return `${name}: ${value.toLocaleString()} (${pct}%)`;
+                                          }}
+                                        />
+                                      );
+                                    }}
+                                  />
+                                </PieChart>
+                              </ResponsiveContainer>
+                            </div>
+                            <div className="flex flex-col justify-center gap-1.5 w-[200px] shrink-0 border-l border-border/80 pl-3 overflow-y-auto">
+                              {fleetDownBreakdown.map((d, i) => {
+                                const sum = fleetDownBreakdown.reduce((a, b) => a + b.count, 0);
+                                const pct = sum ? ((d.count / sum) * 100).toFixed(1) : '0';
+                                const base = [
+                                  { h: 0, l: 42 }, { h: 25, l: 40 }, { h: 350, l: 38 }, { h: 15, l: 36 },
+                                  { h: 330, l: 34 }, { h: 340, l: 32 }, { h: 320, l: 30 }, { h: 310, l: 28 },
+                                  { h: 5, l: 26 }, { h: 355, l: 24 },
+                                ][i % 10];
+                                const color = `hsl(${base.h}, 70%, ${base.l}%)`;
+                                return (
+                                  <div key={i} className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-2 text-xs min-w-0">
+                                    <span className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: color }} />
+                                    <span className="font-medium text-foreground truncate">{d.label}</span>
+                                    <span className="tabular-nums font-semibold text-foreground">{d.count.toLocaleString()}</span>
+                                    <span className="tabular-nums text-muted-foreground shrink-0">({pct}%)</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </>
                         ) : (
-                          <div className="h-full flex items-center justify-center text-muted-foreground text-sm">No down breakdown data</div>
+                          <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">No down breakdown data</div>
                         )}
                       </div>
                     </CardContent>
@@ -1005,51 +1380,67 @@ export default function EquipmentDashboardPage() {
                       <CardDescription>Share of total assets by category</CardDescription>
                     </CardHeader>
                     <CardContent className="pt-3 min-w-0 overflow-hidden">
-                      <div className="h-[260px] min-w-0 w-full" style={{ filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.12))' }}>
+                      <div className="flex gap-4 h-[260px] min-w-0 w-full">
                         {loading ? (
-                          <Skeleton className="h-full w-full" />
+                          <Skeleton className="flex-1 h-full" />
                         ) : pieData.length ? (
-                          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                            <PieChart>
-                              <defs>
-                                {pieData.map((d, i) => (
-                                  <linearGradient key={i} id={`donut-grad-${i}`} x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor={d.fill} stopOpacity={1} />
-                                    <stop offset="50%" stopColor={d.fill} stopOpacity={0.85} />
-                                    <stop offset="100%" stopColor={d.fill} stopOpacity={0.65} />
-                                  </linearGradient>
-                                ))}
-                              </defs>
-                              <Pie
-                                data={pieData.map((d, i) => ({ ...d, fill: `url(#donut-grad-${i})` }))}
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={48}
-                                outerRadius={78}
-                                paddingAngle={4}
-                                dataKey="value"
-                                nameKey="name"
-                              >
-                                {pieData.map((_, i) => (
-                                  <Cell key={i} fill={`url(#donut-grad-${i})`} stroke="rgba(255,255,255,0.9)" strokeWidth={2} />
-                                ))}
-                              </Pie>
-                              <RechartsTooltip
-                                content={(props) => (
-                                  <ChartTooltip
-                                    {...props}
-                                    render={(value, name) => {
-                                      const pct = total && value > 0 ? ((value / total) * 100).toFixed(1) : '0';
-                                      return `${name}: ${value.toLocaleString()} (${pct}%)`;
-                                    }}
+                          <>
+                            <div className="flex-1 min-w-0" style={{ filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.12))' }}>
+                              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                                <PieChart margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
+                                  <defs>
+                                    {pieData.map((d, i) => (
+                                      <linearGradient key={i} id={`donut-grad-${i}`} x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor={d.fill} stopOpacity={1} />
+                                        <stop offset="50%" stopColor={d.fill} stopOpacity={0.85} />
+                                        <stop offset="100%" stopColor={d.fill} stopOpacity={0.65} />
+                                      </linearGradient>
+                                    ))}
+                                  </defs>
+                                  <Pie
+                                    data={pieData.map((d, i) => ({ ...d, fill: `url(#donut-grad-${i})` }))}
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={48}
+                                    outerRadius={78}
+                                    paddingAngle={4}
+                                    dataKey="value"
+                                    nameKey="name"
+                                  >
+                                    {pieData.map((_, i) => (
+                                      <Cell key={i} fill={`url(#donut-grad-${i})`} stroke="rgba(255,255,255,0.9)" strokeWidth={2} />
+                                    ))}
+                                  </Pie>
+                                  <RechartsTooltip
+                                    content={(props) => (
+                                      <ChartTooltip
+                                        {...props}
+                                        render={(value, name) => {
+                                          const pct = total && value > 0 ? ((value / total) * 100).toFixed(1) : '0';
+                                          return `${name}: ${value.toLocaleString()} (${pct}%)`;
+                                        }}
+                                      />
+                                    )}
                                   />
-                                )}
-                              />
-                              <Legend formatter={(name) => <span className="text-xs font-medium">{name}</span>} />
-                            </PieChart>
-                          </ResponsiveContainer>
+                                </PieChart>
+                              </ResponsiveContainer>
+                            </div>
+                            <div className="flex flex-col justify-center gap-1.5 w-[200px] shrink-0 border-l border-border/80 pl-3 overflow-y-auto">
+                              {pieData.map((d, i) => {
+                                const pct = total && d.value > 0 ? ((d.value / total) * 100).toFixed(1) : '0';
+                                return (
+                                  <div key={i} className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-2 text-xs min-w-0">
+                                    <span className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: d.fill }} />
+                                    <span className="font-medium text-foreground truncate">{d.name}</span>
+                                    <span className="tabular-nums font-semibold text-foreground">{d.value.toLocaleString()}</span>
+                                    <span className="tabular-nums text-muted-foreground shrink-0">({pct}%)</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </>
                         ) : (
-                          <div className="h-full flex items-center justify-center text-muted-foreground text-sm">No data</div>
+                          <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">No data</div>
                         )}
                       </div>
                     </CardContent>
@@ -1059,39 +1450,81 @@ export default function EquipmentDashboardPage() {
             </TabsContent>
 
             <TabsContent value="reports" className="space-y-3">
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  key="overall"
-                  variant={reportFilter === 'overall' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setReportFilter('overall')}
+              {/* One row: click pill = show that data; checkbox = combine (2+ = combined report) */}
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-medium text-muted-foreground shrink-0">Report:</span>
+                <button
+                  type="button"
+                  onClick={() => setPrimaryReportScope('overall')}
+                  className={`rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                    primaryReportScope === 'overall' && !isCombinedView
+                      ? 'bg-[#16A34A] text-white hover:bg-[#15803D]'
+                      : 'bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground'
+                  }`}
                 >
                   Overall
-                </Button>
-                {EQUIPMENT_CATEGORIES.map((cat) => (
-                  <Button
-                    key={cat.slug}
-                    variant={reportFilter === cat.slug ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setReportFilter(cat.slug)}
-                  >
-                    {cat.name}
-                  </Button>
-                ))}
+                </button>
+                {EQUIPMENT_CATEGORIES.map((cat) => {
+                  const isPrimary = primaryReportScope === cat.slug && !isCombinedView;
+                  const checked = combinedCheckboxes.includes(cat.slug);
+                  return (
+                    <label
+                      key={cat.slug}
+                      className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium cursor-pointer transition-colors border border-transparent ${
+                        isPrimary
+                          ? 'bg-[#16A34A] text-white hover:bg-[#15803D]'
+                          : 'bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground'
+                      }`}
+                    >
+                      <Checkbox
+                        checked={checked}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          const next = e.target.checked
+                            ? [...combinedCheckboxes, cat.slug]
+                            : combinedCheckboxes.filter((s) => s !== cat.slug);
+                          setCombinedCheckboxes(next);
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        className={isPrimary ? 'border-white data-[state=checked]:bg-white data-[state=checked]:text-[#16A34A]' : ''}
+                      />
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setPrimaryReportScope(cat.slug);
+                        }}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setPrimaryReportScope(cat.slug); } }}
+                        className="select-none"
+                      >
+                        {cat.name}
+                      </span>
+                    </label>
+                  );
+                })}
+                {combinedCheckboxes.length > 0 && (
+                  <span className="text-[10px] text-muted-foreground ml-0.5">
+                    (check 2+ to combine)
+                  </span>
+                )}
               </div>
               <Card className="shadow-lg overflow-hidden">
                 <CardHeader className="bg-green-50/50 dark:bg-green-950/20 border-b py-3">
                   <CardTitle className="text-sm">
-                    {reportFilter === 'overall'
+                    {effectiveReportSlugs.length === 0 || effectiveReportSlugs.includes('overall')
                       ? 'Overall Equipment Status Summary'
-                      : `${EQUIPMENT_CATEGORIES.find((c) => c.slug === reportFilter)?.name ?? reportFilter} Status Summary`}
+                      : effectiveReportSlugs.length === 1
+                        ? `${EQUIPMENT_CATEGORIES.find((c) => c.slug === effectiveReportSlugs[0])?.name ?? effectiveReportSlugs[0]} Status Summary`
+                        : `Combined: ${effectiveReportSlugs.map((s) => EQUIPMENT_CATEGORIES.find((c) => c.slug === s)?.name ?? s).join(' + ')}`}
                   </CardTitle>
                   <CardDescription>
                     Equipment counts by type and status (Op, Idle, UR, Down, HR, etc.)
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-0">
-                  {(loading && !statusSummaryReport) || reportLoading ? (
+                  {loading && !statusSummaryReport ? (
                     <div className="p-8">
                       <Skeleton className="h-64 w-full" />
                     </div>
@@ -1102,29 +1535,49 @@ export default function EquipmentDashboardPage() {
                       <table className="w-full text-xs">
                         <thead>
                           <tr className="bg-green-600 text-white">
-                            <th className="px-2 py-2 text-left font-semibold">No.</th>
-                            <th className="px-2 py-2 text-left font-semibold">Description</th>
-                            <th className="px-2 py-2 text-center font-semibold">Op</th>
-                            <th className="px-2 py-2 text-center font-semibold">Idle</th>
-                            <th className="px-2 py-2 text-center font-semibold">UR</th>
-                            <th className="px-2 py-2 text-center font-semibold">Down</th>
-                            <th className="px-2 py-2 text-center font-semibold">HR</th>
-                            <th className="px-2 py-2 text-center font-semibold">UI</th>
-                            <th className="px-2 py-2 text-center font-semibold">WI</th>
-                            <th className="px-2 py-2 text-center font-semibold">UC</th>
-                            <th className="px-2 py-2 text-center font-semibold">RFD</th>
-                            <th className="px-2 py-2 text-center font-semibold">AFD</th>
-                            <th className="px-2 py-2 text-center font-semibold">Accident</th>
-                            <th className="px-2 py-2 text-center font-semibold">Total</th>
+                            {(['no', 'category', 'description', 'op', 'idle', 'ur', 'down', 'hr', 'ui', 'wi', 'uc', 'rfd', 'afd', 'accident', 'total'] as const).map((key) => {
+                              if (key === 'category' && effectiveReportSlugs.length <= 1) return null;
+                              const labels: Record<string, string> = {
+                                no: 'No.',
+                                category: 'Category',
+                                description: effectiveReportSlugs.length === 0 || effectiveReportSlugs.includes('overall') ? 'Category' : 'Description',
+                                op: 'Op', idle: 'Idle', ur: 'UR', down: 'Down', hr: 'HR', ui: 'UI', wi: 'WI', uc: 'UC', rfd: 'RFD', afd: 'AFD', accident: 'Accident', total: 'Total',
+                              };
+                              const align = ['no', 'category', 'description'].includes(key) ? 'text-left' : 'text-center';
+                              const isActive = reportTableSortBy === key;
+                              const handleClick = () => {
+                                setReportTableSortBy(key);
+                                setReportTableSortOrder(isActive && reportTableSortOrder === 'desc' ? 'asc' : 'desc');
+                              };
+                              return (
+                                <th
+                                  key={key}
+                                  className={`px-2 py-2 ${align} font-semibold cursor-pointer select-none hover:bg-green-700 transition-colors`}
+                                  onClick={handleClick}
+                                >
+                                  <span className="inline-flex items-center gap-0.5">
+                                    {labels[key]}
+                                    {isActive ? (
+                                      <span className="text-white/90">{reportTableSortOrder === 'asc' ? ' ↑' : ' ↓'}</span>
+                                    ) : (
+                                      <span className="text-white/50 text-[10px]">↕</span>
+                                    )}
+                                  </span>
+                                </th>
+                              );
+                            })}
                           </tr>
                         </thead>
                         <tbody>
                           {reportTableRows.map((row) => (
                             <tr
                               key={`${row.category}-${row.description}`}
-                              className="border-b border-border/50 hover:bg-muted/30"
+                              className={`border-b border-border/50 hover:opacity-90 ${effectiveReportSlugs.length > 1 ? reportRowSectionClass(row.category) : 'hover:bg-muted/30'}`}
                             >
                               <td className="px-2 py-1.5 font-medium">{row.no}</td>
+                              {effectiveReportSlugs.length > 1 && (
+                                <td className="px-2 py-1.5 font-medium text-muted-foreground">{row.category}</td>
+                              )}
                               <td className="px-2 py-1.5 font-medium">{row.description}</td>
                               <td className="px-2 py-1.5 text-center tabular-nums">{row.op || '-'}</td>
                               <td className="px-2 py-1.5 text-center tabular-nums">{row.idle || '-'}</td>
@@ -1143,19 +1596,19 @@ export default function EquipmentDashboardPage() {
                         </tbody>
                         <tfoot>
                           <tr className="bg-green-100/50 dark:bg-green-900/20 font-semibold text-xs">
-                            <td className="px-2 py-2" colSpan={2}>G/Total</td>
-                            <td className="px-2 py-2 text-center tabular-nums">{statusSummaryReport?.grandTotal?.op ?? '-'}</td>
-                            <td className="px-2 py-2 text-center tabular-nums">{statusSummaryReport?.grandTotal?.idle ?? '-'}</td>
-                            <td className="px-2 py-2 text-center tabular-nums">{statusSummaryReport?.grandTotal?.ur ?? '-'}</td>
-                            <td className="px-2 py-2 text-center tabular-nums">{statusSummaryReport?.grandTotal?.down ?? '-'}</td>
-                            <td className="px-2 py-2 text-center tabular-nums">{statusSummaryReport?.grandTotal?.hr ?? '-'}</td>
-                            <td className="px-2 py-2 text-center tabular-nums">{statusSummaryReport?.grandTotal?.ui ?? '-'}</td>
-                            <td className="px-2 py-2 text-center tabular-nums">{statusSummaryReport?.grandTotal?.wi ?? '-'}</td>
-                            <td className="px-2 py-2 text-center tabular-nums">{statusSummaryReport?.grandTotal?.uc ?? '-'}</td>
-                            <td className="px-2 py-2 text-center tabular-nums">{statusSummaryReport?.grandTotal?.rfd ?? '-'}</td>
-                            <td className="px-2 py-2 text-center tabular-nums">{statusSummaryReport?.grandTotal?.afd ?? '-'}</td>
-                            <td className="px-2 py-2 text-center tabular-nums">{statusSummaryReport?.grandTotal?.accident ?? '-'}</td>
-                            <td className="px-2 py-2 text-center tabular-nums">{statusSummaryReport?.grandTotal?.total ?? '-'}</td>
+                            <td className="px-2 py-2" colSpan={effectiveReportSlugs.length > 1 ? 3 : 2}>G/Total</td>
+                            <td className="px-2 py-2 text-center tabular-nums">{reportGrandTotal?.op ?? '-'}</td>
+                            <td className="px-2 py-2 text-center tabular-nums">{reportGrandTotal?.idle ?? '-'}</td>
+                            <td className="px-2 py-2 text-center tabular-nums">{reportGrandTotal?.ur ?? '-'}</td>
+                            <td className="px-2 py-2 text-center tabular-nums">{reportGrandTotal?.down ?? '-'}</td>
+                            <td className="px-2 py-2 text-center tabular-nums">{reportGrandTotal?.hr ?? '-'}</td>
+                            <td className="px-2 py-2 text-center tabular-nums">{reportGrandTotal?.ui ?? '-'}</td>
+                            <td className="px-2 py-2 text-center tabular-nums">{reportGrandTotal?.wi ?? '-'}</td>
+                            <td className="px-2 py-2 text-center tabular-nums">{reportGrandTotal?.uc ?? '-'}</td>
+                            <td className="px-2 py-2 text-center tabular-nums">{reportGrandTotal?.rfd ?? '-'}</td>
+                            <td className="px-2 py-2 text-center tabular-nums">{reportGrandTotal?.afd ?? '-'}</td>
+                            <td className="px-2 py-2 text-center tabular-nums">{reportGrandTotal?.accident ?? '-'}</td>
+                            <td className="px-2 py-2 text-center tabular-nums">{reportGrandTotal?.total ?? '-'}</td>
                           </tr>
                         </tfoot>
                       </table>

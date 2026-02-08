@@ -165,7 +165,9 @@ export default function EquipmentReportView({ categoryGroup, categoryName }: Equ
               {locationBreakdown.length === 0 ? (
                 <p className="text-muted-foreground text-sm">No data</p>
               ) : (
-                locationBreakdown.map((l) => (
+                [...locationBreakdown]
+                  .sort((a, b) => (a.location ?? '').localeCompare(b.location ?? '', undefined, { sensitivity: 'base' }))
+                  .map((l) => (
                   <div key={l.location} className="flex justify-between text-[11px] py-1 border-b last:border-0">
                     <span className="truncate flex-1">{l.location}</span>
                     <span className="font-medium ml-2">{l.total}</span>

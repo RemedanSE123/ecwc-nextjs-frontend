@@ -105,6 +105,9 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
   const headerSearchRef = useRef(filters);
   headerSearchRef.current = filters;
   const loadMoreSentinelRef = useRef<HTMLDivElement>(null);
+  /** All Assets table column sort */
+  const [assetsTableSortBy, setAssetsTableSortBy] = useState<string>('project_location');
+  const [assetsTableSortOrder, setAssetsTableSortOrder] = useState<'asc' | 'desc'>('asc');
 
   useEffect(() => {
     const limit = useInfiniteScroll ? INFINITE_SCROLL_PAGE_SIZE : (initialLimit ?? 20);
@@ -352,6 +355,22 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
 
   const searchRegex = useMemo(() => getSearchRegex(filters.search ?? ''), [filters.search]);
 
+  const sortedData = useMemo(() => {
+    const key = assetsTableSortBy;
+    const order = assetsTableSortOrder === 'asc' ? 1 : -1;
+    const strKeys = ['project_location', 'asset_no', 'description', 'category', 'status'];
+    return [...data].sort((a, b) => {
+      const va = (a as Record<string, unknown>)[key];
+      const vb = (b as Record<string, unknown>)[key];
+      if (strKeys.includes(key)) {
+        const sa = String(va ?? '').trim().toLowerCase();
+        const sb = String(vb ?? '').trim().toLowerCase();
+        return order * sa.localeCompare(sb);
+      }
+      return 0;
+    });
+  }, [data, assetsTableSortBy, assetsTableSortOrder]);
+
   const resetFilters = () => {
     setFilters({ category_group: categoryGroup, page: 1, limit: pageSize });
   };
@@ -539,29 +558,54 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
           ) : (
             <div className="overflow-x-auto -mx-1 rounded-lg border border-border">
               <table className="w-full text-xs min-w-[720px] border-collapse">
-                <thead className="border-b border-sky-200/70 dark:border-sky-800/50 bg-gradient-to-r from-sky-100 to-blue-100 dark:from-sky-900/50 dark:to-blue-900/40">
-                  <tr className="text-left text-sky-800 dark:text-sky-200 text-[11px] font-semibold uppercase tracking-wider">
+                <thead>
+                  <tr className="bg-green-600 text-white text-left text-[11px] font-semibold uppercase tracking-wider">
                     <th className="py-2 px-3 w-12 text-right">#</th>
                     <th className="py-2 px-3 whitespace-nowrap w-16">Image</th>
-                    <th className="py-2 px-3 whitespace-nowrap">Project location</th>
-                    <th className="py-2 px-3 whitespace-nowrap">Asset number</th>
-                    <th className="py-2 px-3 whitespace-nowrap">Description</th>
-                    <th className="py-2 px-3 whitespace-nowrap">Category</th>
-                    <th className="py-2 px-3 whitespace-nowrap">Status</th>
+                    {(['project_location', 'asset_no', 'description', 'category', 'status'] as const).map((key) => {
+                      const labels: Record<string, string> = {
+                        project_location: 'Project location',
+                        asset_no: 'Asset number',
+                        description: 'Description',
+                        category: 'Category',
+                        status: 'Status',
+                      };
+                      const isActive = assetsTableSortBy === key;
+                      const handleClick = () => {
+                        setAssetsTableSortBy(key);
+                        setAssetsTableSortOrder(isActive && assetsTableSortOrder === 'desc' ? 'asc' : 'desc');
+                      };
+                      return (
+                        <th
+                          key={key}
+                          className="py-2 px-3 whitespace-nowrap cursor-pointer select-none hover:bg-green-700 transition-colors"
+                          onClick={handleClick}
+                        >
+                          <span className="inline-flex items-center gap-0.5">
+                            {labels[key]}
+                            {isActive ? (
+                              <span className="text-white/90">{assetsTableSortOrder === 'asc' ? ' ↑' : ' ↓'}</span>
+                            ) : (
+                              <span className="text-white/50 text-[10px]">↕</span>
+                            )}
+                          </span>
+                        </th>
+                      );
+                    })}
                     <th className="py-2 px-3 whitespace-nowrap text-center w-24" title="Click row to expand">
                       {isEditMode ? 'Actions' : 'View more'}
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {data.length === 0 ? (
+                  {sortedData.length === 0 ? (
                     <tr>
                       <td colSpan={8} className="py-10 text-center text-muted-foreground text-xs">
                         No assets found
                       </td>
                     </tr>
                   ) : (
-                    data.map((a, index) => {
+                    sortedData.map((a, index) => {
                       const imageUrl = getAssetImageUrl(a.image_s3_key);
                       const isExpanded = expandedId === a.id;
                       const rowIndex = useInfiniteScroll ? index + 1 : (filters.page! - 1) * (filters.limit ?? 20) + index + 1;

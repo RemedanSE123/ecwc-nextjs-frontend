@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { createPortal } from "react-dom"
 import { cn } from "@/lib/utils"
 import { ChevronDown } from "lucide-react"
 
@@ -10,25 +11,57 @@ interface SelectProps {
   disabled?: boolean
   children: React.ReactNode
   className?: string
+  /** When set, dropdown is at least this wide (e.g. for long names). Trigger stays in its cell. */
+  dropdownMinWidth?: number
 }
 
-const Select = ({ value, onValueChange, disabled, children, className }: SelectProps) => {
+const Select = ({ value, onValueChange, disabled, children, className, dropdownMinWidth }: SelectProps) => {
   const [open, setOpen] = React.useState(false)
   const containerRef = React.useRef<HTMLDivElement>(null)
+  const buttonRef = React.useRef<HTMLButtonElement>(null)
+  const dropdownRef = React.useRef<HTMLDivElement>(null)
+  const [position, setPosition] = React.useState({ top: 0, left: 0, width: 0 })
+
+  React.useEffect(() => {
+    if (open && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect()
+      setPosition({
+        top: rect.bottom + 4,
+        left: rect.left,
+        width: rect.width,
+      })
+    }
+  }, [open])
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      const target = event.target as Node
+      if (
+        containerRef.current && !containerRef.current.contains(target) &&
+        dropdownRef.current && !dropdownRef.current.contains(target)
+      ) {
         setOpen(false)
       }
     }
 
+    const handleScroll = (e: Event) => {
+      const target = e.target as Node
+      if (dropdownRef.current && dropdownRef.current.contains(target)) return
+      setOpen(false)
+    }
+
+    const handleResize = () => setOpen(false)
+
     if (open) {
       document.addEventListener("mousedown", handleClickOutside)
+      window.addEventListener("scroll", handleScroll, true)
+      window.addEventListener("resize", handleResize)
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
+      window.removeEventListener("scroll", handleScroll, true)
+      window.removeEventListener("resize", handleResize)
     }
   }, [open])
 
@@ -52,9 +85,40 @@ const Select = ({ value, onValueChange, disabled, children, className }: SelectP
       return null
     })[0]
 
+  const dropdownWidth = dropdownMinWidth != null ? Math.max(position.width, dropdownMinWidth) : position.width
+  const dropdownContent = open && typeof document !== "undefined" && (
+    <div
+      ref={dropdownRef}
+      className="fixed z-[9999] overflow-auto rounded-md border border-[#16A34A]/30 bg-popover text-popover-foreground shadow-lg max-h-[280px] min-w-[var(--select-width,120px)]"
+      style={{
+        top: position.top,
+        left: position.left,
+        width: dropdownWidth,
+        minWidth: dropdownMinWidth ?? undefined,
+      }}
+    >
+      <div className="p-1">
+        {items.map((child) => {
+          if (React.isValidElement(child) && child.type === SelectItem) {
+            const itemProps = child.props as { value: string; children: React.ReactNode }
+            return React.cloneElement(child as React.ReactElement<SelectItemProps>, {
+              onClick: () => {
+                onValueChange(itemProps.value)
+                setOpen(false)
+              },
+              isSelected: itemProps.value === value,
+            })
+          }
+          return null
+        })}
+      </div>
+    </div>
+  )
+
   return (
     <div ref={containerRef} className={cn("relative", className)}>
       <button
+        ref={buttonRef}
         type="button"
         disabled={disabled}
         onClick={() => !disabled && setOpen(!open)}
@@ -66,25 +130,7 @@ const Select = ({ value, onValueChange, disabled, children, className }: SelectP
         <span>{selectedLabel || "Select..."}</span>
         <ChevronDown className="h-4 w-4 opacity-50" />
       </button>
-      {open && (
-        <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md">
-          <div className="p-1">
-            {items.map((child) => {
-              if (React.isValidElement(child) && child.type === SelectItem) {
-                const itemProps = child.props as { value: string; children: React.ReactNode }
-                return React.cloneElement(child as React.ReactElement<SelectItemProps>, {
-                  onClick: () => {
-                    onValueChange(itemProps.value)
-                    setOpen(false)
-                  },
-                  isSelected: itemProps.value === value,
-                })
-              }
-              return null
-            })}
-          </div>
-        </div>
-      )}
+      {typeof document !== "undefined" && dropdownContent && createPortal(dropdownContent, document.body)}
     </div>
   )
 }

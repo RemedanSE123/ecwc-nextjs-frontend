@@ -11,7 +11,6 @@ import {
   AlertTriangle,
   CheckCircle2,
   Clock,
-  Percent,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -75,6 +74,7 @@ interface CategoryKPICardsProps {
   categoryGroup: string;
 }
 
+/** Order: Total, OP, Idle, Down, Down %. Colors: OP green, Idle blue, Down red. */
 const KPI_CONFIG = [
   {
     key: 'total',
@@ -90,9 +90,18 @@ const KPI_CONFIG = [
     title: 'OP',
     subLabel: 'Operational',
     icon: CheckCircle2,
-    bg: 'bg-emerald-500/10',
-    iconBg: 'bg-emerald-500/20',
-    iconColor: 'text-emerald-600 dark:text-emerald-400',
+    bg: 'bg-green-500/10',
+    iconBg: 'bg-green-500/20',
+    iconColor: 'text-green-600 dark:text-green-400',
+  },
+  {
+    key: 'idle',
+    title: 'Idle',
+    subLabel: 'Available',
+    icon: Clock,
+    bg: 'bg-blue-500/10',
+    iconBg: 'bg-blue-500/20',
+    iconColor: 'text-blue-600 dark:text-blue-400',
   },
   {
     key: 'down',
@@ -104,22 +113,13 @@ const KPI_CONFIG = [
     iconColor: 'text-red-600 dark:text-red-400',
   },
   {
-    key: 'idle',
-    title: 'Idle',
-    subLabel: 'Available',
-    icon: Clock,
-    bg: 'bg-cyan-500/10',
-    iconBg: 'bg-cyan-500/20',
-    iconColor: 'text-cyan-600 dark:text-cyan-400',
-  },
-  {
-    key: 'availability',
-    title: 'Availability',
-    subLabel: 'OP %',
-    icon: Percent,
-    bg: 'bg-green-500/10',
-    iconBg: 'bg-green-500/20',
-    iconColor: 'text-green-600 dark:text-green-400',
+    key: 'downPct',
+    title: 'Down %',
+    subLabel: 'By category',
+    icon: AlertTriangle,
+    bg: 'bg-red-500/10',
+    iconBg: 'bg-red-500/20',
+    iconColor: 'text-red-600 dark:text-red-400',
   },
 ];
 
@@ -139,14 +139,14 @@ export default function CategoryKPICards({ categoryGroup }: CategoryKPICardsProp
     [stats?.byStatus]
   );
   const total = stats?.total ?? 0;
-  const availability = total ? Math.round((op / total) * 100) : 0;
+  const downPct = total ? Math.round((down / total) * 100) : 0;
 
   const values: Record<string, string | number> = {
     total: total.toLocaleString(),
     op: op.toLocaleString(),
-    down: down.toLocaleString(),
     idle: idle.toLocaleString(),
-    availability: `${availability}%`,
+    down: down.toLocaleString(),
+    downPct: `${downPct}%`,
   };
 
   if (loading) {

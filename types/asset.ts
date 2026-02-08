@@ -68,7 +68,19 @@ export interface AssetStats {
 export interface AssetReportData {
   categoryBreakdown: { category: string; total: number; percentage: number }[];
   statusBreakdown: { status: string; total: number; percentage: number }[];
-  locationBreakdown: { location: string; total: number }[];
+  locationBreakdown: {
+    location: string;
+    total: number;
+    op: number;
+    idle: number;
+    down: number;
+    plant: number;
+    machinery: number;
+    heavy_vehicle: number;
+    light_vehicles: number;
+    factory_equipment: number;
+    auxiliary: number;
+  }[];
   recentAssets: Asset[];
 }
 
