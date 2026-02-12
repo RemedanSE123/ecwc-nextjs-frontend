@@ -688,30 +688,25 @@ const AnimatedProgress = ({ value, duration = 1500 }: { value: number; duration?
   )
 }
 
-// Animated Progress Bar Component for Equipment Status - KEEPING ORIGINAL COLORS
+// Animated Progress Bar: count vs grandTotal (e.g. 69/1602)
 const AnimatedEquipmentProgress = ({
   name,
-  operational,
-  total,
+  count,
+  grandTotal,
   duration = 1800
 }: {
   name: string;
-  operational: number;
-  total: number;
+  count: number;
+  grandTotal: number;
   duration?: number;
 }) => {
   const [progress, setProgress] = useState(0)
-  const ref = useRef(null)
-  const percentage = (operational / total) * 100
-
-  // Determine color based on percentage (keeping original logic)
-  const getProgressColor = (percent: number) => {
-    if (percent >= 80) return "bg-green-500"
-    if (percent >= 60) return "bg-amber-500"
-    return "bg-red-500"
-  }
+  const ref = useRef<HTMLDivElement>(null)
+  const percentage = grandTotal > 0 ? (count / grandTotal) * 100 : 0
 
   useEffect(() => {
+    const el = ref.current
+    if (!el) return
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -731,11 +726,7 @@ const AnimatedEquipmentProgress = ({
       },
       { threshold: 0.1 }
     )
-
-    if (ref.current) {
-      observer.observe(ref.current)
-    }
-
+    observer.observe(el)
     return () => observer.disconnect()
   }, [percentage, duration])
 
@@ -744,12 +735,12 @@ const AnimatedEquipmentProgress = ({
       <div className="flex items-center justify-between text-sm">
         <span className="font-medium text-foreground">{name}</span>
         <span className="text-muted-foreground">
-          {total}/{operational}
+          {count}/{grandTotal}
         </span>
       </div>
       <div className="relative h-2 bg-muted dark:bg-zinc-800 rounded-full overflow-hidden">
         <motion.div
-          className={`h-full rounded-full bg-gradient-to-r from-[#70c82a] to-emerald-400`}
+          className="h-full rounded-full bg-gradient-to-r from-[#70c82a] to-emerald-400"
           initial={{ width: 0 }}
           animate={{ width: `${progress}%` }}
           transition={{ duration: duration / 1000, ease: "easeOut" }}
@@ -1177,33 +1168,30 @@ export default function LandingPage() {
                       </Badge>
                     </div>
                     <div className="space-y-6">
-                      {/* Equipment Uptime Progress */}
-
-
-                      {/* Equipment Status with Animated Progress Bars */}
+                      {/* Equipment Status: each bar = count/1602 */}
                       <div className="space-y-4">
                         <AnimatedEquipmentProgress
-                          name="Machinery"
-                          operational={122}
-                          total={312}
+                          name="Plant"
+                          count={69}
+                          grandTotal={1602}
                           duration={1600}
                         />
                         <AnimatedEquipmentProgress
-                          name="Dump Trucks"
-                          operational={111}
-                          total={365}
+                          name="Machinery"
+                          count={346}
+                          grandTotal={1602}
                           duration={1800}
                         />
                         <AnimatedEquipmentProgress
                           name="Heavy Vehicles"
-                          operational={201}
-                          total={540}
+                          count={668}
+                          grandTotal={1602}
                           duration={2000}
                         />
                         <AnimatedEquipmentProgress
                           name="Light Vehicles"
-                          operational={111}
-                          total={288}
+                          count={520}
+                          grandTotal={1602}
                           duration={2200}
                         />
                       </div>
@@ -1217,8 +1205,8 @@ export default function LandingPage() {
                         variants={staggerContainer}
                       >
                         {[
-                          { value: "434", label: "Active Assets", color: "bg-[#70c82a]/10 border-[#70c82a]/20", textColor: "text-[#70c82a]" },
-                          { value: "1140", label: "Total Assets", color: "bg-[#70c82a]/10 border-[#70c82a]/20", textColor: "text-[#70c82a]" }
+                          { value: "1000+", label: "Other Assets", color: "bg-[#70c82a]/10 border-[#70c82a]/20", textColor: "text-[#70c82a]" },
+                          { value: "1602", label: "Total Assets", color: "bg-[#70c82a]/10 border-[#70c82a]/20", textColor: "text-[#70c82a]" }
                         ].map((stat, i) => (
                           <motion.div
                             key={i}
@@ -2214,21 +2202,21 @@ export default function LandingPage() {
                 title: "Predict potential equipment failures",
                 metric: "87%",
                 label: "Prediction Accuracy",
-                desc: "Advanced algorithms analyze vibration patterns, temperature fluctuations, and usage data to forecast failures before they occur."
+                desc: "Uses previous breakdown records and maintenance history to identify equipment that frequently fails. Assets with repeated repairs are flagged for preventive maintenance."
               },
               {
                 icon: Zap,
                 title: " preventive maintenance actions",
                 metric: "2.4x",
                 label: "ROI Improvement",
-                desc: "AI-driven scheduling optimizes maintenance windows, reducing downtime and maximizing asset utilization across the fleet."
+                desc: "Maintenance schedules are created based on usage hours, time intervals, or past service records to reduce unexpected breakdowns and improve equipment availability."
               },
               {
                 icon: AlertTriangle,
                 title: "Identify abnormal maintenance ",
                 metric: "Br 47K",
                 label: "Cost Saved/Month",
-                desc: "Real-time anomaly detection flags unusual spending patterns and asset wear, enabling immediate corrective action."
+                desc: "Compares current maintenance costs with past records to highlight equipment that is costing more than usual. Helps management take corrective action early."
               }
             ].map((card, i) => (
               <motion.div

@@ -272,12 +272,15 @@ export default function EquipmentDashboardPage() {
   /** Report table header sort (all views) */
   const [reportTableSortBy, setReportTableSortBy] = useState<string>('total');
   const [reportTableSortOrder, setReportTableSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [activeTab, setActiveTab] = useState<string>('overview');
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [fleetDownPopup, setFleetDownPopup] = useState<{ top: number; left: number } | null>(null);
   const fleetDownTriggerRef = useRef<HTMLDivElement>(null);
   const fleetDownPopupCloseRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pdfRef = useRef<HTMLDivElement>(null);
+  const overviewSectionRef = useRef<HTMLDivElement>(null);
+  const allAssetsSectionRef = useRef<HTMLDivElement>(null);
   const [animatedTotal, setAnimatedTotal] = useState(0);
   const locationSortColumns = ['location', 'plant', 'machinery', 'heavy_vehicle', 'light_vehicles', 'factory_equipment', 'auxiliary', 'total', 'op', 'idle', 'down'] as const;
   type LocationSortBy = (typeof locationSortColumns)[number];
@@ -589,21 +592,37 @@ export default function EquipmentDashboardPage() {
                 <CardContent className="p-4 sm:p-5">
                   {/* 1 row, 3 columns: cohesive neutral + primary accent */}
                   <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_2fr_minmax(0,1fr)] gap-3 sm:gap-4 items-stretch min-h-[130px] md:min-h-[180px]">
-                    {/* Column 1: Project Sites — neutral */}
-                    <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-muted/30 dark:bg-muted/20 px-4 py-4 sm:py-5 min-w-0">
+                    {/* Column 1: Project Sites — neutral, clickable → Overview */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab('overview');
+                        setTimeout(() => overviewSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+                      }}
+                      title="Go to Overview"
+                      className="flex flex-col items-center justify-center rounded-xl border border-border bg-muted/30 dark:bg-muted/20 px-4 py-4 sm:py-5 min-w-0 hover:bg-muted/50 dark:hover:bg-muted/30 transition-colors cursor-pointer focus:outline-none focus:ring-0"
+                    >
                       <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-widest text-muted-foreground">Project Sites</span>
                       <p className="text-2xl sm:text-3xl font-extrabold tabular-nums text-foreground mt-1">{totalProjectSites}</p>
                       <span className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">Active locations</span>
-                    </div>
+                    </button>
 
-                    {/* Column 2: Total Fleet — primary accent only (count-up animation) */}
-                    <div className="flex flex-col items-center justify-center rounded-2xl bg-primary/10 dark:bg-primary/15 border border-primary/20 px-5 py-6 sm:px-10 sm:py-8 min-w-0 shadow-inner ring-2 ring-primary/10">
+                    {/* Column 2: Total Fleet — primary accent only (count-up animation), clickable → All Assets */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab('all-assets');
+                        setTimeout(() => allAssetsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+                      }}
+                      title="Go to All Assets"
+                      className="flex flex-col items-center justify-center rounded-2xl bg-primary/10 dark:bg-primary/15 border border-primary/20 px-5 py-6 sm:px-10 sm:py-8 min-w-0 shadow-inner ring-2 ring-primary/10 hover:bg-primary/15 dark:hover:bg-primary/20 transition-colors cursor-pointer focus:outline-none focus:ring-0"
+                    >
                       <span className="text-xs sm:text-sm font-bold uppercase tracking-[0.2em] text-muted-foreground">Total Fleet</span>
                       <p className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold tabular-nums text-foreground mt-2 tracking-tight drop-shadow-sm">
                         {animatedTotal.toLocaleString()}
                       </p>
                       <span className="text-sm text-muted-foreground mt-1.5 font-medium">Equipment units</span>
-                    </div>
+                    </button>
 
                     {/* Column 3: 4 quadrants — row 1: OP, Idle | line | row 2: Avail, Down */}
                     <div className="grid grid-cols-2 gap-1.5 sm:gap-2 min-w-0">
@@ -750,7 +769,7 @@ export default function EquipmentDashboardPage() {
           </div>
 
           {/* Tabs: Overview | Charts | Reports | All Assets — polished pill style */}
-          <Tabs defaultValue="overview" className="space-y-3">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-3">
             <div className="flex justify-start">
               <TabsList className="inline-flex bg-muted/70 dark:bg-muted/40 p-1.5 rounded-2xl text-base shadow-inner border border-border/50">
                 <TabsTrigger
@@ -780,7 +799,7 @@ export default function EquipmentDashboardPage() {
               </TabsList>
             </div>
 
-            <TabsContent value="overview" className="space-y-3">
+            <TabsContent value="overview" className="space-y-3" ref={overviewSectionRef}>
               <Card className="shadow-lg rounded-xl border border-border/80 overflow-hidden">
                 <CardHeader className="py-3.5 bg-gradient-to-r from-emerald-50/80 to-green-50/60 dark:from-emerald-950/30 dark:to-green-950/20 border-b border-border/60">
                   <CardTitle className="text-sm font-semibold flex items-center gap-2">
@@ -1491,9 +1510,9 @@ export default function EquipmentDashboardPage() {
                   ) : !reportTableRows.length ? (
                     <p className="text-muted-foreground text-center py-12">No data</p>
                   ) : (
-                    <div className="overflow-x-auto">
+                    <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-5rem)] custom-scrollbar">
                       <table className="w-full text-xs">
-                        <thead>
+                        <thead className="sticky top-0 z-10 bg-green-600 shadow-[0_2px_0_0_rgba(0,0,0,0.1)]">
                           <tr className="bg-green-600 text-white">
                             {(['no', 'category', 'description', 'op', 'idle', 'ur', 'down', 'hr', 'ui', 'wi', 'uc', 'rfd', 'afd', 'accident', 'total'] as const).map((key) => {
                               if (key === 'category' && effectiveReportSlugs.length <= 1) return null;
@@ -1512,7 +1531,7 @@ export default function EquipmentDashboardPage() {
                               return (
                                 <th
                                   key={key}
-                                  className={`px-2 py-2 ${align} font-semibold cursor-pointer select-none hover:bg-green-700 transition-colors`}
+                                  className={`px-2 py-2 ${align} font-semibold cursor-pointer select-none hover:bg-green-700 transition-colors bg-green-600`}
                                   onClick={handleClick}
                                 >
                                   <span className="inline-flex items-center gap-0.5">
@@ -1578,7 +1597,7 @@ export default function EquipmentDashboardPage() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="all-assets" className="mt-4 min-w-0 max-w-full overflow-visible">
+            <TabsContent value="all-assets" className="mt-4 min-w-0 max-w-full overflow-visible" ref={allAssetsSectionRef}>
               <div className="min-w-0 max-w-full overflow-x-auto custom-scrollbar -mx-1 px-1">
                 <EquipmentDataView
                   categoryName="All Assets"

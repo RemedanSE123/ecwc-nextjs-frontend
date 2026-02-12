@@ -25,6 +25,7 @@ export default function CompoundMap() {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const selectedItemRef = useRef<HTMLLIElement>(null);
+  const isInitialSelection = useRef(true);
 
   const loadKml = useCallback(async () => {
     setLoading(true);
@@ -58,9 +59,12 @@ export default function CompoundMap() {
     : locations;
 
   useEffect(() => {
-    if (selectedId && selectedItemRef.current) {
-      selectedItemRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (!selectedId || !selectedItemRef.current) return;
+    if (isInitialSelection.current) {
+      isInitialSelection.current = false;
+      return;
     }
+    selectedItemRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, [selectedId]);
 
   const isFacility = (name: string) => /Head Office|Kality P&E|Kality Production/i.test(name);
