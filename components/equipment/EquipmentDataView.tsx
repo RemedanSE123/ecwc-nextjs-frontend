@@ -439,7 +439,7 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
         </Card>
       )}
 
-      <Card className="border-border shadow-sm bg-card">
+      <Card className={`border-border shadow-sm bg-card ${!categoryGroup ? 'min-w-0 max-w-full' : ''}`}>
         <CardHeader className="p-4 pb-2 border-b border-border bg-muted/10 dark:bg-muted/5">
           <div className="flex flex-col gap-3">
             {/* Row 1: Title (left), Search (middle), View/Edit/Export (right) */}
@@ -455,7 +455,7 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
                 <div className="relative flex-1 max-w-xs min-w-[140px]">
                   <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                   <Input
-                    placeholder="Asset no, make, serial..."
+                    placeholder="Search everything"
                     value={headerSearch}
                     onChange={(e) => setHeaderSearch(e.target.value)}
                     className="pl-8 h-9 text-sm w-full border-border bg-background"
@@ -557,7 +557,7 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
             </div>
           ) : (
             <div className="overflow-x-auto -mx-1 rounded-lg border border-border">
-              <table className="w-full text-xs min-w-[720px] border-collapse">
+              <table className={`w-full text-xs border-collapse ${!categoryGroup ? 'min-w-[600px]' : 'min-w-[720px]'}`}>
                 <thead>
                   <tr className="bg-green-600 text-white text-left text-[11px] font-semibold uppercase tracking-wider">
                     <th className="py-2 px-3 w-12 text-right">#</th>
@@ -636,7 +636,7 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
                                 )}
                               </div>
                             </td>
-                            <td className="py-2 px-3 whitespace-nowrap text-foreground text-xs">{highlightText(a.project_location, searchRegex)}</td>
+                            <td className={`py-2 px-3 text-foreground text-xs ${!categoryGroup ? 'max-w-[140px] truncate' : 'whitespace-nowrap'}`} title={a.project_location ?? ''}>{highlightText(a.project_location, searchRegex)}</td>
                             <td className="py-2 px-3 whitespace-nowrap font-medium text-foreground text-xs">{highlightText(a.asset_no, searchRegex)}</td>
                             <td className="py-2 px-3 max-w-[180px] truncate text-foreground/90 text-xs" title={a.description ?? ''}>
                               {highlightText(a.description, searchRegex)}

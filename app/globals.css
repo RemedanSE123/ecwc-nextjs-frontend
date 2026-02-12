@@ -237,7 +237,7 @@
 
 @layer utilities {
   .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
+    width: 10px;
   }
   .custom-scrollbar::-webkit-scrollbar-track {
     background: hsl(48 10% 94% / 0.6);
@@ -247,11 +247,11 @@
     background: rgba(39, 39, 42, 0.5);
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(112, 200, 42, 0.3);
+    background: rgba(112, 200, 42, 0.5);
     border-radius: 10px;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(112, 200, 42, 0.5);
+    background: rgba(112, 200, 42, 0.7);
   }
 
   /* Sidebar: thin, subtle scrollbar on green background */

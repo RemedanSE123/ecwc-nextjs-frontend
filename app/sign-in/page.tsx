@@ -89,7 +89,8 @@ function SignInForm() {
       {/* Back to Home Button */}
       <div className="absolute top-4 left-4 z-50">
         <Link 
-          href="/" 
+          href="/#overview" 
+          scroll={true}
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-background/80 dark:bg-zinc-900/80 border border-[#70c82a]/20 hover:border-[#70c82a] hover:bg-[#70c82a]/5 transition-all backdrop-blur-sm"
         >
           <Home className="h-4 w-4 text-[#70c82a]" />
@@ -113,7 +114,7 @@ function SignInForm() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
                 {/* Left Section - Logo */}
                 <div className="flex justify-center md:justify-start">
-                  <Link href="/" className="relative cursor-pointer hover:opacity-80 transition-opacity">
+                  <Link href="/#overview" className="relative cursor-pointer hover:opacity-80 transition-opacity">
                     <div className="absolute inset-0 bg-[#70c82a]/10 rounded-full blur-xl"></div>
                     <Image
                       src="/ecwc png logo.png"
@@ -245,7 +246,7 @@ function SignInPageFallback() {
     <div className="h-screen bg-background flex flex-col overflow-hidden">
       <div className="absolute top-4 left-4 z-50">
         <Link
-          href="/"
+          href="/#overview"
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-background/80 dark:bg-zinc-900/80 border border-[#70c82a]/20 hover:border-[#70c82a] hover:bg-[#70c82a]/5 transition-all backdrop-blur-sm"
         >
           <Home className="h-4 w-4 text-[#70c82a]" />

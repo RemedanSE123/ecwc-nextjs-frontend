@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useLayoutEffect, useRef } from "react"
 import dynamic from "next/dynamic"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
@@ -759,12 +760,43 @@ const AnimatedEquipmentProgress = ({
 }
 
 export default function LandingPage() {
+  const pathname = usePathname()
   const [isLoading, setIsLoading] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [scrollToBottom, setScrollToBottom] = useState(true)
   const [chatInput, setChatInput] = useState('')
   const [chatUserMessages, setChatUserMessages] = useState<{ id: number; text: string }[]>([])
   const chatMessageIdRef = useRef(0)
+
+  // Force overview (top) when on landing page — back from login/sign-up or refresh
+  useLayoutEffect(() => {
+    if (typeof window === 'undefined' || pathname !== '/') return
+    window.history.scrollRestoration = 'manual'
+    window.scrollTo(0, 0)
+    window.history.replaceState(null, '', '/#overview')
+    const scrollToOverview = () => {
+      window.scrollTo(0, 0)
+      window.history.replaceState(null, '', '/#overview')
+    }
+    const delays = [50, 150, 400, 800, 1200]
+    const timers = delays.map((d) => setTimeout(scrollToOverview, d))
+    return () => timers.forEach((t) => clearTimeout(t))
+  }, [pathname])
+
+  // Scroll lock: for ~1.5s after mount, keep scroll at top to override late restoration
+  useEffect(() => {
+    if (pathname !== '/') return
+    const interval = 100
+    const duration = 1500
+    const id = setInterval(() => {
+      if (window.scrollY !== 0) window.scrollTo(0, 0)
+    }, interval)
+    const stop = setTimeout(() => clearInterval(id), duration)
+    return () => {
+      clearInterval(id)
+      clearTimeout(stop)
+    }
+  }, [pathname])
 
   useEffect(() => {
     const handleScroll = () => {
@@ -968,8 +1000,8 @@ export default function LandingPage() {
         </div>
       </motion.header>
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden py-12 lg:py-16 bg-background dark:bg-black">
+      {/* Hero Section - main overview (PEMS, Real-Time Monitoring, Live Equipment Dashboard) */}
+      <section id="overview" className="relative overflow-hidden py-12 lg:py-16 bg-background dark:bg-black scroll-mt-16">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(112,200,42,0.05),transparent_50%)] dark:bg-[radial-gradient(circle_at_30%_50%,rgba(112,200,42,0.05),transparent_50%)]" />
         <motion.div
           className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#70c82a] to-transparent"

@@ -49,10 +49,14 @@ function MultiSelectFilter({
 }) {
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState<string[]>([]);
+  const [filterSearch, setFilterSearch] = useState('');
 
-  // When dropdown opens, sync pending from current selected
+  // When dropdown opens, sync pending from current selected and reset filter search
   useEffect(() => {
-    if (open) setPending([...selected]);
+    if (open) {
+      setPending([...selected]);
+      setFilterSearch('');
+    }
   }, [open, selected]);
 
   const toggle = (value: string) => {
@@ -61,7 +65,7 @@ function MultiSelectFilter({
       return next;
     });
   };
-  const selectAll = () => setPending(options.length ? [...options] : []);
+  const selectAll = () => setPending(filteredOptions.length ? [...filteredOptions] : []);
   const clear = () => setPending([]);
   const apply = () => {
     onSelectedChange(pending.length ? pending : []);
@@ -70,6 +74,10 @@ function MultiSelectFilter({
 
   const displayLabel = selected.length === 0 ? label : `${label} (${selected.length})`;
   const selectedCount = pending.length;
+  const filterLower = filterSearch.trim().toLowerCase();
+  const filteredOptions = filterLower
+    ? options.filter((opt) => opt.toLowerCase().includes(filterLower))
+    : options;
   const totalCount = options.length;
   const kpiText = totalCount > 0 ? `${selectedCount} of ${totalCount} selected` : 'No options';
 
@@ -81,8 +89,8 @@ function MultiSelectFilter({
           <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-50" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="max-h-[280px] overflow-y-auto">
-        <DropdownMenuLabel className="flex flex-col gap-1.5 text-xs">
+      <DropdownMenuContent align="start" className="max-h-[320px] overflow-hidden flex flex-col">
+        <DropdownMenuLabel className="flex flex-col gap-1.5 text-xs shrink-0">
           <div className="flex items-center justify-between gap-2">
             <span>{placeholder}</span>
             <span className="flex gap-1">
@@ -90,13 +98,25 @@ function MultiSelectFilter({
               <Button type="button" variant="ghost" size="sm" className="h-6 px-1.5 text-[10px]" onClick={clear}>Clear</Button>
             </span>
           </div>
+          <Input
+            placeholder="Search in list..."
+            value={filterSearch}
+            onChange={(e) => setFilterSearch(e.target.value)}
+            onKeyDown={(e) => e.stopPropagation()}
+            onKeyUp={(e) => e.stopPropagation()}
+            className="h-7 text-xs pl-2"
+            onClick={(e) => e.stopPropagation()}
+          />
           <p className="text-[10px] text-muted-foreground font-medium tabular-nums">{kpiText}</p>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {options.length === 0 ? (
-          <div className="py-4 px-3 text-[11px] text-muted-foreground">No options</div>
+        <div className="overflow-y-auto max-h-[220px] min-h-0">
+        {filteredOptions.length === 0 ? (
+          <div className="py-4 px-3 text-[11px] text-muted-foreground">
+            {filterSearch.trim() ? `No matches for "${filterSearch}"` : 'No options'}
+          </div>
         ) : (
-          options.map((opt) => (
+          filteredOptions.map((opt) => (
             <DropdownMenuItem
               key={opt}
               onSelect={(e) => {
@@ -115,8 +135,9 @@ function MultiSelectFilter({
             </DropdownMenuItem>
           ))
         )}
+        </div>
         <DropdownMenuSeparator />
-        <div className="p-2 flex justify-end gap-1 border-t">
+        <div className="p-2 flex justify-end gap-1 border-t shrink-0">
           <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={() => setOpen(false)}>
             Cancel
           </Button>
@@ -222,7 +243,7 @@ export default function AssetFilters({
             <div className="relative w-40 sm:w-48 shrink-0">
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
               <Input
-                placeholder="Asset no, make, serial..."
+                placeholder="Search everything"
                 value={localSearch}
                 onChange={(e) => setLocalSearch(e.target.value)}
                 className="pl-7 h-8 text-xs transition-shadow focus-visible:ring-2"
@@ -319,7 +340,7 @@ export default function AssetFilters({
         <div className="relative flex-1 min-w-[160px]">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Search description, asset no, serial, make..."
+            placeholder="Search everything"
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}
             className="pl-9 h-9 text-sm"

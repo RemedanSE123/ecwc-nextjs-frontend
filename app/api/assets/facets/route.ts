@@ -87,10 +87,12 @@ function buildFacetWhere(request: NextRequest): { whereClause: string; params: (
     conditions.push(`(
       description ILIKE $${idx} OR asset_no ILIKE $${idx + 1} OR
       serial_no ILIKE $${idx + 2} OR make ILIKE $${idx + 3} OR
-      model ILIKE $${idx + 4} OR responsible_person_name ILIKE $${idx + 5}
+      model ILIKE $${idx + 4} OR responsible_person_name ILIKE $${idx + 5} OR
+      project_location ILIKE $${idx + 6} OR category ILIKE $${idx + 7} OR
+      ownership ILIKE $${idx + 8} OR remark ILIKE $${idx + 9}
     )`);
-    params.push(pattern, pattern, pattern, pattern, pattern, pattern);
-    idx += 6;
+    params.push(pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern);
+    idx += 10;
   }
 
   return { whereClause: conditions.join(' AND '), params };

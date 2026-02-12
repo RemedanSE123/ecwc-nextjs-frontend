@@ -266,9 +266,8 @@ export default function EquipmentDashboardPage() {
   const [report, setReport] = useState<AssetReportData | null>(null);
   const [statusSummary, setStatusSummary] = useState<Awaited<ReturnType<typeof fetchStatusSummary>> | null>(null);
   const [statusSummaryReport, setStatusSummaryReport] = useState<Awaited<ReturnType<typeof fetchStatusSummary>> | null>(null);
-  /** Click selection: clicking a pill shows this scope (Overall or single category). */
+  /** Button click = view only that report. Checkbox 2+ = merged report. */
   const [primaryReportScope, setPrimaryReportScope] = useState<'overall' | string>('overall');
-  /** Checkboxes: when 2+ checked, report = combined; otherwise use primaryReportScope. */
   const [combinedCheckboxes, setCombinedCheckboxes] = useState<string[]>([]);
   /** Report table header sort (all views) */
   const [reportTableSortBy, setReportTableSortBy] = useState<string>('total');
@@ -575,8 +574,8 @@ export default function EquipmentDashboardPage() {
   return (
     <Layout>
       <TooltipProvider>
-        <div className="w-full overflow-x-hidden">
-          <div id="equipment-dashboard-pdf" ref={pdfRef} className="space-y-4 w-[103.09%] origin-top-left scale-[0.97]">
+        <div className="w-full overflow-x-hidden min-w-0">
+          <div id="equipment-dashboard-pdf" ref={pdfRef} className="space-y-4 w-full min-w-0">
           {/* Row 1: Title + Fleet card in same row — card stretches full to right */}
           <motion.div
             initial={{ opacity: 0, y: -15 }}
@@ -1410,66 +1409,67 @@ export default function EquipmentDashboardPage() {
             </TabsContent>
 
             <TabsContent value="reports" className="space-y-3">
-              {/* One row: click pill = show that data; checkbox = combine (2+ = combined report) */}
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs font-medium text-muted-foreground shrink-0">Report:</span>
-                <button
-                  type="button"
-                  onClick={() => setPrimaryReportScope('overall')}
-                  className={`rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors ${
-                    primaryReportScope === 'overall' && !isCombinedView
-                      ? 'bg-[#16A34A] text-white hover:bg-[#15803D]'
-                      : 'bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground'
-                  }`}
-                >
-                  Overall
-                </button>
-                {EQUIPMENT_CATEGORIES.map((cat) => {
-                  const isPrimary = primaryReportScope === cat.slug && !isCombinedView;
-                  const checked = combinedCheckboxes.includes(cat.slug);
-                  return (
-                    <label
-                      key={cat.slug}
-                      className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium cursor-pointer transition-colors border border-transparent ${
-                        isPrimary
-                          ? 'bg-[#16A34A] text-white hover:bg-[#15803D]'
-                          : 'bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground'
+              {/* Report scope: click button = view only that report; check 2+ boxes = merged report. */}
+              <Card className="border border-border/80 bg-muted/20 dark:bg-muted/10">
+                <CardContent className="p-4 space-y-2">
+                  <p className="text-sm font-semibold text-foreground">Report scope</p>
+                  <p className="text-xs text-muted-foreground">Click a button to view only that report. Check 2 or more boxes to see a merged report.</p>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => { setPrimaryReportScope('overall'); setCombinedCheckboxes([]); }}
+                      className={`rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                        primaryReportScope === 'overall' && !isCombinedView
+                          ? 'bg-[#16A34A] text-white hover:bg-[#15803D] shadow-sm'
+                          : 'bg-background border border-border text-muted-foreground hover:bg-muted hover:text-foreground'
                       }`}
                     >
-                      <Checkbox
-                        checked={checked}
-                        onChange={(e) => {
-                          e.stopPropagation();
-                          const next = e.target.checked
-                            ? [...combinedCheckboxes, cat.slug]
-                            : combinedCheckboxes.filter((s) => s !== cat.slug);
-                          setCombinedCheckboxes(next);
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                        className={isPrimary ? 'border-white data-[state=checked]:bg-white data-[state=checked]:text-[#16A34A]' : ''}
-                      />
-                      <span
-                        role="button"
-                        tabIndex={0}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setPrimaryReportScope(cat.slug);
-                        }}
-                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setPrimaryReportScope(cat.slug); } }}
-                        className="select-none"
-                      >
-                        {cat.name}
-                      </span>
-                    </label>
-                  );
-                })}
-                {combinedCheckboxes.length > 0 && (
-                  <span className="text-[10px] text-muted-foreground ml-0.5">
-                    (check 2+ to combine)
-                  </span>
-                )}
-              </div>
+                      Overall
+                    </button>
+                    {EQUIPMENT_CATEGORIES.map((cat) => {
+                      const checked = combinedCheckboxes.includes(cat.slug);
+                      const isSingleView = !isCombinedView && primaryReportScope === cat.slug;
+                      return (
+                        <div
+                          key={cat.slug}
+                          className={`flex items-center gap-2 rounded-lg border px-2 py-1.5 ${
+                            isSingleView
+                              ? 'bg-[#16A34A] text-white border-[#16A34A]'
+                              : checked
+                                ? 'bg-[#16A34A]/10 border-[#16A34A]/50'
+                                : 'bg-background border-border'
+                          }`}
+                        >
+                          <Checkbox
+                            checked={checked}
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              const next = e.target.checked
+                                ? [...combinedCheckboxes, cat.slug]
+                                : combinedCheckboxes.filter((s) => s !== cat.slug);
+                              setCombinedCheckboxes(next);
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            className={isSingleView ? 'border-white data-[state=checked]:bg-white data-[state=checked]:text-[#16A34A]' : ''}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => { setPrimaryReportScope(cat.slug); setCombinedCheckboxes([]); }}
+                            className={`text-xs font-medium text-left transition-colors hover:underline focus:outline-none focus:underline ${
+                              isSingleView ? 'text-white' : 'text-foreground hover:text-[#16A34A]'
+                            }`}
+                          >
+                            {cat.name}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {combinedCheckboxes.length === 1 && (
+                    <p className="text-xs text-amber-600 dark:text-amber-400">Check 2 or more to merge.</p>
+                  )}
+                </CardContent>
+              </Card>
               <Card className="shadow-lg overflow-hidden">
                 <CardHeader className="bg-green-50/50 dark:bg-green-950/20 border-b py-3">
                   <CardTitle className="text-sm">
@@ -1578,11 +1578,13 @@ export default function EquipmentDashboardPage() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="all-assets" className="mt-4">
-              <EquipmentDataView
-                categoryName="All Assets"
-                useInfiniteScroll
-              />
+            <TabsContent value="all-assets" className="mt-4 min-w-0 max-w-full overflow-visible">
+              <div className="min-w-0 max-w-full overflow-x-auto custom-scrollbar -mx-1 px-1">
+                <EquipmentDataView
+                  categoryName="All Assets"
+                  useInfiniteScroll
+                />
+              </div>
             </TabsContent>
           </Tabs>
           </div>

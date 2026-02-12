@@ -114,7 +114,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Main Content */}
-      <div className={`flex-1 flex flex-col w-full transition-all duration-300 ${
+      <div className={`flex-1 flex flex-col w-full min-w-0 transition-all duration-300 ${
         sidebarCollapsed ? 'lg:ml-14' : 'lg:ml-52'
       }`}>
         {/* Mobile Menu Button */}
@@ -128,7 +128,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <div className="print-hide">
           <Header sidebarCollapsed={sidebarCollapsed} />
         </div>
-        <main className="flex-1 overflow-y-auto overflow-x-hidden mt-[3.675rem] p-[0.65625rem] sm:p-[0.7875rem] lg:p-[1.05rem] max-w-full min-w-0 bg-gray-50/50 dark:bg-gray-900/50">
+        <main className="flex-1 overflow-y-scroll overflow-x-hidden mt-[3.675rem] p-[0.65625rem] sm:p-[0.7875rem] lg:p-[1.05rem] max-w-full min-w-0 bg-gray-50/50 dark:bg-gray-900/50 custom-scrollbar">
           <div className="max-w-full min-w-0 overflow-x-hidden">
             {children}
           </div>

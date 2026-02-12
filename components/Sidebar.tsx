@@ -16,7 +16,6 @@ import {
   ClipboardList,
   UserCheck,
   Clock,
-  FileCheck,
   ChevronsLeft,
   ChevronsRight,
   Info,
@@ -71,6 +70,9 @@ const navigation: NavItem[] = [
       { name: 'Rate Reference', href: '/rates', icon: BrIcon },
     ],
   },
+  { name: 'Daily Down', href: '/daily-down', icon: FileText },
+  { name: 'Equipment Utilization', href: '/equipment-utilization', icon: FileText },
+  { name: 'Equipment Transfer', href: '/equipment-transfer', icon: FileText },
   { name: 'Compound Map', href: '/compound-map', icon: MapPin },
   { name: 'Announcements', href: '/announcements', icon: Megaphone },
   { name: 'Audit Trail', href: '/audit', icon: History },
@@ -104,6 +106,12 @@ export default function Sidebar({ isCollapsed = false, onToggleCollapse, userPho
     return navigation;
   }, [userPhone]);
 
+  // Standalone form routes: do not add or remove Time Sheet from expanded state (no expand/collapse)
+  const isStandaloneFormRoute =
+    pathname === '/daily-down' ||
+    pathname === '/equipment-utilization' ||
+    pathname === '/equipment-transfer';
+
   // Keep parent expanded when on a child route; for Assets+Map-only users always expand ECWC Assets
   useEffect(() => {
     const parentsToExpand: string[] = [];
@@ -117,10 +125,14 @@ export default function Sidebar({ isCollapsed = false, onToggleCollapse, userPho
       parentsToExpand.push('ECWC Assets');
     }
     setExpandedItems((prev) => {
+      // On Daily Down / Equipment Utilization / Equipment Transfer, don't change expanded state at all
+      if (isStandaloneFormRoute) {
+        return prev;
+      }
       const combined = new Set([...prev, ...parentsToExpand]);
       return Array.from(combined);
     });
-  }, [pathname, userPhone, visibleNav]);
+  }, [pathname, userPhone, visibleNav, isStandaloneFormRoute]);
 
   const toggleExpanded = (name: string) => {
     setExpandedItems((prev) =>
