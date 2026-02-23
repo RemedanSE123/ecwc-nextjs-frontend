@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { SLUG_TO_DB_CATEGORY } from '@/types/asset';
+import { buildAssetWhereClause } from '@/lib/asset-filters-where';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,15 +12,12 @@ function getErrorMessage(err: unknown): string {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const categoryGroup = searchParams.get('category_group') || undefined;
-    const dbCategory = categoryGroup ? SLUG_TO_DB_CATEGORY[categoryGroup] : null;
-
-    const whereClause = dbCategory ? 'WHERE category = $1' : '';
-    const params = dbCategory ? [dbCategory] : [];
+    const { whereClause, params } = buildAssetWhereClause(searchParams);
 
     const cols = [
       'image_s3_key',
       'project_location',
+      'category',
       'asset_no',
       'description',
       'serial_no',
@@ -36,6 +33,7 @@ export async function GET(request: NextRequest) {
     const columnLabels: Record<string, string> = {
       image_s3_key: 'Image',
       project_location: 'Location',
+      category: 'Category',
       asset_no: 'Asset No',
       description: 'Description',
       serial_no: 'Serial No',
@@ -52,7 +50,7 @@ export async function GET(request: NextRequest) {
       (col) => `COUNT(*) FILTER (WHERE (${col} IS NOT NULL) AND (TRIM(COALESCE(${col}::text, '')) != ''))::int AS ${col}_filled`
     ).join(', ');
     const oneRow = await query<Record<string, number>>(
-      `SELECT COUNT(*)::int AS total, ${filters} FROM asset_master ${whereClause}`,
+      `SELECT COUNT(*)::int AS total, ${filters} FROM asset_master WHERE ${whereClause}`,
       params
     );
     const row = oneRow?.[0];

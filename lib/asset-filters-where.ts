@@ -1,17 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db';
 import { SLUG_TO_DB_CATEGORY } from '@/types/asset';
-
-export const dynamic = 'force-dynamic';
-
-function getErrorMessage(err: unknown): string {
-  if (err instanceof Error) return err.message;
-  return String(err);
-}
 
 const BLANK_FILTER_VALUE = '__BLANK__';
 
-function getParamValues(searchParams: URLSearchParams, key: string): string[] {
+export function getParamValues(searchParams: URLSearchParams, key: string): string[] {
   const all = searchParams.getAll(key);
   if (all.length > 0) return all.map((v) => v.trim()).filter((v) => v !== '');
   const single = searchParams.get(key);
@@ -29,9 +20,8 @@ function blankCondition(column: string): string {
   return `(${column} IS NULL OR TRIM(COALESCE(${column}, '')::text) = '')`;
 }
 
-/** Build WHERE clause and params from same filter params as GET /api/assets (cascading facets). */
-function buildFacetWhere(request: NextRequest): { whereClause: string; params: (string | number)[] } {
-  const { searchParams } = new URL(request.url);
+/** Build WHERE clause and params from filter params (category, status, description, etc.). */
+export function buildAssetWhereClause(searchParams: URLSearchParams): { whereClause: string; params: (string | number)[] } {
   const categoryArr = getParamValues(searchParams, 'category');
   const categoryGroup = searchParams.get('category_group') || undefined;
   const statusArr = getParamValues(searchParams, 'status');
@@ -150,42 +140,4 @@ function buildFacetWhere(request: NextRequest): { whereClause: string; params: (
   }
 
   return { whereClause: conditions.join(' AND '), params };
-}
-
-export async function GET(request: NextRequest) {
-  try {
-    const { whereClause, params } = buildFacetWhere(request);
-
-    const [categoryRes, descriptionRes, statusRes, locationRes, makeRes, modelRes, ownershipRes, responsibleRes] = await Promise.all([
-      query<{ category: string }>(`SELECT DISTINCT category FROM asset_master WHERE ${whereClause} AND category IS NOT NULL AND TRIM(category::text) != '' ORDER BY category`, params),
-      query<{ description: string }>(`SELECT DISTINCT description FROM asset_master WHERE ${whereClause} AND description IS NOT NULL AND TRIM(description::text) != '' ORDER BY description LIMIT 500`, params),
-      query<{ status: string }>(`SELECT DISTINCT status FROM asset_master WHERE ${whereClause} AND status IS NOT NULL AND TRIM(status::text) != '' ORDER BY status`, params),
-      query<{ project_location: string }>(`SELECT DISTINCT project_location FROM asset_master WHERE ${whereClause} AND project_location IS NOT NULL AND TRIM(project_location::text) != '' ORDER BY project_location`, params),
-      query<{ make: string }>(`SELECT DISTINCT make FROM asset_master WHERE ${whereClause} AND make IS NOT NULL AND TRIM(make::text) != '' ORDER BY make`, params),
-      query<{ model: string }>(`SELECT DISTINCT model FROM asset_master WHERE ${whereClause} AND model IS NOT NULL AND TRIM(model::text) != '' ORDER BY model`, params),
-      query<{ ownership: string }>(`SELECT DISTINCT ownership FROM asset_master WHERE ${whereClause} AND ownership IS NOT NULL AND TRIM(ownership::text) != '' ORDER BY ownership`, params),
-      query<{ responsible_person_name: string }>(`SELECT DISTINCT responsible_person_name FROM asset_master WHERE ${whereClause} AND responsible_person_name IS NOT NULL AND TRIM(responsible_person_name::text) != '' ORDER BY responsible_person_name`, params),
-    ]);
-
-    const toStrings = <T extends Record<string, unknown>>(rows: T[] | undefined, key: keyof T): string[] =>
-      (rows ?? []).map((r) => r[key] as unknown).filter((v): v is string => v != null && String(v).trim() !== '');
-
-    return NextResponse.json({
-      category: toStrings(categoryRes, 'category'),
-      description: toStrings(descriptionRes, 'description'),
-      status: toStrings(statusRes, 'status'),
-      project_location: toStrings(locationRes, 'project_location'),
-      make: toStrings(makeRes, 'make'),
-      model: toStrings(modelRes, 'model'),
-      ownership: toStrings(ownershipRes, 'ownership'),
-      responsible_person_name: toStrings(responsibleRes, 'responsible_person_name'),
-    });
-  } catch (err) {
-    const msg = getErrorMessage(err);
-    console.error('GET /api/assets/facets error:', msg);
-    return NextResponse.json(
-      { error: 'Failed to fetch facets', detail: msg },
-      { status: 500 }
-    );
-  }
 }

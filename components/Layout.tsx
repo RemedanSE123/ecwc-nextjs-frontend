@@ -4,8 +4,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
-import { Menu, X, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { getSession, isSessionExpired, clearSession, touchSession } from '@/lib/auth';
+import { SidebarContext } from '@/lib/sidebar-context';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -117,20 +118,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <div className={`flex-1 flex flex-col w-full min-w-0 transition-all duration-300 ${
         sidebarCollapsed ? 'lg:ml-14' : 'lg:ml-52'
       }`}>
-        {/* Mobile Menu Button */}
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="print-hide lg:hidden fixed top-2.5 left-2.5 z-30 p-1 bg-green-600 hover:bg-green-700 text-white rounded shadow-lg"
-        >
-          {sidebarOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-        </button>
-
         <div className="print-hide">
-          <Header sidebarCollapsed={sidebarCollapsed} />
+          <Header
+            sidebarCollapsed={sidebarCollapsed}
+            sidebarOpen={sidebarOpen}
+            onMenuClick={() => setSidebarOpen(!sidebarOpen)}
+          />
         </div>
         <main className="flex-1 overflow-y-scroll overflow-x-hidden mt-[3.675rem] p-[0.65625rem] sm:p-[0.7875rem] lg:p-[1.05rem] max-w-full min-w-0 bg-gray-50/50 dark:bg-gray-900/50 custom-scrollbar">
           <div className="max-w-full min-w-0 overflow-x-hidden">
-            {children}
+            <SidebarContext.Provider value={{ sidebarOpen }}>
+              {children}
+            </SidebarContext.Provider>
           </div>
         </main>
       </div>

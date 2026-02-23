@@ -89,12 +89,13 @@ const Select = ({ value, onValueChange, disabled, children, className, dropdownM
   const dropdownContent = open && typeof document !== "undefined" && (
     <div
       ref={dropdownRef}
-      className="fixed z-[9999] overflow-auto rounded-md border border-[#16A34A]/30 bg-popover text-popover-foreground shadow-lg max-h-[280px] min-w-[var(--select-width,120px)]"
+      className="fixed z-[9999] overflow-x-auto overflow-y-auto rounded-md border border-[#16A34A]/30 bg-popover text-popover-foreground shadow-lg max-h-[280px] min-w-[var(--select-width,120px)]"
       style={{
         top: position.top,
         left: position.left,
-        width: dropdownWidth,
-        minWidth: dropdownMinWidth ?? undefined,
+        width: 'max-content',
+        minWidth: dropdownWidth,
+        maxWidth: 'min(90vw, 400px)',
       }}
     >
       <div className="p-1">
@@ -174,7 +175,7 @@ const SelectItem = ({ className, children, onClick, isSelected }: SelectItemProp
   return (
     <div
       className={cn(
-        "relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 px-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
+        "relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 px-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground whitespace-nowrap",
         isSelected && "bg-accent",
         className
       )}

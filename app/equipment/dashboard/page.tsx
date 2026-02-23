@@ -53,6 +53,7 @@ import {
   Activity,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useSidebar } from '@/lib/sidebar-context';
 
 /* Maximally different colors per category — high contrast, spread across spectrum */
 const COLORS = [
@@ -129,54 +130,57 @@ interface CategoryCardProps {
 
 function CategoryCard({ slug, name, icon: Icon, color, stats, pct, index }: CategoryCardProps) {
   const [showDownPopup, setShowDownPopup] = useState(false);
+  const { sidebarOpen } = useSidebar();
+  const popupZ = sidebarOpen ? 'z-30' : 'z-[200]';
+  const wrapperZ = sidebarOpen ? 'z-20' : 'z-[100]';
   const downPct = stats.total ? Math.round((stats.down / stats.total) * 100) : 0;
   const card = (
     <Link href={`/equipment/${slug}`} className="block">
       <Card
-        className="overflow-visible border border-border/80 shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 group relative bg-card rounded-xl"
+        className="overflow-visible border border-border/80 shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 group relative bg-card rounded-lg sm:rounded-xl"
         style={{ borderLeftWidth: '4px', borderLeftColor: color }}
       >
         <CardContent className="p-0">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-0">
             {/* Column 1: Category name, total, fleet % */}
-            <div className="flex items-center gap-2.5 p-3 sm:border-r sm:border-b-0 border-b border-border/60 sm:border-b-transparent">
+            <div className="flex items-center gap-1.5 sm:gap-2.5 p-2 sm:p-3 sm:border-r sm:border-b-0 border-b border-border/60 sm:border-b-transparent">
               <div
-                className="p-1.5 rounded-md shrink-0 group-hover:scale-105 transition-transform bg-muted/60"
+                className="p-1 sm:p-1.5 rounded-md shrink-0 group-hover:scale-105 transition-transform bg-muted/60"
                 style={{ color }}
               >
-                <Icon className="h-4 w-4" style={{ color }} />
+                <Icon className="h-3 w-3 sm:h-4 sm:w-4" style={{ color }} />
               </div>
               <div className="min-w-0">
-                <p className="font-semibold text-xs text-foreground truncate">{name}</p>
-                <p className="text-xl font-bold tabular-nums text-foreground mt-0.5">{stats.total.toLocaleString()}</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">{pct}% of fleet</p>
+                <p className="font-semibold text-[10px] sm:text-xs text-foreground truncate">{name}</p>
+                <p className="text-base sm:text-xl font-bold tabular-nums text-foreground mt-0.5">{stats.total.toLocaleString()}</p>
+                <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5">{pct}% of fleet</p>
               </div>
             </div>
             {/* Column 2: OP (green), Idle (blue), Down count (red), Down % (red) */}
-            <div className="flex flex-col justify-center gap-1 p-3">
-              <div className="flex items-center gap-1.5 text-xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
-                <span className="text-muted-foreground text-[11px]">OP:</span>
+            <div className="flex flex-col justify-center gap-0.5 sm:gap-1 p-2 sm:p-3">
+              <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs">
+                <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-green-500 shrink-0" />
+                <span className="text-muted-foreground text-[10px] sm:text-[11px]">OP:</span>
                 <span className="font-semibold text-green-600 dark:text-green-400 tabular-nums">{stats.op}</span>
               </div>
-              <div className="flex items-center gap-1.5 text-xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
-                <span className="text-muted-foreground text-[11px]">Idle:</span>
+              <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs">
+                <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-blue-500 shrink-0" />
+                <span className="text-muted-foreground text-[10px] sm:text-[11px]">Idle:</span>
                 <span className="font-semibold text-blue-600 dark:text-blue-400 tabular-nums">{stats.idle}</span>
               </div>
               <div
-                className="relative z-[100] flex items-center gap-1.5 text-xs w-fit"
+                className={`relative ${wrapperZ} flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs w-fit`}
                 onMouseEnter={() => setShowDownPopup(true)}
                 onMouseLeave={() => setShowDownPopup(false)}
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
-                <span className="text-muted-foreground text-[11px]">Down:</span>
+                <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-red-500 shrink-0" />
+                <span className="text-muted-foreground text-[10px] sm:text-[11px]">Down:</span>
                 <span className="font-semibold text-red-600 dark:text-red-400 tabular-nums cursor-help underline decoration-dotted decoration-red-500/50 underline-offset-1">
                   {stats.down}
                 </span>
                 {showDownPopup && (
                   <div
-                    className="absolute z-[200] right-0 bottom-full mb-1.5 w-[200px] rounded-lg shadow-2xl border border-border bg-background overflow-hidden animate-in fade-in-0 zoom-in-95 duration-150 pointer-events-auto"
+                    className={`absolute ${popupZ} right-0 bottom-full mb-1.5 w-[200px] rounded-lg shadow-2xl border border-border bg-background overflow-hidden animate-in fade-in-0 zoom-in-95 duration-150 pointer-events-auto`}
                     style={{ isolation: 'isolate' }}
                     onMouseEnter={() => setShowDownPopup(true)}
                     onMouseLeave={() => setShowDownPopup(false)}
@@ -202,15 +206,15 @@ function CategoryCard({ slug, name, icon: Icon, color, stats, pct, index }: Cate
                   </div>
                 )}
               </div>
-              <div className="flex items-center gap-1.5 text-xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
-                <span className="text-muted-foreground text-[11px]">Down:</span>
+              <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs">
+                <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-red-500 shrink-0" />
+                <span className="text-muted-foreground text-[10px] sm:text-[11px]">Down:</span>
                 <span className="font-semibold text-red-600 dark:text-red-400 tabular-nums">{downPct}%</span>
               </div>
             </div>
           </div>
-          <div className="absolute top-2 right-2">
-            <ChevronRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+          <div className="absolute top-1 right-1 sm:top-2 sm:right-2">
+            <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
           </div>
         </CardContent>
       </Card>
@@ -221,10 +225,51 @@ function CategoryCard({ slug, name, icon: Icon, color, stats, pct, index }: Cate
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: (index + 1) * 0.05 }}
-      className={showDownPopup ? 'relative z-[100]' : undefined}
+      className={showDownPopup ? `relative ${wrapperZ}` : undefined}
     >
       {card}
     </motion.div>
+  );
+}
+
+/** Renders fleet down popup via portal. Must be inside SidebarContext.Provider to get correct z-index when sidebar is open on mobile. */
+function FleetDownPopupPortal({
+  position,
+  breakdown,
+  onMouseEnter,
+  onMouseLeave,
+}: {
+  position: { top: number; left: number };
+  breakdown: { label: string; count: number }[];
+  onMouseEnter: () => void;
+  onMouseLeave: () => void;
+}) {
+  const { sidebarOpen } = useSidebar();
+  if (typeof document === 'undefined') return null;
+  return createPortal(
+    <div
+      className={`fixed w-[200px] rounded-lg shadow-2xl border border-border bg-background overflow-hidden animate-in fade-in-0 zoom-in-95 duration-150 ${sidebarOpen ? 'z-30' : 'z-[9999]'}`}
+      style={{ top: position.top, left: position.left }}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+    >
+      <div className="px-3 py-2 bg-destructive/10 border-b border-border font-semibold text-xs text-destructive">
+        Down breakdown (fleet)
+      </div>
+      <div className="p-2 space-y-1 max-h-44 overflow-y-auto">
+        {breakdown.length > 0 ? (
+          breakdown.map((d) => (
+            <div key={d.label} className="flex justify-between items-center gap-2 py-1 px-2 rounded text-xs hover:bg-muted/50">
+              <span className="text-foreground">{d.label}</span>
+              <span className="font-bold tabular-nums text-destructive">{d.count}</span>
+            </div>
+          ))
+        ) : (
+          <p className="text-xs text-muted-foreground py-2">No breakdown data</p>
+        )}
+      </div>
+    </div>,
+    document.body
   );
 }
 
@@ -590,24 +635,9 @@ export default function EquipmentDashboardPage() {
             ) : (
               <Card className="min-w-0 w-full overflow-hidden rounded-xl border border-border/80 bg-gradient-to-br from-card via-card to-muted/20 shadow-lg">
                 <CardContent className="p-4 sm:p-5">
-                  {/* 1 row, 3 columns: cohesive neutral + primary accent */}
+                  {/* Mobile: row 1 = Total Fleet, row 2 = [Project Sites | OP/Idle/Down]. Desktop: 3 columns */}
                   <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_2fr_minmax(0,1fr)] gap-3 sm:gap-4 items-stretch min-h-[130px] md:min-h-[180px]">
-                    {/* Column 1: Project Sites — neutral, clickable → Overview */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setActiveTab('overview');
-                        setTimeout(() => overviewSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
-                      }}
-                      title="Go to Overview"
-                      className="flex flex-col items-center justify-center rounded-xl border border-border bg-muted/30 dark:bg-muted/20 px-4 py-4 sm:py-5 min-w-0 hover:bg-muted/50 dark:hover:bg-muted/30 transition-colors cursor-pointer focus:outline-none focus:ring-0"
-                    >
-                      <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-widest text-muted-foreground">Project Sites</span>
-                      <p className="text-2xl sm:text-3xl font-extrabold tabular-nums text-foreground mt-1">{totalProjectSites}</p>
-                      <span className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">Active locations</span>
-                    </button>
-
-                    {/* Column 2: Total Fleet — primary accent only (count-up animation), clickable → All Assets */}
+                    {/* Mobile row 1: Total Fleet (full width). Desktop: middle column */}
                     <button
                       type="button"
                       onClick={() => {
@@ -615,17 +645,34 @@ export default function EquipmentDashboardPage() {
                         setTimeout(() => allAssetsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
                       }}
                       title="Go to All Assets"
-                      className="flex flex-col items-center justify-center rounded-2xl bg-primary/10 dark:bg-primary/15 border border-primary/20 px-5 py-6 sm:px-10 sm:py-8 min-w-0 shadow-inner ring-2 ring-primary/10 hover:bg-primary/15 dark:hover:bg-primary/20 transition-colors cursor-pointer focus:outline-none focus:ring-0"
+                      className="order-1 md:order-2 flex flex-col items-center justify-center rounded-2xl bg-primary/10 dark:bg-primary/15 border border-primary/20 px-5 py-4 sm:py-6 sm:px-10 sm:py-8 min-w-0 shadow-inner ring-2 ring-primary/10 hover:bg-primary/15 dark:hover:bg-primary/20 transition-colors cursor-pointer focus:outline-none focus:ring-0"
                     >
                       <span className="text-xs sm:text-sm font-bold uppercase tracking-[0.2em] text-muted-foreground">Total Fleet</span>
-                      <p className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold tabular-nums text-foreground mt-2 tracking-tight drop-shadow-sm">
+                      <p className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold tabular-nums text-foreground mt-2 tracking-tight drop-shadow-sm">
                         {animatedTotal.toLocaleString()}
                       </p>
                       <span className="text-sm text-muted-foreground mt-1.5 font-medium">Equipment units</span>
                     </button>
 
-                    {/* Column 3: 4 quadrants — row 1: OP, Idle | line | row 2: Avail, Down */}
-                    <div className="grid grid-cols-2 gap-1.5 sm:gap-2 min-w-0">
+                    {/* Mobile row 2: 2 columns — Project Sites (left) + quadrants (right). Desktop: col 1 + col 3 */}
+                    <div className="order-2 grid grid-cols-2 gap-2 md:contents">
+                      {/* Project Sites — neutral, clickable → Overview */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActiveTab('overview');
+                          setTimeout(() => overviewSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+                        }}
+                        title="Go to Overview"
+                        className="md:order-1 flex flex-col items-center justify-center rounded-xl border border-border bg-muted/30 dark:bg-muted/20 px-3 py-3 sm:px-4 sm:py-5 min-w-0 hover:bg-muted/50 dark:hover:bg-muted/30 transition-colors cursor-pointer focus:outline-none focus:ring-0"
+                      >
+                        <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-muted-foreground">Project Sites</span>
+                        <p className="text-xl sm:text-3xl font-extrabold tabular-nums text-foreground mt-1">{totalProjectSites}</p>
+                        <span className="text-[9px] sm:text-xs text-muted-foreground mt-0.5">Active locations</span>
+                      </button>
+
+                      {/* 4 quadrants — OP, Idle, Down %, Down count */}
+                      <div className="md:order-3 grid grid-cols-2 gap-1.5 sm:gap-2 min-w-0">
                       <div className="rounded-lg border border-green-200 dark:border-green-800/50 bg-green-50/50 dark:bg-green-950/20 px-2.5 py-2 sm:py-2.5 flex flex-col justify-center text-center">
                         <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">OP</span>
                         <span className="text-base sm:text-lg font-extrabold tabular-nums text-green-600 dark:text-green-500 mt-0.5">{totalOp}</span>
@@ -668,6 +715,7 @@ export default function EquipmentDashboardPage() {
                         <span className="text-base sm:text-lg font-extrabold tabular-nums text-destructive mt-1 underline decoration-dotted decoration-destructive/50 underline-offset-1">{totalDown}</span>
                         <span className="text-[10px] text-muted-foreground leading-tight mt-0.5">Out of service</span>
                       </div>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
@@ -675,15 +723,10 @@ export default function EquipmentDashboardPage() {
             )}
           </motion.div>
 
-          {typeof document !== 'undefined' &&
-            fleetDownPopup &&
-            createPortal(
-              <div
-                className="fixed w-[200px] rounded-lg shadow-2xl border border-border bg-background overflow-hidden animate-in fade-in-0 zoom-in-95 duration-150 z-[9999]"
-                style={{
-                  top: fleetDownPopup.top,
-                  left: fleetDownPopup.left,
-                }}
+          {fleetDownPopup && (
+            <FleetDownPopupPortal
+                position={fleetDownPopup}
+                breakdown={fleetDownBreakdown}
                 onMouseEnter={() => {
                   if (fleetDownPopupCloseRef.current) {
                     clearTimeout(fleetDownPopupCloseRef.current);
@@ -698,32 +741,15 @@ export default function EquipmentDashboardPage() {
                 onMouseLeave={() => {
                   fleetDownPopupCloseRef.current = setTimeout(() => setFleetDownPopup(null), 150);
                 }}
-              >
-                <div className="px-3 py-2 bg-destructive/10 border-b border-border font-semibold text-xs text-destructive">
-                  Down breakdown (fleet)
-                </div>
-                <div className="p-2 space-y-1 max-h-44 overflow-y-auto">
-                  {fleetDownBreakdown.length > 0 ? (
-                    fleetDownBreakdown.map((d) => (
-                      <div key={d.label} className="flex justify-between items-center gap-2 py-1 px-2 rounded text-xs hover:bg-muted/50">
-                        <span className="text-foreground">{d.label}</span>
-                        <span className="font-bold tabular-nums text-destructive">{d.count}</span>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-xs text-muted-foreground py-2">No breakdown data</p>
-                  )}
-                </div>
-              </div>,
-              document.body
-            )}
+            />
+          )}
 
-          {/* Row 2: Plant, Machinery, Heavy Vehicles - 3 cards per row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {/* 6 KPI cards: 2 rows × 3 columns on mobile and desktop (previous layout on PC) */}
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
             {loading ? (
-              [...Array(3)].map((_, i) => <Skeleton key={i} className="h-32 rounded-lg" />)
+              [...Array(6)].map((_, i) => <Skeleton key={i} className="h-28 sm:h-32 rounded-lg" />)
             ) : (
-              EQUIPMENT_CATEGORIES.slice(0, 3).map((cat, i) => {
+              EQUIPMENT_CATEGORIES.map((cat, i) => {
                 const Icon = iconMap[cat.slug] ?? FileText;
                 const s = getCategoryStats(statusSummary, cat.dbCategory);
                 const pct = total ? Math.round((s.total / total) * 100) : 0;
@@ -737,31 +763,6 @@ export default function EquipmentDashboardPage() {
                     stats={s}
                     pct={pct}
                     index={i}
-                  />
-                );
-              })
-            )}
-          </div>
-
-          {/* Row 3: Light Vehicles, Factory Equipment, Auxiliary - 3 cards per row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {loading ? (
-              [...Array(3)].map((_, i) => <Skeleton key={i} className="h-32 rounded-lg" />)
-            ) : (
-              EQUIPMENT_CATEGORIES.slice(3, 6).map((cat, i) => {
-                const Icon = iconMap[cat.slug] ?? FileText;
-                const s = getCategoryStats(statusSummary, cat.dbCategory);
-                const pct = total ? Math.round((s.total / total) * 100) : 0;
-                return (
-                  <CategoryCard
-                    key={cat.slug}
-                    slug={cat.slug}
-                    name={cat.name}
-                    icon={Icon}
-                    color={COLORS[i + 3]}
-                    stats={s}
-                    pct={pct}
-                    index={i + 3}
                   />
                 );
               })

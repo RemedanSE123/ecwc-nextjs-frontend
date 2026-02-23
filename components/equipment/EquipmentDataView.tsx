@@ -22,6 +22,7 @@ import ImageLightbox from './ImageLightbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Image as ImageIcon, Search, Download, FileSpreadsheet, FileDown, BarChart2, Plus, Pencil, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
 import { SLUG_TO_DB_CATEGORY } from '@/types/asset';
+import { BLANK_FILTER_VALUE } from '@/lib/api/assets';
 import { deleteAsset } from '@/lib/api/assets';
 
 /** Escape regex special chars and build a regex that matches any of the search terms (case-insensitive). */
@@ -185,18 +186,20 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
   const facetFilterKey = `${toArray(filters.category).join(',')}|${toArray(filters.status).join(',')}|${toArray(filters.project_location).join(',')}|${toArray(filters.make).join(',')}|${toArray(filters.model).join(',')}|${toArray(filters.ownership).join(',')}|${toArray(filters.description).join(',')}|${filters.search ?? ''}|${filters.responsible_person_name ?? ''}|${categoryGroup ?? ''}`;
   useEffect(() => {
     setFacetsError(null);
+    setFacets(null);
     fetchAssetFacets(filters)
       .then(setFacets)
       .catch((err) => setFacetsError(err instanceof Error ? err.message : String(err)));
   }, [facetFilterKey]);
 
   useEffect(() => {
-    fetchAssetCompleteness(categoryGroup)
+    fetchAssetCompleteness(filters)
       .then(setCompleteness)
       .catch(() => {});
-  }, [categoryGroup]);
+  }, [facetFilterKey]);
 
-  // Fetch facets with each dimension excluded so each dropdown shows full list (selected + unselected) for current other filters
+  // Fetch facets with each dimension excluded so each dropdown shows full list (selected + unselected) for current other filters.
+  // Cascading: when user filters by Category, Location/Status/Make/etc. options update to only show values that exist for that Category.
   const baseFilters = useMemo(
     () => ({
       category_group: categoryGroup,
@@ -212,8 +215,11 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
     }),
     [categoryGroup, filters.search, filters.responsible_person_name, filters.category, filters.status, filters.project_location, filters.make, filters.model, filters.ownership, filters.description]
   );
+  const facetsFetchIdRef = useRef(0);
   useEffect(() => {
+    setFacetsForDropdown(null);
     const base = { ...baseFilters, category_group: categoryGroup };
+    const fetchId = ++facetsFetchIdRef.current;
     Promise.all([
       fetchAssetFacets({ ...base, category: undefined }),
       fetchAssetFacets({ ...base, status: undefined }),
@@ -224,6 +230,7 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
       fetchAssetFacets({ ...base, description: undefined }),
     ])
       .then(([fCat, fStatus, fLoc, fMake, fModel, fOwn, fDesc]) => {
+        if (fetchId !== facetsFetchIdRef.current) return;
         setFacetsForDropdown({
           category: fCat?.category ?? [],
           status: fStatus?.status ?? [],
@@ -234,7 +241,9 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
           description: fDesc?.description ?? [],
         });
       })
-      .catch(() => setFacetsForDropdown(null));
+      .catch(() => {
+        if (fetchId === facetsFetchIdRef.current) setFacetsForDropdown(null);
+      });
   }, [baseFilters, categoryGroup]);
 
   // Excel-like: only clear a value if it is not in the full option list for that dimension (e.g. deleted from DB), not because it disappeared from cascaded facets
@@ -246,43 +255,43 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
     const next: Partial<AssetFilters> = {};
     let changed = false;
     const statusAllowList = facetsForDropdown?.status ?? facets?.status ?? [];
-    const statusArr = toArray(f.status).filter((s) => statusAllowList.includes(s));
+    const statusArr = toArray(f.status).filter((s) => s === BLANK_FILTER_VALUE || statusAllowList.includes(s));
     if (statusArr.length !== toArray(f.status).length) {
       next.status = statusArr.length ? statusArr : undefined;
       changed = true;
     }
     const locAllowList = facetsForDropdown?.project_location ?? facets?.project_location ?? [];
-    const locArr = toArray(f.project_location).filter((l) => locAllowList.includes(l));
+    const locArr = toArray(f.project_location).filter((l) => l === BLANK_FILTER_VALUE || locAllowList.includes(l));
     if (locArr.length !== toArray(f.project_location).length) {
       next.project_location = locArr.length ? locArr : undefined;
       changed = true;
     }
     const makeAllowList = facetsForDropdown?.make ?? facets?.make ?? [];
-    const makeArr = toArray(f.make).filter((m) => makeAllowList.includes(m));
+    const makeArr = toArray(f.make).filter((m) => m === BLANK_FILTER_VALUE || makeAllowList.includes(m));
     if (makeArr.length !== toArray(f.make).length) {
       next.make = makeArr.length ? makeArr : undefined;
       changed = true;
     }
     const modelAllowList = facetsForDropdown?.model ?? facets?.model ?? [];
-    const modelArr = toArray(f.model).filter((m) => modelAllowList.includes(m));
+    const modelArr = toArray(f.model).filter((m) => m === BLANK_FILTER_VALUE || modelAllowList.includes(m));
     if (modelArr.length !== toArray(f.model).length) {
       next.model = modelArr.length ? modelArr : undefined;
       changed = true;
     }
     const ownAllowList = facetsForDropdown?.ownership ?? facets?.ownership ?? [];
-    const ownArr = toArray(f.ownership).filter((o) => ownAllowList.includes(o));
+    const ownArr = toArray(f.ownership).filter((o) => o === BLANK_FILTER_VALUE || ownAllowList.includes(o));
     if (ownArr.length !== toArray(f.ownership).length) {
       next.ownership = ownArr.length ? ownArr : undefined;
       changed = true;
     }
     const descAllowList = facetsForDropdown?.description ?? facets?.description ?? [];
-    const descArr = toArray(f.description).filter((d) => descAllowList.includes(d));
+    const descArr = toArray(f.description).filter((d) => d === BLANK_FILTER_VALUE || descAllowList.includes(d));
     if (descArr.length !== toArray(f.description).length) {
       next.description = descArr.length ? descArr : undefined;
       changed = true;
     }
     const catAllowList = facetsForDropdown?.category ?? facets?.category ?? [];
-    const catArr = toArray(f.category).filter((c) => catAllowList.includes(c));
+    const catArr = toArray(f.category).filter((c) => c === BLANK_FILTER_VALUE || catAllowList.includes(c));
     if (catArr.length !== toArray(f.category).length) {
       next.category = catArr.length ? catArr : undefined;
       changed = true;
@@ -352,6 +361,20 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
     () => [...new Set([...toArray(filters.ownership), ...(facetsForDropdown?.ownership ?? effectiveFacets.ownership ?? [])])].sort(),
     [filters.ownership, facetsForDropdown?.ownership, effectiveFacets.ownership]
   );
+
+  /** Which filter columns have blank values - show "(Blanks)" only for those (Excel-like). */
+  const hasBlanksFor = useMemo(() => {
+    const cols = completeness?.columns ?? {};
+    return {
+      category: (cols['Category']?.empty ?? 0) > 0,
+      project_location: (cols['Location']?.empty ?? 0) > 0,
+      description: (cols['Description']?.empty ?? 0) > 0,
+      make: (cols['Make']?.empty ?? 0) > 0,
+      model: (cols['Model']?.empty ?? 0) > 0,
+      status: (cols['Status']?.empty ?? 0) > 0,
+      ownership: (cols['Ownership']?.empty ?? 0) > 0,
+    };
+  }, [completeness?.columns]);
 
   const searchRegex = useMemo(() => getSearchRegex(filters.search ?? ''), [filters.search]);
 
@@ -450,7 +473,7 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
                   ({loading ? '...' : total.toLocaleString()} assets)
                 </span>
               </CardTitle>
-              <div className="flex-1 flex justify-center items-center gap-2 min-w-0 max-w-md">
+              <div className="hidden sm:flex flex-1 justify-center items-center gap-2 min-w-0 max-w-md">
                 <span className="text-xs text-muted-foreground shrink-0">Search</span>
                 <div className="relative flex-1 max-w-xs min-w-[140px]">
                   <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
@@ -526,6 +549,7 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
                 ownershipOptions={ownershipOptionsForFilter}
                 hideCategoryFilter={!!categoryGroup}
                 facets={effectiveFacets}
+                hasBlanksFor={hasBlanksFor}
                 facetsError={facetsError}
                 compact
                 inline
@@ -731,8 +755,8 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
                                         </div>
                                         <div className="grid grid-cols-3 gap-x-4 sm:gap-x-6 gap-y-3 text-xs">
                                           <div>
-                                            <span className="text-muted-foreground text-[11px] font-medium uppercase tracking-wide block mb-1">Asset No</span>
-                                            <p className="text-foreground text-xs">{highlightText(a.asset_no, searchRegex)}</p>
+                                            <span className="text-muted-foreground text-[11px] font-medium uppercase tracking-wide block mb-1">Make</span>
+                                            <p className="text-foreground text-xs">{highlightText(a.make, searchRegex) ?? '—'}</p>
                                           </div>
                                           <div>
                                             <span className="text-muted-foreground text-[11px] font-medium uppercase tracking-wide block mb-1">Serial No</span>
@@ -744,7 +768,7 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
                                           </div>
                                           <div>
                                             <span className="text-muted-foreground text-[11px] font-medium uppercase tracking-wide block mb-1">Model</span>
-                                            <p className="text-foreground text-xs">{highlightText(a.model, searchRegex)}</p>
+                                            <p className="text-foreground text-xs">{highlightText(a.model, searchRegex) ?? '—'}</p>
                                           </div>
                                           <div>
                                             <span className="text-muted-foreground text-[11px] font-medium uppercase tracking-wide block mb-1">Ownership</span>

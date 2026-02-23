@@ -1,6 +1,6 @@
 'use client';
 
-import { Search, Bell, User, ChevronDown, Settings, LogOut, Menu, Megaphone } from 'lucide-react';
+import { Search, Bell, User, ChevronDown, Settings, LogOut, Menu, X, Megaphone } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -31,9 +31,11 @@ function formatAgo(iso: string): string {
 
 interface HeaderProps {
   sidebarCollapsed?: boolean;
+  sidebarOpen?: boolean;
+  onMenuClick?: () => void;
 }
 
-export default function Header({ sidebarCollapsed = false }: HeaderProps) {
+export default function Header({ sidebarCollapsed = false, sidebarOpen = false, onMenuClick }: HeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [searchQuery, setSearchQuery] = useState('');
@@ -132,24 +134,33 @@ export default function Header({ sidebarCollapsed = false }: HeaderProps) {
 
   return (
     <header 
-      className={`bg-white border-b border-gray-200/80 h-[3.675rem] flex items-center justify-between px-3 lg:px-4 fixed top-0 right-0 z-30 backdrop-blur-sm transition-all duration-300 font-[var(--font-dm-sans)] ${
+      className={`bg-white border-b border-gray-200/80 h-[3.675rem] flex items-center justify-between pl-3 pr-3 lg:pl-4 lg:pr-4 fixed top-0 left-0 right-0 z-30 backdrop-blur-sm transition-all duration-300 font-[var(--font-dm-sans)] ${
         sidebarCollapsed ? 'lg:left-14' : 'lg:left-52'
       }`}
     >
-      {/* Left - ECWC + PEMS subtitle */}
-      <div className="flex items-center min-w-0 flex-1 justify-start">
-        <div className="flex flex-col min-w-0">
-          <span className="text-[13px] font-bold text-gray-900 dark:text-gray-100 leading-tight tracking-tight truncate">
+      {/* Left - Menu button (mobile) + ECWC + PEMS subtitle */}
+      <div className="flex items-center min-w-0 flex-1 justify-start gap-2">
+        {onMenuClick && (
+          <button
+            onClick={onMenuClick}
+            className="lg:hidden shrink-0 p-2 -ml-1 rounded-lg bg-gradient-to-br from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 transition-colors shadow-sm"
+            aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
+          >
+            {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        )}
+        <div className="flex flex-col min-w-0 max-w-full">
+          <span className="text-[10px] sm:text-[13px] font-bold text-gray-900 dark:text-gray-100 leading-tight tracking-tight whitespace-normal">
             Ethiopian Construction Works Corporation
           </span>
-          <span className="text-[10px] text-gray-500 dark:text-gray-400 leading-tight">
+          <span className="text-[9px] sm:text-[10px] text-gray-500 dark:text-gray-400 leading-tight">
             Plant Equipment Management System
           </span>
         </div>
       </div>
 
-      {/* Search - visually centered in header */}
-      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md px-4 pointer-events-none">
+      {/* Search - visually centered in header, hidden on mobile */}
+      <div className="hidden sm:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md px-4 pointer-events-none">
         <form onSubmit={handleSearch} className="pointer-events-auto relative group">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 group-focus-within:text-green-600 transition-colors pointer-events-none z-10" />
           <input

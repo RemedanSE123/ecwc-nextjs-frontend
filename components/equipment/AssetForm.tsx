@@ -17,6 +17,7 @@ import { createAsset, updateAsset, uploadAssetImage, fetchAssetFacets, fetchAsse
 import type { CreateAssetPayload } from '@/lib/api/assets';
 import type { AssetFacets } from '@/types/asset';
 import { Upload, X, Image as ImageIcon } from 'lucide-react';
+import { SearchableCombobox } from '@/components/ui/searchable-combobox';
 
 const CATEGORY_OPTIONS = EQUIPMENT_CATEGORIES.map((c) => ({
   value: c.dbCategory,
@@ -47,14 +48,13 @@ export default function AssetForm({
   const [imageKey, setImageKey] = useState<string | null>(asset?.image_s3_key ?? null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [facets, setFacets] = useState<AssetFacets | null>(null);
+  const [allFacets, setAllFacets] = useState<AssetFacets | null>(null);
   const [facetsLoading, setFacetsLoading] = useState(false);
+  const [allFacetsLoading, setAllFacetsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const [descriptionIsOther, setDescriptionIsOther] = useState(false);
   const [form, setForm] = useState({
     category: asset?.category ?? defaultCategory ?? CATEGORY_OPTIONS[0]?.value ?? '',
     description: asset?.description ?? '',
-    descriptionOther: '',
     asset_no: asset?.asset_no ?? '',
     serial_no: asset?.serial_no ?? '',
     make: asset?.make ?? '',
@@ -63,23 +63,31 @@ export default function AssetForm({
     project_location: asset?.project_location ?? '',
     ownership: asset?.ownership ?? '',
     responsible_person_name: asset?.responsible_person_name ?? '',
-    responsible_person_pno: asset?.responsible_person_pno ?? '',
+    responsible_person_pno: asset?.responsible_person_pno ?? '+251',
     remark: asset?.remark ?? '',
   });
 
-  // Fetch unique options for selected category (description, status, location, ownership, make, model)
+  // Fetch unique options for selected category (description, make)
   useEffect(() => {
     if (!form.category.trim()) {
       setFacets(null);
       return;
     }
     setFacetsLoading(true);
-    // Use only category so options always match the selected category (not categoryGroup)
     fetchAssetFacets({ category: [form.category] })
       .then(setFacets)
       .catch(() => setFacets(null))
       .finally(() => setFacetsLoading(false));
   }, [form.category]);
+
+  // Fetch ALL options (no category filter) for project_location, status, ownership
+  useEffect(() => {
+    setAllFacetsLoading(true);
+    fetchAssetFacets({})
+      .then(setAllFacets)
+      .catch(() => setAllFacets(null))
+      .finally(() => setAllFacetsLoading(false));
+  }, []);
 
   // Description options: from facets for selected category; include current value in edit
   const descriptionOptions = useMemo(() => {
@@ -91,11 +99,27 @@ export default function AssetForm({
     return uniq;
   }, [facets?.description, form.description, isEdit]);
 
-  const statusOptions = useMemo(() => [...new Set(facets?.status ?? [])].filter(Boolean).sort(), [facets?.status]);
-  const projectLocationOptions = useMemo(() => [...new Set(facets?.project_location ?? [])].filter(Boolean).sort(), [facets?.project_location]);
-  const ownershipOptions = useMemo(() => [...new Set(facets?.ownership ?? [])].filter(Boolean).sort(), [facets?.ownership]);
-  const makeOptions = useMemo(() => [...new Set(facets?.make ?? [])].filter(Boolean).sort(), [facets?.make]);
-  const modelOptions = useMemo(() => [...new Set(facets?.model ?? [])].filter(Boolean).sort(), [facets?.model]);
+  const ensureCurrentInList = (list: string[], current: string | undefined): string[] => {
+    if (!isEdit || !current?.trim()) return list;
+    if (!list.includes(current)) return [current, ...list];
+    return list;
+  };
+  const statusOptions = useMemo(() => {
+    const list = [...new Set(allFacets?.status ?? [])].filter(Boolean).sort() as string[];
+    return ensureCurrentInList(list, form.status);
+  }, [allFacets?.status, form.status, isEdit]);
+  const projectLocationOptions = useMemo(() => {
+    const list = [...new Set(allFacets?.project_location ?? [])].filter(Boolean).sort() as string[];
+    return ensureCurrentInList(list, form.project_location);
+  }, [allFacets?.project_location, form.project_location, isEdit]);
+  const ownershipOptions = useMemo(() => {
+    const list = [...new Set(allFacets?.ownership ?? [])].filter(Boolean).sort() as string[];
+    return ensureCurrentInList(list, form.ownership);
+  }, [allFacets?.ownership, form.ownership, isEdit]);
+  const makeOptions = useMemo(() => {
+    const list = [...new Set(facets?.make ?? [])].filter(Boolean).sort() as string[];
+    return ensureCurrentInList(list, form.make);
+  }, [facets?.make, form.make, isEdit]);
 
   // When category changes, clear description if it's not in the new category's list (create mode)
   useEffect(() => {
@@ -109,11 +133,9 @@ export default function AssetForm({
   // Sync form when opening in edit mode so the popup is never empty
   useEffect(() => {
     if (asset?.id) {
-      setDescriptionIsOther(false);
       setForm({
         category: asset.category ?? defaultCategory ?? CATEGORY_OPTIONS[0]?.value ?? '',
         description: asset.description ?? '',
-        descriptionOther: '',
         asset_no: asset.asset_no ?? '',
         serial_no: asset.serial_no ?? '',
         make: asset.make ?? '',
@@ -161,8 +183,7 @@ export default function AssetForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const descriptionValue = descriptionIsOther ? form.descriptionOther.trim() : form.description.trim();
-    if (!form.category.trim() || !descriptionValue) {
+    if (!form.category.trim() || !form.description.trim()) {
       setError('Category and description are required.');
       return;
     }
@@ -189,15 +210,12 @@ export default function AssetForm({
 
     setSaving(true);
     try {
-      const payloadForm = { ...form, description: descriptionValue };
       if (isEdit && asset) {
-        const { descriptionOther: _do, ...rest } = payloadForm as Record<string, unknown>;
-        const payload = { ...rest, image_s3_key: imageKey };
+        const payload = { ...form, image_s3_key: imageKey };
         const updated = await updateAsset(asset.id, payload);
         onSuccess(updated);
       } else {
-        const { descriptionOther: _do, ...rest } = payloadForm as Record<string, unknown>;
-        const payload: CreateAssetPayload = { ...rest, image_s3_key: imageKey ?? undefined } as CreateAssetPayload;
+        const payload: CreateAssetPayload = { ...form, image_s3_key: imageKey ?? undefined } as CreateAssetPayload;
         const created = await createAsset(payload);
         onSuccess(created);
       }
@@ -209,87 +227,110 @@ export default function AssetForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
-        <div className="rounded-lg bg-destructive/10 text-destructive text-sm px-3 py-2">
+        <div className="rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm px-4 py-3 flex items-center gap-2 shadow-sm">
+          <span className="font-medium">Error:</span>
           {error}
         </div>
       )}
 
-      {/* Image */}
-      <div className="space-y-2">
-        <Label>Image</Label>
-        <div className="flex items-center gap-3">
-          <div className="w-20 h-14 rounded-lg bg-muted flex items-center justify-center overflow-hidden border">
-            {(imageFile || imageKey) ? (
-              imageFile ? (
-                <img
-                  src={URL.createObjectURL(imageFile)}
-                  alt="Preview"
-                  className="w-full h-full object-cover"
+      {/* Image + Category — same column */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="space-y-4">
+          {/* Image */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Image</Label>
+            <div className="flex flex-col gap-3 p-4 rounded-xl border border-border/80 bg-background/50 hover:bg-muted/30 transition-colors">
+              <div className="w-full aspect-[4/3] max-h-32 rounded-lg bg-muted/60 flex items-center justify-center overflow-hidden border-2 border-dashed border-muted-foreground/20 hover:border-primary/30 transition-colors">
+                {(imageFile || imageKey) ? (
+                  imageFile ? (
+                    <img
+                      src={URL.createObjectURL(imageFile)}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                  )
+                ) : (
+                  <ImageIcon className="h-8 w-8 text-muted-foreground/60" />
+                )}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
+                  className="hidden"
+                  onChange={handleImageChange}
                 />
-              ) : (
-                <ImageIcon className="h-6 w-6 text-muted-foreground" />
-              )
-            ) : (
-              <ImageIcon className="h-6 w-6 text-muted-foreground" />
-            )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={saving}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="gap-1.5 border-primary/30 hover:bg-primary/5 hover:border-primary/50 flex-1"
+                >
+                  <Upload className="h-4 w-4" />
+                  Upload
+                </Button>
+                {(imageFile || imageKey) && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setImageFile(null);
+                      setImageKey(null);
+                    }}
+                    className="text-muted-foreground hover:text-destructive"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
           </div>
-          <div className="flex-1 flex gap-2">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/gif,image/webp"
-              className="hidden"
-              onChange={handleImageChange}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={saving}
-              onClick={() => fileInputRef.current?.click()}
-              className="gap-1"
+          {/* Category */}
+          <div className="space-y-2">
+            <Label htmlFor="category">Category *</Label>
+            <Select
+              value={form.category}
+              onValueChange={(v) => update('category', v)}
             >
-              <Upload className="h-4 w-4" />
-              Upload
-            </Button>
-            {(imageFile || imageKey) && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setImageFile(null);
-                  setImageKey(null);
-                }}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            )}
+              <SelectTrigger id="category">
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                {CATEGORY_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {/* Project Location */}
+          <div className="space-y-2">
+            <Label htmlFor="project_location">Project Location</Label>
+            <SearchableCombobox
+              id="project_location"
+              value={form.project_location}
+              onChange={(v) => update('project_location', v)}
+              options={projectLocationOptions}
+              placeholder="Type to search location"
+              loading={allFacetsLoading}
+              allowEmpty
+            />
           </div>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="category">Category *</Label>
-          <Select
-            value={form.category}
-            onValueChange={(v) => update('category', v)}
-          >
-            <SelectTrigger id="category">
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent>
-              {CATEGORY_OPTIONS.map((o) => (
-                <SelectItem key={o.value} value={o.value}>
-                  {o.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      {/* Rest of form fields */}
+      <div className="sm:col-span-2 lg:col-span-2">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">Asset details</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2 sm:col-span-2">
           <Label htmlFor="description">Description *</Label>
           {descriptionOptions.length === 0 && !facetsLoading ? (
@@ -301,41 +342,15 @@ export default function AssetForm({
               required
             />
           ) : (
-            <>
-              <Select
-                value={form.description || (descriptionIsOther ? '__other__' : '')}
-                onValueChange={(v) => {
-                  if (v === '__other__') {
-                    setDescriptionIsOther(true);
-                    update('description', '');
-                  } else {
-                    setDescriptionIsOther(false);
-                    update('description', v);
-                    update('descriptionOther', '');
-                  }
-                }}
-              >
-                <SelectTrigger id="description">
-                  <SelectValue placeholder={facetsLoading ? 'Loading…' : 'Select description'} />
-                </SelectTrigger>
-                <SelectContent>
-                  {descriptionOptions.map((d) => (
-                    <SelectItem key={d} value={d}>
-                      {d.length > 60 ? `${d.slice(0, 60)}…` : d}
-                    </SelectItem>
-                  ))}
-                  <SelectItem value="__other__">Other (type below)</SelectItem>
-                </SelectContent>
-              </Select>
-              {descriptionIsOther && (
-                <Input
-                  className="mt-2"
-                  value={form.descriptionOther}
-                  onChange={(e) => update('descriptionOther', e.target.value)}
-                  placeholder="Enter description"
-                />
-              )}
-            </>
+            <SearchableCombobox
+              id="description"
+              value={form.description}
+              onChange={(v) => update('description', v)}
+              options={descriptionOptions}
+              placeholder="Type to search description"
+              loading={facetsLoading}
+              required
+            />
           )}
         </div>
         <div className="space-y-2">
@@ -358,31 +373,24 @@ export default function AssetForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="make">Make</Label>
-          <Select value={form.make || '_none_'} onValueChange={(v) => update('make', v === '_none_' ? '' : v)}>
-            <SelectTrigger id="make">
-              <SelectValue placeholder="Select make" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_none_">—</SelectItem>
-              {makeOptions.map((m) => (
-                <SelectItem key={m} value={m}>{m}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <SearchableCombobox
+            id="make"
+            value={form.make}
+            onChange={(v) => update('make', v)}
+            options={makeOptions}
+            placeholder="Type to search make"
+            loading={facetsLoading}
+            allowEmpty
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="model">Model</Label>
-          <Select value={form.model || '_none_'} onValueChange={(v) => update('model', v === '_none_' ? '' : v)}>
-            <SelectTrigger id="model">
-              <SelectValue placeholder="Select model" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_none_">—</SelectItem>
-              {modelOptions.map((m) => (
-                <SelectItem key={m} value={m}>{m}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Input
+            id="model"
+            value={form.model}
+            onChange={(e) => update('model', e.target.value)}
+            placeholder="Enter model"
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="status">Status</Label>
@@ -394,20 +402,6 @@ export default function AssetForm({
               <SelectItem value="_none_">—</SelectItem>
               {statusOptions.map((s) => (
                 <SelectItem key={s} value={s}>{s}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="project_location">Project Location</Label>
-          <Select value={form.project_location || '_none_'} onValueChange={(v) => update('project_location', v === '_none_' ? '' : v)}>
-            <SelectTrigger id="project_location">
-              <SelectValue placeholder="Select location" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_none_">—</SelectItem>
-              {projectLocationOptions.map((loc) => (
-                <SelectItem key={loc} value={loc}>{loc}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -437,29 +431,42 @@ export default function AssetForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="responsible_person_pno">Phone</Label>
-          <Input
-            id="responsible_person_pno"
-            value={form.responsible_person_pno}
-            onChange={(e) => update('responsible_person_pno', e.target.value)}
-            placeholder="Phone number"
-          />
+          <div className="flex rounded-md border border-input overflow-hidden">
+            <span className="inline-flex items-center px-3 py-2 text-sm font-medium bg-muted/60 text-muted-foreground border-r border-input shrink-0">
+              +251
+            </span>
+            <Input
+              id="responsible_person_pno"
+              value={form.responsible_person_pno.startsWith('+251') ? form.responsible_person_pno.slice(4) : form.responsible_person_pno}
+              onChange={(e) => {
+                const raw = e.target.value;
+                update('responsible_person_pno', raw ? '+251' + raw : '');
+              }}
+              placeholder="912345678"
+              className="border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0"
+            />
+          </div>
         </div>
         <div className="space-y-2 sm:col-span-2">
           <Label htmlFor="remark">Remark</Label>
-          <Input
+          <textarea
             id="remark"
             value={form.remark}
             onChange={(e) => update('remark', e.target.value)}
             placeholder="Remarks"
+            rows={3}
+            className="flex w-full min-w-0 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-y"
           />
         </div>
+        </div>
+      </div>
       </div>
 
-      <div className="flex justify-end gap-2 pt-2">
-        <Button type="button" variant="outline" onClick={onCancel} disabled={saving}>
+      <div className="flex justify-end gap-3 pt-6 border-t border-border/60">
+        <Button type="button" variant="outline" onClick={onCancel} disabled={saving} className="min-w-[100px]">
           Cancel
         </Button>
-        <Button type="submit" disabled={saving}>
+        <Button type="submit" disabled={saving} className="min-w-[120px] bg-primary hover:bg-primary/90">
           {saving ? 'Saving…' : isEdit ? 'Update' : 'Create'}
         </Button>
       </div>

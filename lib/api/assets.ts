@@ -11,6 +11,9 @@ export function getAssetImageUrl(key: string | null): string | null {
 
 const MULTI_KEYS = ['status', 'project_location', 'make', 'model', 'ownership', 'description'] as const;
 
+/** Special value sent to API to filter for blank/empty cells (Excel-like). */
+export const BLANK_FILTER_VALUE = '__BLANK__';
+
 function buildAssetsQuery(filters: AssetFilters): string {
   const search = new URLSearchParams();
   const set = (k: string, v: string | number | undefined) => {
@@ -135,9 +138,23 @@ export async function fetchAssetFacets(filtersOrGroup?: AssetFilters | string): 
 }
 
 
-export async function fetchAssetCompleteness(categoryGroup?: string): Promise<AssetCompleteness> {
+export async function fetchAssetCompleteness(filtersOrGroup?: AssetFilters | string): Promise<AssetCompleteness> {
   const params = new URLSearchParams();
-  if (categoryGroup) params.set('category_group', categoryGroup);
+  if (typeof filtersOrGroup === 'string') {
+    params.set('category_group', filtersOrGroup);
+  } else if (filtersOrGroup) {
+    const f = filtersOrGroup;
+    if (f.category_group) params.set('category_group', f.category_group);
+    if (f.search) params.set('search', f.search);
+    if (f.responsible_person_name) params.set('responsible_person_name', f.responsible_person_name);
+    const appendAll = (k: string, val: string | string[] | undefined) => {
+      if (val == null) return;
+      const arr = Array.isArray(val) ? val : [val];
+      arr.filter((v) => v !== '').forEach((v) => params.append(k, v));
+    };
+    appendAll('category', f.category);
+    MULTI_KEYS.forEach((key) => appendAll(key, f[key]));
+  }
   const q = params.toString() ? `?${params}` : '';
   const res = await fetch(`${API_BASE}/api/assets/completeness${q}`);
   if (!res.ok) return handleApiError(res, 'Failed to fetch completeness');

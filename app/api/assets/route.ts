@@ -75,12 +75,26 @@ export async function POST(request: NextRequest) {
   }
 }
 
+const BLANK_FILTER_VALUE = '__BLANK__';
+
 function getParamValues(searchParams: URLSearchParams, key: string): string[] {
   const all = searchParams.getAll(key);
-  if (all.length > 0) return all.map((v) => v.trim()).filter(Boolean);
+  if (all.length > 0) return all.map((v) => v.trim()).filter((v) => v !== '');
   const single = searchParams.get(key);
   if (single?.trim()) return [single.trim()];
   return [];
+}
+
+/** Split values into regular values and whether blanks are requested. */
+function splitValues(arr: string[]): { values: string[]; includeBlanks: boolean } {
+  const values = arr.filter((v) => v !== BLANK_FILTER_VALUE);
+  const includeBlanks = arr.includes(BLANK_FILTER_VALUE);
+  return { values, includeBlanks };
+}
+
+/** SQL condition for column being blank (null or empty/whitespace). */
+function blankCondition(column: string): string {
+  return `(${column} IS NULL OR TRIM(COALESCE(${column}, '')::text) = '')`;
 }
 
 export async function GET(request: NextRequest) {
@@ -112,44 +126,86 @@ export async function GET(request: NextRequest) {
         idx++;
       }
     } else if (categoryArr.length > 0) {
-      conditions.push(`(category = ${categoryArr.map((_, i) => `$${idx + i}`).join(' OR category = ')})`);
-      categoryArr.forEach((v) => params.push(v));
-      idx += categoryArr.length;
+      const { values, includeBlanks } = splitValues(categoryArr);
+      const parts: string[] = [];
+      if (values.length > 0) {
+        parts.push(`(category = ${values.map((_, i) => `$${idx + i}`).join(' OR category = ')})`);
+        values.forEach((v) => params.push(v));
+        idx += values.length;
+      }
+      if (includeBlanks) parts.push(blankCondition('category'));
+      if (parts.length > 0) conditions.push(`(${parts.join(' OR ')})`);
     }
-    if (statusArr.length > 0) {
-      conditions.push(`(status = ${statusArr.map((_, i) => `$${idx + i}`).join(' OR status = ')})`);
-      statusArr.forEach((v) => params.push(v));
-      idx += statusArr.length;
+    const { values: statusVals, includeBlanks: statusBlanks } = splitValues(statusArr);
+    if (statusVals.length > 0 || statusBlanks) {
+      const parts: string[] = [];
+      if (statusVals.length > 0) {
+        parts.push(`(status = ${statusVals.map((_, i) => `$${idx + i}`).join(' OR status = ')})`);
+        statusVals.forEach((v) => params.push(v));
+        idx += statusVals.length;
+      }
+      if (statusBlanks) parts.push(blankCondition('status'));
+      if (parts.length > 0) conditions.push(`(${parts.join(' OR ')})`);
     }
-    if (project_locationArr.length > 0) {
-      conditions.push(`(project_location = ${project_locationArr.map((_, i) => `$${idx + i}`).join(' OR project_location = ')})`);
-      project_locationArr.forEach((v) => params.push(v));
-      idx += project_locationArr.length;
+    const { values: locVals, includeBlanks: locBlanks } = splitValues(project_locationArr);
+    if (locVals.length > 0 || locBlanks) {
+      const parts: string[] = [];
+      if (locVals.length > 0) {
+        parts.push(`(project_location = ${locVals.map((_, i) => `$${idx + i}`).join(' OR project_location = ')})`);
+        locVals.forEach((v) => params.push(v));
+        idx += locVals.length;
+      }
+      if (locBlanks) parts.push(blankCondition('project_location'));
+      if (parts.length > 0) conditions.push(`(${parts.join(' OR ')})`);
     }
-    if (makeArr.length > 0) {
-      conditions.push(`(make = ${makeArr.map((_, i) => `$${idx + i}`).join(' OR make = ')})`);
-      makeArr.forEach((v) => params.push(v));
-      idx += makeArr.length;
+    const { values: makeVals, includeBlanks: makeBlanks } = splitValues(makeArr);
+    if (makeVals.length > 0 || makeBlanks) {
+      const parts: string[] = [];
+      if (makeVals.length > 0) {
+        parts.push(`(make = ${makeVals.map((_, i) => `$${idx + i}`).join(' OR make = ')})`);
+        makeVals.forEach((v) => params.push(v));
+        idx += makeVals.length;
+      }
+      if (makeBlanks) parts.push(blankCondition('make'));
+      if (parts.length > 0) conditions.push(`(${parts.join(' OR ')})`);
     }
-    if (modelArr.length > 0) {
-      conditions.push(`(model = ${modelArr.map((_, i) => `$${idx + i}`).join(' OR model = ')})`);
-      modelArr.forEach((v) => params.push(v));
-      idx += modelArr.length;
+    const { values: modelVals, includeBlanks: modelBlanks } = splitValues(modelArr);
+    if (modelVals.length > 0 || modelBlanks) {
+      const parts: string[] = [];
+      if (modelVals.length > 0) {
+        parts.push(`(model = ${modelVals.map((_, i) => `$${idx + i}`).join(' OR model = ')})`);
+        modelVals.forEach((v) => params.push(v));
+        idx += modelVals.length;
+      }
+      if (modelBlanks) parts.push(blankCondition('model'));
+      if (parts.length > 0) conditions.push(`(${parts.join(' OR ')})`);
     }
-    if (ownershipArr.length > 0) {
-      conditions.push(`(ownership = ${ownershipArr.map((_, i) => `$${idx + i}`).join(' OR ownership = ')})`);
-      ownershipArr.forEach((v) => params.push(v));
-      idx += ownershipArr.length;
+    const { values: ownVals, includeBlanks: ownBlanks } = splitValues(ownershipArr);
+    if (ownVals.length > 0 || ownBlanks) {
+      const parts: string[] = [];
+      if (ownVals.length > 0) {
+        parts.push(`(ownership = ${ownVals.map((_, i) => `$${idx + i}`).join(' OR ownership = ')})`);
+        ownVals.forEach((v) => params.push(v));
+        idx += ownVals.length;
+      }
+      if (ownBlanks) parts.push(blankCondition('ownership'));
+      if (parts.length > 0) conditions.push(`(${parts.join(' OR ')})`);
     }
     if (responsible_person_name) {
       conditions.push(`responsible_person_name ILIKE $${idx}`);
       params.push(responsible_person_name);
       idx++;
     }
-    if (descriptionArr.length > 0) {
-      conditions.push(`(description = ${descriptionArr.map((_, i) => `$${idx + i}`).join(' OR description = ')})`);
-      descriptionArr.forEach((v) => params.push(v));
-      idx += descriptionArr.length;
+    const { values: descVals, includeBlanks: descBlanks } = splitValues(descriptionArr);
+    if (descVals.length > 0 || descBlanks) {
+      const parts: string[] = [];
+      if (descVals.length > 0) {
+        parts.push(`(description = ${descVals.map((_, i) => `$${idx + i}`).join(' OR description = ')})`);
+        descVals.forEach((v) => params.push(v));
+        idx += descVals.length;
+      }
+      if (descBlanks) parts.push(blankCondition('description'));
+      if (parts.length > 0) conditions.push(`(${parts.join(' OR ')})`);
     }
     if (search) {
       const pattern = `%${search}%`;

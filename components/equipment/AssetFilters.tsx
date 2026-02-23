@@ -22,6 +22,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Search, X, ChevronDown } from 'lucide-react';
 import type { AssetFilters as AssetFiltersType } from '@/types/asset';
 import type { AssetFacets } from '@/types/asset';
+import { BLANK_FILTER_VALUE } from '@/lib/api/assets';
 
 function toArray(v: string | string[] | undefined): string[] {
   if (v == null) return [];
@@ -38,6 +39,7 @@ function MultiSelectFilter({
   placeholder,
   className,
   optionDisplay,
+  includeBlanksOption = false,
 }: {
   label: string;
   options: string[];
@@ -46,6 +48,8 @@ function MultiSelectFilter({
   placeholder: string;
   className?: string;
   optionDisplay?: (opt: string) => React.ReactNode;
+  /** When true, add "(Blanks)" option to filter for empty/null values (Excel-like). */
+  includeBlanksOption?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState<string[]>([]);
@@ -75,10 +79,13 @@ function MultiSelectFilter({
   const displayLabel = selected.length === 0 ? label : `${label} (${selected.length})`;
   const selectedCount = pending.length;
   const filterLower = filterSearch.trim().toLowerCase();
+  const optionsWithBlanks = includeBlanksOption ? [...options, BLANK_FILTER_VALUE] : options;
   const filteredOptions = filterLower
-    ? options.filter((opt) => opt.toLowerCase().includes(filterLower))
-    : options;
-  const totalCount = options.length;
+    ? optionsWithBlanks.filter((opt) =>
+        opt === BLANK_FILTER_VALUE ? /blank|empty/.test(filterLower) : opt.toLowerCase().includes(filterLower)
+      )
+    : optionsWithBlanks;
+  const totalCount = optionsWithBlanks.length;
   const kpiText = totalCount > 0 ? `${selectedCount} of ${totalCount} selected` : 'No options';
 
   return (
@@ -131,7 +138,7 @@ function MultiSelectFilter({
                 onClick={(e) => e.stopPropagation()}
                 className="h-3.5 w-3.5 shrink-0 border-2"
               />
-              <span className="truncate">{optionDisplay ? optionDisplay(opt) : opt}</span>
+              <span className="truncate">{opt === BLANK_FILTER_VALUE ? '(Blanks)' : (optionDisplay ? optionDisplay(opt) : opt)}</span>
             </DropdownMenuItem>
           ))
         )}
@@ -150,6 +157,17 @@ function MultiSelectFilter({
   );
 }
 
+/** Which filter columns have blank/empty values (from completeness API). When true, show "(Blanks)" option. */
+export interface HasBlanksForFilters {
+  category?: boolean;
+  project_location?: boolean;
+  description?: boolean;
+  make?: boolean;
+  model?: boolean;
+  status?: boolean;
+  ownership?: boolean;
+}
+
 interface AssetFiltersProps {
   filters: AssetFiltersType;
   onFiltersChange: (f: AssetFiltersType) => void;
@@ -164,6 +182,8 @@ interface AssetFiltersProps {
   ownershipOptions?: string[];
   hideCategoryFilter?: boolean;
   facets?: AssetFacets | null;
+  /** Which columns have blank values - show "(Blanks)" only for those (Excel-like). */
+  hasBlanksFor?: HasBlanksForFilters;
   /** Compact: single row, small search, filters inline */
   compact?: boolean;
   /** When set, show near filter bar (e.g. facets fetch failed) */
@@ -187,6 +207,7 @@ export default function AssetFilters({
   ownershipOptions: ownershipOptionsProp,
   hideCategoryFilter = false,
   facets,
+  hasBlanksFor = {},
   compact = true,
   facetsError,
   inline = false,
@@ -260,6 +281,7 @@ export default function AssetFilters({
             onSelectedChange={(v) => onFiltersChange({ category: v.length ? v : undefined, page: 1 })}
             placeholder="All categories"
             className="w-[110px] sm:w-[120px]"
+            includeBlanksOption={hasBlanksFor.category !== false}
           />
         )}
         <MultiSelectFilter
@@ -269,18 +291,18 @@ export default function AssetFilters({
           onSelectedChange={(v) => onFiltersChange({ project_location: v.length ? v : undefined, page: 1 })}
           placeholder="Location"
           className="w-[110px] sm:w-[120px]"
+          includeBlanksOption={hasBlanksFor.project_location !== false}
         />
-        {descriptionOptions.length > 0 && (
-          <MultiSelectFilter
-            label="Description"
-            options={descriptionOptions.map((o) => o.value)}
-            selected={toArray(filters.description)}
-            onSelectedChange={(v) => onFiltersChange({ description: v.length ? v : undefined, page: 1 })}
-            placeholder="Description"
-            className="w-[130px] sm:w-[150px] max-w-[200px]"
-            optionDisplay={(opt) => (opt.length > 50 ? `${opt.slice(0, 50)}…` : opt)}
-          />
-        )}
+        <MultiSelectFilter
+          label="Description"
+          options={descriptionOptions.map((o) => o.value)}
+          selected={toArray(filters.description)}
+          onSelectedChange={(v) => onFiltersChange({ description: v.length ? v : undefined, page: 1 })}
+          placeholder="Description"
+          className="w-[130px] sm:w-[150px] max-w-[200px]"
+          optionDisplay={(opt) => (opt.length > 50 ? `${opt.slice(0, 50)}…` : opt)}
+          includeBlanksOption={hasBlanksFor.description !== false}
+        />
         <MultiSelectFilter
           label="Make"
           options={makeOptions}
@@ -288,6 +310,7 @@ export default function AssetFilters({
           onSelectedChange={(v) => onFiltersChange({ make: v.length ? v : undefined, page: 1 })}
           placeholder="Make"
           className="w-[95px] sm:w-[100px]"
+          includeBlanksOption={hasBlanksFor.make}
         />
         <MultiSelectFilter
           label="Model"
@@ -296,6 +319,7 @@ export default function AssetFilters({
           onSelectedChange={(v) => onFiltersChange({ model: v.length ? v : undefined, page: 1 })}
           placeholder="Model"
           className="w-[95px] sm:w-[100px]"
+          includeBlanksOption={hasBlanksFor.model !== false}
         />
         <MultiSelectFilter
           label="Status"
@@ -304,6 +328,7 @@ export default function AssetFilters({
           onSelectedChange={(v) => onFiltersChange({ status: v.length ? v : undefined, page: 1 })}
           placeholder="Status"
           className="w-[100px] sm:w-[110px]"
+          includeBlanksOption={hasBlanksFor.status}
         />
         <MultiSelectFilter
           label="Ownership"
@@ -312,6 +337,7 @@ export default function AssetFilters({
           onSelectedChange={(v) => onFiltersChange({ ownership: v.length ? v : undefined, page: 1 })}
           placeholder="Ownership"
           className="w-[100px] sm:w-[110px]"
+          includeBlanksOption={hasBlanksFor.ownership !== false}
         />
         {hasActiveFilters && (
           <Button variant="ghost" size="sm" onClick={onReset} className="h-8 px-2 text-xs">
@@ -362,6 +388,7 @@ export default function AssetFilters({
               selected={toArray(filters.category)}
               onSelectedChange={(v) => onFiltersChange({ category: v.length ? v : undefined, page: 1 })}
               placeholder="All categories"
+              includeBlanksOption={hasBlanksFor.category !== false}
             />
           </div>
         )}
@@ -373,20 +400,21 @@ export default function AssetFilters({
             selected={toArray(filters.project_location)}
             onSelectedChange={(v) => onFiltersChange({ project_location: v.length ? v : undefined, page: 1 })}
             placeholder="Location"
+            includeBlanksOption={hasBlanksFor.project_location !== false}
           />
         </div>
-        {descriptionOptions.length > 0 && (
-          <div>
-            <label className="text-[11px] text-muted-foreground mb-1 block font-medium">Description</label>
-            <MultiSelectFilter
-              label="Description"
-              options={descriptionOptions.map((o) => o.value)}
-              selected={toArray(filters.description)}
-              onSelectedChange={(v) => onFiltersChange({ description: v.length ? v : undefined, page: 1 })}
-              placeholder="Description"
-            />
-          </div>
-        )}
+        <div>
+          <label className="text-[11px] text-muted-foreground mb-1 block font-medium">Description</label>
+          <MultiSelectFilter
+            label="Description"
+            options={descriptionOptions.map((o) => o.value)}
+            selected={toArray(filters.description)}
+            onSelectedChange={(v) => onFiltersChange({ description: v.length ? v : undefined, page: 1 })}
+            placeholder="Description"
+            optionDisplay={(opt) => (opt.length > 50 ? `${opt.slice(0, 50)}…` : opt)}
+            includeBlanksOption={hasBlanksFor.description !== false}
+          />
+        </div>
         <div>
           <label className="text-[11px] text-muted-foreground mb-1 block font-medium">Make</label>
           <MultiSelectFilter
@@ -395,6 +423,7 @@ export default function AssetFilters({
             selected={toArray(filters.make)}
             onSelectedChange={(v) => onFiltersChange({ make: v.length ? v : undefined, page: 1 })}
             placeholder="Make"
+            includeBlanksOption={hasBlanksFor.make}
           />
         </div>
         <div>
@@ -405,6 +434,7 @@ export default function AssetFilters({
             selected={toArray(filters.model)}
             onSelectedChange={(v) => onFiltersChange({ model: v.length ? v : undefined, page: 1 })}
             placeholder="Model"
+            includeBlanksOption={hasBlanksFor.model !== false}
           />
         </div>
         <div>
@@ -415,6 +445,7 @@ export default function AssetFilters({
             selected={toArray(filters.status)}
             onSelectedChange={(v) => onFiltersChange({ status: v.length ? v : undefined, page: 1 })}
             placeholder="Status"
+            includeBlanksOption={hasBlanksFor.status}
           />
         </div>
         <div>
@@ -425,6 +456,7 @@ export default function AssetFilters({
             selected={toArray(filters.ownership)}
             onSelectedChange={(v) => onFiltersChange({ ownership: v.length ? v : undefined, page: 1 })}
             placeholder="Ownership"
+            includeBlanksOption={hasBlanksFor.ownership !== false}
           />
         </div>
         <div>
