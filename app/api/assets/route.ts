@@ -64,6 +64,21 @@ export async function POST(request: NextRequest) {
       details: { created_fields: createdFields },
       session_id: getSessionIdFromRequest(request),
     });
+    if (newId != null) {
+      const initialStatus = inserted.status;
+      const statusTo = initialStatus != null && initialStatus !== '' ? String(initialStatus) : '—';
+      const params: (string | number)[] = [
+        typeof newId === 'number' ? newId : String(newId),
+        statusTo,
+        user.phone,
+        user.name,
+      ];
+      await query(
+        `INSERT INTO asset_status_history (asset_id, status_from, status_to, changed_by_phone, changed_by_name)
+         VALUES ($1, NULL, $2, $3, $4)`,
+        params
+      );
+    }
     return NextResponse.json(rows[0], { status: 201 });
   } catch (err) {
     const msg = getErrorMessage(err);

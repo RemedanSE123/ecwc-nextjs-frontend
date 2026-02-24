@@ -13,7 +13,7 @@ function getErrorMessage(err: unknown): string {
 function mapStatusToColumn(raw: string): string {
   const s = (raw ?? '').trim().toLowerCase();
   if (s === 'op') return 'op';
-  if (['idle', '0', 'unknown'].includes(s)) return 'idle';
+  if (s === 'idle') return 'idle';
   if (s === 'ur') return 'ur';
   if (s === 'down') return 'down';
   if (s === 'hr' || s.startsWith('hr ')) return 'hr';

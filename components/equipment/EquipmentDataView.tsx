@@ -19,9 +19,10 @@ import type { Asset, AssetFilters, AssetStats, AssetFacets } from '@/types/asset
 import AssetFiltersComponent from './AssetFilters';
 import AssetFormModal from './AssetFormModal';
 import ImageLightbox from './ImageLightbox';
+import StatusHistoryModal from './StatusHistoryModal';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Image as ImageIcon, Search, Download, FileSpreadsheet, FileDown, BarChart2, Plus, Pencil, Trash2, ChevronDown, ChevronRight } from 'lucide-react';
-import { SLUG_TO_DB_CATEGORY } from '@/types/asset';
+import { Image as ImageIcon, Search, Download, FileSpreadsheet, FileDown, BarChart2, Plus, Pencil, Trash2, ChevronDown, ChevronRight, FileText, LayoutList, RefreshCw, Settings, MapPin, Users, Calendar, History, Truck, Gauge, Box, Building2, Hash, User, Phone, Clock, Copy, Check } from 'lucide-react';
+import { SLUG_TO_DB_CATEGORY, EQUIPMENT_CATEGORIES } from '@/types/asset';
 import { BLANK_FILTER_VALUE } from '@/lib/api/assets';
 import { deleteAsset } from '@/lib/api/assets';
 
@@ -32,6 +33,55 @@ function getSearchRegex(search: string): RegExp | null {
   const terms = trimmed.split(/\s+/).filter(Boolean).map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
   if (terms.length === 0) return null;
   return new RegExp(`(${terms.join('|')})`, 'gi');
+}
+
+/** Detail row for Equipment Details section — sidebar green theme */
+function DetailRow({ icon: Icon, label, value, badge, mono, copyable, rawValue }: { icon: React.ComponentType<{ className?: string }>; label: string; value: React.ReactNode; badge?: boolean; mono?: boolean; copyable?: boolean; rawValue?: string | null }) {
+  const [copied, setCopied] = useState(false);
+  const display = value ?? '—';
+  const toCopy = rawValue ?? (typeof display === 'string' ? display : '');
+  const handleCopy = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (toCopy && toCopy !== '—') {
+      navigator.clipboard.writeText(toCopy);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    }
+  };
+  return (
+    <div className="group/row flex gap-2.5 min-w-0 py-2 px-2.5 -mx-2.5 rounded-md border-l-2 border-transparent hover:border-l-[#0d5c32] hover:bg-[#0d5c32]/5 dark:hover:bg-[#0d5c32]/10 transition-all duration-200">
+      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-[#0d5c32]/12 dark:bg-[#0d5c32]/20 text-[#0d5c32] dark:text-emerald-400 group-hover/row:bg-[#0d5c32]/20 dark:group-hover/row:bg-[#0d5c32]/30 group-hover/row:text-[#0a4d28] dark:group-hover/row:text-emerald-300 transition-colors">
+        <Icon className="h-3 w-3" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-[10px] text-neutral-500 dark:text-neutral-400 mb-0.5 font-medium uppercase tracking-wider group-hover/row:text-[#0d5c32]/80 dark:group-hover/row:text-emerald-400/80 transition-colors">{label}</p>
+        <div className="flex items-center gap-1 min-w-0">
+          {badge ? (
+            <span className="inline-flex rounded px-2 py-0.5 text-[10px] font-medium bg-[#0d5c32]/15 text-[#0d5c32] dark:bg-[#0d5c32]/25 dark:text-emerald-400 border border-[#0d5c32]/25 dark:border-[#0d5c32]/40">{display}</span>
+          ) : (
+            <p className={`text-xs font-medium text-neutral-800 dark:text-neutral-200 leading-tight truncate flex-1 min-w-0 group-hover/row:text-[#0a4d28] dark:group-hover/row:text-emerald-300/90 transition-colors ${mono ? 'font-mono' : ''}`} title={typeof display === 'string' ? display : undefined}>{display}</p>
+          )}
+          {copyable && toCopy && toCopy !== '—' && (
+            <button type="button" onClick={handleCopy} className="shrink-0 p-0.5 rounded hover:bg-[#0d5c32]/15 dark:hover:bg-[#0d5c32]/25 text-[#0d5c32]/70 dark:text-emerald-400/70 hover:text-[#0d5c32] dark:hover:text-emerald-400 transition-colors" title="Copy">
+              {copied ? <Check className="h-3 w-3 text-[#0d5c32] dark:text-emerald-400" /> : <Copy className="h-3 w-3" />}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** KPI colors for 6 categories: Plant, Machinery, Heavy, Light, Factory, Auxiliary */
+const CATEGORY_KPI_COLORS = ['#00c853', '#2962ff', '#ff1744', '#ff9100', '#aa00ff', '#00e5ff'];
+
+function getCategoryColor(category: string | null | undefined): string {
+  if (!category?.trim()) return '#64748b';
+  const c = category.trim().toLowerCase();
+  const idx = EQUIPMENT_CATEGORIES.findIndex(
+    (ec) => ec.dbCategory.toLowerCase() === c || ec.name.toLowerCase() === c || (ec.dbCategory.toLowerCase().includes('auxill') && (c.includes('auxill') || c.includes('auxiliary')))
+  );
+  return idx >= 0 ? CATEGORY_KPI_COLORS[idx] : CATEGORY_KPI_COLORS[0];
 }
 
 /** Status badge colors: OP = green, Down = red, Repair = yellow, Idle = blue, etc. */
@@ -54,11 +104,13 @@ function getStatusBadgeClass(status: string | null | undefined): string {
 }
 
 /** Wrap matching substrings in <mark> for highlight. */
-function highlightText(text: string | null, searchRegex: RegExp | null): React.ReactNode {
-  if (text == null || text === '') return '-';
+function highlightText(text: string | null | undefined, searchRegex: RegExp | null): React.ReactNode {
+  if (text == null || text === '') return '—';
+  if (typeof text !== 'string') return String(text ?? '—');
   if (!searchRegex) return text;
-  const parts = text.split(searchRegex);
-  return parts.map((part, i) =>
+  try {
+    const parts = text.split(searchRegex);
+    return parts.map((part, i) =>
     i % 2 === 1 ? (
       <mark key={i} className="bg-primary/10 dark:bg-primary/20 text-foreground rounded px-0.5 font-medium">
         {part}
@@ -67,6 +119,9 @@ function highlightText(text: string | null, searchRegex: RegExp | null): React.R
       part
     )
   );
+  } catch {
+    return text;
+  }
 }
 
 const INFINITE_SCROLL_PAGE_SIZE = 50;
@@ -100,6 +155,7 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
   const [editAsset, setEditAsset] = useState<Asset | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
+  const [statusHistoryAssetId, setStatusHistoryAssetId] = useState<string | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [headerSearch, setHeaderSearch] = useState(filters.search ?? '');
@@ -422,43 +478,51 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
 
   const defaultCategory = categoryGroup ? SLUG_TO_DB_CATEGORY[categoryGroup] : undefined;
 
+  const [dataCompletenessOpen, setDataCompletenessOpen] = useState(false);
+
   return (
     <div className="space-y-6">
-      {/* Column completeness report */}
+      {/* Column completeness report — collapsed by default */}
       {completeness && completeness.total > 0 && (
         <Card className="border-border bg-muted/20 dark:bg-muted/10">
-          <CardHeader className="py-3 px-4">
+          <CardHeader
+            className="py-3 px-4 cursor-pointer hover:bg-muted/30 dark:hover:bg-muted/20 transition-colors rounded-t-lg"
+            onClick={() => setDataCompletenessOpen((o) => !o)}
+          >
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-semibold flex items-center gap-2 text-foreground">
+                {dataCompletenessOpen ? <ChevronDown className="w-4 h-4 shrink-0" /> : <ChevronRight className="w-4 h-4 shrink-0" />}
                 <BarChart2 className="w-4 h-4 text-muted-foreground" />
                 Data completeness ({completeness.total} assets)
               </CardTitle>
               <span className="text-xs text-muted-foreground">% empty per column</span>
             </div>
           </CardHeader>
-          <CardContent className="pt-0 px-4 pb-4">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-              {(['Image', 'Location', 'Asset No', 'Description', 'Serial No', 'Make', 'Model', 'Status', 'Responsible', 'Phone', 'Ownership', 'Remark'] as const)
-                .filter((col) => completeness.columns[col] != null)
-                .map((col) => {
-                  const v = completeness.columns[col]!;
-                  return (
-                    <div key={col} className="p-3 rounded-lg bg-background border border-border text-[11px]">
-                      <div className="flex justify-between items-center font-medium mb-1.5 gap-2">
-                        <span className="truncate text-foreground">{col}</span>
-                        <span className={`shrink-0 font-semibold tabular-nums ${v.pctEmpty > 50 ? 'text-amber-600 dark:text-amber-400' : v.pctEmpty > 20 ? 'text-orange-600 dark:text-orange-400' : 'text-green-600 dark:text-green-400'}`}>
-                          {v.pctEmpty}% empty
-                        </span>
+          {dataCompletenessOpen && (
+            <CardContent className="pt-0 px-4 pb-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                {(['Image', 'Location', 'Asset No', 'Description', 'Serial No', 'Make', 'Model', 'Status', 'Responsible', 'Phone', 'Ownership', 'Remark'] as const)
+                  .filter((col) => completeness.columns[col] != null)
+                  .map((col) => {
+                    const v = completeness.columns[col]!;
+                    return (
+                      <div key={col} className="p-3 rounded-lg bg-background border border-border text-[11px]">
+                        <div className="flex justify-between items-center font-medium mb-1.5 gap-2">
+                          <span className="truncate text-foreground">{col}</span>
+                          <span className={`shrink-0 font-semibold tabular-nums ${v.pctEmpty > 50 ? 'text-amber-600 dark:text-amber-400' : v.pctEmpty > 20 ? 'text-orange-600 dark:text-orange-400' : 'text-green-600 dark:text-green-400'}`}>
+                            {v.pctEmpty}% empty
+                          </span>
+                        </div>
+                        <Progress value={v.pctFilled} className="h-2 rounded-full" />
+                        <p className="text-[10px] text-muted-foreground mt-1 tabular-nums">
+                          {v.filled.toLocaleString()} filled · {v.empty.toLocaleString()} empty
+                        </p>
                       </div>
-                      <Progress value={v.pctFilled} className="h-2 rounded-full" />
-                      <p className="text-[10px] text-muted-foreground mt-1 tabular-nums">
-                        {v.filled.toLocaleString()} filled · {v.empty.toLocaleString()} empty
-                      </p>
-                    </div>
-                  );
-                })}
-            </div>
-          </CardContent>
+                    );
+                  })}
+              </div>
+            </CardContent>
+          )}
         </Card>
       )}
 
@@ -638,7 +702,7 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
                         <Fragment key={a.id}>
                           <tr
                             key={a.id}
-                            className={`border-b border-border/60 transition-colors cursor-pointer ${isExpanded ? 'bg-muted/25 dark:bg-muted/15' : isEven ? 'bg-background hover:bg-muted/15 dark:hover:bg-muted/10' : 'bg-muted/5 dark:bg-muted/5 hover:bg-muted/20 dark:hover:bg-muted/15'}`}
+                            className={`border-b border-border/60 transition-colors cursor-pointer ${isExpanded ? 'bg-muted/25 dark:bg-muted/15 border-l-4 border-l-[#137638]' : isEven ? 'bg-background hover:bg-muted/15 dark:hover:bg-muted/10 border-l-4 border-l-transparent' : 'bg-muted/5 dark:bg-muted/5 hover:bg-muted/20 dark:hover:bg-muted/15 border-l-4 border-l-transparent'}`}
                             onClick={() => setExpandedId(isExpanded ? null : a.id)}
                           >
                             <td className="py-2 px-3 align-middle text-right">
@@ -661,11 +725,25 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
                               </div>
                             </td>
                             <td className={`py-2 px-3 text-foreground text-xs ${!categoryGroup ? 'max-w-[140px] truncate' : 'whitespace-nowrap'}`} title={a.project_location ?? ''}>{highlightText(a.project_location, searchRegex)}</td>
-                            <td className="py-2 px-3 whitespace-nowrap font-medium text-foreground text-xs">{highlightText(a.asset_no, searchRegex)}</td>
+                            <td className="py-2 px-3 whitespace-nowrap">
+                              <span className="inline-flex items-center rounded px-2 py-0.5 text-[11px] font-normal bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-500 border border-emerald-300 dark:border-emerald-700/60">
+                                {highlightText(a.asset_no, searchRegex) || '—'}
+                              </span>
+                            </td>
                             <td className="py-2 px-3 max-w-[180px] truncate text-foreground/90 text-xs" title={a.description ?? ''}>
                               {highlightText(a.description, searchRegex)}
                             </td>
-                            <td className="py-2 px-3 whitespace-nowrap text-muted-foreground text-xs">{highlightText(a.category, searchRegex)}</td>
+                            <td className="py-2 px-3 whitespace-nowrap">
+                              <span
+                                className="inline-flex items-center rounded px-2 py-0.5 text-[11px] font-normal text-foreground truncate max-w-full border"
+                                style={{
+                                  backgroundColor: `${getCategoryColor(a.category)}18`,
+                                  borderColor: `${getCategoryColor(a.category)}25`,
+                                }}
+                              >
+                                {highlightText(a.category, searchRegex) || '—'}
+                              </span>
+                            </td>
                             <td className="py-2 px-3">
                               <Badge variant="outline" className={`text-[11px] font-medium shrink-0 ${getStatusBadgeClass(a.status)}`}>
                                 {highlightText(a.status, searchRegex)}
@@ -727,71 +805,79 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
                           {isExpanded && (
                             <tr key={`${a.id}-exp`} className="border-b border-border/80">
                               <td colSpan={8} className="p-0 align-top">
-                                <div className="mx-2 mb-2 rounded-lg border border-border bg-card shadow-sm overflow-hidden">
-                                  <div className="px-4 py-2.5 border-b border-border bg-muted/30 dark:bg-muted/20">
-                                    <span className="text-xs font-semibold uppercase tracking-wider text-foreground">View details</span>
-                                  </div>
-                                  <div className="flex gap-0 min-h-[100px]">
-                                    <div
-                                      className="w-28 sm:w-36 shrink-0 p-3 border-r border-border flex items-center justify-center cursor-pointer hover:bg-muted/20 transition-colors bg-muted/10"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (imageUrl) setLightboxSrc(imageUrl);
-                                      }}
-                                    >
-                                      {imageUrl ? (
-                                        <img src={imageUrl} alt="" className="w-full max-h-24 object-contain rounded-lg border border-border shadow-sm" />
-                                      ) : (
-                                        <div className="w-full h-20 rounded-lg border border-dashed border-border flex items-center justify-center bg-muted/20">
-                                          <ImageIcon className="h-6 w-6 text-muted-foreground/50" />
+                                <div className="mx-2 mb-2 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/50 shadow-sm overflow-hidden">
+                                  {/* Top accent line when expanded */}
+                                  <div className="h-1 bg-[#137638]" />
+                                  <div className="flex flex-col sm:flex-row">
+                                    {/* Left: Image + Remarks */}
+                                    <div className="w-full sm:w-[45%] sm:min-w-0 sm:shrink-0 p-4 sm:border-r border-neutral-100 dark:border-neutral-800 flex flex-col gap-4">
+                                      <div>
+                                        <p className="text-[10px] font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-2">Equipment Image</p>
+                                        <div
+                                          className="group relative w-full min-h-[187px] h-[238px] rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800/50 flex flex-col items-center justify-center cursor-pointer overflow-hidden hover:border-neutral-300 dark:hover:border-neutral-600 transition-colors"
+                                          onClick={(e) => { e.stopPropagation(); if (imageUrl) setLightboxSrc(imageUrl); }}
+                                        >
+                                          {imageUrl ? (
+                                            <>
+                                              <img
+                                                src={imageUrl}
+                                                alt=""
+                                                className="max-w-full max-h-full w-auto h-auto object-contain transition-transform group-hover:scale-[1.02]"
+                                                loading="lazy"
+                                                decoding="async"
+                                              />
+                                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors pointer-events-none" />
+                                            </>
+                                          ) : (
+                                            <div className="flex flex-col items-center justify-center p-3">
+                                              <div className="w-12 h-12 rounded-lg bg-neutral-200/80 dark:bg-neutral-700/50 flex items-center justify-center mb-2">
+                                                <ImageIcon className="h-5 w-5 text-neutral-400 dark:text-neutral-500" />
+                                              </div>
+                                              <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400">No Image</span>
+                                              <span className="text-[10px] text-neutral-400 dark:text-neutral-500 mt-0.5">Upload for this equipment</span>
+                                            </div>
+                                          )}
                                         </div>
-                                      )}
+                                      </div>
+                                      <div className="w-full flex-1 min-w-0">
+                                        <p className="text-[10px] font-medium uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-2">Remarks & Notes</p>
+                                        <div className="min-h-[100px] w-full p-3 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-neutral-50/50 dark:bg-neutral-800/30 text-xs leading-relaxed overflow-auto">
+                                          <span className={(a.remark || '').trim() ? 'text-neutral-800 dark:text-neutral-200' : 'text-neutral-400 dark:text-neutral-500 italic'}>
+                                            {highlightText(a.remark, searchRegex) || 'No additional remarks'}
+                                          </span>
+                                        </div>
+                                      </div>
                                     </div>
-                                    <div className="flex-1 min-w-0 p-4 flex gap-4">
-                                      <div className="flex-1 min-w-0 flex flex-col gap-3">
-                                        <div>
-                                          <span className="text-muted-foreground text-[11px] font-medium uppercase tracking-wide block mb-1">Description</span>
-                                          <p className="text-foreground text-xs leading-snug">{highlightText(a.description, searchRegex)}</p>
-                                        </div>
-                                        <div className="grid grid-cols-3 gap-x-4 sm:gap-x-6 gap-y-3 text-xs">
-                                          <div>
-                                            <span className="text-muted-foreground text-[11px] font-medium uppercase tracking-wide block mb-1">Make</span>
-                                            <p className="text-foreground text-xs">{highlightText(a.make, searchRegex) ?? '—'}</p>
-                                          </div>
-                                          <div>
-                                            <span className="text-muted-foreground text-[11px] font-medium uppercase tracking-wide block mb-1">Serial No</span>
-                                            <p className="text-foreground text-xs">{highlightText(a.serial_no, searchRegex)}</p>
-                                          </div>
-                                          <div>
-                                            <span className="text-muted-foreground text-[11px] font-medium uppercase tracking-wide block mb-1">Responsible person</span>
-                                            <p className="text-foreground text-xs">{highlightText(a.responsible_person_name, searchRegex)}</p>
-                                          </div>
-                                          <div>
-                                            <span className="text-muted-foreground text-[11px] font-medium uppercase tracking-wide block mb-1">Model</span>
-                                            <p className="text-foreground text-xs">{highlightText(a.model, searchRegex) ?? '—'}</p>
-                                          </div>
-                                          <div>
-                                            <span className="text-muted-foreground text-[11px] font-medium uppercase tracking-wide block mb-1">Ownership</span>
-                                            <p className="text-foreground text-xs">{highlightText(a.ownership, searchRegex)}</p>
-                                          </div>
-                                          <div>
-                                            <span className="text-muted-foreground text-[11px] font-medium uppercase tracking-wide block mb-1">Phone number</span>
-                                            <p className="text-xs">
-                                              {a.responsible_person_pno ? (
-                                                <a href={`tel:${a.responsible_person_pno}`} className="text-foreground hover:underline font-medium">{a.responsible_person_pno}</a>
-                                              ) : (
-                                                <span className="text-muted-foreground">—</span>
-                                              )}
-                                            </p>
-                                          </div>
-                                        </div>
+                                    {/* Right: Equipment Details — sidebar green theme */}
+                                    <div className="w-full sm:w-[55%] sm:min-w-0 flex-1 p-4 flex flex-col sm:border-l-2 sm:border-l-[#0d5c32]/30">
+                                      <div className="flex items-center gap-2 mb-4 pb-3 border-b-2 border-[#0d5c32]/25 dark:border-[#0d5c32]/35">
+                                        <div className="h-5 w-1 rounded-full bg-gradient-to-b from-[#0d5c32] via-[#0a4d28] to-[#064320]" />
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-[#0d5c32] dark:text-emerald-400">Equipment Details</p>
                                       </div>
-                                      <div className="w-full sm:w-52 shrink-0 flex flex-col min-w-0">
-                                        <span className="text-muted-foreground text-[11px] font-medium uppercase tracking-wide block mb-1">Remark</span>
-                                        <div className="flex-1 min-h-[3rem] p-3 rounded-lg border border-border bg-muted/10 dark:bg-muted/20 text-foreground text-xs leading-relaxed overflow-auto whitespace-pre-wrap break-words">
-                                          {highlightText(a.remark, searchRegex) ?? '—'}
-                                        </div>
+                                      <div className="rounded-lg bg-[#0d5c32]/5 dark:bg-[#0d5c32]/10 border border-[#0d5c32]/15 dark:border-[#0d5c32]/25 p-3 -mx-1">
+                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-0.5 flex-1">
+                                        <DetailRow icon={Truck} label="Category" value={highlightText(a.category, searchRegex)} />
+                                        <DetailRow icon={FileText} label="Description" value={highlightText(a.description, searchRegex)} />
+                                        <DetailRow icon={MapPin} label="Location" value={highlightText(a.project_location, searchRegex)} />
+                                        <DetailRow icon={Building2} label="Ownership" value={highlightText(a.ownership, searchRegex)} />
+                                        <DetailRow icon={Settings} label="Make" value={highlightText(a.make, searchRegex)} />
+                                        <DetailRow icon={Box} label="Model" value={highlightText(a.model, searchRegex)} />
+                                        <DetailRow icon={Hash} label="Serial No" value={highlightText(a.serial_no, searchRegex)} mono copyable rawValue={a.serial_no} />
+                                        <DetailRow icon={Gauge} label="Status" value={highlightText(a.status, searchRegex)} badge />
+                                        <DetailRow icon={User} label="Responsible person" value={highlightText(a.responsible_person_name, searchRegex)} />
+                                        <DetailRow icon={Phone} label="Phone number" value={highlightText(a.responsible_person_pno, searchRegex)} />
+                                        <DetailRow icon={Calendar} label="Created" value={a.created_at ? new Date(a.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : null} />
+                                        <DetailRow icon={Clock} label="Updated" value={a.updated_at ? new Date(a.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : null} />
                                       </div>
+                                      </div>
+                                      <Button
+                                        variant="default"
+                                        className="w-full sm:w-auto sm:min-w-[180px] mt-4 gap-1.5 h-9 bg-[#137638] hover:bg-[#0f5a2e] dark:bg-[#137638] dark:hover:bg-[#0f5a2e] text-white font-medium text-xs rounded-md shadow-sm transition-all duration-200"
+                                        onClick={(e) => { e.stopPropagation(); setStatusHistoryAssetId(a.id); }}
+                                      >
+                                        <History className="h-3.5 w-3.5" />
+                                        View Status History
+                                      </Button>
                                     </div>
                                   </div>
                                 </div>
@@ -848,6 +934,13 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
         <ImageLightbox
           src={lightboxSrc}
           onClose={() => setLightboxSrc(null)}
+        />
+      )}
+
+      {statusHistoryAssetId && (
+        <StatusHistoryModal
+          assetId={statusHistoryAssetId}
+          onClose={() => setStatusHistoryAssetId(null)}
         />
       )}
 

@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
          ${locationExpr} AS location,
          COUNT(*)::int AS total,
          COUNT(*) FILTER (WHERE LOWER(TRIM(COALESCE(status, ''))) = 'op')::int AS op,
-         COUNT(*) FILTER (WHERE LOWER(TRIM(COALESCE(status, ''))) IN ('idle', '0', 'unknown'))::int AS idle
+         COUNT(*) FILTER (WHERE LOWER(TRIM(COALESCE(status, ''))) = 'idle')::int AS idle
        FROM asset_master ${categoryFilter}
        GROUP BY ${locationExpr}
        ORDER BY location ASC`,

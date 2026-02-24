@@ -8,16 +8,17 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Checkbox } from '@/components/ui/checkbox';
-import { fetchAssetStats, fetchAssetReports, fetchStatusSummary } from '@/lib/api/assets';
+import { fetchAssetStats, fetchAssetReports, fetchStatusSummary, ensureStatusSnapshot, fetchStatusTrend } from '@/lib/api/assets';
 import EquipmentDataView from '@/components/equipment/EquipmentDataView';
+import StatusTrendCard from '@/components/equipment/StatusTrendCard';
 import { exportStatsToExcel, exportToPdf } from '@/lib/export-utils';
 import { EQUIPMENT_CATEGORIES, SLUG_TO_DB_CATEGORY } from '@/types/asset';
 import type { AssetStats, AssetReportData } from '@/types/asset';
@@ -51,6 +52,7 @@ import {
   MapPin,
   PieChart as PieChartIcon,
   Activity,
+  HelpCircle,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useSidebar } from '@/lib/sidebar-context';
@@ -805,9 +807,28 @@ export default function EquipmentDashboardPage() {
                 <CardHeader className="py-3.5 bg-gradient-to-r from-emerald-50/80 to-green-50/60 dark:from-emerald-950/30 dark:to-green-950/20 border-b border-border/60">
                   <CardTitle className="text-sm font-semibold flex items-center gap-2">
                     <MapPin className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                    Top Locations
+                    Project Locations
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button type="button" className="inline-flex p-1 rounded-full text-muted-foreground hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50/80 dark:hover:bg-emerald-950/30 transition-colors border border-transparent hover:border-emerald-200/60 dark:hover:border-emerald-800/50" aria-label="Help">
+                          <HelpCircle className="w-4 h-4" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" side="bottom" className="max-w-[340px] p-0 overflow-hidden rounded-xl border-emerald-200/60 dark:border-emerald-800/50 shadow-lg">
+                        <div className="bg-gradient-to-br from-emerald-50/90 via-green-50/60 to-teal-50/50 dark:from-emerald-950/50 dark:via-green-950/30 dark:to-teal-950/30 p-4">
+                          <div className="flex items-start gap-3">
+                            <div className="shrink-0 w-8 h-8 rounded-lg bg-emerald-500/15 dark:bg-emerald-500/25 flex items-center justify-center">
+                              <MapPin className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                            </div>
+                            <div>
+                              <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300 mb-1">About this view</p>
+                              <p className="text-sm text-muted-foreground leading-relaxed">Assets by project location (12 visible, scrollable). Total split by Plant, Machinery, Heavy, Light, Factory, Auxiliary; then OP, Idle, Down.</p>
+                            </div>
+                          </div>
+                        </div>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </CardTitle>
-                  <CardDescription>Assets by project location (12 visible, scrollable). Total split by Plant, Machinery, Heavy, Light, Factory, Auxiliary; then OP, Idle, Down.</CardDescription>
                 </CardHeader>
                 <CardContent className="p-0">
                   {loading ? (
@@ -1069,6 +1090,9 @@ export default function EquipmentDashboardPage() {
             </TabsContent>
 
             <TabsContent value="charts" className="space-y-4 overflow-hidden">
+              {/* Status Trend — All Categories */}
+              <StatusTrendCard categorySlug="all" categoryName="All Categories" borderColor="#f59e0b" />
+
               {/* Column 1: Bar charts | Column 2: Pie & Donuts — no duplicate data */}
               <motion.div
                 initial={{ opacity: 0 }}

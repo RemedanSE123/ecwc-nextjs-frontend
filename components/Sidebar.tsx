@@ -300,7 +300,7 @@ export default function Sidebar({ isCollapsed = false, onToggleCollapse, userPho
         <div className="px-2.5 py-2.5 border-t border-white/20 relative z-10">
           <div className="text-center">
             <p className="text-[10px] text-white/90 leading-relaxed">
-              ኢትዮጵያ ኮንስትራክሽን ስራዎች ኮርፖሬሽን
+              የኢትዮጵያ ኮንስትራክሽን ስራዎች ኮርፖሬሽን
             </p>
             <p className="text-[9px] text-green-200/80 leading-relaxed">
               Ethiopian Construction Works Corp.

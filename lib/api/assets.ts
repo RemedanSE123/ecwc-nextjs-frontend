@@ -167,6 +167,47 @@ export async function fetchAsset(id: string): Promise<Asset> {
   return res.json();
 }
 
+export interface AssetStatusHistoryEntry {
+  id: string;
+  asset_id: string;
+  status_from: string | null;
+  status_to: string;
+  changed_by_phone: string;
+  changed_by_name: string;
+  created_at: string;
+}
+
+export async function fetchAssetStatusHistory(assetId: string): Promise<AssetStatusHistoryEntry[]> {
+  const res = await fetch(`${API_BASE}/api/assets/${encodeURIComponent(assetId)}/status-history`);
+  if (!res.ok) return handleApiError(res, 'Failed to fetch status history');
+  return res.json();
+}
+
+export interface StatusTrendPoint {
+  date: string;
+  op: number;
+  idle: number;
+  down: number;
+}
+
+export async function ensureStatusSnapshot(): Promise<{ ok: boolean }> {
+  const res = await fetch(`${API_BASE}/api/assets/reports/status-snapshot`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) return handleApiError(res, 'Failed to ensure status snapshot');
+  return res.json();
+}
+
+export async function fetchStatusTrend(period: 'day' | 'week' | 'month' = 'day', category: string = 'all'): Promise<StatusTrendPoint[]> {
+  const params = new URLSearchParams();
+  params.set('period', period);
+  params.set('category', category);
+  const res = await fetch(`${API_BASE}/api/assets/reports/status-trend?${params}`);
+  if (!res.ok) return handleApiError(res, 'Failed to fetch status trend');
+  return res.json();
+}
+
 export type CreateAssetPayload = Partial<Omit<Asset, 'id' | 'created_at' | 'updated_at'>> & {
   category: string;
   description: string;

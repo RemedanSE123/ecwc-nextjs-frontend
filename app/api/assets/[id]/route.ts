@@ -131,6 +131,20 @@ export async function PATCH(
       details: { asset_id: id, previous_data, updated_data, changes },
       session_id: getSessionIdFromRequest(request),
     });
+    const statusChange = changes.find((c) => c.field === 'status');
+    if (statusChange) {
+      await query(
+        `INSERT INTO asset_status_history (asset_id, status_from, status_to, changed_by_phone, changed_by_name)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [
+          id,
+          statusChange.from ?? null,
+          statusChange.to ?? '—',
+          user.phone,
+          user.name,
+        ]
+      );
+    }
     return NextResponse.json(rows[0]);
   } catch (err) {
     const msg = getErrorMessage(err);

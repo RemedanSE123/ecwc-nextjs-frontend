@@ -18,7 +18,7 @@ export interface SessionData {
   sessionId?: string;
 }
 
-/** 6 whitelisted accounts — edit phone, password, and name as needed. Passwords are 6-digit. */
+/** Whitelisted accounts — edit phone, password, and name as needed. Passwords are 6-digit. */
 export const AUTH_ACCOUNTS: { phone: string; password: string; name: string }[] = [
   { phone: '0929517703', password: '482917', name: 'Remedan Hyeredin' },
   { phone: '0983007020', password: '639284', name: 'Robel Argaw' },
@@ -26,6 +26,11 @@ export const AUTH_ACCOUNTS: { phone: string; password: string; name: string }[] 
   { phone: '0927763207', password: '815203', name: 'Biruh T/Michael ' },
   { phone: '0921133084', password: '564839', name: 'Tilaye Teshome' },
   { phone: '0980194463', password: '193058', name: 'Hagos Alemseged' },
+  { phone: '0920795215', password: '521407', name: 'Abdulaziz Yimer' },
+  { phone: '0923953535', password: '353592', name: 'Nahom Aregay' },
+  { phone: '0943190139', password: '013914', name: 'Biruk Berihun' },
+  { phone: '0922789648', password: '964827', name: 'Mohammed Erpo' },
+  { phone: '0924700786', password: '786407', name: 'Kassahun Shukera' },
 ];
 
 /** Full sidebar access (all nav items) */
@@ -33,10 +38,16 @@ export const FULL_ACCESS_PHONES = ['0929517703', '0983007020'];
 /** All except Overview */
 export const NO_OVERVIEW_PHONES = ['0912293712'];
 /** Only ECWC Assets (expanded) + Compound Map */
-export const ASSETS_AND_MAP_PHONES = ['0927763207', '0921133084', '0980194463'];
+export const ASSETS_AND_MAP_PHONES = [
+  '0927763207', '0921133084', '0980194463',
+  '0920795215', '0923953535', '0943190139', '0922789648', '0924700786',
+];
 
-/** Can only view announcements, not create/send (Biruh, Tilaye, Hagos). */
-export const ANNOUNCEMENT_VIEW_ONLY_PHONES = ['0927763207', '0921133084', '0980194463'];
+/** Can only view announcements, not create/send */
+export const ANNOUNCEMENT_VIEW_ONLY_PHONES = [
+  '0927763207', '0921133084', '0980194463',
+  '0920795215', '0923953535', '0943190139', '0922789648', '0924700786',
+];
 
 export function canSendAnnouncement(phone: string): boolean {
   const normalized = phone.replace(/\s/g, '');

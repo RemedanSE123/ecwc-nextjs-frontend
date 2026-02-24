@@ -17,7 +17,7 @@ import { motion } from 'framer-motion';
 /** DB statuses mapped to OP (Operational) */
 const OP_STATUSES = ['op'];
 /** DB statuses mapped to Idle */
-const IDLE_STATUSES = ['idle', '0', 'unknown'];
+const IDLE_STATUSES = ['idle'];
 /** DB statuses mapped to Down - everything not OP or Idle */
 const DOWN_STATUS_LABELS: Record<string, string> = {
   down: 'Down',

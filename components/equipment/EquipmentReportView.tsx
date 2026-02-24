@@ -6,7 +6,17 @@ import { Progress } from '@/components/ui/progress';
 import { fetchAssetReports } from '@/lib/api/assets';
 import type { AssetReportData } from '@/types/asset';
 import { Skeleton } from '@/components/ui/skeleton';
-import { BarChart3, PieChart, MapPin, Clock } from 'lucide-react';
+import { BarChart3, PieChart, MapPin, Clock, Activity, MapPinned } from 'lucide-react';
+import StatusTrendCard from './StatusTrendCard';
+
+const CATEGORY_COLORS: Record<string, string> = {
+  'plant-equipment': '#00c853',
+  machinery: '#2962ff',
+  'heavy-vehicles': '#ff1744',
+  'light-vehicles': '#ff9100',
+  'factory-equipment': '#aa00ff',
+  'auxiliary-equipment': '#00e5ff',
+};
 
 interface EquipmentReportViewProps {
   categoryGroup?: string;  // slug e.g. plant-equipment
@@ -48,10 +58,17 @@ export default function EquipmentReportView({ categoryGroup, categoryName }: Equ
 
   if (!report) return <div className="text-muted-foreground">No report data</div>;
 
-  const { categoryBreakdown, statusBreakdown, locationBreakdown, recentAssets } = report;
+  const { categoryBreakdown, statusBreakdown, locationBreakdown } = report;
 
   return (
     <div className="space-y-4">
+      {/* Status Trend — category-specific graph */}
+      <StatusTrendCard
+        categorySlug={categoryGroup ?? 'all'}
+        categoryName={categoryName}
+        borderColor={categoryGroup ? CATEGORY_COLORS[categoryGroup] ?? '#f59e0b' : '#f59e0b'}
+      />
+
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Card>
@@ -108,91 +125,59 @@ export default function EquipmentReportView({ categoryGroup, categoryName }: Equ
         </Card>
       </div>
 
+      {/* Status Breakdown & Top Locations — side by side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Category Breakdown */}
-        <Card>
-          <CardHeader className="p-3 pb-1.5">
-            <CardTitle className="text-[13px] font-semibold">Category Breakdown</CardTitle>
-          </CardHeader>
-          <CardContent className="p-3 pt-1.5 space-y-3">
-            {categoryBreakdown.length === 0 ? (
-              <p className="text-muted-foreground text-sm">No data</p>
-            ) : (
-              categoryBreakdown.map((c) => (
-                <div key={c.category}>
-                  <div className="flex justify-between text-[11px] mb-1">
-                    <span>{c.category}</span>
-                    <span className="font-medium">{c.total} ({c.percentage}%)</span>
-                  </div>
-                  <Progress value={c.percentage} className="h-2" />
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
-
         {/* Status Breakdown */}
-        <Card>
-          <CardHeader className="p-3 pb-1.5">
-            <CardTitle className="text-[13px] font-semibold">Status Breakdown</CardTitle>
+        <Card className="overflow-hidden rounded-xl shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-br from-slate-50 to-slate-100/80 dark:from-slate-900/50 dark:to-slate-800/30">
+          <CardHeader className="py-3.5 border-b border-slate-200/60 dark:border-slate-700/50 bg-slate-50/80 dark:bg-slate-900/40">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2 text-slate-800 dark:text-slate-200">
+              <Activity className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+              Status Breakdown
+            </CardTitle>
           </CardHeader>
-          <CardContent className="p-3 pt-1.5 space-y-3">
+          <CardContent className="p-4 pt-3">
             {statusBreakdown.length === 0 ? (
-              <p className="text-muted-foreground text-sm">No data</p>
+              <p className="text-muted-foreground text-sm py-4">No data</p>
             ) : (
-              statusBreakdown.map((s) => (
-                <div key={s.status}>
-                  <div className="flex justify-between text-[11px] mb-1">
-                    <span>{s.status}</span>
-                    <span className="font-medium">{s.total} ({s.percentage}%)</span>
+              <div className="space-y-3">
+                {statusBreakdown.map((s) => (
+                  <div key={s.status} className="group">
+                    <div className="flex justify-between items-center text-xs mb-1">
+                      <span className="font-medium text-foreground">{s.status}</span>
+                      <span className="tabular-nums font-semibold text-muted-foreground">{s.total} ({s.percentage}%)</span>
+                    </div>
+                    <Progress value={s.percentage} className="h-2.5" />
                   </div>
-                  <Progress value={s.percentage} className="h-2" />
-                </div>
-              ))
+                ))}
+              </div>
             )}
           </CardContent>
         </Card>
-      </div>
 
-      {/* Location & Recent */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader className="p-3 pb-1.5">
-            <CardTitle className="text-[13px] font-semibold">Top Locations</CardTitle>
+        {/* Top Locations */}
+        <Card className="overflow-hidden rounded-xl shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-br from-sky-50 to-slate-100/80 dark:from-sky-950/30 dark:to-slate-800/30">
+          <CardHeader className="py-3.5 border-b border-sky-200/60 dark:border-sky-900/50 bg-sky-50/80 dark:bg-sky-950/40">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2 text-slate-800 dark:text-slate-200">
+              <MapPinned className="w-4 h-4 text-sky-600 dark:text-sky-400" />
+              Top Locations
+            </CardTitle>
           </CardHeader>
-          <CardContent className="p-3 pt-1.5">
-            <div className="space-y-2 max-h-[200px] overflow-y-auto">
+          <CardContent className="p-4 pt-3">
+            <div className="space-y-0 max-h-[280px] overflow-y-auto pr-1">
               {locationBreakdown.length === 0 ? (
-                <p className="text-muted-foreground text-sm">No data</p>
+                <p className="text-muted-foreground text-sm py-4">No data</p>
               ) : (
                 [...locationBreakdown]
-                  .sort((a, b) => (a.location ?? '').localeCompare(b.location ?? '', undefined, { sensitivity: 'base' }))
+                  .sort((a, b) => (b.total ?? 0) - (a.total ?? 0))
                   .map((l) => (
-                  <div key={l.location} className="flex justify-between text-[11px] py-1 border-b last:border-0">
-                    <span className="truncate flex-1">{l.location}</span>
-                    <span className="font-medium ml-2">{l.total}</span>
-                  </div>
-                ))
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="p-3 pb-1.5">
-            <CardTitle className="text-[13px] font-semibold">Recent Assets</CardTitle>
-          </CardHeader>
-          <CardContent className="p-3 pt-1.5">
-            <div className="space-y-2 max-h-[200px] overflow-y-auto">
-              {recentAssets.length === 0 ? (
-                <p className="text-muted-foreground text-sm">No data</p>
-              ) : (
-                recentAssets.map((a) => (
-                  <div key={a.id} className="text-[11px] py-1 border-b last:border-0">
-                    <span className="font-medium">{a.asset_no ?? a.description?.slice(0, 30)}</span>
-                    <span className="text-muted-foreground ml-1">• {a.status ?? '-'}</span>
-                  </div>
-                ))
+                    <div
+                      key={l.location}
+                      className="flex justify-between items-center gap-3 py-2.5 px-2 rounded-lg hover:bg-sky-50/50 dark:hover:bg-sky-950/20 transition-colors border-b border-border/40 last:border-0"
+                    >
+                      <span className="text-xs truncate flex-1 min-w-0 font-medium text-foreground">{l.location}</span>
+                      <span className="text-sm font-bold tabular-nums text-sky-600 dark:text-sky-400 shrink-0">{l.total}</span>
+                    </div>
+                  ))
               )}
             </div>
           </CardContent>
