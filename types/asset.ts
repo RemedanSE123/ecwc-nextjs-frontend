@@ -6,6 +6,8 @@ export interface Asset {
   asset_no: string | null;
   description: string;
   serial_no: string | null;
+  /** Plate number from heavy_vehicle_details (only for Heavy Vehicle category) */
+  plate_no?: string | null;
   make: string | null;
   model: string | null;
   status: string | null;
@@ -30,6 +32,8 @@ export interface AssetFilters {
   responsible_person_name?: string;
   page?: number;
   limit?: number;
+  /** Include heavy/light vehicle and machinery detail columns in response (for export) */
+  include_details?: boolean;
 }
 
 export interface AssetFacets {

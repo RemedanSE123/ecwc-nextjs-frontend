@@ -1,6 +1,6 @@
 /**
  * Client-side: track which announcements the user has "seen" for unread badge.
- * Uses highest seen announcement id in localStorage.
+ * Uses sessionStorage so each tab/session shows unread until user visits /announcements.
  */
 
 const STORAGE_KEY = 'ecwc_announcements_last_seen_id';
@@ -8,7 +8,7 @@ const STORAGE_KEY = 'ecwc_announcements_last_seen_id';
 export function getLastSeenAnnouncementId(): number {
   if (typeof window === 'undefined') return 0;
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = sessionStorage.getItem(STORAGE_KEY);
     if (!raw) return 0;
     const n = parseInt(raw, 10);
     return Number.isFinite(n) ? n : 0;
@@ -22,7 +22,8 @@ export function markAnnouncementsAsSeen(ids: number[]): void {
   if (typeof window === 'undefined' || !ids.length) return;
   const current = getLastSeenAnnouncementId();
   const maxId = Math.max(current, ...ids);
-  localStorage.setItem(STORAGE_KEY, String(maxId));
+  sessionStorage.setItem(STORAGE_KEY, String(maxId));
+  window.dispatchEvent(new CustomEvent('announcements-seen'));
 }
 
 /** Count how many of the given announcements are "unread" (id > lastSeenId). */

@@ -146,7 +146,7 @@ export default function EquipmentUtilizationForm() {
               </div>
               <div className="col-span-8 border-r border-border flex flex-col items-center justify-center py-2 text-center print:border-black print:py-1">
                 <p className="text-sm font-semibold text-foreground sm:text-base print:text-[14px] print:font-bold">
-                  ኢትየጵያ ኮንስትራክሽን ሥራዎች ኮርፖሬሽን
+                  የኢትየጵያ ኮንስትራክሽን ሥራዎች ኮርፖሬሽን
                 </p>
                 <p className="text-[9px] font-medium text-muted-foreground sm:text-[10px] print:text-[9px] print:font-bold print:text-black">
                   ETHIOPIAN CONSTRUCTION WORKS CORPORATION

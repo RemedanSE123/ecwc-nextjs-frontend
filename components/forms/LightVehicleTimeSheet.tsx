@@ -82,7 +82,7 @@ export default function LightVehicleTimeSheet() {
               <Image src="/ecwc png logo.png" alt="ECWC Logo" fill className="object-contain" />
             </div>
             <div className="col-span-8 border-r-2 border-black flex flex-col items-center justify-center py-1.5 text-center">
-              <p className="text-[18px] font-bold">ኢትየጵያ ኮንስትራክሽን ሥራዎች ኮርፖሬሽን</p>
+              <p className="text-[18px] font-bold">የኢትየጵያ ኮንስትራክሽን ሥራዎች ኮርፖሬሽን</p>
               <p className="text-[10px] font-bold">ETHIOPIAN CONSTRUCTION WORKS CORPORATION</p>
             </div>
             <div className="col-span-2 flex flex-col justify-center pl-2 text-[12px]">

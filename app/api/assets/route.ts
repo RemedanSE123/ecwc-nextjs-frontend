@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { SLUG_TO_DB_CATEGORY } from '@/types/asset';
 import { getUserFromRequest, getSessionIdFromRequest, insertAuditLog } from '@/lib/audit';
+import { createAssetChangeAnnouncement } from '@/lib/asset-change-announcement';
 
 export const dynamic = 'force-dynamic';
 
@@ -78,6 +79,13 @@ export async function POST(request: NextRequest) {
          VALUES ($1, NULL, $2, $3, $4)`,
         params
       );
+      const desc = (inserted.description || 'Unspecified') as string;
+      await createAssetChangeAnnouncement({
+        title: 'New asset created',
+        body: `"${desc}" created with status ${statusTo} by ${user.name}.`,
+        created_by_phone: user.phone,
+        created_by_name: user.name,
+      });
     }
     return NextResponse.json(rows[0], { status: 201 });
   } catch (err) {
@@ -128,6 +136,7 @@ export async function GET(request: NextRequest) {
     const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
     const limit = Math.min(5000, Math.max(1, parseInt(searchParams.get('limit') || '20', 10)));
     const offset = (page - 1) * limit;
+    const includeDetails = searchParams.get('include_details') === 'true';
 
     const conditions: string[] = ['1=1'];
     const params: (string | number)[] = [];
@@ -225,24 +234,29 @@ export async function GET(request: NextRequest) {
     if (search) {
       const pattern = `%${search}%`;
       conditions.push(`(
-        description ILIKE $${idx} OR asset_no ILIKE $${idx + 1} OR
-        serial_no ILIKE $${idx + 2} OR make ILIKE $${idx + 3} OR
-        model ILIKE $${idx + 4} OR responsible_person_name ILIKE $${idx + 5} OR
-        project_location ILIKE $${idx + 6} OR category ILIKE $${idx + 7} OR
-        ownership ILIKE $${idx + 8} OR remark ILIKE $${idx + 9}
+        am.description ILIKE $${idx} OR am.asset_no ILIKE $${idx + 1} OR
+        am.serial_no ILIKE $${idx + 2} OR am.make ILIKE $${idx + 3} OR
+        am.model ILIKE $${idx + 4} OR am.responsible_person_name ILIKE $${idx + 5} OR
+        am.project_location ILIKE $${idx + 6} OR am.category ILIKE $${idx + 7} OR
+        am.ownership ILIKE $${idx + 8} OR am.remark ILIKE $${idx + 9} OR
+        hvd.plate_no ILIKE $${idx + 10} OR lvd.plate_no ILIKE $${idx + 11} OR md.plate_no ILIKE $${idx + 12}
       )`);
-      params.push(pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern);
-      idx += 10;
+      params.push(pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern);
+      idx += 13;
     }
 
     const whereClause = conditions.join(' AND ');
 
-    const countQuery = `SELECT COUNT(*)::int as total FROM asset_master WHERE ${whereClause}`;
+    const fromJoin = `asset_master am LEFT JOIN heavy_vehicle_details hvd ON am.id = hvd.asset_id LEFT JOIN light_vehicle_details lvd ON am.id = lvd.asset_id LEFT JOIN machinery_details md ON am.id = md.asset_id`;
+    const countQuery = `SELECT COUNT(*)::int as total FROM ${fromJoin} WHERE ${whereClause}`;
     const countRes = await query<{ total: number }>(countQuery, params);
     const total = countRes?.[0]?.total ?? 0;
 
     params.push(limit, offset);
-    const dataQuery = `SELECT * FROM asset_master WHERE ${whereClause} ORDER BY project_location ASC NULLS LAST, created_at DESC LIMIT $${idx} OFFSET $${idx + 1}`;
+    const detailCols = includeDetails
+      ? `, hvd.plate_no AS hvd_plate_no, hvd.chassis_serial_no AS hvd_chassis_serial_no, hvd.engine_make AS hvd_engine_make, hvd.engine_model AS hvd_engine_model, hvd.engine_serial_no AS hvd_engine_serial_no, hvd.capacity AS hvd_capacity, hvd.manuf_year AS hvd_manuf_year, hvd.libre AS hvd_libre, hvd.tire_size AS hvd_tire_size, hvd.battery_capacity AS hvd_battery_capacity, hvd.insurance_coverage AS hvd_insurance_coverage, hvd.bolo_renewal_date AS hvd_bolo_renewal_date, lvd.plate_no AS lvd_plate_no, lvd.engine_serial_no AS lvd_engine_serial_no, lvd.capacity AS lvd_capacity, lvd.manuf_year AS lvd_manuf_year, lvd.libre AS lvd_libre, lvd.tire_size AS lvd_tire_size, lvd.battery_capacity AS lvd_battery_capacity, lvd.insurance_coverage AS lvd_insurance_coverage, lvd.bolo_renewal_date AS lvd_bolo_renewal_date, md.plate_no AS md_plate_no, md.engine_make AS md_engine_make, md.engine_model AS md_engine_model, md.engine_serial_no AS md_engine_serial_no, md.capacity AS md_capacity, md.manuf_year AS md_manuf_year, md.libre AS md_libre, md.tire_size AS md_tire_size, md.battery_capacity AS md_battery_capacity`
+      : '';
+    const dataQuery = `SELECT am.*, COALESCE(hvd.plate_no, lvd.plate_no, md.plate_no) AS plate_no${detailCols} FROM ${fromJoin} WHERE ${whereClause} ORDER BY am.project_location ASC NULLS LAST, am.created_at DESC LIMIT $${idx} OFFSET $${idx + 1}`;
     const data = await query(dataQuery, params);
 
     return NextResponse.json({

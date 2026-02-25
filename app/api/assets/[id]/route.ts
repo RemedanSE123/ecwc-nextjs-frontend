@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { getUserFromRequest, getSessionIdFromRequest, insertAuditLog } from '@/lib/audit';
+import { createAssetChangeAnnouncement } from '@/lib/asset-change-announcement';
 
 export const dynamic = 'force-dynamic';
 
@@ -145,6 +146,27 @@ export async function PATCH(
         ]
       );
     }
+
+    const desc = (updated_data.description || current?.description || 'Unspecified') as string;
+    if (statusChange) {
+      const fromStr = statusChange.from?.trim() || '—';
+      const toStr = statusChange.to?.trim() || '—';
+      await createAssetChangeAnnouncement({
+        title: 'Asset status changed',
+        body: `"${desc}" status changed from ${fromStr} to ${toStr} by ${user.name}.`,
+        created_by_phone: user.phone,
+        created_by_name: user.name,
+      });
+    } else if (changes.length > 0) {
+      const fieldsList = changes.map((c) => c.field).join(', ');
+      await createAssetChangeAnnouncement({
+        title: 'Asset updated',
+        body: `"${desc}" was updated by ${user.name}. Changed: ${fieldsList}.`,
+        created_by_phone: user.phone,
+        created_by_name: user.name,
+      });
+    }
+
     return NextResponse.json(rows[0]);
   } catch (err) {
     const msg = getErrorMessage(err);

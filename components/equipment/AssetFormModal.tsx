@@ -56,7 +56,7 @@ export default function AssetFormModal({
         <div className="shrink-0 flex items-center justify-between border-b border-border/80 bg-gradient-to-r from-emerald-50/90 via-green-50/60 to-primary/5 dark:from-emerald-950/40 dark:via-green-950/30 dark:to-primary/10 px-6 py-4 pr-14">
           <div>
             <p className="text-sm font-semibold text-foreground">
-              ኢትየጵያ ኮንስትራክሽን ሥራዎች ኮርፖሬሽን
+              የኢትየጵያ ኮንስትራክሽን ሥራዎች ኮርፖሬሽን
             </p>
             <p className="text-[10px] font-medium text-muted-foreground mt-0.5">
               ETHIOPIAN CONSTRUCTION WORKS CORPORATION

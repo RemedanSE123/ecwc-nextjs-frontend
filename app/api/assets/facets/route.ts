@@ -143,10 +143,13 @@ function buildFacetWhere(request: NextRequest): { whereClause: string; params: (
       serial_no ILIKE $${idx + 2} OR make ILIKE $${idx + 3} OR
       model ILIKE $${idx + 4} OR responsible_person_name ILIKE $${idx + 5} OR
       project_location ILIKE $${idx + 6} OR category ILIKE $${idx + 7} OR
-      ownership ILIKE $${idx + 8} OR remark ILIKE $${idx + 9}
+      ownership ILIKE $${idx + 8} OR remark ILIKE $${idx + 9} OR
+      EXISTS (SELECT 1 FROM heavy_vehicle_details hvd WHERE hvd.asset_id = asset_master.id AND hvd.plate_no ILIKE $${idx + 10}) OR
+      EXISTS (SELECT 1 FROM light_vehicle_details lvd WHERE lvd.asset_id = asset_master.id AND lvd.plate_no ILIKE $${idx + 11}) OR
+      EXISTS (SELECT 1 FROM machinery_details md WHERE md.asset_id = asset_master.id AND md.plate_no ILIKE $${idx + 12})
     )`);
-    params.push(pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern);
-    idx += 10;
+    params.push(pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern);
+    idx += 13;
   }
 
   return { whereClause: conditions.join(' AND '), params };

@@ -35,6 +35,9 @@ export const AUTH_ACCOUNTS: { phone: string; password: string; name: string }[] 
   { phone: '0911909654', password: '190965', name: 'Tariku Mamo' },
 ];
 
+/** Phones to notify when asset status changes or asset is edited (in-app announcements) */
+export const ASSET_CHANGE_NOTIFICATION_PHONES = ['0929517703', '0983007020', '0912293712'];
+
 /** Full sidebar access (all nav items) */
 export const FULL_ACCESS_PHONES = ['0929517703', '0983007020'];
 /** All except Overview */

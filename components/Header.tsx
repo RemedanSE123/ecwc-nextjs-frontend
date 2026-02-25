@@ -5,7 +5,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { getSession, clearSession } from '@/lib/auth';
-import { getUnreadCount, markAnnouncementsAsSeen } from '@/lib/announcements-seen';
+import { getUnreadCount } from '@/lib/announcements-seen';
+import { AnnouncementBodyWithStatus } from '@/lib/announcement-body';
 
 interface AnnouncementItem {
   id: number;
@@ -57,35 +58,41 @@ export default function Header({ sidebarCollapsed = false, sidebarOpen = false, 
     }
   }, []);
 
-  // Fetch announcements for dropdown and for unread badge (need list to compute count)
+  // Fetch announcements for dropdown when opened
   useEffect(() => {
     if (!notificationsOpen) return;
-    setUnreadCount(0); // clear badge as soon as user opens dropdown (mark as seen after fetch)
     setAnnouncementsLoading(true);
     fetch('/api/announcements?limit=30')
       .then((res) => (res.ok ? res.json() : { data: [] }))
       .then((json) => {
         const data = json.data ?? [];
         setAnnouncements(data);
-        if (data.length > 0) {
-          markAnnouncementsAsSeen(data.map((a: AnnouncementItem) => a.id));
-          setUnreadCount(0);
-        }
       })
       .catch(() => setAnnouncements([]))
       .finally(() => setAnnouncementsLoading(false));
   }, [notificationsOpen]);
 
-  // Fetch announcements for unread badge when dropdown is closed (and on route change so badge updates after visiting /announcements)
+  // Fetch announcements for unread badge when dropdown is closed; poll and refetch on focus
   useEffect(() => {
     if (notificationsOpen) return;
-    fetch('/api/announcements?limit=50')
-      .then((res) => (res.ok ? res.json() : { data: [] }))
-      .then((json) => {
-        const data = json.data ?? [];
-        setUnreadCount(getUnreadCount(data));
-      })
-      .catch(() => setUnreadCount(0));
+    const fetchBadge = () => {
+      fetch('/api/announcements?limit=50')
+        .then((res) => (res.ok ? res.json() : { data: [] }))
+        .then((json) => {
+          const data = json.data ?? [];
+          const count = getUnreadCount(data);
+          setUnreadCount(count);
+        })
+        .catch(() => setUnreadCount(0));
+    };
+    fetchBadge();
+    const interval = setInterval(fetchBadge, 15000);
+    const onFocus = () => fetchBadge();
+    window.addEventListener('focus', onFocus);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', onFocus);
+    };
   }, [notificationsOpen, pathname]);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -175,17 +182,17 @@ export default function Header({ sidebarCollapsed = false, sidebarOpen = false, 
 
       {/* Right Actions - Compact */}
       <div className="flex items-center gap-2 flex-shrink-0 flex-1 justify-end">
-        {/* Notifications */}
-        <div className="relative" ref={notificationsRef}>
+        {/* Notifications - Facebook-style red badge with number */}
+        <div className="relative inline-flex overflow-visible" ref={notificationsRef}>
           <button
             onClick={() => setNotificationsOpen(!notificationsOpen)}
-            className="relative p-1.5 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
-            aria-label="Announcements"
+            className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-full transition-colors overflow-visible"
+            aria-label={unreadCount > 0 ? `${unreadCount} unread announcements` : 'Announcements'}
           >
-            <Bell className="w-4 h-4" />
+            <Bell className="w-5 h-5 shrink-0" />
             {unreadCount > 0 && (
               <span
-                className="absolute -top-0.5 -right-0.5 min-w-[1.25rem] h-5 px-1 flex items-center justify-center rounded-full bg-red-500 text-white text-[10px] font-semibold border-2 border-white dark:border-gray-900"
+                className="absolute -top-0.5 -right-0.5 z-10 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-red-600 text-white text-[10px] font-bold shadow-md ring-2 ring-white dark:ring-gray-900 animate-pulse"
                 title={`${unreadCount} unread announcement${unreadCount !== 1 ? 's' : ''}`}
               >
                 {unreadCount > 99 ? '99+' : unreadCount}
@@ -213,7 +220,9 @@ export default function Header({ sidebarCollapsed = false, sidebarOpen = false, 
                       className="block px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-50 dark:border-gray-800 last:border-b-0 transition-colors"
                     >
                       <p className="text-[11px] font-medium text-gray-900 dark:text-gray-100 line-clamp-1">{a.title}</p>
-                      <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">{a.body}</p>
+                      <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">
+                        {a.body ? <AnnouncementBodyWithStatus text={a.body} /> : a.title}
+                      </p>
                       <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">{a.created_by_name} · {formatAgo(a.created_at)}</p>
                     </Link>
                   ))

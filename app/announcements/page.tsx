@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { getAuthHeaders, getSession, canSendAnnouncement } from '@/lib/auth';
 import { markAnnouncementsAsSeen, getUnreadCount, getLastSeenAnnouncementId } from '@/lib/announcements-seen';
 import { Megaphone, Send, Plus, User, Search, X, ChevronDown, ChevronUp, Sparkles, Calendar } from 'lucide-react';
+import { AnnouncementBodyWithStatus } from '@/lib/announcement-body';
 
 interface Announcement {
   id: number;
@@ -96,7 +97,6 @@ export default function AnnouncementsPage() {
       setList(data);
       setTotal(json.total ?? 0);
       setLastSeenId(getLastSeenAnnouncementId());
-      if (data.length > 0) markAnnouncementsAsSeen(data.map((a) => a.id));
     } catch (err) {
       setList([]);
       setTotal(0);
@@ -108,6 +108,15 @@ export default function AnnouncementsPage() {
   useEffect(() => {
     fetchList();
   }, [fetchList]);
+
+  // Mark as seen only after user has been on page 2s (avoids prefetch marking)
+  useEffect(() => {
+    if (list.length === 0) return;
+    const t = setTimeout(() => {
+      markAnnouncementsAsSeen(list.map((a) => a.id));
+    }, 2000);
+    return () => clearTimeout(t);
+  }, [list]);
 
   const unreadCount = useMemo(() => getUnreadCount(list), [list]);
   const filteredList = useMemo(() => {
@@ -364,7 +373,7 @@ export default function AnnouncementsPage() {
                     </CardHeader>
                     <CardContent className="pt-0">
                       <p className="text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed" style={{ lineHeight: LINE_HEIGHT }}>
-                        {displayText}
+                        <AnnouncementBodyWithStatus text={displayText} />
                         {needsExpand && !isExpanded && (
                           <button
                             type="button"

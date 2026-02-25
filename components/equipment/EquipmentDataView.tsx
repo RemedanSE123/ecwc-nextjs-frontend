@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, Fragment, useMemo, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,9 +21,17 @@ import AssetFiltersComponent from './AssetFilters';
 import AssetFormModal from './AssetFormModal';
 import ImageLightbox from './ImageLightbox';
 import StatusHistoryModal from './StatusHistoryModal';
+import HeavyVehicleDetailModal from './HeavyVehicleDetailModal';
+import LightVehicleDetailModal from './LightVehicleDetailModal';
+import MachineryDetailModal from './MachineryDetailModal';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Image as ImageIcon, Search, Download, FileSpreadsheet, FileDown, BarChart2, Plus, Pencil, Trash2, ChevronDown, ChevronRight, FileText, LayoutList, RefreshCw, Settings, MapPin, Users, Calendar, History, Truck, Gauge, Box, Building2, Hash, User, Phone, Clock, Copy, Check } from 'lucide-react';
+import { Image as ImageIcon, Search, Download, FileSpreadsheet, FileDown, BarChart2, Plus, Pencil, Trash2, ChevronDown, ChevronRight, FileText, LayoutList, RefreshCw, Settings, MapPin, Users, Calendar, History, Truck, Gauge, Box, Building2, Hash, User, Phone, Clock, Copy, Check, Wrench } from 'lucide-react';
 import { SLUG_TO_DB_CATEGORY, EQUIPMENT_CATEGORIES } from '@/types/asset';
+
+const HEAVY_VEHICLE_CATEGORY = SLUG_TO_DB_CATEGORY['heavy-vehicles']; // 'Heavy Vehicle'
+const LIGHT_VEHICLE_CATEGORY = SLUG_TO_DB_CATEGORY['light-vehicles']; // 'Light Vehicles & Bus'
+const MACHINERY_CATEGORY = SLUG_TO_DB_CATEGORY['machinery']; // 'Machinery'
 import { BLANK_FILTER_VALUE } from '@/lib/api/assets';
 import { deleteAsset } from '@/lib/api/assets';
 
@@ -86,8 +95,8 @@ function getCategoryColor(category: string | null | undefined): string {
 
 /** Status badge colors: OP = green, Down = red, Repair = yellow, Idle = blue, etc. */
 function getStatusBadgeClass(status: string | null | undefined): string {
-  if (!status) return 'border-border/80 bg-muted/40 text-muted-foreground';
-  const s = status.toLowerCase().trim();
+  if (status == null || status === '') return 'border-border/80 bg-muted/40 text-muted-foreground';
+  const s = String(status).toLowerCase().trim();
   // Green: operational / op / active / in use
   if (s === 'op' || s.includes('operational') || s.includes('active') || s.includes('in use')) return 'border-green-200 text-green-700 dark:text-green-500 dark:border-green-800/50 bg-green-50/80 dark:bg-green-950/30';
   // Red: down / out of service / condemned / scrap / disposed
@@ -103,13 +112,25 @@ function getStatusBadgeClass(status: string | null | undefined): string {
   return palette[n % palette.length];
 }
 
+/** Safe date format for display. */
+function formatDateSafe(iso: string | null | undefined): string | null {
+  if (!iso) return null;
+  try {
+    const d = new Date(iso);
+    return isNaN(d.getTime()) ? iso : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  } catch {
+    return iso;
+  }
+}
+
 /** Wrap matching substrings in <mark> for highlight. */
 function highlightText(text: string | null | undefined, searchRegex: RegExp | null): React.ReactNode {
   if (text == null || text === '') return '—';
-  if (typeof text !== 'string') return String(text ?? '—');
-  if (!searchRegex) return text;
+  const str = typeof text === 'string' ? text : String(text ?? '');
+  if (!str) return '—';
+  if (!searchRegex) return str;
   try {
-    const parts = text.split(searchRegex);
+    const parts = str.split(searchRegex);
     return parts.map((part, i) =>
     i % 2 === 1 ? (
       <mark key={i} className="bg-primary/10 dark:bg-primary/20 text-foreground rounded px-0.5 font-medium">
@@ -120,7 +141,7 @@ function highlightText(text: string | null | undefined, searchRegex: RegExp | nu
     )
   );
   } catch {
-    return text;
+    return str;
   }
 }
 
@@ -156,6 +177,9 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
   const [statusHistoryAssetId, setStatusHistoryAssetId] = useState<string | null>(null);
+  const [heavyVehicleDetailAssetId, setHeavyVehicleDetailAssetId] = useState<string | null>(null);
+  const [lightVehicleDetailAssetId, setLightVehicleDetailAssetId] = useState<string | null>(null);
+  const [machineryDetailAssetId, setMachineryDetailAssetId] = useState<string | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [headerSearch, setHeaderSearch] = useState(filters.search ?? '');
@@ -457,7 +481,7 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
   const handleExportExcel = async () => {
     setExporting(true);
     try {
-      const res = await fetchAssets({ ...filters, limit: 5000 });
+      const res = await fetchAssets({ ...filters, limit: 5000, include_details: true });
       exportAssetsToExcel(res.data as unknown as Record<string, unknown>[], `${categoryName.replace(/\s/g, '-')}-${new Date().toISOString().slice(0, 10)}.xlsx`);
     } finally {
       setExporting(false);
@@ -467,7 +491,7 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
   const handleExportCsv = async () => {
     setExporting(true);
     try {
-      const res = await fetchAssets({ ...filters, limit: 5000 });
+      const res = await fetchAssets({ ...filters, limit: 5000, include_details: true });
       exportAssetsToCsv(res.data as unknown as Record<string, unknown>[], `${categoryName.replace(/\s/g, '-')}-${new Date().toISOString().slice(0, 10)}.csv`);
     } finally {
       setExporting(false);
@@ -702,7 +726,7 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
                         <Fragment key={a.id}>
                           <tr
                             key={a.id}
-                            className={`border-b border-border/60 transition-colors cursor-pointer ${isExpanded ? 'bg-muted/25 dark:bg-muted/15 border-l-4 border-l-[#137638]' : isEven ? 'bg-background hover:bg-muted/15 dark:hover:bg-muted/10 border-l-4 border-l-transparent' : 'bg-muted/5 dark:bg-muted/5 hover:bg-muted/20 dark:hover:bg-muted/15 border-l-4 border-l-transparent'}`}
+                            className={`border-b border-border/60 transition-all duration-300 ease-out cursor-pointer ${isExpanded ? 'bg-muted/25 dark:bg-muted/15 border-l-4 border-l-[#137638]' : isEven ? 'bg-background hover:bg-muted/15 dark:hover:bg-muted/10 border-l-4 border-l-transparent' : 'bg-muted/5 dark:bg-muted/5 hover:bg-muted/20 dark:hover:bg-muted/15 border-l-4 border-l-transparent'}`}
                             onClick={() => setExpandedId(isExpanded ? null : a.id)}
                           >
                             <td className="py-2 px-3 align-middle text-right">
@@ -793,19 +817,50 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
                                 </div>
                               ) : (
                                 <span
-                                  className="inline-flex items-center gap-0.5 text-[11px] font-medium text-muted-foreground hover:text-foreground whitespace-nowrap cursor-pointer transition-colors"
+                                  className="inline-flex items-center gap-0.5 text-[11px] font-medium text-muted-foreground hover:text-foreground whitespace-nowrap cursor-pointer transition-all duration-300"
                                   onClick={(e) => { e.stopPropagation(); setExpandedId(isExpanded ? null : a.id); }}
                                 >
-                                  {isExpanded ? <ChevronDown className="h-3.5 w-3.5 shrink-0" /> : <ChevronRight className="h-3.5 w-3.5 shrink-0" />}
+                                  <motion.span
+                                    animate={{ rotate: isExpanded ? 90 : 0 }}
+                                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                                    className="inline-flex shrink-0"
+                                  >
+                                    <ChevronRight className="h-3.5 w-3.5" />
+                                  </motion.span>
                                   View more
                                 </span>
                               )}
                             </td>
                           </tr>
-                          {isExpanded && (
-                            <tr key={`${a.id}-exp`} className="border-b border-border/80">
-                              <td colSpan={8} className="p-0 align-top">
-                                <div className="mx-2 mb-2 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/50 shadow-sm overflow-hidden">
+                          <AnimatePresence>
+                            {isExpanded && (
+                              <motion.tr
+                                key={`${a.id}-exp`}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
+                                className="border-b border-border/80"
+                              >
+                                <td colSpan={8} className="p-0 align-top overflow-hidden">
+                                  <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    transition={{
+                                      height: { duration: 0.45, ease: [0.32, 0.72, 0, 1] },
+                                      opacity: { duration: 0.3, ease: 'easeOut' },
+                                    }}
+                                    className="overflow-hidden"
+                                  >
+                                    <ErrorBoundary>
+                                    <motion.div
+                                      initial={{ opacity: 0, y: 10 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      exit={{ opacity: 0 }}
+                                      transition={{ duration: 0.35, delay: 0.1, ease: [0.25, 0.1, 0.25, 1] }}
+                                      className="mx-2 mb-2 rounded-lg border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/50 shadow-sm overflow-hidden"
+                                    >
                                   {/* Top accent line when expanded */}
                                   <div className="h-1 bg-[#137638]" />
                                   <div className="flex flex-col sm:flex-row">
@@ -862,28 +917,53 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
                                         <DetailRow icon={Building2} label="Ownership" value={highlightText(a.ownership, searchRegex)} />
                                         <DetailRow icon={Settings} label="Make" value={highlightText(a.make, searchRegex)} />
                                         <DetailRow icon={Box} label="Model" value={highlightText(a.model, searchRegex)} />
-                                        <DetailRow icon={Hash} label="Serial No" value={highlightText(a.serial_no, searchRegex)} mono copyable rawValue={a.serial_no} />
+                                        {((a.category ?? '') === HEAVY_VEHICLE_CATEGORY || (a.category ?? '') === LIGHT_VEHICLE_CATEGORY || (a.category ?? '') === MACHINERY_CATEGORY) ? (
+                                          <DetailRow icon={Hash} label="Plate No" value={highlightText(a.plate_no, searchRegex)} mono copyable rawValue={a.plate_no ?? undefined} />
+                                        ) : (
+                                          <DetailRow icon={Hash} label="Serial No" value={highlightText(a.serial_no, searchRegex)} mono copyable rawValue={a.serial_no} />
+                                        )}
                                         <DetailRow icon={Gauge} label="Status" value={highlightText(a.status, searchRegex)} badge />
                                         <DetailRow icon={User} label="Responsible person" value={highlightText(a.responsible_person_name, searchRegex)} />
                                         <DetailRow icon={Phone} label="Phone number" value={highlightText(a.responsible_person_pno, searchRegex)} />
-                                        <DetailRow icon={Calendar} label="Created" value={a.created_at ? new Date(a.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : null} />
-                                        <DetailRow icon={Clock} label="Updated" value={a.updated_at ? new Date(a.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : null} />
+                                        <DetailRow icon={Calendar} label="Created" value={formatDateSafe(a.created_at)} />
+                                        <DetailRow icon={Clock} label="Updated" value={formatDateSafe(a.updated_at)} />
                                       </div>
                                       </div>
-                                      <Button
-                                        variant="default"
-                                        className="w-full sm:w-auto sm:min-w-[180px] mt-4 gap-1.5 h-9 bg-[#137638] hover:bg-[#0f5a2e] dark:bg-[#137638] dark:hover:bg-[#0f5a2e] text-white font-medium text-xs rounded-md shadow-sm transition-all duration-200"
-                                        onClick={(e) => { e.stopPropagation(); setStatusHistoryAssetId(a.id); }}
-                                      >
-                                        <History className="h-3.5 w-3.5" />
-                                        View Status History
-                                      </Button>
+                                      <div className="flex flex-wrap gap-2 mt-4">
+                                        <Button
+                                          variant="default"
+                                          className="gap-1.5 h-9 bg-[#137638] hover:bg-[#0f5a2e] dark:bg-[#137638] dark:hover:bg-[#0f5a2e] text-white font-medium text-xs rounded-md shadow-sm transition-all duration-200"
+                                          onClick={(e) => { e.stopPropagation(); setStatusHistoryAssetId(a.id); }}
+                                        >
+                                          <History className="h-3.5 w-3.5" />
+                                          Status History
+                                        </Button>
+                                        {((a.category ?? '') === HEAVY_VEHICLE_CATEGORY || (a.category ?? '') === LIGHT_VEHICLE_CATEGORY || (a.category ?? '') === MACHINERY_CATEGORY) && (
+                                          <Button
+                                            variant="outline"
+                                            className="gap-1.5 h-9 border-[#0d5c32]/40 text-[#0d5c32] dark:text-emerald-400 hover:bg-[#0d5c32]/10 dark:hover:bg-[#0d5c32]/20 font-medium text-xs rounded-md transition-all duration-200"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              const cat = a.category ?? '';
+                                              if (cat === HEAVY_VEHICLE_CATEGORY) setHeavyVehicleDetailAssetId(a.id);
+                                              else if (cat === LIGHT_VEHICLE_CATEGORY) setLightVehicleDetailAssetId(a.id);
+                                              else if (cat === MACHINERY_CATEGORY) setMachineryDetailAssetId(a.id);
+                                            }}
+                                          >
+                                            {(a.category ?? '') === MACHINERY_CATEGORY ? <Wrench className="h-3.5 w-3.5" /> : <Truck className="h-3.5 w-3.5" />}
+                                            View Detail
+                                          </Button>
+                                        )}
+                                      </div>
                                     </div>
                                   </div>
-                                </div>
-                              </td>
-                            </tr>
-                          )}
+                                    </motion.div>
+                                    </ErrorBoundary>
+                                  </motion.div>
+                                </td>
+                              </motion.tr>
+                            )}
+                          </AnimatePresence>
                         </Fragment>
                       );
                     })
@@ -941,6 +1021,27 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
         <StatusHistoryModal
           assetId={statusHistoryAssetId}
           onClose={() => setStatusHistoryAssetId(null)}
+        />
+      )}
+
+      {heavyVehicleDetailAssetId && (
+        <HeavyVehicleDetailModal
+          assetId={heavyVehicleDetailAssetId}
+          onClose={() => setHeavyVehicleDetailAssetId(null)}
+        />
+      )}
+
+      {lightVehicleDetailAssetId && (
+        <LightVehicleDetailModal
+          assetId={lightVehicleDetailAssetId}
+          onClose={() => setLightVehicleDetailAssetId(null)}
+        />
+      )}
+
+      {machineryDetailAssetId && (
+        <MachineryDetailModal
+          assetId={machineryDetailAssetId}
+          onClose={() => setMachineryDetailAssetId(null)}
         />
       )}
 

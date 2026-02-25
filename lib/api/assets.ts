@@ -29,6 +29,7 @@ function buildAssetsQuery(filters: AssetFilters): string {
   set('responsible_person_name', filters.responsible_person_name);
   set('page', String(filters.page ?? 1));
   set('limit', String(filters.limit ?? 20));
+  if (filters.include_details) search.set('include_details', 'true');
   appendAll('category', filters.category);
   MULTI_KEYS.forEach((k) => appendAll(k, filters[k]));
   return search.toString();
@@ -181,6 +182,98 @@ export async function fetchAssetStatusHistory(assetId: string): Promise<AssetSta
   const res = await fetch(`${API_BASE}/api/assets/${encodeURIComponent(assetId)}/status-history`);
   if (!res.ok) return handleApiError(res, 'Failed to fetch status history');
   return res.json();
+}
+
+export interface HeavyVehicleDetails {
+  asset_id: string;
+  plate_no: string | null;
+  chassis_serial_no: string | null;
+  engine_make: string | null;
+  engine_model: string | null;
+  engine_serial_no: string | null;
+  capacity: string | null;
+  manuf_year: number | null;
+  libre: boolean | null;
+  tire_size: string | null;
+  battery_capacity: string | null;
+  insurance_coverage: string | null;
+  bolo_renewal_date: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type VehicleDetailsResult<T> = { data: T | null; error: string | null };
+
+export async function fetchHeavyVehicleDetails(assetId: string): Promise<VehicleDetailsResult<HeavyVehicleDetails>> {
+  try {
+    const res = await fetch(`${API_BASE}/api/assets/${encodeURIComponent(assetId)}/heavy-vehicle-details`);
+    const body = await res.json().catch(() => null);
+    if (!res.ok) {
+      const msg = (body && (body.detail || body.error)) || res.statusText || 'Failed to fetch heavy vehicle details';
+      return { data: null, error: msg };
+    }
+    return { data: body ?? null, error: null };
+  } catch (err) {
+    return { data: null, error: err instanceof Error ? err.message : 'Failed to fetch heavy vehicle details' };
+  }
+}
+
+export interface LightVehicleDetails {
+  asset_id: string;
+  plate_no: string | null;
+  engine_serial_no: string | null;
+  capacity: string | null;
+  manuf_year: number | null;
+  libre: boolean | null;
+  tire_size: string | null;
+  battery_capacity: string | null;
+  insurance_coverage: string | null;
+  bolo_renewal_date: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function fetchLightVehicleDetails(assetId: string): Promise<VehicleDetailsResult<LightVehicleDetails>> {
+  try {
+    const res = await fetch(`${API_BASE}/api/assets/${encodeURIComponent(assetId)}/light-vehicle-details`);
+    const body = await res.json().catch(() => null);
+    if (!res.ok) {
+      const msg = (body && (body.detail || body.error)) || res.statusText || 'Failed to fetch light vehicle details';
+      return { data: null, error: msg };
+    }
+    return { data: body ?? null, error: null };
+  } catch (err) {
+    return { data: null, error: err instanceof Error ? err.message : 'Failed to fetch light vehicle details' };
+  }
+}
+
+export interface MachineryDetails {
+  asset_id: string;
+  plate_no: string | null;
+  engine_make: string | null;
+  engine_model: string | null;
+  engine_serial_no: string | null;
+  capacity: string | null;
+  manuf_year: number | null;
+  libre: boolean | null;
+  tire_size: string | null;
+  battery_capacity: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function fetchMachineryDetails(assetId: string): Promise<VehicleDetailsResult<MachineryDetails>> {
+  try {
+    const res = await fetch(`${API_BASE}/api/assets/${encodeURIComponent(assetId)}/machinery-details`);
+    const body = await res.json().catch(() => null);
+    if (!res.ok) {
+      const msg = (body && (body.detail || body.error)) || res.statusText || 'Failed to fetch machinery details';
+      return { data: null, error: msg };
+    }
+    return { data: body ?? null, error: null };
+  } catch (err) {
+    return { data: null, error: err instanceof Error ? err.message : 'Failed to fetch machinery details' };
+  }
 }
 
 export interface StatusTrendPoint {

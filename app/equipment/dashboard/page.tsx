@@ -1614,6 +1614,37 @@ export default function EquipmentDashboardPage() {
                             <td className="px-2 py-2 text-center tabular-nums">{reportGrandTotal?.accident ?? '-'}</td>
                             <td className="px-2 py-2 text-center tabular-nums">{reportGrandTotal?.total ?? '-'}</td>
                           </tr>
+                          {reportGrandTotal?.total ? (
+                            (() => {
+                              const PCT_COLORS: Record<string, string> = {
+                                op: 'bg-emerald-500/30 text-emerald-800 dark:bg-emerald-500/25 dark:text-emerald-200',
+                                idle: 'bg-amber-500/35 text-amber-800 dark:bg-amber-500/25 dark:text-amber-200',
+                                ur: 'bg-orange-500/35 text-orange-800 dark:bg-orange-500/25 dark:text-orange-200',
+                                down: 'bg-red-500/35 text-red-800 dark:bg-red-500/25 dark:text-red-200',
+                                hr: 'bg-rose-600/35 text-rose-900 dark:bg-rose-600/25 dark:text-rose-200',
+                                ui: 'bg-amber-400/30 text-amber-700 dark:bg-amber-400/20 dark:text-amber-300',
+                                wi: 'bg-amber-400/30 text-amber-700 dark:bg-amber-400/20 dark:text-amber-300',
+                                uc: 'bg-amber-400/30 text-amber-700 dark:bg-amber-400/20 dark:text-amber-300',
+                                rfd: 'bg-slate-500/30 text-slate-700 dark:bg-slate-500/20 dark:text-slate-300',
+                                afd: 'bg-slate-500/30 text-slate-700 dark:bg-slate-500/20 dark:text-slate-300',
+                                accident: 'bg-red-600/35 text-red-900 dark:bg-red-600/25 dark:text-red-200',
+                              };
+                              return (
+                                <tr className="bg-green-50/80 dark:bg-green-950/30 text-xs font-medium">
+                                  <td className="px-2 py-1.5" colSpan={effectiveReportSlugs.length > 1 ? 3 : 2}>% of fleet</td>
+                                  {(['op', 'idle', 'ur', 'down', 'hr', 'ui', 'wi', 'uc', 'rfd', 'afd', 'accident'] as const).map((k) => {
+                                    const n = reportGrandTotal[k] ?? 0;
+                                    const pct = ((n / reportGrandTotal.total!) * 100).toFixed(1);
+                                    const colorClass = PCT_COLORS[k] ?? 'text-muted-foreground';
+                                    return (
+                                      <td key={k} className={`px-2 py-1.5 text-center tabular-nums ${colorClass}`}>{pct}%</td>
+                                    );
+                                  })}
+                                  <td className="px-2 py-1.5 text-center tabular-nums font-semibold text-foreground">100%</td>
+                                </tr>
+                              );
+                            })()
+                          ) : null}
                         </tfoot>
                       </table>
                     </div>
