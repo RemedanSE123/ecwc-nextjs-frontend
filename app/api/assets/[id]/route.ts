@@ -147,6 +147,7 @@ export async function PATCH(
       );
     }
 
+    // Notify only when status column changes (not for other field edits)
     const desc = (updated_data.description || current?.description || 'Unspecified') as string;
     if (statusChange) {
       const fromStr = statusChange.from?.trim() || '—';
@@ -154,14 +155,6 @@ export async function PATCH(
       await createAssetChangeAnnouncement({
         title: 'Asset status changed',
         body: `"${desc}" status changed from ${fromStr} to ${toStr} by ${user.name}.`,
-        created_by_phone: user.phone,
-        created_by_name: user.name,
-      });
-    } else if (changes.length > 0) {
-      const fieldsList = changes.map((c) => c.field).join(', ');
-      await createAssetChangeAnnouncement({
-        title: 'Asset updated',
-        body: `"${desc}" was updated by ${user.name}. Changed: ${fieldsList}.`,
         created_by_phone: user.phone,
         created_by_name: user.name,
       });
