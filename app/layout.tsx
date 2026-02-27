@@ -1,11 +1,10 @@
 // app/layout.tsx
 import type { Metadata } from "next";
-import { Inter, DM_Sans } from "next/font/google";
+import { DM_Sans } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import ScrollRestoration from "@/components/ScrollRestoration";
 
-const inter = Inter({ subsets: ["latin"] });
 const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans" });
 
 const LANDING_SCROLL_SCRIPT = `
@@ -46,7 +45,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${inter.className} ${dmSans.variable}`}>
+      <body className={`${dmSans.className} ${dmSans.variable}`}>
         <Script
           id="landing-scroll-top"
           strategy="beforeInteractive"

@@ -152,7 +152,7 @@ export default function CompoundMapView({
       >
       <TileLayer attribution={SATELLITE_LAYER.attribution} url={SATELLITE_LAYER.url} />
       <FlyTo location={selectedLocation} locations={locations} />
-      {/* Only show pin and border for the location selected in the sidebar */}
+      {/* Only show the clicked/selected location on the map */}
       {selectedLocation && (() => {
         const loc = selectedLocation;
         if (loc.type === 'point') {

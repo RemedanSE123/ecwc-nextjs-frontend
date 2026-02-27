@@ -115,6 +115,27 @@
   border-radius: inherit;
 }
 
+/* Compound map sidebar: visible scrollbar */
+.compound-map-sidebar-list {
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted-foreground) / 0.4) transparent;
+}
+.compound-map-sidebar-list::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.compound-map-sidebar-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+.compound-map-sidebar-list::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 4px;
+}
+.compound-map-sidebar-list::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
 @layer base {
   :root {
     /* CEO-grade light mode: #70c82a primary, warm off-whites, refined neutrals */

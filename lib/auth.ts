@@ -27,7 +27,7 @@ export const AUTH_ACCOUNTS: { phone: string; password: string; name: string }[] 
   { phone: '0921133084', password: '564839', name: 'Tilaye Teshome' },
   { phone: '0980194463', password: '193058', name: 'Hagos Alemseged' },
   { phone: '0920795215', password: '521407', name: 'Abdulaziz Yimer' },
-  { phone: '0923953535', password: '353592', name: 'Nahom Aregay' },
+  { phone: '0923953835', password: '353592', name: 'Nahom Aregay' },
   { phone: '0943190139', password: '013914', name: 'Biruk Berihun' },
   { phone: '0922789648', password: '964827', name: 'Mohammed Erpo' },
   { phone: '0924700786', password: '786407', name: 'Kassahun Shukera' },
@@ -45,14 +45,14 @@ export const NO_OVERVIEW_PHONES = ['0912293712'];
 /** Only ECWC Assets (expanded) + Compound Map */
 export const ASSETS_AND_MAP_PHONES = [
   '0927763207', '0921133084', '0980194463',
-  '0920795215', '0923953535', '0943190139', '0922789648', '0924700786',
+  '0920795215', '0923953835', '0943190139', '0922789648', '0924700786',
   '0915980000', '0911909654',
 ];
 
 /** Can only view announcements, not create/send */
 export const ANNOUNCEMENT_VIEW_ONLY_PHONES = [
   '0927763207', '0921133084', '0980194463',
-  '0920795215', '0923953535', '0943190139', '0922789648', '0924700786',
+  '0920795215', '0923953835', '0943190139', '0922789648', '0924700786',
   '0915980000', '0911909654',
 ];
 

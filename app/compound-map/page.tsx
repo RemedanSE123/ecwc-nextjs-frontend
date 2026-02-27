@@ -10,7 +10,7 @@ export default function CompoundMapPage() {
       <div className="space-y-4">
        
 
-        <div className="min-h-[560px] w-full">
+        <div className="h-[560px] w-full overflow-hidden flex">
           <CompoundMap />
         </div>
       </div>
