@@ -2,9 +2,50 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { RefreshCw, MapPin, Building2, Search, ChevronRight } from 'lucide-react';
+import { RefreshCw, MapPin, Search, ChevronRight, ChevronDown } from 'lucide-react';
 import { parseKml, FALLBACK_LOCATIONS, type MapLocation } from '@/lib/kmlParser';
 import { Input } from '@/components/ui/input';
+
+/* ── Group definitions ─────────────────────────────────────────────── */
+interface LocationGroup {
+  id: string;
+  label: string;
+  icon: React.ElementType;
+  color: string;
+  bgColor: string;
+  borderColor: string;
+  test: (name: string) => boolean;
+}
+
+const GROUPS: LocationGroup[] = [
+  {
+    id: 'head-office',
+    label: 'Head Office',
+    icon: MapPin,
+    color: 'text-[#70c82a]',
+    bgColor: 'bg-[#70c82a]/10',
+    borderColor: 'border-[#70c82a]/30',
+    test: (n) => /head office/i.test(n),
+  },
+  {
+    id: 'kality',
+    label: 'Kality Compound',
+    icon: MapPin,
+    color: 'text-[#70c82a]',
+    bgColor: 'bg-[#70c82a]/10',
+    borderColor: 'border-[#70c82a]/30',
+    test: (n) => /kality|workshop|factory|production|flexi/i.test(n),
+  },
+  {
+    id: 'projects',
+    label: 'Project Sites',
+    icon: MapPin,
+    color: 'text-[#70c82a]',
+    bgColor: 'bg-[#70c82a]/10',
+    borderColor: 'border-[#70c82a]/30',
+    test: (n) => /project|airfield|corridor|negele|yabelo|semera/i.test(n),
+  },
+];
 
 const CompoundMapView = dynamic(
   () => import('./CompoundMapView').then((m) => m.default),
@@ -24,6 +65,11 @@ export default function CompoundMap() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
+    'head-office': true,
+    'kality': true,
+    'projects': true,
+  });
   const selectedItemRef = useRef<HTMLLIElement>(null);
   const isInitialSelection = useRef(true);
 
@@ -48,44 +94,59 @@ export default function CompoundMap() {
     }
   }, []);
 
-  useEffect(() => {
-    loadKml();
-  }, [loadKml]);
-
-  const selectedLocation = locations.find((l) => l.id === selectedId);
-  const searchLower = search.trim().toLowerCase();
-  const filteredLocations = searchLower
-    ? locations.filter((l) => l.name.toLowerCase().includes(searchLower))
-    : locations;
+  useEffect(() => { loadKml(); }, [loadKml]);
 
   useEffect(() => {
     if (!selectedId || !selectedItemRef.current) return;
-    if (isInitialSelection.current) {
-      isInitialSelection.current = false;
-      return;
-    }
+    if (isInitialSelection.current) { isInitialSelection.current = false; return; }
     selectedItemRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, [selectedId]);
 
-  const isFacility = (name: string) => /Head Office|Kality P&E|Kality Production/i.test(name);
+  const searchLower = search.trim().toLowerCase();
+
+  /* Assign each location to a group, or "other" */
+  const getGroup = (name: string) => GROUPS.find((g) => g.test(name)) ?? null;
+
+  const groupedData = GROUPS.map((group) => ({
+    group,
+    items: locations.filter((l) => {
+      const belongs = getGroup(l.name)?.id === group.id;
+      if (!belongs) return false;
+      if (searchLower) return l.name.toLowerCase().includes(searchLower);
+      return true;
+    }),
+  }));
+
+  const ungrouped = locations.filter((l) => {
+    const belongs = getGroup(l.name) === null;
+    if (!belongs) return false;
+    if (searchLower) return l.name.toLowerCase().includes(searchLower);
+    return true;
+  });
+
+  const totalFiltered = groupedData.reduce((s, g) => s + g.items.length, 0) + ungrouped.length;
+
+  const toggleGroup = (id: string) =>
+    setExpandedGroups((prev) => ({ ...prev, [id]: !prev[id] }));
 
   return (
     <div className="flex h-full w-full min-h-0 gap-4">
-      {/* Sidebar — compact, attractive, scrollable */}
+      {/* Sidebar — grouped tree */}
       <aside className="w-72 lg:w-80 shrink-0 flex flex-col h-full rounded-xl border border-border bg-card shadow-lg overflow-hidden ring-1 ring-black/5">
-        <div className="shrink-0 px-4 py-3.5 border-b border-border bg-gradient-to-br from-primary/5 via-muted/20 to-transparent">
+        {/* Header */}
+        <div className="shrink-0 px-4 py-3.5 border-b border-border bg-gradient-to-br from-[#70c82a]/5 via-muted/20 to-transparent">
           <div className="flex items-center justify-between gap-2 mb-3">
             <h2 className="text-sm font-bold text-foreground tracking-tight">Locations</h2>
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center justify-center min-w-[1.5rem] h-5 px-1.5 rounded-full bg-primary/20 text-primary text-[10px] font-semibold tabular-nums">
+              <span className="inline-flex items-center justify-center min-w-[1.5rem] h-5 px-1.5 rounded-full bg-[#70c82a]/20 text-[#70c82a] text-[10px] font-bold tabular-nums">
                 {locations.length}
               </span>
               <button
                 type="button"
                 onClick={loadKml}
                 disabled={loading}
-                className="p-1 rounded-md text-muted-foreground hover:text-primary hover:bg-muted/60 disabled:opacity-50 transition-all"
-                title="Refresh list"
+                className="p-1 rounded-md text-muted-foreground hover:text-[#70c82a] hover:bg-muted/60 disabled:opacity-50 transition-all"
+                title="Refresh"
               >
                 <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
               </button>
@@ -98,16 +159,17 @@ export default function CompoundMap() {
               placeholder="Search locations…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="h-9 pl-8 pr-8 text-sm rounded-lg border-border bg-background/80 focus:ring-2 focus:ring-primary/25 focus:border-primary transition-all"
+              className="h-9 pl-8 pr-8 text-sm rounded-lg border-border bg-background/80 focus:ring-2 focus:ring-[#70c82a]/25 focus:border-[#70c82a]/50 transition-all"
             />
             {search.trim() && (
               <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground tabular-nums">
-                {filteredLocations.length}
+                {totalFiltered}
               </span>
             )}
           </div>
         </div>
 
+        {/* Grouped list */}
         <div className="compound-map-sidebar-list flex-1 overflow-y-auto overflow-x-hidden min-h-0 max-h-[360px] border-t border-border/80 overscroll-contain bg-background/50">
           {loading ? (
             <div className="p-4 flex items-center gap-2 text-sm text-muted-foreground">
@@ -117,39 +179,85 @@ export default function CompoundMap() {
           ) : locations.length === 0 ? (
             <div className="p-4 text-sm text-muted-foreground">No locations loaded.</div>
           ) : (
-            <ul className="p-1.5 space-y-px">
-              {filteredLocations.map((loc) => {
-                const selected = loc.id === selectedId;
-                const icon = isFacility(loc.name) ? (
-                  <div className="shrink-0 w-7 h-7 rounded-lg bg-primary/20 flex items-center justify-center">
-                    <Building2 className="h-3.5 w-3.5 text-primary" />
-                  </div>
-                ) : (
-                  <div className="shrink-0 w-7 h-7 rounded-lg bg-muted/70 flex items-center justify-center">
-                    <MapPin className="h-3.5 w-3.5 text-foreground/70" />
+            <div className="p-2 space-y-1">
+              {groupedData.map(({ group, items }) => {
+                if (items.length === 0 && searchLower) return null;
+                const expanded = expandedGroups[group.id] ?? true;
+                const GroupIcon = group.icon;
+                return (
+                  <div key={group.id}>
+                    {/* Group header */}
+                    <button
+                      type="button"
+                      onClick={() => toggleGroup(group.id)}
+                      className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-muted/50 transition-all duration-200 group"
+                    >
+                      <div className={`w-6 h-6 rounded-md ${group.bgColor} border ${group.borderColor} flex items-center justify-center flex-shrink-0`}>
+                        <GroupIcon className={`h-3.5 w-3.5 ${group.color}`} />
+                      </div>
+                      <span className="flex-1 text-sm font-medium tracking-wide text-left text-foreground">
+                        {group.label}
+                      </span>
+                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground tabular-nums">
+                        {items.length}
+                      </span>
+                      {expanded
+                        ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                        : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />}
+                    </button>
+
+                    {/* Sub-items */}
+                    {expanded && (
+                      <ul className="ml-3 pl-3 border-l-2 border-border/50 space-y-px mt-0.5 mb-1">
+                        {items.map((loc) => {
+                          const selected = loc.id === selectedId;
+                          return (
+                            <li key={loc.id} ref={selected ? selectedItemRef : undefined}>
+                              <button
+                                type="button"
+                                onClick={() => setSelectedId(loc.id)}
+                                className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-left transition-all duration-200 group ${
+                                  selected
+                                    ? `${group.bgColor} border-l-2 ${group.borderColor} font-semibold`
+                                    : 'hover:bg-muted/50 border-l-2 border-transparent hover:border-border'
+                                }`}
+                              >
+                                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${selected ? group.color.replace('text-', 'bg-') : 'bg-muted-foreground/40'}`} />
+                                <span className={`flex-1 text-xs leading-relaxed break-words text-left ${selected ? 'text-foreground font-semibold' : 'text-muted-foreground group-hover:text-foreground'}`}>
+                                  {loc.name}
+                                </span>
+                                {selected && <ChevronRight className={`h-3 w-3 flex-shrink-0 ${group.color}`} />}
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
                   </div>
                 );
+              })}
+
+              {/* Ungrouped fallback */}
+              {ungrouped.length > 0 && ungrouped.map((loc) => {
+                const selected = loc.id === selectedId;
                 return (
-                  <li key={loc.id} ref={selected ? selectedItemRef : undefined}>
+                  <li key={loc.id} ref={selected ? selectedItemRef : undefined} className="list-none">
                     <button
                       type="button"
                       onClick={() => setSelectedId(loc.id)}
-                      className={`w-full flex items-start gap-2 px-2.5 py-1.5 rounded-md text-left transition-all duration-200 border-l-[3px] group ${
-                        selected
-                          ? 'bg-primary/15 dark:bg-primary/25 border-primary text-foreground font-semibold shadow-sm hover:bg-primary/20'
-                          : 'border-transparent hover:bg-muted/60 text-foreground/90 hover:border-primary/20 hover:text-foreground'
+                      className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-left transition-all duration-200 border-l-2 ${
+                        selected ? 'bg-[#70c82a]/15 border-[#70c82a] font-semibold' : 'border-transparent hover:bg-muted/60 hover:border-border'
                       }`}
                     >
-                      {icon}
-                      <span className="min-w-0 flex-1 text-sm font-medium text-foreground leading-relaxed break-words text-left pt-0.5">{loc.name}</span>
-                      {selected && <ChevronRight className="h-3.5 w-3.5 shrink-0 text-primary mt-0.5" />}
+                      <MapPin className={`h-3.5 w-3.5 flex-shrink-0 ${selected ? 'text-[#70c82a]' : 'text-muted-foreground'}`} />
+                      <span className="flex-1 text-xs text-foreground break-words">{loc.name}</span>
                     </button>
                   </li>
                 );
               })}
-            </ul>
+            </div>
           )}
-          {search.trim() && filteredLocations.length === 0 && (
+          {search.trim() && totalFiltered === 0 && (
             <div className="px-3 py-4 text-sm text-muted-foreground text-center">
               No locations match &quot;{search}&quot;
             </div>
@@ -161,9 +269,9 @@ export default function CompoundMap() {
             href="https://earth.google.com/earth/d/14Qm1aUGZdkw6yf5-CUlJvwqYMJ6DX3CC?usp=sharing"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 w-full rounded-lg border-2 border-primary/30 bg-primary/5 py-2.5 px-3 text-sm font-semibold text-foreground hover:bg-primary/15 hover:border-primary/50 hover:shadow-md transition-all duration-200"
+            className="flex items-center justify-center gap-2 w-full rounded-lg border-2 border-[#70c82a]/30 bg-[#70c82a]/5 py-2.5 px-3 text-sm font-semibold text-foreground hover:bg-[#70c82a]/15 hover:border-[#70c82a]/50 hover:shadow-md transition-all duration-200"
           >
-            <MapPin className="h-4 w-4 shrink-0 text-primary" />
+            <MapPin className="h-4 w-4 shrink-0 text-[#70c82a]" />
             Open in Google Earth
           </a>
         </div>

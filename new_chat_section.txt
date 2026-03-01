@@ -1,0 +1,241 @@
+          {/* AI Chat Assistant - Phone + Tablet */}
+          <div className="mt-16 flex flex-col xl:flex-row items-start justify-center gap-8">
+
+            {/* ── Portrait Phone ── */}
+            <motion.div initial={{ opacity: 0, x: -40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }} className="flex-shrink-0 w-full max-w-[280px] mx-auto xl:mx-0">
+              <div className="relative">
+                <div className="absolute -inset-3 rounded-[3.5rem] bg-[#70c82a]/20 dark:bg-[#70c82a]/30 blur-2xl" />
+                {/* frame */}
+                <div className="relative rounded-[3rem] border-[7px] border-gray-900 dark:border-zinc-700 bg-gray-900 dark:bg-zinc-800 shadow-2xl overflow-hidden flex flex-col" style={{ height: 540 }}>
+                  {/* side buttons */}
+                  <div className="absolute -left-[9px] top-[90px] w-[5px] h-7 bg-gray-700 dark:bg-zinc-600 rounded-l-md" />
+                  <div className="absolute -left-[9px] top-[126px] w-[5px] h-10 bg-gray-700 dark:bg-zinc-600 rounded-l-md" />
+                  <div className="absolute -left-[9px] top-[148px] w-[5px] h-10 bg-gray-700 dark:bg-zinc-600 rounded-l-md" />
+                  <div className="absolute -right-[9px] top-[120px] w-[5px] h-14 bg-gray-700 dark:bg-zinc-600 rounded-r-md" />
+                  {/* screen */}
+                  <div className="flex-1 bg-white dark:bg-zinc-950 rounded-[2.2rem] m-1 overflow-hidden flex flex-col">
+                    {/* notch */}
+                    <div className="relative flex justify-center">
+                      <div className="absolute top-0 w-20 h-5 bg-gray-900 dark:bg-zinc-800 rounded-b-2xl z-10 flex items-center justify-center gap-1.5">
+                        <div className="w-1.5 h-1.5 rounded-full bg-gray-700 dark:bg-zinc-600" />
+                        <div className="w-2 h-2 rounded-full bg-gray-800 dark:bg-zinc-700 border border-gray-600 dark:border-zinc-500" />
+                      </div>
+                    </div>
+                    {/* status bar */}
+                    <div className="flex items-center justify-between px-5 pt-6 pb-0.5">
+                      <span className="text-[9px] font-bold text-gray-900 dark:text-white/80">9:41</span>
+                      <div className="flex items-center gap-1">
+                        <div className="flex gap-px items-end h-3">{[2,3,4,5].map(h => <div key={h} className="w-0.5 bg-gray-700 dark:bg-white/60 rounded-sm" style={{height: h*2.2}} />)}</div>
+                        <div className="w-3 h-1.5 border border-gray-700 dark:border-white/50 rounded-sm relative"><div className="absolute inset-y-0.5 left-0.5 right-0 bg-gray-700 dark:bg-white/60 rounded-sm" /></div>
+                      </div>
+                    </div>
+                    {/* app header */}
+                    <div className="mx-2.5 mt-1 mb-1 flex items-center gap-2 bg-gradient-to-r from-[#70c82a] to-[#5ab523] px-3 py-2 rounded-2xl">
+                      <div className="w-7 h-7 rounded-full bg-white/20 border border-white/30 flex items-center justify-center flex-shrink-0">
+                        <Cpu className="w-3.5 h-3.5 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11px] font-black text-white leading-none">ECWC AI Assistant</p>
+                        <p className="text-[9px] text-white/80">Online • Ready to help</p>
+                      </div>
+                      <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                    </div>
+                    {/* messages */}
+                    <div className="flex-1 bg-gray-50 dark:bg-zinc-900 px-3 py-2 space-y-2 overflow-hidden">
+                      <div className="flex justify-end">
+                        <div className="bg-[#70c82a] text-white text-[10px] font-medium leading-relaxed px-3 py-1.5 rounded-2xl rounded-tr-sm max-w-[82%] shadow-sm">
+                          Which site has the highest maintenance cost this month?
+                        </div>
+                      </div>
+                      <div className="flex gap-2 items-end">
+                        <div className="w-5 h-5 rounded-full bg-[#70c82a]/15 dark:bg-[#70c82a]/20 border border-[#70c82a]/40 flex items-center justify-center flex-shrink-0">
+                          <Cpu className="w-2.5 h-2.5 text-[#70c82a]" />
+                        </div>
+                        <div className="bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-[10px] text-gray-700 dark:text-zinc-200 leading-relaxed px-3 py-1.5 rounded-2xl rounded-tl-sm shadow-sm max-w-[80%]">
+                          <span className="font-bold text-gray-900 dark:text-white">Addis Ababa</span> leads at <span className="font-bold text-[#70c82a]">Br 82,400</span> this month.
+                        </div>
+                      </div>
+                      {/* chart card */}
+                      <div className="flex gap-2 items-end">
+                        <div className="w-5 flex-shrink-0" />
+                        <div className="flex-1 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-2xl rounded-tl-sm px-3 py-2 shadow-sm">
+                          <p className="text-[8px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-widest mb-2">Monthly Cost by Site</p>
+                          <div className="space-y-1.5">
+                            {[
+                              { site: "Addis Ababa", pct: 100, color: "#70c82a", val: "Br 82K" },
+                              { site: "Bahir Dar",   pct: 66,  color: "#3b82f6", val: "Br 54K" },
+                              { site: "Dire Dawa",   pct: 38,  color: "#f59e0b", val: "Br 32K" },
+                            ].map((s) => (
+                              <div key={s.site}>
+                                <div className="flex justify-between mb-0.5">
+                                  <span className="text-[9px] text-gray-600 dark:text-zinc-400 font-medium">{s.site}</span>
+                                  <span className="text-[9px] font-bold" style={{ color: s.color }}>{s.val}</span>
+                                </div>
+                                <div className="h-1.5 bg-gray-100 dark:bg-zinc-700 rounded-full overflow-hidden">
+                                  <motion.div initial={{ width: 0 }} whileInView={{ width: `${s.pct}%` }} viewport={{ once: true }} transition={{ duration: 0.9, delay: 0.3 }} className="h-full rounded-full" style={{ backgroundColor: s.color }} />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      {chatUserMessages.map((msg) => (
+                        <div key={msg.id} className="space-y-1.5">
+                          <div className="flex justify-end"><div className="bg-[#70c82a] text-white text-[10px] px-3 py-1.5 rounded-2xl rounded-tr-sm max-w-[82%]">{msg.text}</div></div>
+                          <div className="flex gap-2 items-end">
+                            <div className="w-5 h-5 rounded-full bg-[#70c82a]/15 dark:bg-[#70c82a]/20 border border-[#70c82a]/40 flex items-center justify-center flex-shrink-0"><Cpu className="w-2.5 h-2.5 text-[#70c82a]" /></div>
+                            <div className="bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-[10px] text-[#70c82a] font-semibold px-3 py-1.5 rounded-2xl rounded-tl-sm shadow-sm max-w-[80%]">Coming soon…</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {/* input */}
+                    <div className="flex gap-2 items-center px-3 py-2 bg-white dark:bg-zinc-900 border-t border-gray-200 dark:border-zinc-800">
+                      <input type="text" placeholder="Ask a question…" value={chatInput} onChange={(e) => setChatInput(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') { const t = chatInput.trim(); if (t) { chatMessageIdRef.current += 1; setChatUserMessages(m => [...m, { id: chatMessageIdRef.current, text: t }]); setChatInput('') } } }}
+                        className="flex-1 rounded-full border border-gray-200 dark:border-zinc-700 bg-gray-100 dark:bg-zinc-800 px-3 py-1.5 text-[10px] text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#70c82a]/40" />
+                      <button type="button" onClick={() => { const t = chatInput.trim(); if (t) { chatMessageIdRef.current += 1; setChatUserMessages(m => [...m, { id: chatMessageIdRef.current, text: t }]); setChatInput('') } }}
+                        className="w-8 h-8 rounded-full bg-[#70c82a] hover:bg-[#5ab523] text-white flex items-center justify-center flex-shrink-0 transition-colors shadow-md">
+                        <Send className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    {/* home bar */}
+                    <div className="flex justify-center py-1.5 bg-white dark:bg-zinc-950"><div className="w-16 h-1 bg-gray-300 dark:bg-zinc-600 rounded-full" /></div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* ── Landscape Tablet ── */}
+            <motion.div initial={{ opacity: 0, x: 40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }} className="flex-1 w-full max-w-[680px] mx-auto xl:mx-0">
+              <div className="relative">
+                <div className="absolute -inset-3 rounded-[2rem] bg-[#70c82a]/15 dark:bg-[#70c82a]/25 blur-2xl" />
+                {/* tablet frame */}
+                <div className="relative rounded-[1.8rem] border-[8px] border-gray-900 dark:border-zinc-700 bg-gray-900 dark:bg-zinc-800 shadow-2xl overflow-hidden" style={{ height: 480 }}>
+                  {/* camera dot */}
+                  <div className="absolute top-2 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-gray-700 dark:bg-zinc-600 z-10" />
+                  {/* home bar right side */}
+                  <div className="absolute right-1.5 top-1/2 -translate-y-1/2 w-1 h-12 bg-gray-700 dark:bg-zinc-600 rounded-full z-10" />
+                  {/* screen */}
+                  <div className="bg-white dark:bg-zinc-950 rounded-[1.2rem] m-1 overflow-hidden flex flex-col" style={{ height: 'calc(100% - 8px)' }}>
+                    {/* tablet status bar */}
+                    <div className="flex items-center justify-between px-5 py-1.5 bg-white dark:bg-zinc-950 border-b border-gray-100 dark:border-zinc-800 flex-shrink-0">
+                      <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 rounded-md bg-[#70c82a] flex items-center justify-center"><Cpu className="w-2.5 h-2.5 text-white" /></div>
+                        <span className="text-[10px] font-black text-gray-900 dark:text-white">ECWC AI Assistant</span>
+                        <span className="flex items-center gap-1 text-[9px] text-[#70c82a] font-semibold"><span className="w-1.5 h-1.5 rounded-full bg-[#70c82a] animate-pulse" />Online</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-[9px] text-gray-400 dark:text-zinc-500">9:41 AM</span>
+                        <div className="flex gap-px items-end h-3">{[2,3,4,5].map(h => <div key={h} className="w-0.5 bg-gray-400 dark:bg-zinc-500 rounded-sm" style={{height: h*2}} />)}</div>
+                        <div className="w-4 h-2 border border-gray-400 dark:border-zinc-500 rounded-sm relative"><div className="absolute inset-y-0.5 left-0.5 right-1 bg-gray-400 dark:bg-zinc-500 rounded-sm" /></div>
+                      </div>
+                    </div>
+                    {/* split layout */}
+                    <div className="flex flex-1 overflow-hidden">
+                      {/* LEFT: chat */}
+                      <div className="w-[45%] flex flex-col border-r border-gray-100 dark:border-zinc-800">
+                        <div className="flex-1 bg-gray-50 dark:bg-zinc-900 px-3 py-3 space-y-2.5 overflow-hidden">
+                          <div className="flex justify-end">
+                            <div className="bg-[#70c82a] text-white text-[10px] font-medium px-3 py-1.5 rounded-2xl rounded-tr-sm max-w-[85%] shadow-sm leading-relaxed">
+                              What are the main maintenance issues this month?
+                            </div>
+                          </div>
+                          <div className="flex gap-1.5 items-end">
+                            <div className="w-5 h-5 rounded-full bg-[#70c82a]/15 dark:bg-[#70c82a]/20 border border-[#70c82a]/40 flex items-center justify-center flex-shrink-0"><Cpu className="w-2.5 h-2.5 text-[#70c82a]" /></div>
+                            <div className="bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-[10px] text-gray-700 dark:text-zinc-200 px-3 py-1.5 rounded-2xl rounded-tl-sm shadow-sm leading-relaxed max-w-[82%]">
+                              Found <span className="font-bold text-gray-900 dark:text-white">2 critical issues</span> driving <span className="font-bold text-[#70c82a]">Br 70,500/mo</span>. Details on the right.
+                            </div>
+                          </div>
+                          <div className="flex justify-end">
+                            <div className="bg-[#70c82a] text-white text-[10px] font-medium px-3 py-1.5 rounded-2xl rounded-tr-sm max-w-[85%] shadow-sm leading-relaxed">
+                              Show me fleet equipment status
+                            </div>
+                          </div>
+                          <div className="flex gap-1.5 items-end">
+                            <div className="w-5 h-5 rounded-full bg-[#70c82a]/15 dark:bg-[#70c82a]/20 border border-[#70c82a]/40 flex items-center justify-center flex-shrink-0"><Cpu className="w-2.5 h-2.5 text-[#70c82a]" /></div>
+                            <div className="bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-[10px] text-gray-700 dark:text-zinc-200 px-3 py-1.5 rounded-2xl rounded-tl-sm shadow-sm leading-relaxed max-w-[82%]">
+                              Fleet uptime at <span className="font-bold text-[#70c82a]">94.3%</span>. 1 critical unit needs immediate attention.
+                            </div>
+                          </div>
+                          {chatUserMessages2.map((msg) => (
+                            <div key={msg.id} className="space-y-1.5">
+                              <div className="flex justify-end"><div className="bg-[#70c82a] text-white text-[10px] px-3 py-1.5 rounded-2xl rounded-tr-sm max-w-[85%]">{msg.text}</div></div>
+                              <div className="flex gap-1.5 items-end">
+                                <div className="w-5 h-5 rounded-full bg-[#70c82a]/15 dark:bg-[#70c82a]/20 border border-[#70c82a]/40 flex items-center justify-center flex-shrink-0"><Cpu className="w-2.5 h-2.5 text-[#70c82a]" /></div>
+                                <div className="bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-[10px] text-[#70c82a] font-semibold px-3 py-1.5 rounded-2xl rounded-tl-sm shadow-sm max-w-[82%]">Coming soon…</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="flex gap-2 items-center px-3 py-2 bg-white dark:bg-zinc-900 border-t border-gray-200 dark:border-zinc-800">
+                          <input type="text" placeholder="Ask anything…" value={chatInput2} onChange={(e) => setChatInput2(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === 'Enter') { const t = chatInput2.trim(); if (t) { chatMessageIdRef2.current += 1; setChatUserMessages2(m => [...m, { id: chatMessageIdRef2.current, text: t }]); setChatInput2('') } } }}
+                            className="flex-1 rounded-full border border-gray-200 dark:border-zinc-700 bg-gray-100 dark:bg-zinc-800 px-3 py-1 text-[10px] text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#70c82a]/40" />
+                          <button type="button" onClick={() => { const t = chatInput2.trim(); if (t) { chatMessageIdRef2.current += 1; setChatUserMessages2(m => [...m, { id: chatMessageIdRef2.current, text: t }]); setChatInput2('') } }}
+                            className="w-7 h-7 rounded-full bg-[#70c82a] hover:bg-[#5ab523] text-white flex items-center justify-center flex-shrink-0 transition-colors">
+                            <Send className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                      {/* RIGHT: data panel */}
+                      <div className="flex-1 bg-white dark:bg-zinc-950 overflow-hidden">
+                        <div className="h-full overflow-y-auto px-4 py-3 space-y-3">
+                          <p className="text-[9px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-widest">AI Analysis — This Month</p>
+                          <div className="space-y-2">
+                            <div className="p-3 rounded-xl bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800">
+                              <div className="flex items-center justify-between mb-1.5">
+                                <span className="text-[11px] font-bold text-gray-900 dark:text-white">Hydraulic Failures</span>
+                                <span className="text-[10px] font-black text-white bg-[#70c82a] px-2 py-0.5 rounded-full">38%</span>
+                              </div>
+                              <div className="h-2 bg-gray-200 dark:bg-zinc-700 rounded-full overflow-hidden mb-1.5">
+                                <motion.div initial={{ width: 0 }} whileInView={{ width: '38%' }} viewport={{ once: true }} transition={{ duration: 0.8, delay: 0.3 }} className="h-full bg-[#70c82a] rounded-full" />
+                              </div>
+                              <p className="text-[9px] text-gray-500 dark:text-zinc-400 leading-relaxed">Seal degradation from harsh site conditions. Affects excavators and loaders.</p>
+                              <p className="text-[10px] font-bold text-[#70c82a] mt-1">Cost: Br 42,000/mo</p>
+                            </div>
+                            <div className="p-3 rounded-xl bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800">
+                              <div className="flex items-center justify-between mb-1.5">
+                                <span className="text-[11px] font-bold text-gray-900 dark:text-white">Engine Overheating</span>
+                                <span className="text-[10px] font-black text-white bg-amber-500 px-2 py-0.5 rounded-full">27%</span>
+                              </div>
+                              <div className="h-2 bg-gray-200 dark:bg-zinc-700 rounded-full overflow-hidden mb-1.5">
+                                <motion.div initial={{ width: 0 }} whileInView={{ width: '27%' }} viewport={{ once: true }} transition={{ duration: 0.8, delay: 0.45 }} className="h-full bg-amber-500 rounded-full" />
+                              </div>
+                              <p className="text-[9px] text-gray-500 dark:text-zinc-400 leading-relaxed">Coolant failures and radiator blockages on older equipment in high-temp conditions.</p>
+                              <p className="text-[10px] font-bold text-amber-500 mt-1">Cost: Br 28,500/mo</p>
+                            </div>
+                          </div>
+                          <div className="p-3 rounded-xl bg-[#70c82a]/8 dark:bg-[#70c82a]/10 border border-[#70c82a]/25">
+                            <p className="text-[10px] font-black text-[#70c82a] mb-1">Recommended Actions</p>
+                            <p className="text-[9px] text-gray-600 dark:text-zinc-400 leading-relaxed">① Preventive seal replacement program  ② Upgrade cooling systems on high-risk units</p>
+                          </div>
+                          <div>
+                            <p className="text-[9px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-widest mb-1.5">Fleet Status</p>
+                            <div className="grid grid-cols-2 gap-1.5">
+                              {[
+                                { id: "ECWC-B-042", type: "Dozer",     status: "Active",   color: "text-[#70c82a]", dot: "bg-[#70c82a]" },
+                                { id: "ECWC-E-108", type: "Excavator", status: "Maint.",   color: "text-amber-500", dot: "bg-amber-500" },
+                                { id: "ECWC-L-023", type: "Loader",    status: "Critical", color: "text-red-500",   dot: "bg-red-500"   },
+                                { id: "ECWC-T-091", type: "Truck",     status: "Active",   color: "text-[#70c82a]", dot: "bg-[#70c82a]" },
+                              ].map((eq) => (
+                                <div key={eq.id} className="flex items-center justify-between bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-lg px-2 py-1.5">
+                                  <div><p className="text-[9px] font-bold text-gray-800 dark:text-zinc-200 leading-none">{eq.type}</p><p className="text-[8px] text-gray-400 dark:text-zinc-500">{eq.id}</p></div>
+                                  <div className="flex items-center gap-1"><div className={`w-1.5 h-1.5 rounded-full ${eq.dot} animate-pulse`} /><span className={`text-[9px] font-bold ${eq.color}`}>{eq.status}</span></div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between p-2.5 rounded-xl bg-gray-900 dark:bg-zinc-800 border border-gray-700 dark:border-zinc-700">
+                            <span className="text-[10px] text-gray-400 font-medium">Combined Monthly Impact</span>
+                            <span className="text-[13px] font-black text-[#70c82a]">~Br 70,500</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+          </div>

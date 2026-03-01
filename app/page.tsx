@@ -88,53 +88,143 @@ const CompoundMap = dynamic(
 const getEquipmentDescription = (name: string): string => {
   const descMap: { [key: string]: string } = {
 
-    "Dozer, Chain": "Heavy-duty crawler tractor engineered for aggressive earthmoving, terrain shaping, and site preparation activities. Equipped with a large front blade capable of pushing, spreading, ripping, and leveling soil, rock, and construction debris across extensive work areas. Its tracked undercarriage provides superior traction, stability, and low ground pressure, allowing continuous operation on soft, muddy, rocky, or uneven terrain where wheeled equipment cannot function safely. Widely used during the initial phases of construction projects for clearing vegetation, removing overburden, forming embankments, cutting access roads, and shaping slopes. Advanced hydraulic systems allow precise blade control for fine grading, while the reinforced chassis and drivetrain ensure durability under sustained heavy loads. Plays a critical role in accelerating project timelines, reducing manual labor dependency, and ensuring consistent terrain formation that meets engineering and environmental requirements.",
+    "Dozer, Chain": "Heavy tracked pushing machine for large-scale earthmoving and site preparation. Performs well in soft, muddy, and uneven terrain. | Clearing vegetation, pushing and spreading soil, forming embankments, cutting access roads.",
 
-    "Motor Grader": "High-precision grading machine specifically designed for shaping, leveling, and finishing surfaces to exact elevation and slope specifications. Features a long centrally mounted moldboard blade capable of fine material redistribution for road bases, shoulders, drainage channels, and finished surfaces. Extensively used in road construction, highway maintenance, airport runway preparation, and large-scale infrastructure works where accuracy directly impacts performance and longevity. Advanced articulation, hydraulic blade control, and optional GPS or laser guidance systems enable millimeter-level precision, ensuring optimal drainage and surface uniformity. Improves pavement lifespan by preventing water pooling and uneven load distribution. Essential for achieving engineering tolerances, reducing rework, and maintaining consistent surface quality across long distances and large projects.",
+    "Motor Grader": "Precision surface-finishing machine with a long adjustable blade. Achieves smooth, level surfaces before paving. | Road base grading, shaping shoulders, forming drainage channels, unpaved road maintenance.",
 
-    "Excavator, Chain": "Crawler-mounted excavator designed for intensive excavation, trenching, lifting, demolition, and bulk material handling operations. Built with a reinforced undercarriage and high-powered hydraulic system, it delivers exceptional digging force, reach, and stability even in deep excavations and difficult soil conditions. Frequently deployed for foundation excavation, utility trenching, slope cutting, and large-scale earthmoving tasks. Supports a wide range of attachments including buckets, hydraulic breakers, grapples, and augers, making it one of the most versatile machines on a construction site. Enhances operational efficiency by reducing excavation cycle time, improving material control, and enabling precise excavation near structures. A cornerstone machine in civil works, infrastructure development, mining, and industrial construction projects.",
+    "Excavator, Chain": "Tracked hydraulic excavator for heavy digging and lifting. Reliable on unstable and rough ground. | Deep trenching, foundation excavation, bulk earth removal, demolition and material handling.",
 
-    "Excavator, Wheel": "Highly mobile excavator mounted on rubber tires, designed for operations requiring frequent relocation and rapid response. Combines strong digging capability with superior travel speed, making it ideal for urban construction, road maintenance, drainage systems, and utility installation projects. Equipped with stabilizers and advanced hydraulic controls to ensure stability during excavation despite its wheeled configuration. Minimizes surface damage on paved areas and allows direct road travel without transport trailers. Improves productivity by reducing downtime between tasks and increasing operational flexibility. Essential for city infrastructure projects where space constraints, traffic flow, and mobility are critical factors.",
+    "Excavator, Wheel": "Wheeled excavator for mobility and quick relocation. Travels on paved roads without damage. | Urban projects, road works, utility installations, confined space excavation.",
 
-    "Loader, Chain": "Tracked loader built for powerful and reliable material handling in extreme ground conditions. Designed to load, carry, and stockpile heavy materials such as soil, aggregates, debris, and demolition waste. Its tracked system ensures excellent traction, stability, and load control on soft, wet, or uneven terrain where wheeled loaders may lose effectiveness. Commonly used in quarry operations, earthworks, landfills, and rough construction sites. The machine’s robust hydraulic lifting system allows continuous heavy-duty operation with minimal performance loss. Enhances site productivity by maintaining loading efficiency regardless of terrain limitations.",
+    "Loader, Chain": "Tracked loader for loading and moving materials in soft ground. Strong traction in muddy or rough conditions. | Quarry operations, landfill work, earthwork projects, waste material handling.",
 
-    "Loader, Wheel": "High-capacity front-end loader optimized for fast, efficient material movement and truck loading operations. Designed for stockpile management, aggregate handling, and logistics support across construction sites, batching plants, and material yards. Rubber tires allow smooth and rapid movement across paved and compacted surfaces, reducing cycle times and fuel consumption. Equipped with powerful hydraulics and large bucket options to maximize payload efficiency. Improves operational workflow by accelerating loading processes and reducing equipment idle time. Essential for projects with high material throughput and continuous logistics demand.",
+    "Loader, Wheel": "High-speed loader with rubber tires for efficient material handling. Ideal for hard surfaces. | Loading trucks, moving aggregates, managing stockpiles, cleaning construction yards.",
 
-    "Backhoe Loader": "Versatile multipurpose machine integrating a front loader and rear excavator arm into a single compact unit. Designed for flexibility and efficiency on small to medium-scale construction sites. Capable of performing excavation, trenching, loading, backfilling, and material handling tasks without the need for multiple machines. Particularly effective in urban environments, roadside works, and utility installations where space is limited. Reduces operational costs by minimizing equipment mobilization and operator requirements. Widely used by municipalities, contractors, and maintenance teams for diverse daily operations.",
+    "Backhoe Loader": "Multi-purpose machine with front bucket and rear digging arm. Versatile in limited space. | Trench excavation, small foundations, loading materials, utility project backfilling.",
 
-    "Roller D/Drum": "Double drum vibratory compaction machine engineered for high-performance soil and asphalt compaction. Applies uniform pressure and vibration across both drums, ensuring consistent density over wide surface areas. Essential for road construction, industrial yards, and large paved surfaces where compaction quality directly affects structural integrity and lifespan. Adjustable vibration frequencies allow adaptation to different material types and layer thicknesses. Enhances construction quality by reducing voids, preventing settlement, and improving long-term pavement durability.",
+    "Roller D/Drum": "Double drum vibratory compactor for asphalt and granular materials. Achieves uniform density. | Road paving, industrial yards, parking areas, pavement finishing.",
 
-    "Roller S/Drum": "Single drum roller designed for controlled soil compaction and base preparation. Delivers focused compaction force ideal for edges, shoulders, and confined work zones. Frequently used for embankments, subgrade preparation, and secondary compaction passes. Offers precise maneuverability and depth control, ensuring stable foundation layers. Supports infrastructure longevity by achieving required density levels before surface construction.",
+    "Roller S/Drum": "Single drum compactor for soil layers and base courses. Controlled compaction depth. | Embankments, road subgrades, trench backfill, foundation preparation.",
 
-    "Roller Pneumatic": "Rubber-tired roller utilized primarily for asphalt compaction and finishing operations. Applies kneading action that improves aggregate interlock and material bonding without damaging surface texture. Produces smooth, uniform finishes critical for ride quality and surface durability. Commonly used during final compaction stages of asphalt paving. Enhances pavement performance by sealing surface voids and reducing long-term cracking.",
+    "Roller S/foot -D/D": "Padfoot roller with double drums for deep soil compaction. Improves soil stability. | Clay compaction, cohesive soils, earthworks, embankment construction.",
 
-    "Scraper": "High-capacity earthmoving machine capable of cutting, loading, hauling, and spreading soil in a single continuous operation. Designed for long-distance earth transport with minimal support equipment. Ideal for large-scale projects such as highways, airports, dams, and land development works. Reduces reliance on multiple machines, improving efficiency and lowering operational costs. Plays a strategic role in mass earthworks and terrain reshaping projects.",
+    "Roller S/foot -S/D": "Single drum padfoot compactor for heavy-duty soil compaction. Strong compaction force. | Foundation preparation, dam works, large earthfill, target density achievement.",
 
-    "Asphalt Paver": "Specialized paving machine responsible for placing asphalt layers with precise thickness, width, and smoothness. Ensures uniform material distribution and consistent surface finish essential for road performance. Used extensively in highways, urban roads, parking facilities, and industrial pavements. Supports automated screed control systems for accurate leveling. Enhances pavement quality, ride comfort, and structural integrity.",
+    "Roller Pneumatic": "Rubber-tired compactor for finishing asphalt surfaces. Improves smoothness and bonding. | Final paving stages, sealing surface voids, ride quality, material bonding.",
 
-    "Low bed": "Low-profile heavy transport trailer designed for moving oversized and heavy construction equipment. Allows safe transport of excavators, bulldozers, cranes, and industrial machinery. Its low deck height ensures compliance with transport height restrictions. Essential for equipment mobilization across project sites and long-distance logistics.",
+    "Trencher, Chain": "Chain trenching machine for narrow, deep trenches. Straight and uniform trench profiles. | Cable installation, pipe laying, drainage lines, utility trenching.",
 
-    "Mobile Crane": "Truck-mounted lifting machine combining mobility with powerful hoisting capability. Used for lifting, positioning, and installing heavy materials, structural elements, and equipment. Supports construction, industrial assembly, and infrastructure projects requiring flexible lifting solutions. Reduces reliance on fixed cranes and enhances site adaptability.",
+    "Trencher, Wheel": "Wheeled trenching machine for faster movement between locations. Protects paved surfaces. | Road utility installation, sidewalk trenching, paved area work, long trenching.",
 
-    "Water Truck": "Multi-purpose tanker vehicle supplying water for dust suppression, soil compaction, and site maintenance. Essential for maintaining safe working conditions, environmental compliance, and construction quality. Supports road construction, earthworks, and remote site operations where water access is limited.",
+    "Scraper": "Self-loading earthmoving machine that cuts, carries, and spreads soil. Reduces need for separate equipment. | Large-scale earthworks, land leveling, highway projects, site development.",
 
-    "Fuel Truck": "Mobile fuel delivery vehicle ensuring continuous equipment operation on construction sites. Supplies diesel and lubricants directly to machinery, minimizing downtime and logistical delays. Essential for large or remote projects where centralized fueling is impractical.",
+    "Asphalt Paver": "Paving machine for placing hot asphalt with controlled thickness. Ensures uniform surfaces. | Highway construction, urban roads, parking areas, pavement surfacing.",
 
-    "Fork lift": "Material handling equipment designed for lifting, stacking, and transporting palletized loads. Widely used in warehouses, workshops, and construction sites. Enhances efficiency and safety in material logistics and inventory handling.",
+    "Concrete Paver": "Concrete paving machine for laying rigid pavement structures. Consistent thickness and alignment. | Concrete roads, industrial floors, channels, pavement slabs.",
 
-    "Bus Passenger": "High-capacity transport vehicle dedicated to moving construction workers safely and efficiently. Supports workforce logistics on large project sites, ensuring punctual crew deployment and operational continuity.",
+    "Asphalt Milling machine": "Road milling machine for removing damaged asphalt layers. Restores road profiles. | Surface rehabilitation, pothole preparation, pavement recycling, resurfacing prep.",
 
-    "Double Cabin": "Pickup truck with extended seating designed to transport both personnel and tools. Provides flexibility for supervision, inspection, and light logistics tasks across construction sites."
+    "Chip Spreader": "Aggregate spreading machine for surface treatment works. Ensures uniform coverage. | Chip seal operations, stone chip distribution, road surface treatment, skid resistance.",
+
+    "Power Curber": "Concrete forming machine for curbs and road edges. Continuous extrusion. | Sidewalks, medians, drainage curbs, concrete edge construction.",
+
+    "D/Truck Beiben": "Heavy-duty dump truck for large volumes of earth and aggregates. High hauling capacity. | Soil transport, sand and gravel hauling, demolition waste, large project earthmoving.",
+
+    "D/Truck Daewoo": "Medium-duty dump truck for general construction hauling. Reliable daily transport. | Earth transport, crushed stone hauling, materials delivery, project site logistics.",
+
+    "D/Truck Faw": "High-capacity dump truck for long-haul material transport. Maintains production rates. | Large earthmoving, continuous soil hauling, aggregate transport, excavation support.",
+
+    "D/Truck Nissan": "Reliable dump truck for routine site hauling. Versatile material transport. | Construction materials, spoil removal, aggregate hauling, disposal area transport.",
+
+    "D/Truck Sino": "Dump truck for supporting earthmoving activities. Supports excavation operations. | Soil hauling, waste material transport, fill delivery, backfilling operations.",
+
+    "D/Truck Foton": "Compact dump truck for small to medium hauling. Suited for tight areas. | Short-distance transport, congested areas, material delivery, small project hauling.",
+
+    "Water Truck": "Water tanker for spraying roads and construction areas. Maintains site conditions. | Dust suppression, soil moisture control, compaction watering, safe working conditions.",
+
+    "Water Truck Trailer": "Towed water tank to increase delivery capacity. Supports large projects. | Extended dust control, long road sections, earthwork areas, high water demand.",
+
+    "Fuel Truck": "Mobile fuel supply for refueling equipment on site. Reduces downtime. | Remote refueling, equipment servicing, spread-out work zones, continuous operations.",
+
+    "Fuel Truck Trailer": "Fuel tanker trailer for bulk fuel transport and storage. Supports large fleets. | Bulk fuel delivery, remote project support, equipment fleet fueling, storage supply.",
+
+    "Asphalt Distributer": "Bitumen spraying vehicle for prime and tack coats. Prepares road surfaces. | Prime coat application, tack coat spraying, pavement layer bonding, paving preparation.",
+
+    "Low bed": "Low-deck heavy transport for oversized machinery. Meets height restrictions. | Excavator transport, dozer relocation, crane moving, equipment mobilization.",
+
+    "Low bed Trailer": "Heavy equipment transport trailer for long-distance relocation. Safe equipment moving. | Large equipment transport, site-to-depot moving, machinery relocation, long-haul equipment.",
+
+    "High bed trailer": "High-deck trailer for bulky materials and equipment. General cargo hauling. | Cargo transport, machinery movement, long route hauling, bulky material delivery.",
+
+    "Mobile Crane": "Truck-mounted crane for lifting and positioning heavy loads. Combines mobility with power. | Steel structure placement, precast elements, equipment installation, loading operations.",
+
+    "Cargo Truck": "Flatbed or box truck for transporting materials and tools. Flexible cargo space. | Pallet transport, construction supplies, equipment delivery, yard-to-site logistics.",
+
+    "Cargo Crane": "Truck with mounted crane for loading and unloading. Replaces fixed cranes. | Material lifting, equipment loading, container handling, flexible crane operations.",
+
+    "Water Well Drilling rig": "Drilling rig for creating groundwater wells and boreholes. Develops water sources. | Water supply projects, irrigation systems, remote area wells, borehole drilling.",
+
+    "Shop Truck": "Mobile service vehicle with tools and spare parts. Supports field operations. | On-site maintenance, minor repairs, emergency support, broken-down equipment.",
+
+    "Fork lift": "Industrial lifting vehicle for palletized loads. Enhances warehouse efficiency. | Warehouse loading, yard material handling, construction site stacking, pallet movement.",
+
+    "Farm Truck": "Light-duty utility truck for general site transport. Versatile utility use. | Supply moving, small equipment transport, personnel transport, project area logistics.",
+
+    "Automobile": "Passenger vehicle for site supervision and transport. Supports management mobility. | Site inspections, coordination travel, work zone access, engineer transport.",
+
+    "Bus Passenger": "Large-capacity bus for transporting workers. Safe crew movement. | Camp-to-site transport, office shuttle, construction site crew, labor logistics.",
+
+    "Midi Bus": "Medium-size bus for transporting supervisors and teams. Daily logistics support. | Crew movement, supervisor transport, team logistics, medium project support.",
+
+    "Station Wagon": "Multi-purpose vehicle for staff and light cargo. Office-to-site transport. | Personnel transport, tools delivery, document carrying, project site access.",
+
+    "Double Cabin": "Pickup truck with rear seating for crew transport. Site supervision vehicle. | Supervisor transport, worker movement, small tools carrying, construction site mobility.",
+
+    "Single Cabin": "Pickup truck with extended cargo space for materials. Light hauling capacity. | Tools transport, spare parts delivery, light materials, project area logistics."
 
   };
 
   return (
     descMap[name] ||
-    "Heavy construction equipment designed to support earthmoving, compaction, material handling, transportation, and infrastructure development activities. These assets play a critical role in maintaining productivity, safety, quality control, and schedule adherence across complex construction and industrial projects."
+    "Construction equipment for earthworks, transport, compaction, and lifting. Critical for productivity and schedule adherence. | Earthworks support, material transport, compaction operations, site logistics."
   );
 };
 
+/** Parses description: "Explanation | Application" format - exactly 2 sections */
+function parseDescription(text: string): { explanation: string; application: string } {
+  const parts = text.split(/\s*\|\s*/).map((p) => p.trim());
+  const explanation = parts[0] || "";
+  const application = parts[1] || "";
+  return { explanation, application };
+}
 
+function EquipmentDescriptionBlock({ text }: { text: string }) {
+  const { explanation, application } = parseDescription(text);
+  if (!explanation && !application) {
+    return <p className="text-sm text-muted-foreground leading-relaxed">{text}</p>;
+  }
+  const appItems = application
+    ? application.replace(/, and /g, ", ").split(/,\s+/).map((s) => s.trim()).filter(Boolean).slice(0, 4)
+    : [];
+  return (
+    <div className="space-y-3 text-sm leading-relaxed">
+      <p className="font-bold text-foreground text-base leading-snug">{explanation}</p>
+      {application && (
+        <div>
+          <p className="font-semibold text-foreground/90 underline underline-offset-2 decoration-primary/50 mb-1.5">Application</p>
+          <ul className="space-y-1 ml-1 pl-4 border-l-2 border-primary/30 list-none">
+            {appItems.map((item, j) => (
+              <li key={j} className="text-muted-foreground flex items-start gap-2">
+                <span className="text-primary font-bold shrink-0">•</span>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
 
 // --- Equipment Command Center Data - Aggregated by Category ---
 const equipmentCategories = [
@@ -404,7 +494,9 @@ const CommandCenterSection = () => {
                 <div className="space-y-2">
                   <h3 className="text-3xl md:text-4xl font-bold text-foreground tracking-tight leading-tight">{currentCategory.name}</h3>
                   <p className="text-[#70c82a] font-mono text-base">Fleet Category #{currentCategory.id} of {equipmentCategories.length}</p>
-                  <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed italic mb-4">{getEquipmentDescription(currentCategory.name)}</p>
+                  <div className="text-xs sm:text-sm mb-4 p-4 rounded-xl bg-muted/30 border border-border/60 max-h-[220px] overflow-y-auto custom-scrollbar">
+                  <EquipmentDescriptionBlock text={getEquipmentDescription(currentCategory.name)} />
+                </div>
                 </div>
 
                 {/* Main Stats with Icons and Descriptions */}
@@ -758,6 +850,12 @@ export default function LandingPage() {
   const [chatInput, setChatInput] = useState('')
   const [chatUserMessages, setChatUserMessages] = useState<{ id: number; text: string }[]>([])
   const chatMessageIdRef = useRef(0)
+  const [chatInput2, setChatInput2] = useState('')
+  const [chatUserMessages2, setChatUserMessages2] = useState<{ id: number; text: string }[]>([])
+  const chatMessageIdRef2 = useRef(0)
+  const [chatInput3, setChatInput3] = useState('')
+  const [chatUserMessages3, setChatUserMessages3] = useState<{ id: number; text: string }[]>([])
+  const chatMessageIdRef3 = useRef(0)
 
   // Force overview (top) when on landing page — back from login/sign-up or refresh
   useLayoutEffect(() => {
@@ -1008,7 +1106,7 @@ export default function LandingPage() {
             variants={staggerContainer}
             className="max-w-6xl mx-auto"
           >
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="grid lg:grid-cols-[1fr_1.15fr] gap-10 items-center">
               {/* Left Content */}
               <motion.div variants={fadeInUp} className="space-y-4">
                 {/* PMMS Acronym with Explanations */}
@@ -1154,80 +1252,122 @@ export default function LandingPage() {
 
               {/* Right Content - Dashboard Preview */}
               <motion.div
-                variants={scaleIn}
-                className="relative"
+                initial={{ opacity: 0, y: 40, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                className="relative lg:pl-4"
               >
-                <div className="relative overflow-hidden rounded-2xl bg-card dark:bg-zinc-950 border border-border dark:border-zinc-800 shadow-2xl">
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#70c82a]/5 to-transparent" />
-                  <div className="p-6 relative z-10">
-                    <div className="flex items-center justify-between mb-6 pb-4 border-b border-border dark:border-zinc-800">
-                      <h3 className="text-lg font-bold text-foreground">Live Equipment Dashboard</h3>
-                      <Badge className="bg-[#70c82a] text-black font-bold">
-                        <div className="h-2 w-2 bg-black rounded-full mr-2 animate-pulse" />
-                        Live
-                      </Badge>
-                    </div>
-                    <div className="space-y-6">
-                      {/* Equipment Status: each bar = count/1602 */}
-                      <div className="space-y-4">
-                        <AnimatedEquipmentProgress
-                          name="Plant"
-                          count={69}
-                          grandTotal={1602}
-                          duration={1600}
-                        />
-                        <AnimatedEquipmentProgress
-                          name="Machinery"
-                          count={346}
-                          grandTotal={1602}
-                          duration={1800}
-                        />
-                        <AnimatedEquipmentProgress
-                          name="Heavy Vehicles"
-                          count={668}
-                          grandTotal={1602}
-                          duration={2000}
-                        />
-                        <AnimatedEquipmentProgress
-                          name="Light Vehicles"
-                          count={520}
-                          grandTotal={1602}
-                          duration={2200}
-                        />
-                      </div>
+                <div className="relative rounded-2xl">
+                  {/* Outer glow ring */}
+                  <div className="absolute -inset-[1px] rounded-2xl bg-gradient-to-b from-[#70c82a]/40 via-[#70c82a]/10 to-[#70c82a]/25 pointer-events-none" />
+                  <div className="absolute -inset-3 rounded-3xl bg-[#70c82a]/10 blur-xl pointer-events-none" />
+                <div className="relative overflow-hidden rounded-2xl shadow-2xl bg-card dark:bg-zinc-950">
+                  {/* Animated scan line */}
+                  <motion.div
+                    className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#70c82a]/50 to-transparent z-20 pointer-events-none"
+                    animate={{ y: [0, 350, 0] }}
+                    transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                  />
 
-                      {/* Quick Stats */}
-                      <motion.div
-                        className="grid grid-cols-2 gap-4 pt-4"
-                        initial="initial"
-                        whileInView="animate"
-                        viewport={{ once: true }}
-                        variants={staggerContainer}
-                      >
-                        {[
-                          { value: "1000+", label: "Other Assets", color: "bg-[#70c82a]/10 border-[#70c82a]/20", textColor: "text-[#70c82a]" },
-                          { value: "1602", label: "Total Assets", color: "bg-[#70c82a]/10 border-[#70c82a]/20", textColor: "text-[#70c82a]" }
-                        ].map((stat, i) => (
-                          <motion.div
-                            key={i}
-                            variants={fadeInUp}
-                            className={`text-center p-4 rounded-xl border ${stat.color} hover:scale-105 transition-transform duration-300`}
-                          >
-                            <motion.div
-                              className={`text-2xl font-bold ${stat.textColor}`}
-                              initial={{ scale: 0 }}
-                              whileInView={{ scale: 1 }}
-                              viewport={{ once: true }}
-                              transition={{ delay: 0.5 + i * 0.1, type: "spring", stiffness: 200 }}
-                            >
-                              {stat.value}
-                            </motion.div>
-                            <div className="text-xs text-muted-foreground mt-1">{stat.label}</div>
-                          </motion.div>
-                        ))}
-                      </motion.div>
+                  {/* Dark gradient header */}
+                  <div className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 dark:from-zinc-900 dark:via-zinc-800 dark:to-zinc-900 px-5 py-4">
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(112,200,42,0.15),transparent_50%)]" />
+                    <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#70c82a]/30 to-transparent" />
+                    <div className="relative flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="relative">
+                          <div className="absolute inset-0 rounded-xl bg-[#70c82a]/30 blur-md" />
+                          <div className="relative w-10 h-10 rounded-xl bg-[#70c82a]/20 border border-[#70c82a]/50 flex items-center justify-center">
+                            <Layers className="w-5 h-5 text-[#70c82a]" />
+                          </div>
+                        </div>
+                        <div>
+                          <h3 className="text-base font-bold text-white leading-none">Registered Assets</h3>
+                          <p className="text-[11px] text-zinc-400 mt-1">Fleet overview · Real-time tracking</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#70c82a]/15 border border-[#70c82a]/30 text-[11px] font-semibold text-[#70c82a]">
+                          <span className="w-2 h-2 rounded-full bg-[#70c82a] animate-pulse" />3 On
+                        </span>
+                        <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-[11px] font-semibold text-amber-400">
+                          <span className="w-2 h-2 rounded-full bg-amber-400" />1 Idle
+                        </span>
+                        <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/15 border border-red-500/30 text-[11px] font-semibold text-red-400">
+                          <span className="w-2 h-2 rounded-full bg-red-400" />1 Down
+                        </span>
+                      </div>
                     </div>
                   </div>
+
+                  {/* Table */}
+                  <div className="relative z-10">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="bg-gradient-to-r from-muted/50 via-muted/30 to-muted/50 dark:from-zinc-800/60 dark:via-zinc-800/40 dark:to-zinc-800/60 border-b border-border dark:border-zinc-700">
+                          <th className="text-left px-5 py-3 text-xs font-bold text-foreground/70 uppercase tracking-widest">Asset ID</th>
+                          <th className="text-left px-4 py-3 text-xs font-bold text-foreground/70 uppercase tracking-widest">Type</th>
+                          <th className="text-left px-4 py-3 text-xs font-bold text-foreground/70 uppercase tracking-widest">Status</th>
+                          <th className="text-left px-4 py-3 text-xs font-bold text-foreground/70 uppercase tracking-widest">Location</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[
+                          { id: "ECWC-B-042", type: "Dozer",     status: "Operational", dot: "bg-[#70c82a]",  dotPulse: true,  badge: "text-[#70c82a] bg-[#70c82a]/8",                                        location: "Addis Ababa" },
+                          { id: "ECWC-E-108", type: "Excavator", status: "Idle",        dot: "bg-amber-400", dotPulse: false, badge: "text-amber-600 dark:text-amber-400 bg-amber-500/8", location: "Bahir Dar"   },
+                          { id: "ECWC-G-056", type: "Grader",    status: "Operational", dot: "bg-[#70c82a]",  dotPulse: true,  badge: "text-[#70c82a] bg-[#70c82a]/8",                                        location: "Dire Dawa"   },
+                          { id: "ECWC-L-023", type: "Loader",    status: "Down",        dot: "bg-red-500",   dotPulse: false, badge: "text-red-600 dark:text-red-400 bg-red-500/8",         location: "Kality"      },
+                          { id: "ECWC-T-091", type: "Truck",     status: "Operational", dot: "bg-[#70c82a]",  dotPulse: true,  badge: "text-[#70c82a] bg-[#70c82a]/8",                                        location: "Semera"      },
+                        ].map((row, i) => (
+                          <motion.tr
+                            key={row.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.15 + i * 0.08, duration: 0.4 }}
+                            className={`border-b border-border/20 dark:border-zinc-800/30 last:border-0 transition-all duration-200 group cursor-default relative ${i % 2 === 0 ? '' : 'bg-muted/15 dark:bg-zinc-900/20'}`}
+                          >
+                            <td className="px-5 py-3 relative">
+                              <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-[#70c82a] scale-y-0 group-hover:scale-y-100 transition-transform duration-200 origin-top" />
+                              <span className="text-[13px] font-semibold text-foreground group-hover:text-[#70c82a] transition-colors">{row.id}</span>
+                            </td>
+                            <td className="px-4 py-3 text-[13px] text-foreground font-normal">{row.type}</td>
+                            <td className="px-4 py-3">
+                              <span className={`inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[12px] font-semibold ${row.badge}`}>
+                                <span className="relative flex h-2 w-2">
+                                  {row.dotPulse && <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${row.dot} opacity-50`} />}
+                                  <span className={`relative inline-flex rounded-full h-2 w-2 ${row.dot}`} />
+                                </span>
+                                {row.status}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-1.5 text-[13px] text-foreground/70">
+                                <MapPin className="w-3 h-3 text-[#70c82a]/60 flex-shrink-0" />
+                                {row.location}
+                              </div>
+                            </td>
+                          </motion.tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Footer CTA */}
+                  <div className="relative z-10 flex items-center justify-between px-5 py-3 border-t border-border dark:border-zinc-800 bg-gradient-to-r from-muted/20 to-[#70c82a]/[0.04]">
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex -space-x-1">
+                        {['bg-[#70c82a]', 'bg-amber-400', 'bg-red-400'].map((c, i) => (
+                          <div key={i} className={`w-4 h-4 rounded-full ${c} border-2 border-card dark:border-zinc-950`} />
+                        ))}
+                      </div>
+                      <span className="text-xs text-muted-foreground">Showing <span className="font-bold text-foreground">5</span> of <span className="font-bold text-foreground">2,500+</span> assets</span>
+                    </div>
+                    <a href="/sign-in" className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-gradient-to-r from-[#70c82a] to-[#5ab523] hover:from-[#5ab523] hover:to-[#4a9e1d] text-xs font-bold text-black transition-all duration-300 shadow-md shadow-[#70c82a]/25 hover:shadow-lg hover:shadow-[#70c82a]/40 hover:-translate-y-0.5">
+                      Access full register <ArrowRight className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                </div>
                 </div>
 
 
@@ -1426,7 +1566,10 @@ export default function LandingPage() {
 
       {/* Core Functional Areas - Enterprise Data-Driven */}
       <section id="features" className="pt-6 pb-12 lg:pt-8 lg:pb-16 bg-background dark:bg-black relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(112,200,42,0.03),transparent_70%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_15%,rgba(112,200,42,0.08),transparent_55%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_85%,rgba(112,200,42,0.06),transparent_55%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_50%,rgba(112,200,42,0.03),transparent_70%)]" />
+        <div className="absolute inset-0" style={{backgroundImage:"radial-gradient(circle,rgba(112,200,42,0.07) 1px,transparent 1px)",backgroundSize:"52px 52px"}} />
         <div className="container mx-auto px-4 lg:px-8 relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1435,18 +1578,38 @@ export default function LandingPage() {
             className="text-center mb-8"
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#70c82a]/10 text-[#70c82a] text-xs font-bold uppercase tracking-widest mb-6 border border-[#70c82a]/20">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#70c82a] opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#70c82a]" />
+              </span>
               Enterprise Architecture
             </div>
             <h2 className="text-4xl md:text-6xl font-bold text-foreground mb-4">
               Core <span className="text-[#70c82a]">Functional Areas</span>
             </h2>
-            <p className="text-muted-foreground text-lg max-w-3xl mx-auto">
-              Comprehensive operational intelligence platform built for ECWC infrastructure management
-            </p>
+            <div className="flex items-center justify-center gap-0 mt-8">
+              {[
+                { n: "01", id: "module-01" },
+                { n: "02", id: "module-02" },
+                { n: "03", id: "module-03" },
+                { n: "04", id: "module-04" },
+                { n: "05", id: "module-05" },
+              ].map(({ n, id }, idx) => (
+                <div key={idx} className="flex items-center">
+                  <button
+                    onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+                    className="w-9 h-9 rounded-full bg-[#70c82a]/10 border border-[#70c82a]/30 flex items-center justify-center text-[11px] font-bold text-[#70c82a] hover:bg-[#70c82a]/25 hover:scale-110 transition-all duration-200 cursor-pointer select-none"
+                  >
+                    {n}
+                  </button>
+                  {idx < 4 && <div className="w-10 h-[1px] bg-gradient-to-r from-[#70c82a]/40 via-[#70c82a]/20 to-[#70c82a]/10" />}
+                </div>
+              ))}
+            </div>
           </motion.div>
 
           {/* Plant & Equipment Management - Left/Right with Table */}
-          <div className="grid lg:grid-cols-2 gap-16 items-center mb-32">
+          <div id="module-01" className="relative grid lg:grid-cols-2 gap-16 items-center mb-32">
             <motion.div
               initial={{ opacity: 0, x: -50 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -1454,20 +1617,32 @@ export default function LandingPage() {
               transition={{ duration: 0.8 }}
               className="space-y-8"
             >
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-16 h-16 rounded-2xl bg-[#70c82a]/10 flex items-center justify-center border border-[#70c82a]/20">
-                  <HardHat className="w-8 h-8 text-[#70c82a]" />
-                </div>
-                <div>
-                  <div className="text-xs text-[#70c82a] font-bold uppercase tracking-wider mb-1">Module 01</div>
-                  <h3 className="text-3xl font-bold text-foreground">Asset & Fleet Management</h3>
+              <div className="relative mb-6">
+                <div className="absolute -top-4 -left-2 text-[110px] font-black leading-none text-[#70c82a]/[0.05] select-none pointer-events-none">01</div>
+                <div className="flex items-center gap-4 relative">
+                  <div className="relative flex-shrink-0">
+                    <div className="absolute inset-0 rounded-2xl bg-[#70c82a]/30 blur-xl opacity-60" />
+                    <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-[#70c82a]/25 to-[#70c82a]/5 flex items-center justify-center border border-[#70c82a]/40 shadow-lg shadow-[#70c82a]/10">
+                      <HardHat className="w-8 h-8 text-[#70c82a]" />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#70c82a]/10 text-[#70c82a] text-xs font-bold uppercase tracking-wider mb-2 border border-[#70c82a]/25">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#70c82a] animate-pulse" />
+                      Module 01
+                    </div>
+                    <h3 className="text-3xl font-bold text-foreground">Asset & Fleet Management</h3>
+                  </div>
                 </div>
               </div>
               <p className="text-muted-foreground text-lg leading-relaxed mb-6">
                 Know every piece of equipment, where it is, and its condition.
               </p>
               <div className="mb-8">
-                <h4 className="text-foreground font-semibold mb-4">What this module does</h4>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-[2px] w-6 bg-gradient-to-r from-[#70c82a] to-transparent rounded-full" />
+                  <h4 className="text-foreground font-semibold text-sm uppercase tracking-widest">What this module does</h4>
+                </div>
                 <div className="space-y-3">
                   {[
                     "Keeps a single list of all ECWC equipment",
@@ -1482,17 +1657,23 @@ export default function LandingPage() {
                       whileInView={{ opacity: 1, x: 0 }}
                       viewport={{ once: true }}
                       transition={{ delay: i * 0.08 }}
-                      className="flex items-center gap-3 text-foreground"
+                      className="flex items-center gap-3 group"
                     >
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#70c82a]" />
-                      <span className="text-sm">{item}</span>
+                      <CheckCircle2 className="w-4 h-4 text-[#70c82a] flex-shrink-0 group-hover:scale-110 transition-transform" />
+                      <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">{item}</span>
                     </motion.div>
                   ))}
                 </div>
               </div>
-              <div className="p-6 rounded-xl bg-[#70c82a]/5 border border-[#70c82a]/20">
-                <h4 className="text-foreground font-semibold mb-3">ECWC Scenario</h4>
-                <p className="text-sm text-muted-foreground leading-relaxed">
+              <div className="relative pl-5 pr-6 py-5 rounded-xl bg-gradient-to-br from-[#70c82a]/[0.07] to-[#70c82a]/[0.02] border border-[#70c82a]/20 overflow-hidden">
+                <div className="absolute top-0 left-0 w-[3px] h-full bg-gradient-to-b from-[#70c82a] via-emerald-400 to-[#70c82a]/30 rounded-l-xl" />
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-5 h-5 rounded-full bg-[#70c82a]/15 border border-[#70c82a]/30 flex items-center justify-center flex-shrink-0">
+                    <MapPin className="w-2.5 h-2.5 text-[#70c82a]" />
+                  </div>
+                  <h4 className="text-foreground font-semibold text-xs uppercase tracking-widest text-[#70c82a]">Real-World Scenario</h4>
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed italic">
                   ECWC receives a new excavator for a road project in Bahir Dar.
                   The asset officer registers it in the system, assigns an ID and QR code, and records its value and location.
                   From that day, every maintenance job, part replacement, and cost is automatically linked to this excavator.
@@ -1508,29 +1689,35 @@ export default function LandingPage() {
               transition={{ duration: 0.8 }}
               className="relative"
             >
-              <div className="absolute inset-0 bg-[#70c82a]/5 blur-3xl rounded-full" />
-              <div className="relative p-6 rounded-2xl bg-card dark:bg-zinc-950 border border-border dark:border-zinc-800">
+              <div className="absolute inset-0 bg-[#70c82a]/5 blur-3xl rounded-full transition-all duration-500 group-hover:opacity-150" />
+              <div className="relative p-6 rounded-2xl bg-card dark:bg-zinc-950 border border-border dark:border-zinc-800 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-[#70c82a]/15 hover:border-[#70c82a]/35 cursor-default">
                 <div className="flex items-center justify-between mb-6 pb-4 border-b border-border dark:border-zinc-800">
                   <div className="text-foreground font-bold">Equipment Registry Overview</div>
-                  <Badge className="bg-[#70c82a] text-black">Live Data</Badge>
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#70c82a] text-black text-[10px] font-bold uppercase tracking-wider">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-black opacity-40" />
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-black" />
+                    </span>
+                    Live Data
+                  </div>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="border-b border-border dark:border-zinc-800">
-                        <th className="text-left py-3 px-2 text-xs font-bold text-muted-foreground uppercase">Asset ID</th>
-                        <th className="text-left py-3 px-2 text-xs font-bold text-muted-foreground uppercase">Type</th>
-                        <th className="text-left py-3 px-2 text-xs font-bold text-muted-foreground uppercase">Status</th>
-                        <th className="text-right py-3 px-2 text-xs font-bold text-muted-foreground uppercase">Value</th>
+                      <tr className="border-b border-border dark:border-zinc-800 bg-muted/30 dark:bg-zinc-900/40">
+                        <th className="text-left py-3 px-3 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Asset ID</th>
+                        <th className="text-left py-3 px-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Type</th>
+                        <th className="text-left py-3 px-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Status</th>
+                        <th className="text-right py-3 px-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Value</th>
                       </tr>
                     </thead>
                     <tbody>
                       {[
-                        { id: "ECWC-B-042", type: "Dozer", status: "Active", value: "Br 124.5K", color: "bg-[#70c82a]" },
-                        { id: "ECWC-E-108", type: "Excavator", status: "Maint.", value: "Br 89.2K", color: "bg-amber-500" },
-                        { id: "ECWC-G-056", type: "Grader", status: "Active", value: "Br 156K", color: "bg-[#70c82a]" },
-                        { id: "ECWC-L-023", type: "Loader", status: "Critical", value: "Br 210.4K", color: "bg-red-500" },
-                        { id: "ECWC-T-091", type: "Truck", status: "Active", value: "Br 78.3K", color: "bg-[#70c82a]" }
+                        { id: "ECWC-B-042", type: "Dozer", status: "Active", value: "Br 124.5K", color: "bg-[#70c82a]", leftBorder: "border-l-[3px] border-l-[#70c82a]", rowBg: "" },
+                        { id: "ECWC-E-108", type: "Excavator", status: "Maint.", value: "Br 89.2K", color: "bg-amber-500", leftBorder: "border-l-[3px] border-l-amber-500", rowBg: "bg-amber-500/[0.04]" },
+                        { id: "ECWC-G-056", type: "Grader", status: "Active", value: "Br 156K", color: "bg-[#70c82a]", leftBorder: "border-l-[3px] border-l-[#70c82a]", rowBg: "" },
+                        { id: "ECWC-L-023", type: "Loader", status: "Critical", value: "Br 210.4K", color: "bg-red-500", leftBorder: "border-l-[3px] border-l-red-500", rowBg: "bg-red-500/[0.05]" },
+                        { id: "ECWC-T-091", type: "Truck", status: "Active", value: "Br 78.3K", color: "bg-[#70c82a]", leftBorder: "border-l-[3px] border-l-[#70c82a]", rowBg: "" }
                       ].map((row, i) => (
                         <motion.tr
                           key={i}
@@ -1538,14 +1725,18 @@ export default function LandingPage() {
                           whileInView={{ opacity: 1, y: 0 }}
                           viewport={{ once: true }}
                           transition={{ delay: i * 0.1 }}
-                          className="border-b border-border/50 dark:border-zinc-800/50 hover:bg-muted/30 dark:hover:bg-zinc-900/30 transition-colors"
+                          className={`border-b border-border/50 dark:border-zinc-800/50 hover:bg-[#70c82a]/[0.04] transition-all duration-200 ${row.rowBg}`}
                         >
-                          <td className="py-3 px-2 text-sm font-mono text-foreground">{row.id}</td>
+                          <td className={`py-3 px-3 text-sm font-mono font-bold text-foreground ${row.leftBorder}`}>{row.id}</td>
                           <td className="py-3 px-2 text-sm text-muted-foreground">{row.type}</td>
                           <td className="py-3 px-2">
-                            <span className="flex items-center gap-2">
-                              <span className={`w-2 h-2 rounded-full ${row.color}`} />
-                              <span className="text-xs text-muted-foreground">{row.status}</span>
+                            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                              row.status === "Active" ? "bg-[#70c82a]/10 text-[#70c82a] border border-[#70c82a]/20" :
+                              row.status === "Maint." ? "bg-amber-500/10 text-amber-500 border border-amber-500/20" :
+                              "bg-red-500/10 text-red-500 border border-red-500/20"
+                            }`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${row.color} ${row.status === "Active" ? "animate-pulse" : ""}`} />
+                              {row.status}
                             </span>
                           </td>
                           <td className="py-3 px-2 text-right text-sm font-semibold text-foreground">{row.value}</td>
@@ -1555,15 +1746,15 @@ export default function LandingPage() {
                   </table>
                 </div>
                 <div className="mt-6 pt-4 border-t border-border dark:border-zinc-800 flex justify-between items-center">
-                  <div className="text-xs text-muted-foreground">Total Fleet Value</div>
-                  <div className="text-2xl font-bold text-[#70c82a]">Br 12.4M</div>
+                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Total Fleet Value</span>
+                  <div className="text-3xl font-black bg-gradient-to-r from-[#70c82a] to-emerald-400 bg-clip-text text-transparent">Br 12.4M</div>
                 </div>
               </div>
             </motion.div>
           </div>
 
           {/* Maintenance Management - Right/Left with KPI Grid */}
-          <div className="grid lg:grid-cols-2 gap-16 items-center mb-32">
+          <div id="module-02" className="relative grid lg:grid-cols-2 gap-16 items-center mb-32">
             <motion.div
               initial={{ opacity: 0, x: -50 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -1571,14 +1762,22 @@ export default function LandingPage() {
               transition={{ duration: 0.8 }}
               className="order-2 lg:order-1 relative"
             >
-              <div className="p-8 rounded-2xl bg-card dark:bg-zinc-950 border border-border dark:border-zinc-800">
-                <div className="text-foreground font-bold mb-6">Maintenance KPI Dashboard</div>
-                <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="relative">
+              <div className="absolute inset-0 bg-[#70c82a]/5 blur-3xl rounded-full pointer-events-none" />
+              <div className="relative p-8 rounded-2xl bg-card dark:bg-zinc-950 border border-border dark:border-zinc-800 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-[#70c82a]/15 hover:border-[#70c82a]/35 cursor-default">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-[#70c82a]" />
+                    <span className="text-foreground font-bold">Maintenance KPI Dashboard</span>
+                  </div>
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">This Month</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3 mb-6">
                   {[
-                    { label: "MTBF", value: "847h", trend: "+12%", icon: TrendingUp, color: "text-[#70c82a]" },
-                    { label: "MTTR", value: "4.2h", trend: "-8%", icon: Clock, color: "text-[#70c82a]" },
-                    { label: "Uptime", value: "94.3%", trend: "+2.1%", icon: CheckCircle, color: "text-[#70c82a]" },
-                    { label: "Preventive", value: "78%", trend: "+5%", icon: Shield, color: "text-[#70c82a]" }
+                    { label: "MTBF", value: "847h", trend: "+12%", icon: TrendingUp, gradient: "from-[#70c82a]/15", border: "border-l-[#70c82a]" },
+                    { label: "MTTR", value: "4.2h", trend: "-8%", icon: Clock, gradient: "from-emerald-500/12", border: "border-l-emerald-400" },
+                    { label: "Uptime", value: "94.3%", trend: "+2.1%", icon: CheckCircle, gradient: "from-[#70c82a]/20", border: "border-l-[#70c82a]" },
+                    { label: "Preventive", value: "78%", trend: "+5%", icon: Shield, gradient: "from-[#70c82a]/12", border: "border-l-emerald-400" }
                   ].map((kpi, i) => (
                     <motion.div
                       key={i}
@@ -1586,40 +1785,41 @@ export default function LandingPage() {
                       whileInView={{ opacity: 1, scale: 1 }}
                       viewport={{ once: true }}
                       transition={{ delay: i * 0.1 }}
-                      className="p-4 rounded-xl bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800"
+                      className={`relative p-4 rounded-xl bg-gradient-to-br ${kpi.gradient} to-transparent dark:to-zinc-900/80 border border-[#70c82a]/20 border-l-[3px] ${kpi.border} overflow-hidden group hover:border-[#70c82a]/40 hover:-translate-y-1 hover:shadow-lg hover:shadow-[#70c82a]/15 transition-all duration-300 cursor-default`}
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <kpi.icon className={`w-5 h-5 ${kpi.color}`} />
-                        <span className="text-xs font-bold text-[#70c82a]">{kpi.trend}</span>
+                      <div className="absolute top-0 right-0 w-12 h-12 rounded-bl-2xl bg-[#70c82a]/5 flex items-end justify-end p-2">
+                        <kpi.icon className="w-4 h-4 text-[#70c82a]/60" />
                       </div>
-                      <div className="text-2xl font-bold text-foreground mb-1">{kpi.value}</div>
-                      <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{kpi.label}</div>
+                      <div className="text-2xl font-bold text-foreground mb-1 leading-none">{kpi.value}</div>
+                      <div className="text-[10px] text-muted-foreground uppercase font-semibold tracking-widest mb-2">{kpi.label}</div>
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-[#70c82a]/12 text-[#70c82a] text-[10px] font-semibold border border-[#70c82a]/20">{kpi.trend}</span>
                     </motion.div>
                   ))}
                 </div>
-                <div className="space-y-3">
+                <div className="space-y-3 pt-2 border-t border-border/30 dark:border-zinc-800/50">
                   {[
-                    { label: "Work Orders This Month", value: 124, max: 150 },
-                    { label: "Scheduled Maintenance", value: 89, max: 150 },
-                    { label: "Emergency Responses", value: 12, max: 150 }
+                    { label: "Work Orders This Month", value: 124, max: 150, barColor: "from-[#70c82a] to-emerald-400", glowColor: "shadow-[#70c82a]/40" },
+                    { label: "Scheduled Maintenance", value: 89, max: 150, barColor: "from-[#70c82a] to-emerald-500", glowColor: "shadow-[#70c82a]/40" },
+                    { label: "Emergency Responses", value: 12, max: 150, barColor: "from-red-500 to-red-400", glowColor: "shadow-red-500/40" }
                   ].map((bar, i) => (
-                    <div key={i}>
-                      <div className="flex justify-between text-xs text-muted-foreground mb-1">
-                        <span>{bar.label}</span>
-                        <span className="font-bold text-foreground">{bar.value}</span>
+                    <div key={i} className="space-y-1">
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-muted-foreground">{bar.label}</span>
+                        <span className="font-medium text-foreground">{bar.value} <span className="text-muted-foreground font-normal">/ {bar.max}</span></span>
                       </div>
-                      <div className="h-2 bg-muted dark:bg-zinc-800 rounded-full overflow-hidden">
+                      <div className="h-3 bg-muted/50 dark:bg-zinc-800/80 rounded-full overflow-hidden border border-border/20">
                         <motion.div
                           initial={{ width: 0 }}
                           whileInView={{ width: `${(bar.value / bar.max) * 100}%` }}
                           viewport={{ once: true }}
-                          transition={{ duration: 1, delay: i * 0.2 }}
-                          className="h-full bg-gradient-to-r from-[#70c82a] to-emerald-400 rounded-full"
+                          transition={{ duration: 1.2, delay: i * 0.2, ease: "easeOut" }}
+                          className={`h-full bg-gradient-to-r ${bar.barColor} rounded-full shadow-sm ${bar.glowColor}`}
                         />
                       </div>
                     </div>
                   ))}
                 </div>
+              </div>
               </div>
             </motion.div>
 
@@ -1630,20 +1830,32 @@ export default function LandingPage() {
               transition={{ duration: 0.8 }}
               className="order-1 lg:order-2 space-y-8"
             >
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-16 h-16 rounded-2xl bg-[#70c82a]/10 flex items-center justify-center border border-[#70c82a]/20">
-                  <Wrench className="w-8 h-8 text-[#70c82a]" />
-                </div>
-                <div>
-                  <div className="text-xs text-[#70c82a] font-bold uppercase tracking-wider mb-1">Module 02</div>
-                  <h3 className="text-3xl font-bold text-foreground"> Work Order Management</h3>
+              <div className="relative mb-6">
+                <div className="absolute -top-4 -left-2 text-[110px] font-black leading-none text-[#70c82a]/[0.05] select-none pointer-events-none">02</div>
+                <div className="flex items-center gap-4 relative">
+                  <div className="relative flex-shrink-0">
+                    <div className="absolute inset-0 rounded-2xl bg-[#70c82a]/30 blur-xl opacity-60" />
+                    <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-[#70c82a]/25 to-[#70c82a]/5 flex items-center justify-center border border-[#70c82a]/40 shadow-lg shadow-[#70c82a]/10">
+                      <Wrench className="w-8 h-8 text-[#70c82a]" />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#70c82a]/10 text-[#70c82a] text-xs font-bold uppercase tracking-wider mb-2 border border-[#70c82a]/25">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#70c82a] animate-pulse" />
+                      Module 02
+                    </div>
+                    <h3 className="text-3xl font-bold text-foreground">Work Order Management</h3>
+                  </div>
                 </div>
               </div>
               <p className="text-muted-foreground text-lg leading-relaxed mb-6">
                 Plan, assign, and track all maintenance work in one place.
               </p>
               <div className="mb-8">
-                <h4 className="text-foreground font-semibold mb-4">What this module does</h4>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-[2px] w-6 bg-gradient-to-r from-[#70c82a] to-transparent rounded-full" />
+                  <h4 className="text-foreground font-semibold text-sm uppercase tracking-widest">What this module does</h4>
+                </div>
                 <div className="space-y-3">
                   {[
                     "Creates preventive maintenance schedules",
@@ -1658,17 +1870,23 @@ export default function LandingPage() {
                       whileInView={{ opacity: 1, x: 0 }}
                       viewport={{ once: true }}
                       transition={{ delay: i * 0.08 }}
-                      className="flex items-center gap-3 text-foreground"
+                      className="flex items-center gap-3 group"
                     >
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#70c82a]" />
-                      <span className="text-sm">{item}</span>
+                      <CheckCircle2 className="w-4 h-4 text-[#70c82a] flex-shrink-0 group-hover:scale-110 transition-transform" />
+                      <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">{item}</span>
                     </motion.div>
                   ))}
                 </div>
               </div>
-              <div className="p-6 rounded-xl bg-[#70c82a]/5 border border-[#70c82a]/20">
-                <h4 className="text-foreground font-semibold mb-3">ECWC Scenario</h4>
-                <p className="text-sm text-muted-foreground leading-relaxed">
+              <div className="relative pl-5 pr-6 py-5 rounded-xl bg-gradient-to-br from-[#70c82a]/[0.07] to-[#70c82a]/[0.02] border border-[#70c82a]/20 overflow-hidden">
+                <div className="absolute top-0 left-0 w-[3px] h-full bg-gradient-to-b from-[#70c82a] via-emerald-400 to-[#70c82a]/30 rounded-l-xl" />
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-5 h-5 rounded-full bg-[#70c82a]/15 border border-[#70c82a]/30 flex items-center justify-center flex-shrink-0">
+                    <MapPin className="w-2.5 h-2.5 text-[#70c82a]" />
+                  </div>
+                  <h4 className="text-foreground font-semibold text-xs uppercase tracking-widest text-[#70c82a]">Real-World Scenario</h4>
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed italic">
                   A bulldozer reaches its scheduled service hours.
                   The system automatically creates a work order and notifies the workshop supervisor.
                   Tasks and safety checks are already listed, so the technician knows exactly what to do.
@@ -1679,7 +1897,7 @@ export default function LandingPage() {
           </div>
 
           {/* Workforce & Time Sheet Management - Left/Right */}
-          <div className="grid lg:grid-cols-2 gap-16 items-center mb-32">
+          <div id="module-03" className="relative grid lg:grid-cols-2 gap-16 items-center mb-32">
             <motion.div
               initial={{ opacity: 0, x: -50 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -1687,20 +1905,32 @@ export default function LandingPage() {
               transition={{ duration: 0.8 }}
               className="space-y-8"
             >
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-16 h-16 rounded-2xl bg-[#70c82a]/10 flex items-center justify-center border border-[#70c82a]/20">
-                  <Clock className="w-8 h-8 text-[#70c82a]" />
-                </div>
-                <div>
-                  <div className="text-xs text-[#70c82a] font-bold uppercase tracking-wider mb-1">Module 03</div>
-                  <h3 className="text-3xl font-bold text-foreground">Workforce & Time Management</h3>
+              <div className="relative mb-6">
+                <div className="absolute -top-4 -left-2 text-[110px] font-black leading-none text-[#70c82a]/[0.05] select-none pointer-events-none">03</div>
+                <div className="flex items-center gap-4 relative">
+                  <div className="relative flex-shrink-0">
+                    <div className="absolute inset-0 rounded-2xl bg-[#70c82a]/30 blur-xl opacity-60" />
+                    <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-[#70c82a]/25 to-[#70c82a]/5 flex items-center justify-center border border-[#70c82a]/40 shadow-lg shadow-[#70c82a]/10">
+                      <Clock className="w-8 h-8 text-[#70c82a]" />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#70c82a]/10 text-[#70c82a] text-xs font-bold uppercase tracking-wider mb-2 border border-[#70c82a]/25">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#70c82a] animate-pulse" />
+                      Module 03
+                    </div>
+                    <h3 className="text-3xl font-bold text-foreground">Workforce & Time Management</h3>
+                  </div>
                 </div>
               </div>
               <p className="text-muted-foreground text-lg leading-relaxed mb-6">
                 Track technician work time, productivity, and labor cost.
               </p>
               <div className="mb-8">
-                <h4 className="text-foreground font-semibold mb-4">What this module does</h4>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-[2px] w-6 bg-gradient-to-r from-[#70c82a] to-transparent rounded-full" />
+                  <h4 className="text-foreground font-semibold text-sm uppercase tracking-widest">What this module does</h4>
+                </div>
                 <div className="space-y-3">
                   {[
                     "Records technician working hours per job",
@@ -1715,17 +1945,23 @@ export default function LandingPage() {
                       whileInView={{ opacity: 1, x: 0 }}
                       viewport={{ once: true }}
                       transition={{ delay: i * 0.08 }}
-                      className="flex items-center gap-3 text-foreground"
+                      className="flex items-center gap-3 group"
                     >
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#70c82a]" />
-                      <span className="text-sm">{item}</span>
+                      <CheckCircle2 className="w-4 h-4 text-[#70c82a] flex-shrink-0 group-hover:scale-110 transition-transform" />
+                      <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">{item}</span>
                     </motion.div>
                   ))}
                 </div>
               </div>
-              <div className="p-6 rounded-xl bg-[#70c82a]/5 border border-[#70c82a]/20">
-                <h4 className="text-foreground font-semibold mb-3">ECWC Scenario</h4>
-                <p className="text-sm text-muted-foreground leading-relaxed">
+              <div className="relative pl-5 pr-6 py-5 rounded-xl bg-gradient-to-br from-[#70c82a]/[0.07] to-[#70c82a]/[0.02] border border-[#70c82a]/20 overflow-hidden">
+                <div className="absolute top-0 left-0 w-[3px] h-full bg-gradient-to-b from-[#70c82a] via-emerald-400 to-[#70c82a]/30 rounded-l-xl" />
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-5 h-5 rounded-full bg-[#70c82a]/15 border border-[#70c82a]/30 flex items-center justify-center flex-shrink-0">
+                    <MapPin className="w-2.5 h-2.5 text-[#70c82a]" />
+                  </div>
+                  <h4 className="text-foreground font-semibold text-xs uppercase tracking-widest text-[#70c82a]">Real-World Scenario</h4>
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed italic">
                   A technician repairs a loader and records start and end time using a mobile phone.
                   The system calculates labor hours and cost automatically.
                   At the end of the week, the manager sees who worked overtime and which jobs took longer than planned.
@@ -1740,13 +1976,21 @@ export default function LandingPage() {
               transition={{ duration: 0.8 }}
               className="relative"
             >
-              <div className="p-8 rounded-2xl bg-card dark:bg-zinc-950 border border-border dark:border-zinc-800">
-                <div className="text-foreground font-bold mb-6">Weekly Workforce Analytics</div>
-                <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="relative">
+              <div className="absolute inset-0 bg-[#70c82a]/5 blur-3xl rounded-full pointer-events-none" />
+              <div className="relative p-8 rounded-2xl bg-card dark:bg-zinc-950 border border-border dark:border-zinc-800 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-[#70c82a]/15 hover:border-[#70c82a]/35 cursor-default">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-[#70c82a]" />
+                    <span className="text-foreground font-bold">Weekly Workforce Analytics</span>
+                  </div>
+                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">This Week</span>
+                </div>
+                <div className="grid grid-cols-3 gap-3 mb-6">
                   {[
-                    { label: "Total Hours", value: "1,247", icon: Clock, color: "text-[#70c82a]" },
-                    { label: "Overtime", value: "89h", icon: TrendingUp, color: "text-amber-500" },
-                    { label: "Technicians", value: "42", icon: Users, color: "text-blue-500" }
+                    { label: "Total Hours", value: "1,247", icon: Clock, color: "text-[#70c82a]", gradient: "from-[#70c82a]/15", border: "border-[#70c82a]/25" },
+                    { label: "Overtime", value: "89h", icon: TrendingUp, color: "text-amber-500", gradient: "from-amber-500/15", border: "border-amber-500/25" },
+                    { label: "Technicians", value: "42", icon: Users, color: "text-blue-500", gradient: "from-blue-500/15", border: "border-blue-500/25" }
                   ].map((stat, i) => (
                     <motion.div
                       key={i}
@@ -1754,51 +1998,52 @@ export default function LandingPage() {
                       whileInView={{ opacity: 1, scale: 1 }}
                       viewport={{ once: true }}
                       transition={{ delay: i * 0.1 }}
-                      className="p-4 rounded-xl bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800 text-center"
+                      className={`p-4 rounded-xl bg-gradient-to-br ${stat.gradient} to-transparent dark:to-zinc-900/80 border ${stat.border} text-center hover:-translate-y-1 hover:shadow-lg transition-all duration-300 cursor-default`}
                     >
                       <stat.icon className={`w-5 h-5 ${stat.color} mx-auto mb-2`} />
-                      <div className="text-2xl font-bold text-foreground mb-1">{stat.value}</div>
-                      <div className="text-[10px] text-muted-foreground uppercase font-bold">{stat.label}</div>
+                      <div className={`text-2xl font-black ${stat.color} mb-0.5`}>{stat.value}</div>
+                      <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{stat.label}</div>
                     </motion.div>
                   ))}
                 </div>
-                <div className="space-y-3 mb-6">
-                  <div className="text-sm text-muted-foreground mb-2">Productivity by Shift</div>
+                <div className="space-y-2 mb-6">
+                  <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Productivity by Shift</div>
                   {[
-                    { shift: "Morning Shift", hours: 428, productivity: 96, color: "bg-[#70c82a]" },
-                    { shift: "Day Shift", hours: 512, productivity: 88, color: "bg-blue-500" },
-                    { shift: "Night Shift", hours: 307, productivity: 82, color: "bg-amber-500" }
+                    { shift: "Morning Shift", hours: 428, productivity: 96, color: "bg-[#70c82a]", textColor: "text-[#70c82a]", borderColor: "border-l-[#70c82a]", gradient: "from-[#70c82a]/10" },
+                    { shift: "Day Shift", hours: 512, productivity: 88, color: "bg-blue-500", textColor: "text-blue-400", borderColor: "border-l-blue-500", gradient: "from-blue-500/10" },
+                    { shift: "Night Shift", hours: 307, productivity: 82, color: "bg-amber-500", textColor: "text-amber-400", borderColor: "border-l-amber-500", gradient: "from-amber-500/10" }
                   ].map((shift, i) => (
-                    <div key={i} className="p-4 rounded-xl bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800">
+                    <div key={i} className={`p-3 rounded-xl bg-gradient-to-r ${shift.gradient} to-transparent dark:to-zinc-900/60 border border-border/50 border-l-[3px] ${shift.borderColor} hover:-translate-y-0.5 hover:shadow-md transition-all duration-300 cursor-default`}>
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-sm text-foreground font-semibold">{shift.shift}</span>
-                        <span className="text-xs text-muted-foreground">{shift.hours}h</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="flex-1 h-2 bg-muted dark:bg-zinc-800 rounded-full overflow-hidden">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            whileInView={{ width: `${shift.productivity}%` }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 1, delay: i * 0.2 }}
-                            className={`h-full ${shift.color} rounded-full`}
-                          />
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] text-muted-foreground">{shift.hours}h</span>
+                          <span className={`text-sm font-black ${shift.textColor}`}>{shift.productivity}%</span>
                         </div>
-                        <span className="text-xs font-bold text-foreground">{shift.productivity}%</span>
+                      </div>
+                      <div className="h-2.5 bg-muted/40 dark:bg-zinc-800/60 rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          whileInView={{ width: `${shift.productivity}%` }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 1.2, delay: i * 0.2, ease: "easeOut" }}
+                          className={`h-full ${shift.color} rounded-full shadow-sm`}
+                        />
                       </div>
                     </div>
                   ))}
                 </div>
-                <div className="pt-4 border-t border-border dark:border-zinc-800 flex justify-between items-center">
-                  <div className="text-xs text-muted-foreground">Total Labor Cost This Week</div>
-                  <div className="text-2xl font-bold text-[#70c82a]">Br 47,850</div>
+                <div className="pt-4 border-t border-border/40 dark:border-zinc-800 flex justify-between items-center">
+                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Total Labor Cost This Week</span>
+                  <div className="text-2xl font-black bg-gradient-to-r from-[#70c82a] to-emerald-400 bg-clip-text text-transparent">Br 47,850</div>
                 </div>
+              </div>
               </div>
             </motion.div>
           </div>
 
           {/* Spare Parts & Inventory Control - Right/Left */}
-          <div className="grid lg:grid-cols-2 gap-16 items-center mb-32">
+          <div id="module-04" className="relative grid lg:grid-cols-2 gap-16 items-center mb-32">
             <motion.div
               initial={{ opacity: 0, x: -50 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -1806,14 +2051,24 @@ export default function LandingPage() {
               transition={{ duration: 0.8 }}
               className="order-2 lg:order-1 relative"
             >
-              <div className="p-8 rounded-2xl bg-card dark:bg-zinc-950 border border-border dark:border-zinc-800">
-                <div className="text-foreground font-bold mb-6">Inventory Status Overview</div>
-                <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="absolute inset-0 bg-[#70c82a]/5 blur-3xl rounded-full pointer-events-none" />
+              <div className="relative p-8 rounded-2xl bg-card dark:bg-zinc-950 border border-border dark:border-zinc-800 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-[#70c82a]/15 hover:border-[#70c82a]/35 cursor-default">
+                <div className="flex items-center justify-between mb-6">
+                  <span className="text-foreground font-bold">Inventory Status Overview</span>
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#70c82a] text-black text-[10px] font-bold uppercase tracking-wider">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-black opacity-40" />
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-black" />
+                    </span>
+                    Live
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3 mb-6">
                   {[
-                    { label: "Total SKUs", value: "2,847", trend: "+12", color: "text-[#70c82a]" },
-                    { label: "In Stock", value: "2,681", trend: "+8", color: "text-[#70c82a]" },
-                    { label: "Low Stock", value: "124", trend: "+4", color: "text-amber-500" },
-                    { label: "Out of Stock", value: "42", trend: "-3", color: "text-red-500" }
+                    { label: "Total SKUs", value: "2,847", trend: "+12", color: "text-[#70c82a]", gradient: "from-[#70c82a]/15", border: "border-[#70c82a]/25", shadow: "shadow-[#70c82a]/20", icon: Database },
+                    { label: "In Stock", value: "2,681", trend: "+8", color: "text-[#70c82a]", gradient: "from-[#70c82a]/12", border: "border-[#70c82a]/20", shadow: "shadow-[#70c82a]/15", icon: CheckCircle2 },
+                    { label: "Low Stock", value: "124", trend: "+4", color: "text-amber-500", gradient: "from-amber-500/15", border: "border-amber-500/25", shadow: "shadow-amber-500/20", icon: AlertTriangle },
+                    { label: "Out of Stock", value: "42", trend: "-3", color: "text-red-500", gradient: "from-red-500/15", border: "border-red-500/25", shadow: "shadow-red-500/20", icon: X }
                   ].map((stat, i) => (
                     <motion.div
                       key={i}
@@ -1821,31 +2076,41 @@ export default function LandingPage() {
                       whileInView={{ opacity: 1, scale: 1 }}
                       viewport={{ once: true }}
                       transition={{ delay: i * 0.1 }}
-                      className="p-4 rounded-xl bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800"
+                      className={`p-4 rounded-xl bg-gradient-to-br ${stat.gradient} to-transparent dark:to-zinc-900/80 border ${stat.border} shadow-lg ${stat.shadow} hover:-translate-y-1.5 hover:shadow-xl transition-all duration-300 cursor-default`}
                     >
-                      <div className="flex justify-between items-center mb-2">
-                        <div className={`text-2xl font-bold ${stat.color}`}>{stat.value}</div>
-                        <span className="text-xs font-bold text-muted-foreground">{stat.trend}</span>
+                      <div className="flex items-center justify-between mb-2">
+                        <stat.icon className={`w-4 h-4 ${stat.color}`} />
+                        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full ${
+                          stat.trend.startsWith('+') ? 'bg-[#70c82a]/10 text-[#70c82a]' : 'bg-red-500/10 text-red-500'
+                        }`}>{stat.trend}</span>
                       </div>
-                      <div className="text-[10px] text-muted-foreground uppercase font-bold">{stat.label}</div>
+                      <div className={`text-2xl font-black ${stat.color} mb-0.5`}>{stat.value}</div>
+                      <div className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{stat.label}</div>
                     </motion.div>
                   ))}
                 </div>
-                <div className="mb-6">
-                  <div className="text-sm text-muted-foreground mb-3">Recent Parts Issued</div>
+                <div className="mb-2">
+                  <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Recent Parts Issued</div>
                   <div className="space-y-2">
                     {[
                       { part: "Hydraulic Filter HF-208", qty: "12", wo: "WO-2847", cost: "Br 1,240" },
                       { part: "Engine Oil 15W-40 (Drum)", qty: "8", wo: "WO-2851", cost: "Br 2,880" },
                       { part: "Air Filter Element AF-501", qty: "24", wo: "WO-2856", cost: "Br 960" },
-                      { part: "Brake Pad Set BP-410", qty: "6", wo: "WO-2859", cost: "Br 1,440" }
+                    
                     ].map((issue, i) => (
-                      <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-card/30 dark:bg-zinc-900/30 border border-border dark:border-zinc-800 text-xs">
-                        <div className="flex-1">
-                          <div className="text-foreground font-semibold mb-1">{issue.part}</div>
-                          <div className="text-muted-foreground">QTY: {issue.qty} • {issue.wo}</div>
+                      <div key={i} className="relative flex items-center gap-3 p-3 rounded-lg bg-card/30 dark:bg-zinc-900/40 border border-border/50 dark:border-zinc-800 text-xs hover:border-[#70c82a]/35 hover:bg-[#70c82a]/[0.05] hover:-translate-y-0.5 hover:shadow-md hover:shadow-[#70c82a]/10 transition-all duration-300 cursor-default overflow-hidden">
+                        <div className="absolute top-0 left-0 w-[2px] h-full bg-gradient-to-b from-[#70c82a] to-[#70c82a]/20" />
+                        <div className="w-7 h-7 rounded-lg bg-[#70c82a]/10 border border-[#70c82a]/20 flex items-center justify-center flex-shrink-0">
+                          <Cog className="w-3.5 h-3.5 text-[#70c82a]" />
                         </div>
-                        <div className="text-foreground font-bold">{issue.cost}</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-foreground font-semibold truncate mb-1">{issue.part}</div>
+                          <div className="flex items-center gap-2">
+                            <span className="px-1.5 py-0.5 rounded-full bg-[#70c82a]/10 text-[#70c82a] font-black text-[9px] border border-[#70c82a]/20">QTY {issue.qty}</span>
+                            <span className="text-muted-foreground">{issue.wo}</span>
+                          </div>
+                        </div>
+                        <div className="text-foreground font-semibold flex-shrink-0">{issue.cost}</div>
                       </div>
                     ))}
                   </div>
@@ -1861,20 +2126,32 @@ export default function LandingPage() {
               transition={{ duration: 0.8 }}
               className="order-1 lg:order-2 space-y-8"
             >
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-16 h-16 rounded-2xl bg-[#70c82a]/10 flex items-center justify-center border border-[#70c82a]/20">
-                  <Warehouse className="w-8 h-8 text-[#70c82a]" />
-                </div>
-                <div>
-                  <div className="text-xs text-[#70c82a] font-bold uppercase tracking-wider mb-1">Module 04</div>
-                  <h3 className="text-3xl font-bold text-foreground">Inventory Management</h3>
+              <div className="relative mb-6">
+                <div className="absolute -top-4 -left-2 text-[110px] font-black leading-none text-[#70c82a]/[0.05] select-none pointer-events-none">04</div>
+                <div className="flex items-center gap-4 relative">
+                  <div className="relative flex-shrink-0">
+                    <div className="absolute inset-0 rounded-2xl bg-[#70c82a]/30 blur-xl opacity-60" />
+                    <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-[#70c82a]/25 to-[#70c82a]/5 flex items-center justify-center border border-[#70c82a]/40 shadow-lg shadow-[#70c82a]/10">
+                      <Warehouse className="w-8 h-8 text-[#70c82a]" />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#70c82a]/10 text-[#70c82a] text-xs font-bold uppercase tracking-wider mb-2 border border-[#70c82a]/25">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#70c82a] animate-pulse" />
+                      Module 04
+                    </div>
+                    <h3 className="text-3xl font-bold text-foreground">Inventory Management</h3>
+                  </div>
                 </div>
               </div>
               <p className="text-muted-foreground text-lg leading-relaxed mb-6">
                 Always know what spare parts you have and what you need.
               </p>
               <div className="mb-8">
-                <h4 className="text-foreground font-semibold mb-4">What this module does</h4>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-[2px] w-6 bg-gradient-to-r from-[#70c82a] to-transparent rounded-full" />
+                  <h4 className="text-foreground font-semibold text-sm uppercase tracking-widest">What this module does</h4>
+                </div>
                 <div className="space-y-3">
                   {[
                     "Shows real-time spare parts availability",
@@ -1889,17 +2166,23 @@ export default function LandingPage() {
                       whileInView={{ opacity: 1, x: 0 }}
                       viewport={{ once: true }}
                       transition={{ delay: i * 0.08 }}
-                      className="flex items-center gap-3 text-foreground"
+                      className="flex items-center gap-3 group"
                     >
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#70c82a]" />
-                      <span className="text-sm">{item}</span>
+                      <CheckCircle2 className="w-4 h-4 text-[#70c82a] flex-shrink-0 group-hover:scale-110 transition-transform" />
+                      <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">{item}</span>
                     </motion.div>
                   ))}
                 </div>
               </div>
-              <div className="p-6 rounded-xl bg-[#70c82a]/5 border border-[#70c82a]/20">
-                <h4 className="text-foreground font-semibold mb-3">ECWC Scenario</h4>
-                <p className="text-sm text-muted-foreground leading-relaxed">
+              <div className="relative pl-5 pr-6 py-5 rounded-xl bg-gradient-to-br from-[#70c82a]/[0.07] to-[#70c82a]/[0.02] border border-[#70c82a]/20 overflow-hidden">
+                <div className="absolute top-0 left-0 w-[3px] h-full bg-gradient-to-b from-[#70c82a] via-emerald-400 to-[#70c82a]/30 rounded-l-xl" />
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-5 h-5 rounded-full bg-[#70c82a]/15 border border-[#70c82a]/30 flex items-center justify-center flex-shrink-0">
+                    <MapPin className="w-2.5 h-2.5 text-[#70c82a]" />
+                  </div>
+                  <h4 className="text-foreground font-semibold text-xs uppercase tracking-widest text-[#70c82a]">Real-World Scenario</h4>
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed italic">
                   A work order requires hydraulic filters.
                   Before maintenance starts, the system checks the store and reserves the parts.
                   When stock goes below minimum, the storekeeper receives an alert to reorder.
@@ -1910,7 +2193,7 @@ export default function LandingPage() {
           </div>
 
           {/* Executive Dashboards & Reports - Right/Left */}
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
+          <div id="module-05" className="relative grid lg:grid-cols-2 gap-16 items-center">
             <motion.div
               initial={{ opacity: 0, x: -50 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -1918,35 +2201,49 @@ export default function LandingPage() {
               transition={{ duration: 0.8 }}
               className="order-2 lg:order-1 relative"
             >
-              <div className="p-8 rounded-2xl bg-gradient-to-br from-[#70c82a]/5 via-card to-card dark:via-zinc-950 dark:to-zinc-950 border border-[#70c82a]/20">
-                <div className="text-foreground font-bold mb-6 text-lg">Executive Command Center</div>
+              <div className="absolute inset-0 bg-[#70c82a]/8 blur-3xl rounded-full pointer-events-none" />
+              <div className="relative p-8 rounded-2xl bg-gradient-to-br from-[#70c82a]/8 via-card to-card dark:via-zinc-950 dark:to-zinc-950 border border-[#70c82a]/30 shadow-xl shadow-[#70c82a]/5 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl hover:shadow-[#70c82a]/20 hover:border-[#70c82a]/50 cursor-default">
+                <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#70c82a]/60 to-transparent rounded-t-2xl" />
+                <div className="flex items-center justify-between mb-6">
+                  <div className="text-foreground font-bold text-lg">Executive Command Center</div>
+                  <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-[#70c82a]/10 border border-[#70c82a]/20 text-[10px] font-bold text-[#70c82a] uppercase tracking-wider">
+                    <span className="relative flex h-1.5 w-1.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#70c82a] opacity-75" />
+                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#70c82a]" />
+                    </span>
+                    Live
+                  </div>
+                </div>
 
                 <div className="space-y-4">
                   {/* Site Performance Comparison - Vertical Bar Chart */}
-                  <div className="p-4 rounded-xl bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800">
-                    <div className="text-xs font-semibold text-foreground mb-6">Site Performance Comparison</div>
-                    <div className="relative pt-6 pb-4">
-                      <div className="flex items-end justify-center gap-6 h-16">
+                  <div className="p-4 rounded-xl bg-gradient-to-br from-[#70c82a]/8 to-transparent dark:to-zinc-900/60 border border-[#70c82a]/20 hover:border-[#70c82a]/40 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#70c82a]/10 transition-all duration-300 cursor-default">
+                    <div className="flex items-center gap-2 mb-5">
+                      <BarChart3 className="w-3.5 h-3.5 text-[#70c82a]" />
+                      <span className="text-xs font-semibold text-foreground">Site Performance</span>
+                    </div>
+                    <div className="relative pt-6 pb-2">
+                      <div className="flex items-end justify-center gap-4 h-20">
                         {[
-                          { site: "Addis Ababa", value: 94 },
-                          { site: "Dire Dawa", value: 23 },
-                          { site: "Bahir Dar", value: 55 }
+                          { site: "Addis Ababa", value: 94, color: "from-[#70c82a] to-emerald-400" },
+                          { site: "Dire Dawa", value: 23, color: "from-red-500 to-red-400" },
+                          { site: "Bahir Dar", value: 55, color: "from-amber-500 to-amber-400" }
                         ].map((item, j) => (
-                          <div key={j} className="flex flex-col items-center gap-2 flex-1 max-w-[100px]">
-                            <div className="relative w-full h-16 flex items-end justify-center">
-                              <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-[10px] font-bold text-[#70c82a] whitespace-nowrap z-10">
+                          <div key={j} className="flex flex-col items-center gap-2 flex-1 max-w-[90px]">
+                            <div className="relative w-full h-20 flex items-end justify-center">
+                              <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs font-medium text-muted-foreground whitespace-nowrap z-10">
                                 {item.value}%
                               </div>
                               <motion.div
-                                initial={{ height: 0 }}
-                                whileInView={{ height: `${item.value}%` }}
+                                initial={{ height: 0, opacity: 0 }}
+                                whileInView={{ height: `${item.value}%`, opacity: 1 }}
                                 viewport={{ once: true }}
-                                transition={{ duration: 0.8, delay: j * 0.15 }}
-                                className="w-full bg-gradient-to-t from-[#70c82a] via-[#70c82a]/80 to-emerald-400 rounded-t-md relative group shadow-lg shadow-[#70c82a]/20"
-                                style={{ height: `${item.value}%`, minHeight: '10px' }}
+                                transition={{ duration: 1, delay: j * 0.15, ease: "easeOut" }}
+                                className={`w-full bg-gradient-to-t ${item.color} rounded-t-lg shadow-lg`}
+                                style={{ minHeight: '8px' }}
                               />
                             </div>
-                            <span className="text-[11px] text-foreground font-semibold text-center leading-tight">{item.site}</span>
+                            <span className="text-[10px] text-muted-foreground font-semibold text-center leading-tight">{item.site}</span>
                           </div>
                         ))}
                       </div>
@@ -1954,7 +2251,7 @@ export default function LandingPage() {
                   </div>
 
                   {/* Monthly Cost Trends - Line Chart */}
-                  <div className="p-4 rounded-xl bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800">
+                  <div className="p-4 rounded-xl bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800 hover:border-[#70c82a]/40 hover:bg-[#70c82a]/5 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#70c82a]/10 transition-all duration-300 cursor-default">
                     <div className="text-xs font-semibold text-foreground mb-4">Monthly Cost Trends</div>
                     <div className="relative h-24">
                       <svg className="w-full h-full" viewBox="0 0 200 80" preserveAspectRatio="none">
@@ -2021,13 +2318,16 @@ export default function LandingPage() {
                   </div>
 
                   {/* Inventory Valuation - Three Separate Pie Charts */}
-                  <div className="p-4 rounded-xl bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800">
-                    <div className="text-xs font-semibold text-foreground mb-4">Inventory Valuation</div>
+                  <div className="p-4 rounded-xl bg-card/50 dark:bg-zinc-900/50 border border-border/60 dark:border-zinc-800 hover:border-[#70c82a]/40 hover:bg-[#70c82a]/5 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#70c82a]/10 transition-all duration-300 cursor-default">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Database className="w-3.5 h-3.5 text-[#70c82a]" />
+                      <span className="text-xs font-semibold text-foreground">Inventory Valuation</span>
+                    </div>
                     <div className="flex items-center justify-between gap-4 h-24">
                       {[
-                        { quarter: "Q1", value: 78, color: "#70c82a" },
-                        { quarter: "Q2", value: 85, color: "#8dd63a" },
-                        { quarter: "Q3", value: 92, color: "#a8e55c" }
+                        { quarter: "Q1", value: 78, color: "#70c82a", textColor: "#70c82a" },
+                        { quarter: "Q2", value: 85, color: "#f59e0b", textColor: "#f59e0b" },
+                        { quarter: "Q3", value: 92, color: "#3b82f6", textColor: "#3b82f6" }
                       ].map((item, j) => {
                         // Calculate percentage for donut chart (value out of 100 for visual)
                         const percentage = item.value;
@@ -2094,12 +2394,12 @@ export default function LandingPage() {
                                 <text x="50" y="47" textAnchor="middle" dominantBaseline="middle" className="text-[9px] font-bold fill-foreground">
                                   {item.quarter}
                                 </text>
-                                <text x="50" y="57" textAnchor="middle" dominantBaseline="middle" className="text-[8px] font-semibold fill-[#70c82a]">
+                                <text x="50" y="57" textAnchor="middle" dominantBaseline="middle" className="text-[8px] font-semibold" fill={item.textColor}>
                                   Br {item.value}K
                                 </text>
                               </svg>
                             </div>
-                            <span className="text-xs text-foreground font-semibold">{item.quarter}: Br {item.value}K</span>
+                            <span className="text-xs font-bold" style={{ color: item.textColor }}>{item.quarter}: Br {item.value}K</span>
                           </div>
                         );
                       })}
@@ -2119,20 +2419,32 @@ export default function LandingPage() {
               transition={{ duration: 0.8 }}
               className="order-1 lg:order-2 space-y-8"
             >
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-16 h-16 rounded-2xl bg-[#70c82a]/10 flex items-center justify-center border border-[#70c82a]/20">
-                  <BarChart3 className="w-8 h-8 text-[#70c82a]" />
-                </div>
-                <div>
-                  <div className="text-xs text-[#70c82a] font-bold uppercase tracking-wider mb-1">Module 05</div>
-                  <h3 className="text-3xl font-bold text-foreground">Executive Dashboard & Reporting</h3>
+              <div className="relative mb-6">
+                <div className="absolute -top-4 -left-2 text-[110px] font-black leading-none text-[#70c82a]/[0.05] select-none pointer-events-none">05</div>
+                <div className="flex items-center gap-4 relative">
+                  <div className="relative flex-shrink-0">
+                    <div className="absolute inset-0 rounded-2xl bg-[#70c82a]/30 blur-xl opacity-60" />
+                    <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-[#70c82a]/25 to-[#70c82a]/5 flex items-center justify-center border border-[#70c82a]/40 shadow-lg shadow-[#70c82a]/10">
+                      <BarChart3 className="w-8 h-8 text-[#70c82a]" />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#70c82a]/10 text-[#70c82a] text-xs font-bold uppercase tracking-wider mb-2 border border-[#70c82a]/25">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#70c82a] animate-pulse" />
+                      Module 05
+                    </div>
+                    <h3 className="text-3xl font-bold text-foreground">Executive Dashboard & Reporting</h3>
+                  </div>
                 </div>
               </div>
               <p className="text-muted-foreground text-lg leading-relaxed mb-6">
                 See the full operation at a glance.
               </p>
               <div className="mb-8">
-                <h4 className="text-foreground font-semibold mb-4">What this module does</h4>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-[2px] w-6 bg-gradient-to-r from-[#70c82a] to-transparent rounded-full" />
+                  <h4 className="text-foreground font-semibold text-sm uppercase tracking-widest">What this module does</h4>
+                </div>
                 <div className="space-y-3">
                   {[
                     "Shows fleet availability and uptime",
@@ -2147,17 +2459,23 @@ export default function LandingPage() {
                       whileInView={{ opacity: 1, x: 0 }}
                       viewport={{ once: true }}
                       transition={{ delay: i * 0.08 }}
-                      className="flex items-center gap-3 text-foreground"
+                      className="flex items-center gap-3 group"
                     >
-                      <div className="w-1.5 h-1.5 rounded-full bg-[#70c82a]" />
-                      <span className="text-sm">{item}</span>
+                      <CheckCircle2 className="w-4 h-4 text-[#70c82a] flex-shrink-0 group-hover:scale-110 transition-transform" />
+                      <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">{item}</span>
                     </motion.div>
                   ))}
                 </div>
               </div>
-              <div className="p-6 rounded-xl bg-[#70c82a]/5 border border-[#70c82a]/20">
-                <h4 className="text-foreground font-semibold mb-3">ECWC Scenario</h4>
-                <p className="text-sm text-muted-foreground leading-relaxed">
+              <div className="relative pl-5 pr-6 py-5 rounded-xl bg-gradient-to-br from-[#70c82a]/[0.07] to-[#70c82a]/[0.02] border border-[#70c82a]/20 overflow-hidden">
+                <div className="absolute top-0 left-0 w-[3px] h-full bg-gradient-to-b from-[#70c82a] via-emerald-400 to-[#70c82a]/30 rounded-l-xl" />
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-5 h-5 rounded-full bg-[#70c82a]/15 border border-[#70c82a]/30 flex items-center justify-center flex-shrink-0">
+                    <MapPin className="w-2.5 h-2.5 text-[#70c82a]" />
+                  </div>
+                  <h4 className="text-foreground font-semibold text-xs uppercase tracking-widest text-[#70c82a]">Real-World Scenario</h4>
+                </div>
+                <p className="text-sm text-muted-foreground leading-relaxed italic">
                   An ECWC executive opens the dashboard in the morning.
                   They immediately see fleet availability, equipment under maintenance, and critical alerts.
                   Without asking for reports, they know where attention is needed and can take action quickly.
@@ -2225,14 +2543,17 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.15 }}
-                className="p-6 rounded-2xl bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800 hover:border-[#70c82a]/30 transition-all group"
+                whileHover={{ y: -4 }}
+                className="relative p-6 rounded-2xl bg-card/50 dark:bg-zinc-900/50 border border-border dark:border-zinc-800 hover:border-[#70c82a]/40 hover:shadow-xl hover:shadow-black/5 dark:hover:shadow-black/30 transition-all duration-300 group overflow-hidden"
               >
+                {/* subtle top accent line that fills on hover */}
+                <div className="absolute top-0 left-0 h-[2px] w-0 group-hover:w-full bg-gradient-to-r from-[#70c82a]/60 to-[#70c82a]/20 transition-all duration-500 rounded-t-2xl" />
                 <div className="flex items-center justify-between mb-6">
-                  <div className="w-12 h-12 rounded-xl bg-[#70c82a]/10 flex items-center justify-center border border-[#70c82a]/20">
+                  <div className="w-12 h-12 rounded-xl bg-[#70c82a]/10 group-hover:bg-[#70c82a]/15 flex items-center justify-center border border-[#70c82a]/20 group-hover:border-[#70c82a]/35 transition-colors duration-300">
                     <card.icon className="w-6 h-6 text-[#70c82a]" />
                   </div>
                   <div className="text-right">
-                    <div className="text-3xl font-bold text-foreground">{card.metric}</div>
+                    <div className="text-3xl font-bold text-foreground group-hover:text-[#70c82a] transition-colors duration-300">{card.metric}</div>
                     <div className="text-[10px] text-muted-foreground uppercase font-bold">{card.label}</div>
                   </div>
                 </div>
@@ -2244,215 +2565,278 @@ export default function LandingPage() {
 
         
 
-          {/* AI Chat Assistant - ChatGPT Style */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="mt-16"
-          >
-            <div className="max-w-4xl mx-auto bg-background dark:bg-zinc-950 rounded-2xl border border-border dark:border-zinc-800 overflow-hidden shadow-2xl">
-              {/* Chat Header */}
-              <div className="bg-gradient-to-r from-[#70c82a]/10 to-[#70c82a]/5 border-b border-border dark:border-zinc-800 px-4 sm:px-6 py-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#70c82a]/20 flex items-center justify-center border-2 border-[#70c82a]/30 flex-shrink-0">
-                    <Cpu className="w-5 h-5 text-[#70c82a]" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-lg text-foreground truncate">ECWC AI Assistant</h3>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <span className="w-2 h-2 rounded-full bg-[#70c82a] animate-pulse flex-shrink-0"></span>
-                      <span className="truncate">Online • Ready to help</span>
+          {/* AI Chat Assistant - Phone + Tablet */}
+          <div className="mt-16 flex flex-col xl:flex-row items-start justify-center gap-8">
+
+            {/* ── Portrait Phone ── */}
+            <motion.div initial={{ opacity: 0, x: -40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }} className="flex-shrink-0 w-full max-w-[280px] mx-auto xl:mx-0">
+              <div className="relative">
+                <div className="absolute -inset-3 rounded-[3.5rem] bg-[#70c82a]/20 dark:bg-[#70c82a]/30 blur-2xl" />
+                {/* frame */}
+                <div className="relative rounded-[3rem] border-[7px] border-gray-900 dark:border-zinc-700 bg-gray-900 dark:bg-zinc-800 shadow-2xl overflow-hidden flex flex-col" style={{ height: 480 }}>
+                  {/* side buttons */}
+                  <div className="absolute -left-[9px] top-[90px] w-[5px] h-7 bg-gray-700 dark:bg-zinc-600 rounded-l-md" />
+                  <div className="absolute -left-[9px] top-[126px] w-[5px] h-10 bg-gray-700 dark:bg-zinc-600 rounded-l-md" />
+                  <div className="absolute -left-[9px] top-[148px] w-[5px] h-10 bg-gray-700 dark:bg-zinc-600 rounded-l-md" />
+                  <div className="absolute -right-[9px] top-[120px] w-[5px] h-14 bg-gray-700 dark:bg-zinc-600 rounded-r-md" />
+                  {/* screen */}
+                  <div className="flex-1 bg-white dark:bg-zinc-950 rounded-[2.2rem] m-1 overflow-hidden flex flex-col">
+                    {/* notch */}
+                    <div className="relative flex justify-center">
+                      <div className="absolute top-0 w-20 h-5 bg-gray-900 dark:bg-zinc-800 rounded-b-2xl z-10 flex items-center justify-center gap-1.5">
+                        <div className="w-1.5 h-1.5 rounded-full bg-gray-700 dark:bg-zinc-600" />
+                        <div className="w-2 h-2 rounded-full bg-gray-800 dark:bg-zinc-700 border border-gray-600 dark:border-zinc-500" />
+                      </div>
                     </div>
+                    {/* combined header row */}
+                    <div className="flex items-center gap-2 px-3 pt-7 pb-2 bg-gradient-to-r from-gray-900 to-gray-800 dark:from-zinc-800 dark:to-zinc-900 border-b border-gray-700 dark:border-zinc-700">
+                      <div className="w-7 h-7 rounded-full bg-[#70c82a]/20 border border-[#70c82a]/50 flex items-center justify-center flex-shrink-0">
+                        <Cpu className="w-3.5 h-3.5 text-[#70c82a]" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11px] font-black text-white leading-none">ECWC AI Assistant</p>
+                        <p className="text-[9px] text-zinc-400">Online • Ready to help</p>
+                      </div>
+                      <span className="w-2 h-2 rounded-full bg-[#70c82a] animate-pulse flex-shrink-0" />
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <span className="text-[9px] font-bold text-zinc-400">9:41</span>
+                        <div className="flex gap-px items-end h-2.5">{[2,3,4,5].map(h => <div key={h} className="w-0.5 bg-zinc-400 rounded-sm" style={{height: h*2}} />)}</div>
+                        <div className="w-3 h-1.5 border border-zinc-500 rounded-sm relative"><div className="absolute inset-y-0.5 left-0.5 right-0 bg-zinc-400 rounded-sm" /></div>
+                      </div>
+                    </div>
+                    {/* messages */}
+                    <div className="flex-1 bg-gray-50 dark:bg-zinc-900 px-3 py-2 space-y-2 overflow-hidden">
+                      {/* CEO morning briefing */}
+                      <div className="flex justify-end items-end gap-1.5">
+                        <div className="bg-gray-100 dark:bg-zinc-700 text-gray-900 dark:text-white text-[10px] font-medium leading-relaxed px-3 py-1.5 rounded-2xl rounded-tr-sm max-w-[82%] shadow-sm border border-gray-200 dark:border-zinc-600">
+                          Give me today's executive summary
+                        </div>
+                        <div className="w-5 h-5 rounded-full bg-gray-300 dark:bg-zinc-600 flex items-center justify-center flex-shrink-0">
+                          <User className="w-3 h-3 text-gray-600 dark:text-zinc-300" />
+                        </div>
+                      </div>
+                      <div className="flex gap-2 items-end">
+                        <div className="w-5 h-5 rounded-full bg-[#70c82a]/15 dark:bg-[#70c82a]/20 border border-[#70c82a]/40 flex items-center justify-center flex-shrink-0">
+                          <Cpu className="w-2.5 h-2.5 text-[#70c82a]" />
+                        </div>
+                        <div className="bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-[10px] text-gray-700 dark:text-zinc-200 leading-relaxed px-3 py-1.5 rounded-2xl rounded-tl-sm shadow-sm max-w-[80%]">
+                          <span className="font-bold text-gray-900 dark:text-white">2 critical alerts</span> need action. Fleet availability <span className="font-bold text-gray-900 dark:text-white">94.3%</span>, up 1.8% vs last month.
+                        </div>
+                      </div>
+                      {/* KPI summary card */}
+                      <div className="flex gap-2 items-end">
+                        <div className="w-5 flex-shrink-0" />
+                        <div className="flex-1 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-2xl rounded-tl-sm px-3 py-2 shadow-sm">
+                          <p className="text-[8px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-widest mb-2">Fleet Availability by Site</p>
+                          <div className="space-y-1.5">
+                            {[
+                              { site: "Addis Ababa", pct: 94, color: "#70c82a", label: "94%" },
+                              { site: "Bahir Dar",   pct: 88, color: "#70c82a", label: "88%" },
+                              { site: "Dire Dawa",   pct: 71, color: "#ef4444", label: "71% ⚠" },
+                            ].map((s) => (
+                              <div key={s.site}>
+                                <div className="flex justify-between mb-0.5">
+                                  <span className="text-[9px] text-gray-600 dark:text-zinc-400 font-medium">{s.site}</span>
+                                  <span className="text-[9px] font-bold" style={{ color: s.color }}>{s.label}</span>
+                                </div>
+                                <div className="h-1.5 bg-gray-100 dark:bg-zinc-700 rounded-full overflow-hidden">
+                                  <motion.div initial={{ width: 0 }} whileInView={{ width: `${s.pct}%` }} viewport={{ once: true }} transition={{ duration: 0.9, delay: 0.3 }} className="h-full rounded-full" style={{ backgroundColor: s.color }} />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="mt-2 pt-1.5 border-t border-gray-100 dark:border-zinc-700 flex justify-between items-center">
+                            <span className="text-[8px] text-gray-400 dark:text-zinc-500">Top risk: Loader ECWC-L-023</span>
+                            <span className="text-[8px] font-black text-red-500">Critical</span>
+                          </div>
+                        </div>
+                      </div>
+                      {chatUserMessages.map((msg) => (
+                        <div key={msg.id} className="space-y-1.5">
+                          <div className="flex justify-end items-end gap-1.5">
+                            <div className="bg-gray-100 dark:bg-zinc-700 text-gray-900 dark:text-white text-[10px] px-3 py-1.5 rounded-2xl rounded-tr-sm max-w-[82%] border border-gray-200 dark:border-zinc-600">{msg.text}</div>
+                            <div className="w-5 h-5 rounded-full bg-gray-300 dark:bg-zinc-600 flex items-center justify-center flex-shrink-0"><User className="w-3 h-3 text-gray-600 dark:text-zinc-300" /></div>
+                          </div>
+                          <div className="flex gap-2 items-end">
+                            <div className="w-5 h-5 rounded-full bg-[#70c82a]/15 dark:bg-[#70c82a]/20 border border-[#70c82a]/40 flex items-center justify-center flex-shrink-0"><Cpu className="w-2.5 h-2.5 text-[#70c82a]" /></div>
+                            <div className="bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-[10px] text-gray-500 dark:text-zinc-400 px-3 py-1.5 rounded-2xl rounded-tl-sm shadow-sm max-w-[80%]">Coming soon…</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {/* input */}
+                    <div className="flex gap-2 items-center px-3 py-2 bg-white dark:bg-zinc-900 border-t border-gray-200 dark:border-zinc-800">
+                      <input type="text" placeholder="Ask a question…" value={chatInput} onChange={(e) => setChatInput(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') { const t = chatInput.trim(); if (t) { chatMessageIdRef.current += 1; setChatUserMessages(m => [...m, { id: chatMessageIdRef.current, text: t }]); setChatInput('') } } }}
+                        className="flex-1 rounded-full border border-gray-200 dark:border-zinc-700 bg-gray-100 dark:bg-zinc-800 px-3 py-1.5 text-[10px] text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#70c82a]/40" />
+                      <button type="button" onClick={() => { const t = chatInput.trim(); if (t) { chatMessageIdRef.current += 1; setChatUserMessages(m => [...m, { id: chatMessageIdRef.current, text: t }]); setChatInput('') } }}
+                        className="w-8 h-8 rounded-full bg-[#70c82a] hover:bg-[#5ab523] text-white flex items-center justify-center flex-shrink-0 transition-colors shadow-md">
+                        <Send className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    {/* home bar */}
+                    <div className="flex justify-center py-1.5 bg-white dark:bg-zinc-950"><div className="w-16 h-1 bg-gray-300 dark:bg-zinc-600 rounded-full" /></div>
                   </div>
                 </div>
               </div>
+            </motion.div>
 
-              {/* Chat Messages Container - no vertical scroll, compact */}
-              <div className="overflow-hidden bg-gradient-to-b from-background to-muted/20">
-                <div className="divide-y divide-border dark:divide-zinc-800 px-1">
-                  {[
-                    {
-                      question: "Which site has the highest maintenance cost this month?",
-                      answer: "Addis Ababa Site — Br 82,400. Main drivers: high emergency work orders, heavy spare-part consumption for excavators, and increased overtime labor hours."
-                    },
-                    {
-                      question: "What are the main maintenance issues this month and their impact?",
-                      answer: {
-                        main: "Two primary issues are driving higher costs and equipment downtime:",
-                        details: [
-                          {
-                            issue: "Hydraulic system failures",
-                            percentage: "38%",
-                            impact: "This is the leading cause of downtime, affecting multiple excavators and loaders. Most failures occur due to seal degradation and contamination from harsh operating conditions.",
-                            cost: "Estimated monthly cost: Br 42,000 in repairs and lost productivity"
-                          },
-                          {
-                            issue: "Engine overheating",
-                            percentage: "27%",
-                            impact: "Primarily affecting older equipment and those operating in high-temperature conditions. Coolant system failures and radiator blockages are common causes.",
-                            cost: "Estimated monthly cost: Br 28,500 including engine repairs and preventive measures"
-                          }
-                        ],
-                        recommendation: "Immediate actions: (1) Implement preventive seal replacement program, (2) Upgrade cooling systems on high-risk equipment.",
-                        total: "Combined monthly impact: ~Br 70,500 in direct costs and productivity losses."
-                      }
-                    }
-                  ].map((qa, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, y: 10 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: i * 0.1 }}
-                      className="group"
-                    >
-                      {/* User Question - Right Side */}
-                      <div className="bg-muted/30 dark:bg-zinc-900/50 px-4 sm:px-6 py-3">
-                        <div className="flex gap-3 sm:gap-4 justify-end items-start">
-                          <div className="flex-1 min-w-0 flex justify-end">
-                            <p className="text-sm font-medium text-foreground leading-relaxed whitespace-pre-wrap text-right max-w-full sm:max-w-[85%] break-words">{qa.question}</p>
-                          </div>
-                          <div className="w-8 h-8 rounded-full bg-[#70c82a] dark:bg-[#70c82a] flex items-center justify-center flex-shrink-0 mt-1">
-                            <User className="w-4 h-4 text-white" />
-                          </div>
+            {/* ── Landscape Tablet ── */}
+            <motion.div initial={{ opacity: 0, x: 40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }} className="flex-1 w-full max-w-[780px] mx-auto xl:mx-0">
+              <div className="relative">
+                <div className="absolute -inset-3 rounded-[2rem] bg-[#70c82a]/15 dark:bg-[#70c82a]/25 blur-2xl" />
+                {/* tablet frame */}
+                <div className="relative rounded-[1.8rem] border-[8px] border-gray-900 dark:border-zinc-700 bg-gray-900 dark:bg-zinc-800 shadow-2xl overflow-hidden" style={{ height: 480 }}>
+                  {/* camera dot */}
+                  <div className="absolute top-2 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-gray-700 dark:bg-zinc-600 z-10" />
+                  {/* home bar right side */}
+                  <div className="absolute right-1.5 top-1/2 -translate-y-1/2 w-1 h-12 bg-gray-700 dark:bg-zinc-600 rounded-full z-10" />
+                  {/* screen */}
+                  <div className="bg-white dark:bg-zinc-950 rounded-[1.2rem] m-1 overflow-hidden flex flex-col" style={{ height: 'calc(100% - 8px)' }}>
+                    {/* tablet header — dark like mobile */}
+                    <div className="flex items-center justify-between px-4 py-2 bg-gradient-to-r from-gray-900 to-gray-800 dark:from-zinc-800 dark:to-zinc-900 border-b border-gray-700 dark:border-zinc-700 flex-shrink-0">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-full bg-[#70c82a]/20 border border-[#70c82a]/50 flex items-center justify-center flex-shrink-0">
+                          <Cpu className="w-3.5 h-3.5 text-[#70c82a]" />
                         </div>
-                      </div>
-
-                      {/* AI Answer - Left Side */}
-                      <div className="bg-background dark:bg-zinc-950 px-4 sm:px-6 py-3">
-                        <div className="flex gap-3 sm:gap-4 items-start">
-                          <div className="w-8 h-8 rounded-full bg-[#70c82a]/20 dark:bg-[#70c82a]/20 flex items-center justify-center flex-shrink-0 mt-1 border border-[#70c82a]/30">
-                            <Cpu className="w-4 h-4 text-[#70c82a]" />
-                          </div>
-                          <div className="flex-1 min-w-0 pt-1">
-                            {typeof qa.answer === 'string' ? (
-                              <div className="prose prose-sm dark:prose-invert max-w-none">
-                                <p className="text-foreground leading-relaxed whitespace-pre-wrap break-words">{qa.answer}</p>
-                              </div>
-                            ) : (
-                              <div className="space-y-4">
-                                <p className="text-foreground leading-relaxed break-words">{qa.answer.main}</p>
-
-                                <div className="space-y-4">
-                                  {qa.answer.details.map((detail: any, idx: number) => (
-                                    <div key={idx} className="border-l-2 border-[#70c82a]/30 pl-3 space-y-1.5">
-                                      <div className="flex items-center gap-2 flex-wrap">
-                                        <h4 className="text-base font-semibold text-foreground break-words">{detail.issue}</h4>
-                                        <span className="px-2 py-0.5 rounded bg-[#70c82a]/10 text-[#70c82a] text-xs font-bold flex-shrink-0">{detail.percentage}</span>
-                                      </div>
-                                      <p className="text-sm text-muted-foreground leading-relaxed break-words">{detail.impact}</p>
-                                      <p className="text-xs text-[#70c82a] font-medium break-words">{detail.cost}</p>
-                                    </div>
-                                  ))}
-                                </div>
-
-                                {qa.answer.recommendation && (
-                                  <div className="mt-4 p-3 bg-[#70c82a]/5 dark:bg-[#70c82a]/10 rounded-lg border border-[#70c82a]/20">
-                                    <p className="text-sm font-semibold text-foreground mb-1">Recommended Actions:</p>
-                                    <p className="text-sm text-muted-foreground leading-relaxed break-words">{qa.answer.recommendation}</p>
-                                  </div>
-                                )}
-
-                                {qa.answer.total && (
-                                  <div className="mt-3 pt-3 border-t border-border dark:border-zinc-800">
-                                    <p className="text-sm font-bold text-foreground break-words">{qa.answer.total}</p>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
+                        <div>
+                          <p className="text-[11px] font-black text-white leading-none">ECWC AI Assistant</p>
+                          <p className="text-[9px] text-zinc-400">Online • Ready to help</p>
                         </div>
+                        <span className="w-2 h-2 rounded-full bg-[#70c82a] animate-pulse ml-1" />
                       </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-
-              {/* User-sent messages + "Coming soon" reply */}
-              {chatUserMessages.length > 0 && (
-                <div className="divide-y divide-border dark:divide-zinc-800 px-1">
-                  {chatUserMessages.map((msg) => (
-                    <div key={msg.id} className="group">
-                      <div className="bg-muted/30 dark:bg-zinc-900/50 px-4 sm:px-6 py-3">
-                        <div className="flex gap-3 sm:gap-4 justify-end items-start">
-                          <div className="flex-1 min-w-0 flex justify-end">
-                            <p className="text-sm font-medium text-foreground leading-relaxed whitespace-pre-wrap text-right max-w-full sm:max-w-[85%] break-words">{msg.text}</p>
-                          </div>
-                          <div className="w-8 h-8 rounded-full bg-[#70c82a] flex items-center justify-center flex-shrink-0 mt-1">
-                            <User className="w-4 h-4 text-white" />
-                          </div>
-                        </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-[9px] text-zinc-500">9:41 AM</span>
+                        <div className="flex gap-px items-end h-3">{[2,3,4,5].map(h => <div key={h} className="w-0.5 bg-zinc-500 rounded-sm" style={{height: h*2}} />)}</div>
+                        <div className="w-4 h-2 border border-zinc-500 rounded-sm relative"><div className="absolute inset-y-0.5 left-0.5 right-1 bg-zinc-500 rounded-sm" /></div>
                       </div>
-                      <div className="bg-background dark:bg-zinc-950 px-4 sm:px-6 py-3">
-                        <div className="flex gap-3 sm:gap-4 items-start">
-                          <div className="w-8 h-8 rounded-full bg-[#70c82a]/20 flex items-center justify-center flex-shrink-0 mt-1 border border-[#70c82a]/30">
-                            <Cpu className="w-4 h-4 text-[#70c82a]" />
+                    </div>
+                    {/* split layout */}
+                    <div className="flex flex-col flex-1 overflow-hidden">
+                      <div className="flex flex-1 overflow-hidden">
+                      {/* LEFT: chat + fleet status */}
+                      <div className="w-[48%] flex flex-col border-r border-gray-100 dark:border-zinc-800">
+                        {/* messages — scrollable */}
+                        <div className="flex-1 bg-gray-50 dark:bg-zinc-900 px-3 py-3 space-y-2.5 overflow-y-auto">
+                          <div className="flex justify-end items-end gap-1.5">
+                            <div className="bg-gray-100 dark:bg-zinc-700 text-gray-900 dark:text-white text-[10px] font-medium px-3 py-1.5 rounded-2xl rounded-tr-sm max-w-[85%] shadow-sm leading-relaxed border border-gray-200 dark:border-zinc-600">
+                              Which equipment is at highest risk of failure?
+                            </div>
+                            <div className="w-5 h-5 rounded-full bg-gray-300 dark:bg-zinc-600 flex items-center justify-center flex-shrink-0"><User className="w-3 h-3 text-gray-600 dark:text-zinc-300" /></div>
                           </div>
-                          <div className="flex-1 min-w-0 pt-1">
-                            <div className="rounded-xl border-2 border-[#70c82a]/25 bg-gradient-to-br from-[#70c82a]/10 to-[#70c82a]/5 dark:from-[#70c82a]/15 dark:to-[#70c82a]/5 p-4 shadow-sm">
-                              <p className="text-sm font-semibold text-[#70c82a] mb-2 flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-[#70c82a] animate-pulse" />
-                                We appreciate you want to use the chatbot
-                              </p>
-                              <p className="text-sm text-foreground leading-relaxed mb-3">
-                                The ECWC AI Assistant is currently in development. We are building a smart AI assistant to help you with maintenance insights, cost analysis, and recommendations.
-                              </p>
-                              <p className="text-sm font-medium text-foreground">
-                                Coming soon — stay tuned.
-                              </p>
+                          <div className="flex gap-1.5 items-end">
+                            <div className="w-5 h-5 rounded-full bg-[#70c82a]/15 dark:bg-[#70c82a]/20 border border-[#70c82a]/40 flex items-center justify-center flex-shrink-0"><Cpu className="w-2.5 h-2.5 text-[#70c82a]" /></div>
+                            <div className="bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-[10px] text-gray-700 dark:text-zinc-200 px-3 py-1.5 rounded-2xl rounded-tl-sm shadow-sm leading-relaxed max-w-[82%]">
+                              <span className="font-bold text-gray-900 dark:text-white">Loader ECWC-L-023</span> seal replacement overdue 45 days. <span className="font-bold text-gray-900 dark:text-white">Excavator ECWC-E-108</span> engine temp 18% above threshold. Details on right →
                             </div>
                           </div>
+                          <div className="flex justify-end items-end gap-1.5">
+                            <div className="bg-gray-100 dark:bg-zinc-700 text-gray-900 dark:text-white text-[10px] font-medium px-3 py-1.5 rounded-2xl rounded-tr-sm max-w-[85%] shadow-sm leading-relaxed border border-gray-200 dark:border-zinc-600">
+                              Show equipment down more than 30 days
+                            </div>
+                            <div className="w-5 h-5 rounded-full bg-gray-300 dark:bg-zinc-600 flex items-center justify-center flex-shrink-0"><User className="w-3 h-3 text-gray-600 dark:text-zinc-300" /></div>
+                          </div>
+                          <div className="flex gap-1.5 items-end">
+                            <div className="w-5 h-5 rounded-full bg-[#70c82a]/15 dark:bg-[#70c82a]/20 border border-[#70c82a]/40 flex items-center justify-center flex-shrink-0"><Cpu className="w-2.5 h-2.5 text-[#70c82a]" /></div>
+                            <div className="bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-[10px] text-gray-700 dark:text-zinc-200 px-3 py-1.5 rounded-2xl rounded-tl-sm shadow-sm leading-relaxed max-w-[82%]">
+                              <span className="font-bold text-gray-900 dark:text-white">2 units</span> have been down over 30 days. Combined idle cost: <span className="font-bold text-gray-900 dark:text-white">Br 109,000</span>
+                            </div>
+                          </div>
+                          {/* Extended downtime equipment card */}
+                          <div className="flex gap-1.5 items-start">
+                            <div className="w-5 h-5 flex-shrink-0" />
+                            <div className="flex-1 bg-white dark:bg-zinc-800 border border-red-200 dark:border-red-800/40 rounded-2xl rounded-tl-sm shadow-sm px-2.5 py-2">
+                              <p className="text-[8px] font-black text-gray-500 dark:text-zinc-400 uppercase tracking-widest mb-1.5">Extended Downtime — 30+ Days</p>
+                              <div className="space-y-1.5">
+                                {[
+                                  { id: "ECWC-L-023", type: "Loader",    days: 45, cost: "Br 78K", site: "Kality" },
+                                  { id: "ECWC-E-108", type: "Excavator", days: 38, cost: "Br 31K", site: "Bahir Dar" },
+                                ].map((eq) => (
+                                  <div key={eq.id} className="flex items-center justify-between bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-800/30 rounded-lg px-2 py-1.5">
+                                    <div>
+                                      <p className="text-[8px] font-bold text-gray-800 dark:text-zinc-200 leading-none">{eq.type} · {eq.site}</p>
+                                      <p className="text-[7px] text-gray-400 dark:text-zinc-500 mt-0.5">{eq.id}</p>
+                                    </div>
+                                    <div className="text-right">
+                                      <p className="text-[9px] font-black text-red-500">{eq.days}d down</p>
+                                      <p className="text-[7px] text-gray-400 dark:text-zinc-500">{eq.cost} idle cost</p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                          {chatUserMessages2.map((msg) => (
+                            <div key={msg.id} className="space-y-1.5">
+                              <div className="flex justify-end items-end gap-1.5">
+                                <div className="bg-gray-100 dark:bg-zinc-700 text-gray-900 dark:text-white text-[10px] px-3 py-1.5 rounded-2xl rounded-tr-sm max-w-[85%] border border-gray-200 dark:border-zinc-600">{msg.text}</div>
+                                <div className="w-5 h-5 rounded-full bg-gray-300 dark:bg-zinc-600 flex items-center justify-center flex-shrink-0"><User className="w-3 h-3 text-gray-600 dark:text-zinc-300" /></div>
+                              </div>
+                              <div className="flex gap-1.5 items-end">
+                                <div className="w-5 h-5 rounded-full bg-[#70c82a]/15 dark:bg-[#70c82a]/20 border border-[#70c82a]/40 flex items-center justify-center flex-shrink-0"><Cpu className="w-2.5 h-2.5 text-[#70c82a]" /></div>
+                                <div className="bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 text-[10px] text-gray-500 dark:text-zinc-400 px-3 py-1.5 rounded-2xl rounded-tl-sm shadow-sm max-w-[82%]">Coming soon…</div>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
+                      {/* RIGHT: data panel */}
+                      <div className="flex-1 bg-white dark:bg-zinc-950 overflow-hidden">
+                        <div className="h-full overflow-y-auto px-4 py-3 space-y-3">
+                          <p className="text-[9px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-widest">AI Failure Risk Analysis</p>
+                          <div className="space-y-2">
+                            {/* Critical risk card */}
+                            <div className="p-3 rounded-xl bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-[10px] font-semibold text-gray-800 dark:text-zinc-200">ECWC-L-023 · Loader</span>
+                                <span className="text-[9px] font-semibold text-red-500 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/40 px-2 py-0.5 rounded-full">High Risk</span>
+                              </div>
+                              <div className="h-1.5 bg-gray-200 dark:bg-zinc-700 rounded-full overflow-hidden mb-1.5">
+                                <motion.div initial={{ width: 0 }} whileInView={{ width: '91%' }} viewport={{ once: true }} transition={{ duration: 0.8, delay: 0.3 }} className="h-full bg-red-400 rounded-full" />
+                              </div>
+                              <p className="text-[9px] text-gray-500 dark:text-zinc-400 leading-relaxed">Seal replacement overdue 45 days. Failure probability: <span className="font-medium text-gray-700 dark:text-zinc-300">91%</span> within 2 weeks.</p>
+                              <p className="text-[9px] text-gray-500 dark:text-zinc-400 mt-1">Reactive cost if failed: <span className="font-semibold text-gray-700 dark:text-zinc-300">Br 78,000</span></p>
+                            </div>
+                            {/* Medium risk card */}
+                            <div className="p-3 rounded-xl bg-gray-50 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-[10px] font-semibold text-gray-800 dark:text-zinc-200">ECWC-E-108 · Excavator</span>
+                                <span className="text-[9px] font-semibold text-amber-600 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/30 px-2 py-0.5 rounded-full">Medium</span>
+                              </div>
+                              <div className="h-1.5 bg-gray-200 dark:bg-zinc-700 rounded-full overflow-hidden mb-1.5">
+                                <motion.div initial={{ width: 0 }} whileInView={{ width: '63%' }} viewport={{ once: true }} transition={{ duration: 0.8, delay: 0.45 }} className="h-full bg-amber-400 rounded-full" />
+                              </div>
+                              <p className="text-[9px] text-gray-500 dark:text-zinc-400 leading-relaxed">Engine temp 18% above threshold. Coolant service recommended within 7 days.</p>
+                              <p className="text-[9px] text-gray-500 dark:text-zinc-400 mt-1">Preventive cost: <span className="font-semibold text-gray-700 dark:text-zinc-300">Br 8,500</span></p>
+                            </div>
+                          </div>
+                          {/* Savings callout */}
+                          <div className="p-3 rounded-xl bg-[#70c82a]/8 dark:bg-[#70c82a]/10 border border-[#70c82a]/30">
+                            <div className="flex items-center justify-between mb-1">
+                              <p className="text-[10px] font-black text-[#70c82a]">Act Now — Save Br 105,500</p>
+                            </div>
+                            <p className="text-[9px] text-gray-600 dark:text-zinc-400 leading-relaxed">Preventive maintenance this week costs <span className="font-bold text-gray-800 dark:text-white">Br 18,500</span> vs estimated <span className="font-bold text-red-500">Br 124,000</span> in emergency repairs + downtime losses.</p>
+                          </div>
+                        </div>
+                      </div>
+                      </div>
+                      {/* Full-width input bar */}
+                      <div className="flex-shrink-0 flex gap-2 items-center px-4 py-2.5 bg-white dark:bg-zinc-900 border-t border-gray-200 dark:border-zinc-800">
+                        <input type="text" placeholder="Ask anything…" value={chatInput2} onChange={(e) => setChatInput2(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') { const t = chatInput2.trim(); if (t) { chatMessageIdRef2.current += 1; setChatUserMessages2(m => [...m, { id: chatMessageIdRef2.current, text: t }]); setChatInput2('') } } }}
+                          className="flex-1 rounded-full border border-gray-200 dark:border-zinc-700 bg-gray-100 dark:bg-zinc-800 px-4 py-1.5 text-[10px] text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#70c82a]/40" />
+                        <button type="button" onClick={() => { const t = chatInput2.trim(); if (t) { chatMessageIdRef2.current += 1; setChatUserMessages2(m => [...m, { id: chatMessageIdRef2.current, text: t }]); setChatInput2('') } }}
+                          className="w-8 h-8 rounded-full bg-[#70c82a] hover:bg-[#5ab523] text-white flex items-center justify-center flex-shrink-0 transition-colors shadow-md">
+                          <Send className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
-                  ))}
+                  </div>
                 </div>
-              )}
-
-              {/* Input + Send */}
-              <div className="border-t border-border dark:border-zinc-800 px-4 sm:px-6 py-3 bg-background dark:bg-zinc-950">
-                <div className="flex gap-2 items-center">
-                  <input
-                    type="text"
-                    placeholder="Ask a follow-up question…"
-                    value={chatInput}
-                    onChange={(e) => setChatInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault()
-                        const text = chatInput.trim()
-                        if (text) {
-                          chatMessageIdRef.current += 1
-                          setChatUserMessages((m) => [...m, { id: chatMessageIdRef.current, text }])
-                          setChatInput('')
-                        }
-                      }
-                    }}
-                    className="flex-1 min-w-0 rounded-xl border border-border dark:border-zinc-700 bg-muted/30 dark:bg-zinc-800/50 px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#70c82a]/50 focus:border-[#70c82a]/50"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const text = chatInput.trim()
-                      if (text) {
-                        chatMessageIdRef.current += 1
-                        setChatUserMessages((m) => [...m, { id: chatMessageIdRef.current, text }])
-                        setChatInput('')
-                      }
-                    }}
-                    className="shrink-0 w-10 h-10 rounded-xl bg-[#70c82a] hover:bg-[#70c82a]/90 text-white flex items-center justify-center transition-colors disabled:opacity-50"
-                    aria-label="Send"
-                  >
-                    <Send className="w-4 h-4" />
-                  </button>
-                </div>
-                <p className="mt-2 text-[10px] sm:text-xs text-muted-foreground text-center">
-                  AI Assistant is in development — your message will receive a &quot;Coming soon&quot; reply.
-                </p>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+
+          </div>
         </div>
       </section>
 
