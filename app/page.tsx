@@ -207,14 +207,14 @@ function EquipmentDescriptionBlock({ text }: { text: string }) {
     ? application.replace(/, and /g, ", ").split(/,\s+/).map((s) => s.trim()).filter(Boolean).slice(0, 4)
     : [];
   return (
-    <div className="space-y-3 text-sm leading-relaxed">
+    <div className="space-y-2 text-sm leading-relaxed">
       <p className="font-bold text-foreground text-base leading-snug">{explanation}</p>
       {application && (
         <div>
           <p className="font-semibold text-foreground/90 underline underline-offset-2 decoration-primary/50 mb-1.5">Application</p>
-          <ul className="space-y-1 ml-1 pl-4 border-l-2 border-primary/30 list-none">
+          <ul className="grid grid-cols-2 gap-x-4 gap-y-1 ml-1 list-none">
             {appItems.map((item, j) => (
-              <li key={j} className="text-muted-foreground flex items-start gap-2">
+              <li key={j} className="text-muted-foreground flex items-start gap-1.5">
                 <span className="text-primary font-bold shrink-0">•</span>
                 <span>{item}</span>
               </li>
@@ -415,36 +415,18 @@ const CommandCenterSection = () => {
   const statusColor = getStatusColor(utilization);
 
   return (
-    <section className="relative py-12 lg:py-16 bg-background dark:bg-zinc-950">
+    <section className="relative py-4 lg:py-6 bg-background dark:bg-zinc-950">
       <div className="container mx-auto px-4 lg:px-8 relative z-10">
-        {/* Cinematic Background Lighting */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <motion.div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] rounded-full blur-[120px] bg-[#70c82a]/10"
-            animate={{
-              opacity: [0.3, 0.6, 0.3],
-            }}
-            transition={{
-              duration: 4,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-          />
-        </div>
-        <div className="mb-12">
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            className="text-4xl md:text-6xl font-bold text-foreground mb-2 tracking-tight"
-          >
+        <div className="mb-2">
+          <h2 className="text-2xl md:text-4xl font-bold text-foreground mb-0.5 tracking-tight">
             <span className="text-[#70c82a]">Equipment Command Center</span>
-          </motion.h2>
-          <p className="text-muted-foreground text-lg md:text-xl font-medium">Every machine. Every detail. One intelligent system.</p>
+          </h2>
+          <p className="text-muted-foreground text-sm md:text-base font-medium">Every machine. Every detail. One intelligent system.</p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="grid lg:grid-cols-2 gap-4 items-center">
           {/* Left: Image Panel */}
-          <div className="relative h-[300px] md:h-[500px] flex items-center justify-center overflow-hidden">
+          <div className="relative h-[250px] md:h-[400px] flex items-center justify-center overflow-hidden">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentCategory.id}
@@ -480,197 +462,106 @@ const CommandCenterSection = () => {
             </AnimatePresence>
           </div>
 
-          {/* Right: Aggregated Data Panel - Attractive & Descriptive */}
-          <div className="relative min-h-[500px] flex flex-col justify-center overflow-visible">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentCategory.id}
-                initial={{ opacity: 0, y: 50 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -50 }}
-                transition={{ duration: 0.9, ease: [0.4, 0, 0.2, 1] }}
-                className="absolute inset-0 space-y-5"
-              >
-                <div className="space-y-2">
-                  <h3 className="text-3xl md:text-4xl font-bold text-foreground tracking-tight leading-tight">{currentCategory.name}</h3>
-                  <p className="text-[#70c82a] font-mono text-base">Fleet Category #{currentCategory.id} of {equipmentCategories.length}</p>
-                  <div className="text-xs sm:text-sm mb-4 p-4 rounded-xl bg-muted/30 border border-border/60 max-h-[220px] overflow-y-auto custom-scrollbar">
-                  <EquipmentDescriptionBlock text={getEquipmentDescription(currentCategory.name)} />
-                </div>
-                </div>
+          {/* Right: Data Panel + Fixed Search & Carousel */}
+          <div className="flex flex-col gap-2">
+            {/* Name + description (changes per category) */}
+            <div className="space-y-1">
+              <h3 className="text-3xl md:text-4xl font-bold text-foreground tracking-tight leading-tight">{currentCategory.name}</h3>
+              <p className="text-[#70c82a] font-mono text-sm">Fleet Category #{currentCategory.id} of {equipmentCategories.length}</p>
+              <div className="text-xs sm:text-sm p-3 rounded-xl bg-muted/30 border border-border/60">
+                <EquipmentDescriptionBlock text={getEquipmentDescription(currentCategory.name)} />
+              </div>
+            </div>
 
-                {/* Main Stats with Icons and Descriptions */}
-                <div className="grid grid-cols-2 gap-3">
-               
-
-                  <motion.div
-                    initial={{ scale: 0.95 }}
-                    animate={{ scale: 1 }}
-                    className="p-3 rounded-xl bg-gradient-to-br from-blue-500/10 to-transparent border border-blue-500/20"
-                  >
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <Truck className="w-4 h-4 text-blue-500" />
-                      <p className="text-xs font-semibold text-muted-foreground">Total Fleet Size</p>
-                    </div>
-                    <div className="text-2xl font-bold text-foreground mb-1">
-                      <AnimatedCounter value={currentCategory.totalQty} duration={1000} />
-                    </div>
-                    <p className="text-[10px] text-muted-foreground leading-tight">Total equipment in this category</p>
-                  </motion.div>
-
-                  <motion.div
-                    initial={{ scale: 0.95 }}
-                    animate={{ scale: 1 }}
-                    className="p-3 rounded-xl bg-gradient-to-br from-amber-500/10 to-transparent border border-amber-500/20"
-                  >
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <Gauge className="w-4 h-4 text-amber-500" />
-                      <p className="text-xs font-semibold text-muted-foreground">Utilization Rate</p>
-                    </div>
-                    <div className="text-2xl font-bold text-amber-500 mb-1">
-                      <AnimatedCounter value={utilization} duration={1000} />%
-                    </div>
-                    <p className="text-[10px] text-muted-foreground leading-tight">Percentage of fleet in use</p>
-                  </motion.div>
-
-                 
-                </div>
-
-
-              </motion.div>
-            </AnimatePresence>
-          </div>
-        </div>
-
-        {/* Scrollable Image Carousel - Small Images with Names */}
-        <div className="mt-6 pt-4 border-t border-border dark:border-zinc-800">
-          {/* Search Bar */}
-          <div className="mb-6 flex justify-center">
-            <div className="relative w-full max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            {/* Fixed search bar (never animates) */}
+            <div className="relative w-full">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
               <input
                 type="text"
                 placeholder="Search equipment categories..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-input dark:bg-zinc-900/50 border border-border dark:border-zinc-700 rounded-lg text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:border-[#70c82a] transition-colors"
+                className="w-full pl-9 pr-3 py-2 bg-input dark:bg-zinc-900/50 border border-border dark:border-zinc-700 rounded-lg text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:border-[#70c82a] transition-colors"
               />
             </div>
-          </div>
 
-          {/* Horizontal Scrollable Image Carousel */}
-          <div className="relative">
-            {/* Left Scroll Button - Always Visible */}
-            <button
-              onClick={() => handleNavigate('left')}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-background/95 dark:bg-zinc-900/95 border border-border dark:border-zinc-700 hover:border-[#70c82a] flex items-center justify-center transition-all hover:bg-muted dark:hover:bg-zinc-800 hover:scale-110 shadow-lg"
-              aria-label="Scroll left"
-            >
-              <ChevronRight className="w-5 h-5 text-muted-foreground hover:text-[#70c82a] rotate-180 transition-colors" />
-            </button>
+            {/* Fixed carousel (never animates) */}
+            <div className="relative">
+              <button
+                onClick={() => handleNavigate('left')}
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-background/95 dark:bg-zinc-900/95 border border-border dark:border-zinc-700 hover:border-[#70c82a] flex items-center justify-center transition-all hover:bg-muted dark:hover:bg-zinc-800 hover:scale-110 shadow-lg"
+                aria-label="Scroll left"
+              >
+                <ChevronRight className="w-4 h-4 text-muted-foreground hover:text-[#70c82a] rotate-180 transition-colors" />
+              </button>
+              <button
+                onClick={() => handleNavigate('right')}
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-background/95 dark:bg-zinc-900/95 border border-border dark:border-zinc-700 hover:border-[#70c82a] flex items-center justify-center transition-all hover:bg-muted dark:hover:bg-zinc-800 hover:scale-110 shadow-lg"
+                aria-label="Scroll right"
+              >
+                <ChevronRight className="w-4 h-4 text-muted-foreground hover:text-[#70c82a] transition-colors" />
+              </button>
 
-            {/* Right Scroll Button - Always Visible */}
-            <button
-              onClick={() => handleNavigate('right')}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-background/95 dark:bg-zinc-900/95 border border-border dark:border-zinc-700 hover:border-[#70c82a] flex items-center justify-center transition-all hover:bg-muted dark:hover:bg-zinc-800 hover:scale-110 shadow-lg"
-              aria-label="Scroll right"
-            >
-              <ChevronRight className="w-5 h-5 text-muted-foreground hover:text-[#70c82a] transition-colors" />
-            </button>
+              <div
+                ref={carouselRef}
+                className="overflow-x-auto overflow-y-hidden scrollbar-hide pb-2 px-10 cursor-grab active:cursor-grabbing select-none"
+                style={{ scrollBehavior: 'smooth' }}
+                onMouseDown={(e) => {
+                  if (!carouselRef.current) return;
+                  setIsDragging(true);
+                  setStartX(e.pageX - carouselRef.current.offsetLeft);
+                  setScrollLeft(carouselRef.current.scrollLeft);
+                }}
+                onMouseLeave={() => setIsDragging(false)}
+                onMouseUp={() => setIsDragging(false)}
+                onMouseMove={(e) => {
+                  if (!isDragging || !carouselRef.current) return;
+                  e.preventDefault();
+                  const x = e.pageX - carouselRef.current.offsetLeft;
+                  const walk = (x - startX) * 2;
+                  carouselRef.current.scrollLeft = scrollLeft - walk;
+                }}
+              >
+                <div className="flex gap-2 min-w-max">
+                  {displayCategories.map((category, index) => {
+                    const actualIndex = equipmentCategories.findIndex(cat => cat.id === category.id);
+                    const isActive = actualIndex === currentIndex;
+                    const categoryUtilization = calculateUtilization(category);
+                    const categoryStatusColor = getStatusColor(categoryUtilization);
 
-            <div
-              ref={carouselRef}
-              className="overflow-x-auto overflow-y-hidden scrollbar-hide pb-4 px-12 cursor-grab active:cursor-grabbing select-none"
-              style={{ scrollBehavior: 'smooth' }}
-              onMouseDown={(e) => {
-                if (!carouselRef.current) return;
-                setIsDragging(true);
-                setStartX(e.pageX - carouselRef.current.offsetLeft);
-                setScrollLeft(carouselRef.current.scrollLeft);
-              }}
-              onMouseLeave={() => {
-                setIsDragging(false);
-              }}
-              onMouseUp={() => {
-                setIsDragging(false);
-              }}
-              onMouseMove={(e) => {
-                if (!isDragging || !carouselRef.current) return;
-                e.preventDefault();
-                const x = e.pageX - carouselRef.current.offsetLeft;
-                const walk = (x - startX) * 2; // Scroll speed multiplier
-                carouselRef.current.scrollLeft = scrollLeft - walk;
-              }}
-            >
-              <div className="flex gap-3 min-w-max justify-center">
-                {displayCategories.map((category, index) => {
-                  const actualIndex = equipmentCategories.findIndex(cat => cat.id === category.id);
-                  const isActive = actualIndex === currentIndex;
-                  const categoryUtilization = calculateUtilization(category);
-                  const categoryStatusColor = getStatusColor(categoryUtilization);
-
-                  return (
-                    <motion.button
-                      key={category.id}
-                      onClick={() => handleSelectCategory(index)}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      whileInView={{ opacity: 1, scale: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: index * 0.02 }}
-                      whileHover={{ scale: 1.05, y: -5 }}
-                      whileTap={{ scale: 0.95 }}
-                      className={`
-                          relative flex flex-col items-center gap-2 w-20 sm:w-24 p-3 rounded-xl border-2 transition-all cursor-pointer flex-shrink-0 group
-                          ${isActive
-                          ? 'bg-[#70c82a]/10 border-[#70c82a] shadow-[0_0_20px_rgba(112,200,42,0.4)] scale-105'
-                          : 'bg-card/50 dark:bg-zinc-900/50 border-border dark:border-zinc-800 hover:border-border/80 dark:hover:border-zinc-700 hover:bg-card/70 dark:hover:bg-zinc-900/70'
-                        }
-                        `}
-                    >
-                      {isActive && (
-                        <motion.div
-                          layoutId="activeCarouselItem"
-                          className="absolute inset-0 bg-[#70c82a]/5 rounded-xl"
-                          transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                        />
-                      )}
-
-                      {/* Status Indicator */}
-                      <div className={`absolute top-1 right-1 w-2.5 h-2.5 rounded-full ${categoryStatusColor} ${isActive ? 'animate-pulse shadow-[0_0_8px_rgba(112,200,42,0.6)]' : ''} z-10`} />
-
-                      {/* Small Image */}
-                      <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-muted dark:bg-zinc-800 border border-border dark:border-zinc-700 group-hover:border-[#70c82a]/50 transition-colors">
-                        <Image
-                          src={category.image}
-                          alt={category.name}
-                          fill
-                          className="object-cover"
-                          sizes="(max-width: 640px) 56px, 64px"
-                          unoptimized
-                        />
-                      </div>
-
-                      {/* Category Name */}
-                      <div className="text-center w-full">
-                        <p className={`text-[10px] sm:text-[11px] font-semibold line-clamp-2 leading-tight ${isActive ? 'text-foreground' : 'text-foreground/80 dark:text-zinc-300 group-hover:text-foreground'}`}>
-                          {category.name}
-                        </p>
-                        <div className={`mt-1 text-[9px] font-bold ${isActive ? 'text-[#70c82a]' : 'text-muted-foreground'}`}>
-                          {categoryUtilization}% · {category.op}/{category.totalQty}
+                    return (
+                      <button
+                        key={category.id}
+                        onClick={() => handleSelectCategory(index)}
+                        className={`relative flex flex-col items-center gap-1.5 w-[72px] p-2 rounded-xl border-2 transition-all cursor-pointer flex-shrink-0 group ${
+                          isActive
+                            ? 'bg-[#70c82a]/10 border-[#70c82a] shadow-[0_0_15px_rgba(112,200,42,0.3)]'
+                            : 'bg-card/50 dark:bg-zinc-900/50 border-border dark:border-zinc-800 hover:border-border/80 dark:hover:border-zinc-700 hover:bg-card/70 dark:hover:bg-zinc-900/70'
+                        }`}
+                      >
+                        <div className={`absolute top-1 right-1 w-2 h-2 rounded-full ${categoryStatusColor} ${isActive ? 'animate-pulse' : ''} z-10`} />
+                        <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-muted dark:bg-zinc-800 border border-border dark:border-zinc-700 group-hover:border-[#70c82a]/50 transition-colors">
+                          <Image
+                            src={category.image}
+                            alt={category.name}
+                            fill
+                            className="object-cover"
+                            sizes="48px"
+                            unoptimized
+                          />
                         </div>
-                      </div>
-
-                      {/* Active Indicator Line */}
-                      {isActive && (
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: "100%" }}
-                          className="absolute bottom-0 left-0 h-0.5 bg-[#70c82a] rounded-full"
-                        />
-                      )}
-                    </motion.button>
-                  );
-                })}
+                        <div className="text-center w-full">
+                          <p className={`text-[9px] font-semibold line-clamp-2 leading-tight ${isActive ? 'text-foreground' : 'text-foreground/70 dark:text-zinc-400 group-hover:text-foreground'}`}>
+                            {category.name}
+                          </p>
+                          <div className={`mt-0.5 text-[8px] font-bold ${isActive ? 'text-[#70c82a]' : 'text-muted-foreground'}`}>
+                            {categoryUtilization}%
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
@@ -1282,7 +1173,7 @@ export default function LandingPage() {
                           </div>
                         </div>
                         <div>
-                          <h3 className="text-base font-bold text-white leading-none">Registered Assets</h3>
+                          <h3 className="text-base font-bold text-white leading-none">Asset Register</h3>
                           <p className="text-[11px] text-zinc-400 mt-1">Fleet overview · Real-time tracking</p>
                         </div>
                       </div>
@@ -1404,7 +1295,7 @@ export default function LandingPage() {
       </section>
 
       {/* ECWC System Overview Video Section */}
-      <section id="system-overview" className="relative py-20 lg:py-32 bg-gradient-to-b from-background via-muted/30 to-background dark:from-background dark:via-zinc-950 dark:to-black overflow-hidden">
+      <section id="system-overview" className="relative py-10 lg:py-14 bg-gradient-to-b from-background via-muted/30 to-background dark:from-background dark:via-zinc-950 dark:to-black overflow-hidden">
         {/* Animated Background */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(112,200,42,0.05),transparent_70%)]" />
         <motion.div
@@ -1421,13 +1312,13 @@ export default function LandingPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
-            className="text-center mb-12"
+            className="text-center mb-6"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#70c82a]/10 text-[#70c82a] text-xs font-bold uppercase tracking-widest mb-6 border border-[#70c82a]/20">
-              <Play className="w-4 h-4" />
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#70c82a]/10 text-[#70c82a] text-xs font-bold uppercase tracking-widest mb-3 border border-[#70c82a]/20">
+              <Play className="w-3.5 h-3.5" />
               System Overview
             </div>
-            <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6">
+            <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold text-foreground">
               <span className="text-[#70c82a]">ECWC Plant Management</span> in Action
             </h2>
 
@@ -1565,7 +1456,7 @@ export default function LandingPage() {
       <CommandCenterSection />
 
       {/* Core Functional Areas - Enterprise Data-Driven */}
-      <section id="features" className="pt-6 pb-12 lg:pt-8 lg:pb-16 bg-background dark:bg-black relative overflow-hidden">
+      <section id="features" className="pt-16 pb-12 lg:pt-24 lg:pb-16 bg-background dark:bg-black relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_15%,rgba(112,200,42,0.08),transparent_55%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_85%,rgba(112,200,42,0.06),transparent_55%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_50%,rgba(112,200,42,0.03),transparent_70%)]" />
@@ -1618,13 +1509,9 @@ export default function LandingPage() {
               className="space-y-8"
             >
               <div className="relative mb-6">
-                <div className="absolute -top-4 -left-2 text-[110px] font-black leading-none text-[#70c82a]/[0.05] select-none pointer-events-none">01</div>
                 <div className="flex items-center gap-4 relative">
                   <div className="relative flex-shrink-0">
-                    <div className="absolute inset-0 rounded-2xl bg-[#70c82a]/30 blur-xl opacity-60" />
-                    <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-[#70c82a]/25 to-[#70c82a]/5 flex items-center justify-center border border-[#70c82a]/40 shadow-lg shadow-[#70c82a]/10">
-                      <HardHat className="w-8 h-8 text-[#70c82a]" />
-                    </div>
+                    <span className="text-6xl md:text-7xl font-black text-muted-foreground/15 leading-none tracking-tighter select-none">01</span>
                   </div>
                   <div>
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#70c82a]/10 text-[#70c82a] text-xs font-bold uppercase tracking-wider mb-2 border border-[#70c82a]/25">
@@ -1831,13 +1718,9 @@ export default function LandingPage() {
               className="order-1 lg:order-2 space-y-8"
             >
               <div className="relative mb-6">
-                <div className="absolute -top-4 -left-2 text-[110px] font-black leading-none text-[#70c82a]/[0.05] select-none pointer-events-none">02</div>
                 <div className="flex items-center gap-4 relative">
                   <div className="relative flex-shrink-0">
-                    <div className="absolute inset-0 rounded-2xl bg-[#70c82a]/30 blur-xl opacity-60" />
-                    <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-[#70c82a]/25 to-[#70c82a]/5 flex items-center justify-center border border-[#70c82a]/40 shadow-lg shadow-[#70c82a]/10">
-                      <Wrench className="w-8 h-8 text-[#70c82a]" />
-                    </div>
+                    <span className="text-6xl md:text-7xl font-black text-muted-foreground/15 leading-none tracking-tighter select-none">02</span>
                   </div>
                   <div>
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#70c82a]/10 text-[#70c82a] text-xs font-bold uppercase tracking-wider mb-2 border border-[#70c82a]/25">
@@ -1906,13 +1789,9 @@ export default function LandingPage() {
               className="space-y-8"
             >
               <div className="relative mb-6">
-                <div className="absolute -top-4 -left-2 text-[110px] font-black leading-none text-[#70c82a]/[0.05] select-none pointer-events-none">03</div>
                 <div className="flex items-center gap-4 relative">
                   <div className="relative flex-shrink-0">
-                    <div className="absolute inset-0 rounded-2xl bg-[#70c82a]/30 blur-xl opacity-60" />
-                    <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-[#70c82a]/25 to-[#70c82a]/5 flex items-center justify-center border border-[#70c82a]/40 shadow-lg shadow-[#70c82a]/10">
-                      <Clock className="w-8 h-8 text-[#70c82a]" />
-                    </div>
+                    <span className="text-6xl md:text-7xl font-black text-muted-foreground/15 leading-none tracking-tighter select-none">03</span>
                   </div>
                   <div>
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#70c82a]/10 text-[#70c82a] text-xs font-bold uppercase tracking-wider mb-2 border border-[#70c82a]/25">
@@ -2127,13 +2006,9 @@ export default function LandingPage() {
               className="order-1 lg:order-2 space-y-8"
             >
               <div className="relative mb-6">
-                <div className="absolute -top-4 -left-2 text-[110px] font-black leading-none text-[#70c82a]/[0.05] select-none pointer-events-none">04</div>
                 <div className="flex items-center gap-4 relative">
                   <div className="relative flex-shrink-0">
-                    <div className="absolute inset-0 rounded-2xl bg-[#70c82a]/30 blur-xl opacity-60" />
-                    <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-[#70c82a]/25 to-[#70c82a]/5 flex items-center justify-center border border-[#70c82a]/40 shadow-lg shadow-[#70c82a]/10">
-                      <Warehouse className="w-8 h-8 text-[#70c82a]" />
-                    </div>
+                    <span className="text-6xl md:text-7xl font-black text-muted-foreground/15 leading-none tracking-tighter select-none">04</span>
                   </div>
                   <div>
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#70c82a]/10 text-[#70c82a] text-xs font-bold uppercase tracking-wider mb-2 border border-[#70c82a]/25">
@@ -2420,13 +2295,9 @@ export default function LandingPage() {
               className="order-1 lg:order-2 space-y-8"
             >
               <div className="relative mb-6">
-                <div className="absolute -top-4 -left-2 text-[110px] font-black leading-none text-[#70c82a]/[0.05] select-none pointer-events-none">05</div>
                 <div className="flex items-center gap-4 relative">
                   <div className="relative flex-shrink-0">
-                    <div className="absolute inset-0 rounded-2xl bg-[#70c82a]/30 blur-xl opacity-60" />
-                    <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-[#70c82a]/25 to-[#70c82a]/5 flex items-center justify-center border border-[#70c82a]/40 shadow-lg shadow-[#70c82a]/10">
-                      <BarChart3 className="w-8 h-8 text-[#70c82a]" />
-                    </div>
+                    <span className="text-6xl md:text-7xl font-black text-muted-foreground/15 leading-none tracking-tighter select-none">05</span>
                   </div>
                   <div>
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#70c82a]/10 text-[#70c82a] text-xs font-bold uppercase tracking-wider mb-2 border border-[#70c82a]/25">

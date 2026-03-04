@@ -26,6 +26,7 @@ import {
   Factory,
   History,
   Megaphone,
+  Database,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
@@ -70,14 +71,14 @@ const navigation: NavItem[] = [
       { name: 'Rate Reference', href: '/rates', icon: BrIcon },
     ],
   },
-  { name: 'Daily Down', href: '/daily-down', icon: FileText },
-  { name: 'Equipment Utilization', href: '/equipment-utilization', icon: FileText },
-  { name: 'Equipment Transfer', href: '/equipment-transfer', icon: FileText },
+  
+  { name: 'Machinery Maintenance', href: '/machinery-maintenance', icon: Wrench },
+  { name: 'Machinery Operations ', href: '/machinery-operations', icon: ClipboardList },
+  { name: 'Equipment Management', href: '/equipment-administration', icon: Settings },
+  { name: 'Common Data', href: '/common-data', icon: Database },
   { name: 'Compound Map', href: '/compound-map', icon: MapPin },
   { name: 'Announcements', href: '/announcements', icon: Megaphone },
   { name: 'Audit Trail', href: '/audit', icon: History },
-
- 
 ];
 
 interface SidebarProps {
@@ -116,7 +117,7 @@ export default function Sidebar({ isCollapsed = false, onToggleCollapse, userPho
   useEffect(() => {
     const parentsToExpand: string[] = [];
     visibleNav.forEach((item) => {
-      if (item.children && pathname?.startsWith(item.href)) {
+      if (item.children && (pathname === item.href || pathname?.startsWith(item.href + '/'))) {
         parentsToExpand.push(item.name);
       }
     });
@@ -176,7 +177,7 @@ export default function Sidebar({ isCollapsed = false, onToggleCollapse, userPho
     if (href === '/') {
       return pathname === '/';
     }
-    return pathname?.startsWith(href);
+    return pathname === href || pathname?.startsWith(href + '/');
   };
 
   return (
