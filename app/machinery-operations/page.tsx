@@ -3,16 +3,19 @@
 import SectionPage from '@/components/SectionPage';
 import type { FormItem } from '@/components/SectionPage';
 import { ClipboardList } from 'lucide-react';
+import EquipmentUtilizationForm from '@/components/forms/EquipmentUtilizationForm';
+import DailyDownForm from '@/components/forms/DailyDownForm';
+import EquipmentTransferForm from '@/components/forms/EquipmentTransferForm';
 
 const FORM_ITEMS: FormItem[] = [
-  { name: 'Daily Machines, Trucks and Vehicles Time Utilization Register', href: '/equipment-utilization/standalone' },
+  { name: 'Daily Machines, Trucks and Vehicles Time Utilization Register', component: <EquipmentUtilizationForm /> },
   { name: 'Daily Dump Trucks Trip Register' },
   { name: 'Daily Full Rented Service Vehicles Register' },
   { name: 'Morning and Evening Service Vehicles Register' },
   { name: 'Daily Machinery Status Register' },
-  { name: 'Down Machinery Daily Status Register', href: '/daily-down/standalone' },
+  { name: 'Down Machinery Daily Status Register', component: <DailyDownForm /> },
   { name: 'Machinery and Service Vehicles Rent Agreement' },
-  { name: 'Equipment Transfer Register', href: '/equipment-transfer/standalone' },
+  { name: 'Equipment Transfer Register', component: <EquipmentTransferForm /> },
   { name: 'Equipment Arrival Register' },
   { name: 'Machines Tyre Replacement Register' },
   { name: 'Equipment Accident Report' },
@@ -28,7 +31,7 @@ const FORM_ITEMS: FormItem[] = [
 export default function MachineryOperationsPage() {
   return (
     <SectionPage
-      title="Machinery Operations Management"
+      title={undefined}
       formItems={FORM_ITEMS}
       icon={<ClipboardList className="h-6 w-6" />}
     />

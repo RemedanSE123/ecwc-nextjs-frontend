@@ -24,10 +24,10 @@ function getDbConfig() {
 
 const pool = new Pool(getDbConfig());
 
-/** Run a query and return rows (compatible with Neon-style usage) */
-export async function query<T = unknown>(text: string, params?: (string | number | null)[]): Promise<T[]> {
+/** Run a query and return rows (compatible with Neon-style usage). Params can include arrays for ANY($n::text[]). */
+export async function query<T = unknown>(text: string, params?: unknown[]): Promise<T[]> {
   try {
-    const result = await pool.query(text, params);
+    const result = await pool.query(text, params as (string | number | null)[] | undefined);
     return (result.rows ?? []) as T[];
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

@@ -138,6 +138,19 @@ export async function fetchAssetFacets(filtersOrGroup?: AssetFilters | string): 
   return res.json();
 }
 
+export interface EquipmentOption {
+  id: string;
+  category: string | null;
+  plate_no: string | null;
+}
+
+export async function fetchEquipmentOptions(projectLocation: string): Promise<EquipmentOption[]> {
+  const params = new URLSearchParams();
+  params.set('project_location', projectLocation);
+  const res = await fetch(`${API_BASE}/api/assets/equipment-options?${params.toString()}`);
+  if (!res.ok) return handleApiError(res, 'Failed to fetch equipment options');
+  return res.json();
+}
 
 export async function fetchAssetCompleteness(filtersOrGroup?: AssetFilters | string): Promise<AssetCompleteness> {
   const params = new URLSearchParams();
