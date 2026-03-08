@@ -33,6 +33,7 @@ export const AUTH_ACCOUNTS: { phone: string; password: string; name: string }[] 
   { phone: '0924700786', password: '786407', name: 'Kassahun Shukera' },
   { phone: '0915980000', password: '598000', name: 'Getu Mekonnen' },
   { phone: '0911909654', password: '190965', name: 'Tariku Mamo' },
+  { phone: '0912233648', password: '233648', name: 'Tokuma Tolcha' },
 ];
 
 /** Phones to notify when asset status changes or asset is edited (in-app announcements) */
@@ -46,14 +47,14 @@ export const NO_OVERVIEW_PHONES = ['0912293712'];
 export const ASSETS_AND_MAP_PHONES = [
   '0927763207', '0921133084', '0980194463',
   '0920795215', '0923953835', '0943190139', '0922789648', '0924700786',
-  '0915980000', '0911909654',
+  '0915980000', '0911909654', '0912233648',
 ];
 
 /** Can only view announcements, not create/send */
 export const ANNOUNCEMENT_VIEW_ONLY_PHONES = [
   '0927763207', '0921133084', '0980194463',
   '0920795215', '0923953835', '0943190139', '0922789648', '0924700786',
-  '0915980000', '0911909654',
+  '0915980000', '0911909654', '0912233648',
 ];
 
 export function canSendAnnouncement(phone: string): boolean {

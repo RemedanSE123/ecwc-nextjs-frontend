@@ -493,7 +493,6 @@ export default function EquipmentUtilizationForm() {
   const [rows, setRows] = useState<UtilRow[]>([newUtilRow()])
   const [recordedBy, setRecordedBy] = useState("")
   const [checkedBy, setCheckedBy] = useState("")
-  const [approvedBy, setApprovedBy] = useState("")
 
   const [projects, setProjects] = useState<string[]>([])
   const [equipmentOptions, setEquipmentOptions] = useState<EquipmentOption[]>([])
@@ -716,8 +715,8 @@ export default function EquipmentUtilizationForm() {
   }
 
   return (
-    <div id="form-print-area" className="w-full min-w-0 mx-auto px-2 py-2 print:max-w-[210mm] print:mx-0 print:p-0 print:overflow-visible print:font-[Arial]">
-      <div ref={pdfRef} className="w-full min-w-0 mx-auto print:max-w-[210mm]">
+    <div id="form-print-area" className="w-full min-w-0 h-full min-h-0 flex flex-col p-0 m-0 px-2 print:max-w-[210mm] print:mx-auto print:p-0 print:overflow-visible print:font-[Arial] print:h-auto print:min-h-0">
+      <div ref={pdfRef} className="w-full min-w-0 flex-1 min-h-0 flex flex-col p-0 m-0 print:flex-none print:min-h-0 print:max-w-[210mm]">
         {/* Preview overlay — report paper format */}
         {previewOpen && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50" role="dialog" aria-modal="true">
@@ -781,31 +780,32 @@ export default function EquipmentUtilizationForm() {
           </div>
         )}
 
-        <Card className="w-full min-w-0 border border-zinc-200 shadow-sm print:shadow-none print:border print:border-black rounded-lg bg-white overflow-hidden flex flex-col min-h-[32rem] max-h-[calc(100vh-7rem)] print:min-h-0 print:max-h-none">
+        <Card className="w-full min-w-0 flex-1 min-h-0 border-0 shadow-none print:shadow-none print:border print:border-black rounded-none bg-white overflow-hidden flex flex-col print:flex-none print:min-h-0 print:max-h-none">
 
           {/* Official document header — 3 columns: logo | titles | doc info */}
           <CardHeader className="p-0 print:border-2 print:border-black shrink-0">
-            <div className="grid grid-cols-[80px_1fr_140px] border-b border-zinc-200 bg-zinc-50/60 print:border-2 print:border-black print:bg-transparent">
-              <div className="border-r border-zinc-200 flex items-center justify-center p-1.5 relative h-14 print:border-black print:h-14 print:p-1">
-                <Image src="/ecwc png logo.png" alt="ECWC Logo" fill className="object-contain p-1" />
+            <div className="grid grid-cols-[90px_1fr_160px] border-b-2 border-slate-900 bg-gradient-to-r from-slate-50 to-slate-100 print:border-2 print:border-black print:bg-transparent">
+              <div className="border-r-2 border-slate-900 flex items-center justify-center p-2 relative h-16 print:border-black print:h-14 print:p-1">
+                <Image src="/ecwc png logo.png" alt="ECWC Logo" fill className="object-contain p-1.5" />
               </div>
-              <div className="border-r border-zinc-200 flex flex-col items-center justify-center py-2 px-3 text-center print:border-black">
-                <p className="text-[11px] font-bold text-zinc-800 tracking-wide print:text-[13px] print:font-bold">ETHIOPIAN CONSTRUCTION WORKS CORPORATION</p>
-                <p className="text-[9px] font-medium text-zinc-500 mt-0.5 print:text-[11px] print:font-semibold print:text-black">EQUIPMENT DAILY TIME UTILIZATION REGISTER</p>
+              <div className="border-r-2 border-slate-900 flex flex-col items-center justify-center py-2.5 px-4 text-center print:border-black">
+                <p className="text-[12px] font-bold text-slate-900 tracking-wide print:text-[13px] print:font-bold">ETHIOPIAN CONSTRUCTION WORKS CORPORATION</p>
+                <p className="text-[10px] font-semibold text-slate-600 mt-1 print:text-[11px] print:font-semibold print:text-black">EQUIPMENT DAILY TIME UTILIZATION REGISTER</p>
               </div>
-              <div className="flex flex-col justify-center pl-3 text-[10px] text-zinc-500 print:text-[10px] print:text-black">
-                <p><b>Document No.</b> OF/ECWC/xxx</p>
+              <div className="flex flex-col justify-center px-4 text-[11px] text-slate-700 print:text-[10px] print:text-black font-medium">
+                <p><b>Document No.</b></p>
+                <p>OF/ECWC/xxx</p>
               </div>
             </div>
           </CardHeader>
 
-          <CardContent className="p-2 sm:p-3 bg-white min-w-0 print:p-6 print:bg-white flex flex-col flex-1 min-h-0 overflow-hidden">
+          <CardContent className="p-0 pb-2 bg-white min-w-0 print:p-6 print:bg-white flex flex-col flex-1 min-h-0 overflow-hidden">
 
             {/* Document info row */}
-            <div className="shrink-0 space-y-2 mb-2">
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <div className="shrink-0 space-y-2 mb-3">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 bg-gradient-to-r from-slate-50 to-slate-100 rounded-lg p-2 border border-slate-200">
               <div className="flex items-center gap-2 flex-1 min-w-0 max-w-full">
-                <Label className="text-xs font-medium text-zinc-600 shrink-0 w-14">Project</Label>
+                <Label className="text-xs font-semibold text-slate-700 shrink-0 w-16">Project</Label>
                 <Select
                   value={header.project || "__none__"}
                   onValueChange={(v) => {
@@ -824,7 +824,7 @@ export default function EquipmentUtilizationForm() {
                     setOpenPlateRowId(null)
                     setPlateSearch("")
                   }}
-                  className="[&_button]:h-8 [&_button]:text-xs [&_button]:px-2 [&_button]:rounded min-w-[320px] flex-1 max-w-[520px]"
+                  className="[&_button]:h-8 [&_button]:text-xs [&_button]:px-2 [&_button]:rounded-lg [&_button]:border-slate-300 [&_button]:hover:bg-slate-50 min-w-[320px] flex-1 max-w-[640px]"
                   disabled={loadingProjects}
                 >
                   <SelectItem value="__none__">Select project...</SelectItem>
@@ -836,16 +836,16 @@ export default function EquipmentUtilizationForm() {
                 </Select>
               </div>
               <div className="flex items-center gap-2">
-                <Label className="text-xs font-medium text-zinc-600 shrink-0">Date</Label>
+                <Label className="text-xs font-semibold text-slate-700 shrink-0">Date</Label>
                 <Input
                   type="date"
-                  className="h-8 border border-zinc-200 rounded px-2 text-xs w-36"
+                  className="h-8 border border-slate-300 rounded-lg px-2 text-xs w-36 focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
                   value={header.gcDate}
                   onChange={(e) => setHeader((p) => ({ ...p, gcDate: e.target.value }))}
                 />
               </div>
               <div className="flex items-center gap-2">
-                <Label className="text-xs font-medium text-zinc-600 shrink-0">Shift</Label>
+                <Label className="text-xs font-semibold text-slate-700 shrink-0">Shift</Label>
                 <Select
                   value={header.shift || "__none__"}
                   onValueChange={(v) =>
@@ -854,7 +854,7 @@ export default function EquipmentUtilizationForm() {
                       shift: (v === "__none__" ? "" : (v as Exclude<ShiftValue, "">)),
                     }))
                   }
-                  className="[&_button]:h-7 [&_button]:text-xs [&_button]:px-2 [&_button]:rounded w-28"
+                  className="[&_button]:h-8 [&_button]:text-xs [&_button]:px-2 [&_button]:rounded-lg [&_button]:border-slate-300 [&_button]:hover:bg-slate-50 w-28"
                 >
                   <SelectItem value="__none__">Select...</SelectItem>
                   <SelectItem value="Day">Day</SelectItem>
@@ -862,73 +862,73 @@ export default function EquipmentUtilizationForm() {
                 </Select>
               </div>
               <div className="flex items-center gap-2">
-                <Label className="text-xs font-medium text-zinc-600 shrink-0">Ref.No.</Label>
-                <Input className="h-7 border border-zinc-200 rounded px-2 text-xs w-24" value={header.refNo} onChange={(e) => setHeader((p) => ({ ...p, refNo: e.target.value }))} />
+                <Label className="text-xs font-semibold text-slate-700 shrink-0">Ref.No.</Label>
+                <Input className="h-8 border border-slate-300 rounded-lg px-2 text-xs w-28 focus:border-slate-500 focus:ring-2 focus:ring-slate-200" value={header.refNo} onChange={(e) => setHeader((p) => ({ ...p, refNo: e.target.value }))} />
               </div>
             </div>
             </div>
 
             {/* Equipment entries — only this section scrolls vertically when rows are many */}
-            <div className="w-full border border-zinc-200 rounded-lg overflow-hidden flex-1 min-h-0 flex flex-col">
+            <div className="w-full border border-slate-300 rounded-xl overflow-hidden flex-1 min-h-0 flex flex-col shadow-md">
               <div className="overflow-auto flex-1 min-h-0">
                 <table className="text-xs border-collapse min-w-[1250px] w-full">
-                  <thead className="sticky top-0 z-[1] bg-zinc-100">
-                    <tr className="bg-zinc-100 border-b border-zinc-200">
-                      <th className="border border-zinc-200 px-1 py-1 text-center font-semibold text-zinc-600 whitespace-nowrap w-8" rowSpan={2}></th>
-                      <th className="border border-zinc-200 px-1.5 py-1 text-center font-semibold text-zinc-600 whitespace-nowrap w-8" rowSpan={2}>No</th>
-                      <th className="border border-zinc-200 px-2 py-1 text-left font-semibold text-zinc-600 whitespace-nowrap min-w-[190px] w-[190px]" rowSpan={2}>Equip Type</th>
-                      <th className="border border-zinc-200 px-2 py-1 text-left font-semibold text-zinc-600 whitespace-nowrap min-w-[120px] w-[120px]" rowSpan={2}>Plate No</th>
-                      <th className="border border-zinc-200 border-l-2 border-l-zinc-300 px-2 py-1 text-center font-semibold text-zinc-600 whitespace-nowrap" colSpan={2}>1st Half Hr</th>
-                      <th className="border border-zinc-200 px-1.5 py-1 text-center font-semibold text-zinc-600 whitespace-nowrap" colSpan={2}>2nd Half Hr</th>
-                      <th className="border border-zinc-200 px-1.5 py-1 text-center font-semibold text-zinc-600 whitespace-nowrap" rowSpan={2}>Worked Hrs</th>
-                      <th className="border border-zinc-200 px-1.5 py-1 text-center font-semibold text-zinc-600 whitespace-nowrap" rowSpan={2}>Idle Hrs</th>
-                      <th className="border border-zinc-200 px-1.5 py-1 text-center font-semibold text-zinc-600 whitespace-nowrap" rowSpan={2}>Idle Reason</th>
-                      <th className="border border-zinc-200 px-1.5 py-1 text-center font-semibold text-zinc-600 whitespace-nowrap" rowSpan={2}>Down Hrs</th>
-                      <th className="border border-zinc-200 px-1.5 py-1 text-center font-semibold text-zinc-600 whitespace-nowrap" rowSpan={2}>Down Reason</th>
-                      <th className="border border-zinc-200 px-1.5 py-1 text-center font-semibold text-zinc-600 whitespace-nowrap" colSpan={3}>Engine Hr/Km</th>
-                      <th className="border border-zinc-200 px-1.5 py-1 text-center font-semibold text-zinc-600 whitespace-nowrap" rowSpan={2}>Fuel in Liters</th>
-                      <th className="border border-zinc-200 px-1.5 py-1 text-center font-semibold text-zinc-600 whitespace-nowrap" rowSpan={2}>Hr/Km Reading</th>
-                      <th className="border border-zinc-200 px-1.5 py-1 text-center font-semibold text-zinc-600 whitespace-nowrap" colSpan={2}>Operator</th>
-                      <th className="border border-zinc-200 px-1.5 py-1 text-center font-semibold text-zinc-600 whitespace-nowrap" rowSpan={2}>Type of Work</th>
+                  <thead className="sticky top-0 z-[1] bg-gradient-to-r from-slate-900 to-slate-800">
+                    <tr className="bg-gradient-to-r from-slate-900 to-slate-800 border-b border-slate-700">
+                      <th className="border border-slate-600 px-1 py-2 text-center font-semibold text-slate-300 whitespace-nowrap w-8" rowSpan={2}></th>
+                      <th className="border border-slate-600 px-1.5 py-2 text-center font-semibold text-slate-300 whitespace-nowrap w-8" rowSpan={2}>No</th>
+                      <th className="border border-slate-600 px-2 py-2 text-left font-semibold text-slate-300 whitespace-nowrap min-w-[190px] w-[190px]" rowSpan={2}>Equip Type</th>
+                      <th className="border border-slate-600 px-2 py-2 text-left font-semibold text-slate-300 whitespace-nowrap min-w-[120px] w-[120px]" rowSpan={2}>Plate No</th>
+                      <th className="border border-slate-600 border-l-2 border-l-blue-400 px-2 py-2 text-center font-semibold text-slate-300 whitespace-nowrap" colSpan={2}>1st Half Hr</th>
+                      <th className="border border-slate-600 px-1.5 py-2 text-center font-semibold text-slate-300 whitespace-nowrap" colSpan={2}>2nd Half Hr</th>
+                      <th className="border border-slate-600 px-1.5 py-2 text-center font-semibold text-slate-300 whitespace-nowrap" rowSpan={2}>Worked Hrs</th>
+                      <th className="border border-slate-600 px-1.5 py-2 text-center font-semibold text-slate-300 whitespace-nowrap" rowSpan={2}>Idle Hrs</th>
+                      <th className="border border-slate-600 px-1.5 py-2 text-center font-semibold text-slate-300 whitespace-nowrap" rowSpan={2}>Idle Reason</th>
+                      <th className="border border-slate-600 px-1.5 py-2 text-center font-semibold text-slate-300 whitespace-nowrap" rowSpan={2}>Down Hrs</th>
+                      <th className="border border-slate-600 px-1.5 py-2 text-center font-semibold text-slate-300 whitespace-nowrap" rowSpan={2}>Down Reason</th>
+                      <th className="border border-slate-600 px-1.5 py-2 text-center font-semibold text-slate-300 whitespace-nowrap" colSpan={3}>Engine Hr/Km</th>
+                      <th className="border border-slate-600 px-1.5 py-2 text-center font-semibold text-slate-300 whitespace-nowrap" rowSpan={2}>Fuel in Liters</th>
+                      <th className="border border-slate-600 px-1.5 py-2 text-center font-semibold text-slate-300 whitespace-nowrap" rowSpan={2}>Hr/Km Reading</th>
+                      <th className="border border-slate-600 px-1.5 py-2 text-center font-semibold text-slate-300 whitespace-nowrap" colSpan={2}>Operator</th>
+                      <th className="border border-slate-600 px-1.5 py-2 text-center font-semibold text-slate-300 whitespace-nowrap" rowSpan={2}>Type of Work</th>
                     </tr>
-                    <tr className="bg-zinc-50 border-b border-zinc-200">
+                    <tr className="bg-slate-800 border-b border-slate-700">
                       <th
-                        className="border border-zinc-200 border-l-2 border-l-zinc-300 px-1 py-0.5 text-center text-zinc-500 whitespace-nowrap"
+                        className="border border-slate-600 border-l-2 border-l-blue-400 px-1 py-1 text-center text-slate-400 whitespace-nowrap"
                         title={!header.shift ? "Select Shift (Day/Night) first, then choose times" : undefined}
                       >
                         <span className="inline-flex items-center gap-1">
                           Start
                           {!header.shift && (
-                            <AlertCircle className="h-3 w-3 text-amber-500" />
+                            <AlertCircle className="h-3 w-3 text-yellow-400" />
                           )}
                         </span>
                       </th>
-                      <th className="border border-zinc-200 px-1 py-0.5 text-center text-zinc-500 whitespace-nowrap">End</th>
-                      <th className="border border-zinc-200 px-1 py-0.5 text-center text-zinc-500 whitespace-nowrap">Start</th>
-                      <th className="border border-zinc-200 px-1 py-0.5 text-center text-zinc-500 whitespace-nowrap">End</th>
-                      <th className="border border-zinc-200 px-1 py-0.5 text-center text-zinc-500 whitespace-nowrap">Initial</th>
-                      <th className="border border-zinc-200 px-1 py-0.5 text-center text-zinc-500 whitespace-nowrap">Final</th>
-                      <th className="border border-zinc-200 px-1 py-0.5 text-center text-zinc-500 whitespace-nowrap">Diff</th>
-                      <th className="border border-zinc-200 px-1 py-0.5 text-center text-zinc-500 whitespace-nowrap">1st Half</th>
-                      <th className="border border-zinc-200 px-1 py-0.5 text-center text-zinc-500 whitespace-nowrap">2nd Half</th>
+                      <th className="border border-slate-600 px-1 py-1 text-center text-slate-400 whitespace-nowrap">End</th>
+                      <th className="border border-slate-600 px-1 py-1 text-center text-slate-400 whitespace-nowrap">Start</th>
+                      <th className="border border-slate-600 px-1 py-1 text-center text-slate-400 whitespace-nowrap">End</th>
+                      <th className="border border-slate-600 px-1 py-1 text-center text-slate-400 whitespace-nowrap">Initial</th>
+                      <th className="border border-slate-600 px-1 py-1 text-center text-slate-400 whitespace-nowrap">Final</th>
+                      <th className="border border-slate-600 px-1 py-1 text-center text-slate-400 whitespace-nowrap">Diff</th>
+                      <th className="border border-slate-600 px-1 py-1 text-center text-slate-400 whitespace-nowrap">1st Half</th>
+                      <th className="border border-slate-600 px-1 py-1 text-center text-slate-400 whitespace-nowrap">2nd Half</th>
                     </tr>
                   </thead>
                   <tbody>
                     {rows.map((row, index) => (
-                      <tr key={row.id} className="bg-white hover:bg-zinc-50/50">
-                        <td className="border border-zinc-200 p-0 text-center align-middle w-8">
+                      <tr key={row.id} className="bg-white hover:bg-slate-50/40 transition-colors">
+                        <td className="border border-slate-200 p-0 text-center align-middle w-8">
                           <Button
                             type="button"
                             variant="ghost"
                             size="icon"
-                            className="h-6 w-6 text-red-400 hover:text-red-600 hover:bg-red-50"
+                            className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-100"
                             onClick={() => removeRow(row.id)}
                             disabled={rows.length <= 1}
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>
                         </td>
-                        <td className="border border-zinc-200 p-0 text-center text-[11px] text-zinc-600 align-middle w-8">
+                        <td className="border border-slate-200 p-0 text-center text-[11px] text-slate-600 align-middle w-8 font-medium">
                           {index + 1}
                         </td>
                         <td className="border border-zinc-200 p-0 min-w-[180px] w-[180px]">
@@ -1166,86 +1166,90 @@ export default function EquipmentUtilizationForm() {
               </div>
             </div>
 
-            {/* Legends - 5 Column Layout with executive-style card */}
-            <div className="shrink-0 mt-3 flex flex-wrap items-start gap-6 rounded-xl border border-zinc-200 bg-zinc-50/70 px-4 py-3">
+            {/* Legends - 5 Column Layout with modern card */}
+            <div className="shrink-0 mt-4 flex flex-wrap items-start gap-6 rounded-xl border border-slate-300 bg-gradient-to-br from-slate-50 to-slate-100 px-5 py-4 shadow-sm">
               {/* Column 1: First 4 Idle Time Reasons */}
               <div className="flex-1 min-w-[140px]">
-                <p className="text-[11px] font-semibold text-zinc-700 uppercase tracking-wide mb-1">Idle Time Reasons</p>
-                <div className="space-y-0.5 text-[11px] text-zinc-600">
+                <p className="text-xs font-bold text-slate-800 uppercase tracking-wide mb-2">Idle Time Reasons</p>
+                <div className="space-y-1 text-xs text-slate-700">
                   {IDLE_REASONS.slice(0, 4).map((r) => (
-                    <p key={r.value}><span className="font-bold text-zinc-700">{r.value}</span> — {r.full}</p>
+                    <p key={r.value}><span className="font-bold text-slate-900">{r.value}</span> — {r.full}</p>
                   ))}
                 </div>
               </div>
               
               {/* Column 2: Next 4 Idle Time Reasons */}
               <div className="flex-1 min-w-[140px]">
-                <p className="text-[11px] font-semibold text-zinc-700 uppercase tracking-wide mb-1">Idle Time Reasons</p>
-                <div className="space-y-0.5 text-[11px] text-zinc-600">
+                <p className="text-xs font-bold text-slate-800 uppercase tracking-wide mb-2">Idle Time Reasons</p>
+                <div className="space-y-1 text-xs text-slate-700">
                   {IDLE_REASONS.slice(4, 8).map((r) => (
-                    <p key={r.value}><span className="font-bold text-zinc-700">{r.value}</span> — {r.full}</p>
+                    <p key={r.value}><span className="font-bold text-slate-900">{r.value}</span> — {r.full}</p>
                   ))}
                 </div>
               </div>
               
               {/* Column 3: Last 4 Idle Time Reasons */}
               <div className="flex-1 min-w-[140px]">
-                <p className="text-[11px] font-semibold text-zinc-700 uppercase tracking-wide mb-1">Idle Time Reasons</p>
-                <div className="space-y-0.5 text-[11px] text-zinc-600">
+                <p className="text-xs font-bold text-slate-800 uppercase tracking-wide mb-2">Idle Time Reasons</p>
+                <div className="space-y-1 text-xs text-slate-700">
                   {IDLE_REASONS.slice(8).map((r) => (
-                    <p key={r.value}><span className="font-bold text-zinc-700">{r.value}</span> — {r.full}</p>
+                    <p key={r.value}><span className="font-bold text-slate-900">{r.value}</span> — {r.full}</p>
                   ))}
                 </div>
               </div>
               
               {/* Column 4: Shifts */}
               <div className="flex-1 min-w-[140px]">
-                <p className="text-[11px] font-semibold text-zinc-700 uppercase tracking-wide mb-1">Shifts</p>
-                <div className="text-[11px] text-zinc-700 space-y-0.5">
+                <p className="text-xs font-bold text-slate-800 uppercase tracking-wide mb-2">Shifts</p>
+                <div className="text-xs text-slate-700 space-y-1">
                   <p>Day — 1st Half: 6:00 AM – 12:00 PM</p>
-                  <p className="ml-8">2nd Half: 12:00 PM – 6:00 PM</p>
+                  <p className="ml-6">2nd Half: 12:00 PM – 6:00 PM</p>
                   <p>Night — 1st Half: 6:00 PM – 12:00 AM</p>
-                  <p className="ml-8">2nd Half: 12:00 AM – 6:00 AM</p>
+                  <p className="ml-6">2nd Half: 12:00 AM – 6:00 AM</p>
                 </div>
               </div>
               
               {/* Column 5: Down Time Reasons */}
               <div className="flex-1 min-w-[140px]">
-                <p className="text-[11px] font-semibold text-zinc-700 uppercase tracking-wide mb-1">Down Time Reasons</p>
-                <div className="space-y-0.5 text-[11px] text-zinc-600">
+                <p className="text-xs font-bold text-slate-800 uppercase tracking-wide mb-2">Down Time Reasons</p>
+                <div className="space-y-1 text-xs text-slate-700">
                   {DOWN_REASONS.map((r) => (
-                    <p key={r.value}><span className="font-bold text-zinc-700">{r.value}</span> — {r.full}</p>
+                    <p key={r.value}><span className="font-bold text-slate-900">{r.value}</span> — {r.full}</p>
                   ))}
                 </div>
               </div>
             </div>
             
-            {/* Full Width Row: Signature Fields */}
-            <div className="shrink-0 mt-3 flex flex-wrap items-start gap-4 pt-3 border-t border-zinc-200">
-              <div className="flex-1 min-w-[300px]">
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="flex items-center gap-2">
-                    <Label className="text-xs font-semibold text-zinc-700 whitespace-nowrap">Recorded by</Label>
-                    <Select value={recordedBy} onValueChange={setRecordedBy} className="flex-1 [&_button]:h-8 [&_button]:text-xs [&_button]:rounded [&_button]:w-full">
+            {/* Full Width Row: Signature Fields — fits within body, no overflow */}
+            <div className="shrink-0 mt-3 w-full min-w-0 pt-3 border-t-2 border-slate-300 overflow-hidden">
+              <div className="w-full min-w-0 max-w-full overflow-hidden">
+                <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3 min-w-0">
+                  <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+                    <Label className="text-xs font-semibold text-slate-700 whitespace-nowrap shrink-0">
+                      Recorded by
+                    </Label>
+                    <Select
+                      value={recordedBy}
+                      onValueChange={setRecordedBy}
+                      className="flex-1 min-w-0 max-w-[50%] [&_button]:h-8 [&_button]:text-xs [&_button]:rounded-lg [&_button]:border-slate-300 [&_button]:w-full [&_button]:min-w-0 [&_button]:max-w-full"
+                    >
                       <SelectItem value="u1">Select...</SelectItem>
                       <SelectItem value="u2">User 1</SelectItem>
                       <SelectItem value="u3">User 2</SelectItem>
                     </Select>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Label className="text-xs font-semibold text-zinc-700 whitespace-nowrap">Checked by</Label>
-                    <Select value={checkedBy} onValueChange={setCheckedBy} className="flex-1 [&_button]:h-8 [&_button]:text-xs [&_button]:rounded [&_button]:w-full">
+                  <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+                    <Label className="text-xs font-semibold text-slate-700 whitespace-nowrap shrink-0">
+                      Checked by
+                    </Label>
+                    <Select
+                      value={checkedBy}
+                      onValueChange={setCheckedBy}
+                      className="flex-1 min-w-0 max-w-[50%] [&_button]:h-8 [&_button]:text-xs [&_button]:rounded-lg [&_button]:border-slate-300 [&_button]:w-full [&_button]:min-w-0 [&_button]:max-w-full"
+                    >
                       <SelectItem value="c1">Select...</SelectItem>
                       <SelectItem value="c2">Supervisor A</SelectItem>
                       <SelectItem value="c3">Supervisor B</SelectItem>
-                    </Select>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Label className="text-xs font-semibold text-zinc-700 whitespace-nowrap">Approved by</Label>
-                    <Select value={approvedBy} onValueChange={setApprovedBy} className="flex-1 [&_button]:h-8 [&_button]:text-xs [&_button]:rounded [&_button]:w-full">
-                      <SelectItem value="a1">Select...</SelectItem>
-                      <SelectItem value="a2">Manager A</SelectItem>
-                      <SelectItem value="a3">Manager B</SelectItem>
                     </Select>
                   </div>
                 </div>
