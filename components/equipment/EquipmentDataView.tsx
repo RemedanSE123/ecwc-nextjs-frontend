@@ -24,6 +24,8 @@ import StatusHistoryModal from './StatusHistoryModal';
 import HeavyVehicleDetailModal from './HeavyVehicleDetailModal';
 import LightVehicleDetailModal from './LightVehicleDetailModal';
 import MachineryDetailModal from './MachineryDetailModal';
+import PlantDetailModal from './PlantDetailModal';
+import AuxGeneratorDetailModal from './AuxGeneratorDetailModal';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Image as ImageIcon, Search, Download, FileSpreadsheet, FileDown, BarChart2, Plus, Pencil, Trash2, ChevronDown, ChevronRight, FileText, LayoutList, RefreshCw, Settings, MapPin, Users, Calendar, History, Truck, Gauge, Box, Building2, Hash, User, Phone, Clock, Copy, Check, Wrench } from 'lucide-react';
@@ -32,6 +34,8 @@ import { SLUG_TO_DB_CATEGORY, EQUIPMENT_CATEGORIES } from '@/types/asset';
 const HEAVY_VEHICLE_CATEGORY = SLUG_TO_DB_CATEGORY['heavy-vehicles']; // 'Heavy Vehicle'
 const LIGHT_VEHICLE_CATEGORY = SLUG_TO_DB_CATEGORY['light-vehicles']; // 'Light Vehicles & Bus'
 const MACHINERY_CATEGORY = SLUG_TO_DB_CATEGORY['machinery']; // 'Machinery'
+const PLANT_CATEGORY = SLUG_TO_DB_CATEGORY['plant-equipment']; // 'Plant'
+const AUXILIARY_CATEGORY = SLUG_TO_DB_CATEGORY['auxiliary-equipment']; // 'Auxillary'
 import { BLANK_FILTER_VALUE } from '@/lib/api/assets';
 import { deleteAsset } from '@/lib/api/assets';
 
@@ -180,9 +184,12 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
   const [heavyVehicleDetailAssetId, setHeavyVehicleDetailAssetId] = useState<string | null>(null);
   const [lightVehicleDetailAssetId, setLightVehicleDetailAssetId] = useState<string | null>(null);
   const [machineryDetailAssetId, setMachineryDetailAssetId] = useState<string | null>(null);
+  const [plantDetailAssetId, setPlantDetailAssetId] = useState<string | null>(null);
+  const [auxGeneratorDetailAssetId, setAuxGeneratorDetailAssetId] = useState<string | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [headerSearch, setHeaderSearch] = useState(filters.search ?? '');
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const headerSearchRef = useRef(filters);
   headerSearchRef.current = filters;
   const loadMoreSentinelRef = useRef<HTMLDivElement>(null);
@@ -207,6 +214,12 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
   useEffect(() => {
     if ((filters.search ?? '') !== headerSearch) setHeaderSearch(filters.search ?? '');
   }, [filters.search]);
+
+  useEffect(() => {
+    if (!successMessage) return;
+    const t = setTimeout(() => setSuccessMessage(null), 3000);
+    return () => clearTimeout(t);
+  }, [successMessage]);
 
   useEffect(() => {
     const isLoadMore = useInfiniteScroll && (filters.page ?? 1) > 1;
@@ -938,7 +951,7 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
                                           <History className="h-3.5 w-3.5" />
                                           Status History
                                         </Button>
-                                        {((a.category ?? '') === HEAVY_VEHICLE_CATEGORY || (a.category ?? '') === LIGHT_VEHICLE_CATEGORY || (a.category ?? '') === MACHINERY_CATEGORY) && (
+                                        {((a.category ?? '') === HEAVY_VEHICLE_CATEGORY || (a.category ?? '') === LIGHT_VEHICLE_CATEGORY || (a.category ?? '') === MACHINERY_CATEGORY || (a.category ?? '') === PLANT_CATEGORY) && (
                                           <Button
                                             variant="outline"
                                             className="gap-1.5 h-9 border-[#0d5c32]/40 text-[#0d5c32] dark:text-emerald-400 hover:bg-[#0d5c32]/10 dark:hover:bg-[#0d5c32]/20 font-medium text-xs rounded-md transition-all duration-200"
@@ -948,10 +961,23 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
                                               if (cat === HEAVY_VEHICLE_CATEGORY) setHeavyVehicleDetailAssetId(a.id);
                                               else if (cat === LIGHT_VEHICLE_CATEGORY) setLightVehicleDetailAssetId(a.id);
                                               else if (cat === MACHINERY_CATEGORY) setMachineryDetailAssetId(a.id);
+                                              else if (cat === PLANT_CATEGORY) setPlantDetailAssetId(a.id);
                                             }}
                                           >
                                             {(a.category ?? '') === MACHINERY_CATEGORY ? <Wrench className="h-3.5 w-3.5" /> : <Truck className="h-3.5 w-3.5" />}
                                             View Detail
+                                          </Button>
+                                        )}
+                                        {(a.category ?? '') === AUXILIARY_CATEGORY && (a.description ?? '').toLowerCase().includes('generator') && (
+                                          <Button
+                                            variant="outline"
+                                            className="gap-1.5 h-9 border-[#0d5c32]/40 text-[#0d5c32] dark:text-emerald-400 hover:bg-[#0d5c32]/10 dark:hover:bg-[#0d5c32]/20 font-medium text-xs rounded-md transition-all duration-200"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setAuxGeneratorDetailAssetId(a.id);
+                                            }}
+                                          >
+                                            Generator Rate
                                           </Button>
                                         )}
                                       </div>
@@ -1045,6 +1071,20 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
         />
       )}
 
+      {plantDetailAssetId && (
+        <PlantDetailModal
+          assetId={plantDetailAssetId}
+          onClose={() => setPlantDetailAssetId(null)}
+        />
+      )}
+
+      {auxGeneratorDetailAssetId && (
+        <AuxGeneratorDetailModal
+          assetId={auxGeneratorDetailAssetId}
+          onClose={() => setAuxGeneratorDetailAssetId(null)}
+        />
+      )}
+
       {showCreateModal && (
         <AssetFormModal
           defaultCategory={defaultCategory}
@@ -1052,6 +1092,7 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
           onSuccess={() => {
             refetch();
             setShowCreateModal(false);
+            setSuccessMessage('Asset created successfully.');
           }}
           onClose={() => setShowCreateModal(false)}
         />
@@ -1066,9 +1107,19 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
           onSuccess={() => {
             refetch();
             setEditAsset(null);
+            setSuccessMessage('Asset updated successfully.');
           }}
           onClose={() => setEditAsset(null)}
         />
+      )}
+
+      {successMessage && (
+        <div className="fixed bottom-4 right-4 z-[10000]">
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 shadow-md text-sm text-emerald-800">
+            <span className="font-semibold">Success: </span>
+            {successMessage}
+          </div>
+        </div>
       )}
     </div>
   );

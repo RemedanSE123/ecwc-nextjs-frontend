@@ -141,7 +141,9 @@ export async function fetchAssetFacets(filtersOrGroup?: AssetFilters | string): 
 export interface EquipmentOption {
   id: string;
   category: string | null;
+  description: string | null;
   plate_no: string | null;
+  status: string | null;
 }
 
 export async function fetchEquipmentOptions(projectLocation: string): Promise<EquipmentOption[]> {
@@ -211,6 +213,9 @@ export interface HeavyVehicleDetails {
   battery_capacity: string | null;
   insurance_coverage: string | null;
   bolo_renewal_date: string | null;
+  rate_op: number | null;
+  rate_idle: number | null;
+  rate_down: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -242,6 +247,9 @@ export interface LightVehicleDetails {
   battery_capacity: string | null;
   insurance_coverage: string | null;
   bolo_renewal_date: string | null;
+  rate_op: number | null;
+  rate_idle: number | null;
+  rate_down: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -271,6 +279,9 @@ export interface MachineryDetails {
   libre: boolean | null;
   tire_size: string | null;
   battery_capacity: string | null;
+  rate_op: number | null;
+  rate_idle: number | null;
+  rate_down: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -287,6 +298,133 @@ export async function fetchMachineryDetails(assetId: string): Promise<VehicleDet
   } catch (err) {
     return { data: null, error: err instanceof Error ? err.message : 'Failed to fetch machinery details' };
   }
+}
+
+export async function updateHeavyVehicleRates(assetId: string, payload: { rate_op: number | null; rate_idle: number | null; rate_down: number | null }): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/assets/${encodeURIComponent(assetId)}/heavy-vehicle-details`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) await handleApiError(res, 'Failed to update heavy vehicle rates');
+}
+
+export async function updateLightVehicleRates(assetId: string, payload: { rate_op: number | null; rate_idle: number | null; rate_down: number | null }): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/assets/${encodeURIComponent(assetId)}/light-vehicle-details`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) await handleApiError(res, 'Failed to update light vehicle rates');
+}
+
+export async function updateMachineryRates(assetId: string, payload: { rate_op: number | null; rate_idle: number | null; rate_down: number | null }): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/assets/${encodeURIComponent(assetId)}/machinery-details`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) await handleApiError(res, 'Failed to update machinery rates');
+}
+
+export async function updateHeavyVehicleSpecs(
+  assetId: string,
+  payload: Omit<HeavyVehicleDetails, 'asset_id' | 'created_at' | 'updated_at'>
+): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/assets/${encodeURIComponent(assetId)}/heavy-vehicle-details`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) await handleApiError(res, 'Failed to update heavy vehicle specs');
+}
+
+export async function updateLightVehicleSpecs(
+  assetId: string,
+  payload: Omit<LightVehicleDetails, 'asset_id' | 'created_at' | 'updated_at'>
+): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/assets/${encodeURIComponent(assetId)}/light-vehicle-details`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) await handleApiError(res, 'Failed to update light vehicle specs');
+}
+
+export async function updateMachinerySpecs(
+  assetId: string,
+  payload: Omit<MachineryDetails, 'asset_id' | 'created_at' | 'updated_at'>
+): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/assets/${encodeURIComponent(assetId)}/machinery-details`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) await handleApiError(res, 'Failed to update machinery specs');
+}
+
+export interface PlantDetails {
+  asset_id: string;
+  rate_op: number | null;
+  rate_idle: number | null;
+  rate_down: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function fetchPlantDetails(assetId: string): Promise<VehicleDetailsResult<PlantDetails>> {
+  try {
+    const res = await fetch(`${API_BASE}/api/assets/${encodeURIComponent(assetId)}/plant-details`);
+    const body = await res.json().catch(() => null);
+    if (!res.ok) {
+      const msg = (body && (body.detail || body.error)) || res.statusText || 'Failed to fetch plant details';
+      return { data: null, error: msg };
+    }
+    return { data: body ?? null, error: null };
+  } catch (err) {
+    return { data: null, error: err instanceof Error ? err.message : 'Failed to fetch plant details' };
+  }
+}
+
+export async function updatePlantRates(assetId: string, payload: { rate_op: number | null; rate_idle: number | null; rate_down: number | null }): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/assets/${encodeURIComponent(assetId)}/plant-details`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) await handleApiError(res, 'Failed to update plant rates');
+}
+
+export interface AuxGeneratorDetails {
+  asset_id: string;
+  rate_op: number | null;
+  rate_idle: number | null;
+  rate_down: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function fetchAuxGeneratorDetails(assetId: string): Promise<VehicleDetailsResult<AuxGeneratorDetails>> {
+  try {
+    const res = await fetch(`${API_BASE}/api/assets/${encodeURIComponent(assetId)}/aux-generator-details`);
+    const body = await res.json().catch(() => null);
+    if (!res.ok) {
+      const msg = (body && (body.detail || body.error)) || res.statusText || 'Failed to fetch auxiliary generator details';
+      return { data: null, error: msg };
+    }
+    return { data: body ?? null, error: null };
+  } catch (err) {
+    return { data: null, error: err instanceof Error ? err.message : 'Failed to fetch auxiliary generator details' };
+  }
+}
+
+export async function updateAuxGeneratorRates(assetId: string, payload: { rate_op: number | null; rate_idle: number | null; rate_down: number | null }): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/assets/${encodeURIComponent(assetId)}/aux-generator-details`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) await handleApiError(res, 'Failed to update generator rates');
 }
 
 export interface StatusTrendPoint {

@@ -28,6 +28,14 @@ const ACTIONS = [
   { value: 'asset_update', label: 'Asset update' },
   { value: 'asset_delete', label: 'Asset delete' },
   { value: 'asset_upload', label: 'Asset upload' },
+  { value: 'heavy_vehicle_details_update', label: 'Heavy vehicle details update' },
+  { value: 'heavy_vehicle_rates_update', label: 'Heavy vehicle rate update' },
+  { value: 'light_vehicle_details_update', label: 'Light vehicle details update' },
+  { value: 'light_vehicle_rates_update', label: 'Light vehicle rate update' },
+  { value: 'machinery_details_update', label: 'Machinery details update' },
+  { value: 'machinery_rates_update', label: 'Machinery rate update' },
+  { value: 'plant_rates_update', label: 'Plant rate update' },
+  { value: 'aux_generator_rates_update', label: 'Auxiliary generator rate update' },
 ];
 
 const ENTITY_TYPES = [
@@ -101,10 +109,21 @@ function getActionBadgeClass(action: string): string {
 }
 
 const DETAIL_KEY_ORDER = [
-  'asset_id', 'deleted_id', 'filename', 'key',
-  'previous_data', 'updated_data', 'changes', 'changed_fields',
-  'created_fields', 'deleted_asset', 'asset_snapshot',
-  'reason', 'description',
+  'asset_id',
+  'section',
+  'deleted_id',
+  'filename',
+  'key',
+  'previous_data',
+  'updated_data',
+  'changes',
+  'changed_fields',
+  'updated_fields',
+  'created_fields',
+  'deleted_asset',
+  'asset_snapshot',
+  'reason',
+  'description',
 ];
 
 /** Format details object as readable key-value lines (human-friendly) */
@@ -142,10 +161,12 @@ const FIELD_LABELS: Record<string, string> = {
   created_fields: 'Created asset (all values)',
   previous_data: 'Previous data (before edit)',
   updated_data: 'Updated data (after edit)',
+  updated_fields: 'Updated fields',
   deleted_asset: 'Deleted asset (all values)',
   deleted_id: 'Deleted asset ID',
   asset_snapshot: 'Which asset (at time of upload)',
   asset_id: 'Asset ID',
+  section: 'Section',
   key: 'File key',
   filename: 'Filename',
   image_s3_key: 'Image',
@@ -160,6 +181,22 @@ const FIELD_LABELS: Record<string, string> = {
   ownership: 'Ownership',
   remark: 'Remark',
   id: 'ID',
+  // Heavy / light / machinery detail fields + rates
+  plate_no: 'Plate number',
+  chassis_serial_no: 'Chassis / serial number',
+  engine_make: 'Engine make',
+  engine_model: 'Engine model',
+  engine_serial_no: 'Engine serial number',
+  capacity: 'Capacity',
+  manuf_year: 'Manufacturing year',
+  libre: 'Libre',
+  tire_size: 'Tire size',
+  battery_capacity: 'Battery capacity',
+  insurance_coverage: 'Insurance coverage',
+  bolo_renewal_date: 'Bolo renewal date',
+  rate_op: 'Rate/hr (OP) Birr',
+  rate_idle: 'Rate/hr (Idle) Birr',
+  rate_down: 'Rate/hr (Down) Birr',
 };
 
 function emptyLabel(val: string | null): string {
@@ -197,6 +234,73 @@ function renderAssetData(data: Record<string, unknown>): ReactNode {
   );
 }
 
+/** Special layout for asset_update: show previous vs updated asset data side by side, then changed fields. */
+function renderAssetUpdateDetails(details: Record<string, unknown> | null): ReactNode {
+  if (!details || typeof details !== 'object') {
+    return <p className="text-sm text-muted-foreground">— No extra details</p>;
+  }
+  const anyDetails = details as any;
+  const previous = (anyDetails.previous_data as Record<string, unknown> | undefined) ?? null;
+  const updated = (anyDetails.updated_data as Record<string, unknown> | undefined) ?? null;
+  const changes = (anyDetails.changes as Array<{ field?: string; from?: string | null; to?: string | null }> | undefined) ?? [];
+
+  const hasPrevious = previous && typeof previous === 'object' && Object.keys(previous).length > 0;
+  const hasUpdated = updated && typeof updated === 'object' && Object.keys(updated).length > 0;
+
+  return (
+    <div className="space-y-4">
+      {(hasPrevious || hasUpdated) && (
+        <div className="grid gap-4 md:grid-cols-2">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
+              Previous asset values
+            </p>
+            {hasPrevious ? (
+              renderAssetData(previous!)
+            ) : (
+              <p className="text-sm text-muted-foreground">—</p>
+            )}
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
+              Updated asset values
+            </p>
+            {hasUpdated ? (
+              renderAssetData(updated!)
+            ) : (
+              <p className="text-sm text-muted-foreground">—</p>
+            )}
+          </div>
+        </div>
+      )}
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">
+          Changed fields (from → to)
+        </p>
+        {changes && changes.length > 0 ? (
+          formatDetailValue('changes', changes)
+        ) : (
+          <p className="text-sm text-muted-foreground">No individual field changes recorded.</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function isAssetFieldUpdateAction(action: string): boolean {
+  return (
+    action === 'asset_update' ||
+    action === 'heavy_vehicle_details_update' ||
+    action === 'heavy_vehicle_rates_update' ||
+    action === 'light_vehicle_details_update' ||
+    action === 'light_vehicle_rates_update' ||
+    action === 'machinery_details_update' ||
+    action === 'machinery_rates_update' ||
+    action === 'plant_rates_update' ||
+    action === 'aux_generator_rates_update'
+  );
+}
+
 /** Render one detail value for display (handles changes, created_fields, changed_fields) */
 function formatDetailValue(key: string, v: unknown): ReactNode {
   if (key === 'changes' && Array.isArray(v)) {
@@ -214,6 +318,30 @@ function formatDetailValue(key: string, v: unknown): ReactNode {
               <span className="break-words">
                 Changed from <strong>{emptyLabel(from)}</strong> to <strong>{emptyLabel(to)}</strong>
               </span>
+            </li>
+          );
+        })}
+      </ul>
+    );
+  }
+  if (key === 'updated_fields' && v !== null && typeof v === 'object' && !Array.isArray(v)) {
+    const obj = v as Record<string, unknown>;
+    const entries = Object.entries(obj);
+    if (!entries.length) return <span className="text-muted-foreground">—</span>;
+    return (
+      <ul className="list-none space-y-1.5 mt-1 text-sm">
+        {entries.map(([field, value]) => {
+          const label = FIELD_LABELS[field] ?? formatDetailKey(field);
+          const valStr =
+            value === null || value === undefined || value === ''
+              ? '—'
+              : typeof value === 'object'
+                ? JSON.stringify(value)
+                : String(value);
+          return (
+            <li key={field} className="flex flex-wrap gap-x-2 gap-y-0.5">
+              <span className="font-medium text-muted-foreground shrink-0">{label}:</span>
+              <span className="break-all">{valStr}</span>
             </li>
           );
         })}
@@ -317,6 +445,7 @@ export default function AuditPage() {
   const [action, setAction] = useState('');
   const [entityType, setEntityType] = useState('');
   const [sessionIdFilter, setSessionIdFilter] = useState('');
+  const [assetIdFilter, setAssetIdFilter] = useState('');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [sort, setSort] = useState('created_at_desc');
@@ -335,12 +464,22 @@ export default function AuditPage() {
   const fromDateInputRef = useRef<HTMLInputElement>(null);
   const toDateInputRef = useRef<HTMLInputElement>(null);
 
-  const hasActiveFilters = !!(userPhone || action || entityType || sessionIdFilter || fromDate || toDate || sort !== 'created_at_desc');
+  const hasActiveFilters = !!(
+    userPhone ||
+    action ||
+    entityType ||
+    sessionIdFilter ||
+    assetIdFilter ||
+    fromDate ||
+    toDate ||
+    sort !== 'created_at_desc'
+  );
   const clearFilters = () => {
     setUserPhone('');
     setAction('');
     setEntityType('');
     setSessionIdFilter('');
+    setAssetIdFilter('');
     setFromDate('');
     setToDate('');
     setSort('created_at_desc');
@@ -354,6 +493,7 @@ export default function AuditPage() {
     if (action) params.set('action', action);
     if (entityType) params.set('entity_type', entityType);
     if (sessionIdFilter) params.set('session_id', sessionIdFilter);
+    if (assetIdFilter) params.set('entity_id', assetIdFilter);
     if (fromDate && fromDate.trim()) {
       const from = new Date(fromDate.trim());
       if (!isNaN(from.getTime())) params.set('from_date', from.toISOString());
@@ -376,7 +516,7 @@ export default function AuditPage() {
     } finally {
       setLoading(false);
     }
-  }, [userPhone, action, entityType, sessionIdFilter, fromDate, toDate, page, limit, sort]);
+  }, [userPhone, action, entityType, sessionIdFilter, assetIdFilter, fromDate, toDate, page, limit, sort]);
 
   useEffect(() => {
     fetchAudit();
@@ -472,6 +612,15 @@ export default function AuditPage() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="min-w-0 space-y-2 p-3 rounded-lg bg-background/60 dark:bg-muted/20 border border-border/60 hover:border-[#16A34A]/30 transition-colors">
+                <Label className="text-xs font-medium text-foreground">Asset ID</Label>
+                <Input
+                  placeholder="Paste asset ID to filter"
+                  value={assetIdFilter}
+                  onChange={(e) => setAssetIdFilter(e.target.value.trim())}
+                  className="h-9 font-mono text-xs rounded-md border-border/80 focus-visible:ring-2 focus-visible:ring-[#16A34A]/30 focus-visible:border-[#16A34A]"
+                />
               </div>
               <div className="min-w-0 space-y-2 p-3 rounded-lg bg-background/60 dark:bg-muted/20 border border-border/60 hover:border-[#16A34A]/30 transition-colors">
                 <Label className="text-xs font-medium text-foreground">Action</Label>
@@ -777,14 +926,14 @@ export default function AuditPage() {
         {/* Detail flow popup — click any row to see full flow */}
         {selectedRow && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
             onClick={() => setSelectedRow(null)}
             role="dialog"
             aria-modal="true"
             aria-label="Audit record details"
           >
             <Card
-              className="w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col shadow-2xl border-2 border-emerald-200/50 dark:border-emerald-800/50"
+              className="w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl border-2 border-emerald-200/50 dark:border-emerald-800/50"
               onClick={(e) => e.stopPropagation()}
             >
               <CardHeader className="flex flex-row items-start justify-between gap-4 border-b border-border/60 bg-gradient-to-r from-emerald-50/80 to-teal-50/50 dark:from-emerald-950/40 dark:to-teal-950/30 pb-4">
@@ -867,11 +1016,15 @@ export default function AuditPage() {
                   )}
                   <div className="rounded-xl border border-border/60 bg-card p-3 shadow-sm">
                     <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Details</p>
-                    {selectedRow.details && typeof selectedRow.details === 'object' && Object.keys(selectedRow.details).length > 0 ? (
-                      formatDetails(selectedRow.details)
-                    ) : (
-                      <p className="text-sm text-muted-foreground">— No extra details</p>
-                    )}
+                    {isAssetFieldUpdateAction(selectedRow.action)
+                      ? renderAssetUpdateDetails(
+                          selectedRow.details && typeof selectedRow.details === 'object'
+                            ? (selectedRow.details as Record<string, unknown>)
+                            : null
+                        )
+                      : selectedRow.details && typeof selectedRow.details === 'object' && Object.keys(selectedRow.details).length > 0
+                        ? formatDetails(selectedRow.details)
+                        : <p className="text-sm text-muted-foreground">— No extra details</p>}
                   </div>
                 </div>
               </CardContent>

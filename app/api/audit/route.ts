@@ -68,6 +68,10 @@ export async function GET(request: NextRequest) {
     const action = searchParams.get('action')?.trim();
     const entity_type = searchParams.get('entity_type')?.trim();
     const session_id = searchParams.get('session_id')?.trim();
+    const entity_id =
+      searchParams.get('entity_id')?.trim() ||
+      searchParams.get('asset_id')?.trim() ||
+      undefined;
     const from_date = searchParams.get('from_date')?.trim();
     const to_date = searchParams.get('to_date')?.trim();
     const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
@@ -82,6 +86,11 @@ export async function GET(request: NextRequest) {
     if (session_id) {
       conditions.push(`session_id = $${idx}`);
       params.push(session_id);
+      idx++;
+    }
+    if (entity_id) {
+      conditions.push(`entity_id = $${idx}`);
+      params.push(entity_id);
       idx++;
     }
     if (user_phone) {

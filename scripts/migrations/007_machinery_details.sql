@@ -10,6 +10,9 @@ CREATE TABLE IF NOT EXISTS machinery_details (
     libre BOOLEAN,
     tire_size TEXT,
     battery_capacity TEXT,
+    rate_op NUMERIC(12, 2),
+    rate_idle NUMERIC(12, 2),
+    rate_down NUMERIC(12, 2),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );

@@ -91,7 +91,6 @@ export default function AssetFormModal({
             categoryGroup={categoryGroup}
             onSuccess={(a) => {
               onSuccess(a);
-              onClose();
             }}
             onCancel={onClose}
           />

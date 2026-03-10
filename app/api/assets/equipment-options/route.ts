@@ -3,7 +3,7 @@ import { query } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
-/** Only these categories are shown in equipment utilization (Machinery, Heavy Vehicle, Light Vehicles & Bus). */
+/** Only Machinery, Heavy Vehicle, Light Vehicles & Bus — in that order. */
 const UTILIZATION_CATEGORIES = ['Machinery', 'Heavy Vehicle', 'Light Vehicles & Bus'];
 
 function getErrorMessage(err: unknown): string {
@@ -26,17 +26,25 @@ export async function GET(request: NextRequest) {
       LEFT JOIN heavy_vehicle_details hvd ON am.id = hvd.asset_id
       LEFT JOIN light_vehicle_details lvd ON am.id = lvd.asset_id
       LEFT JOIN machinery_details md ON am.id = md.asset_id`;
-    const sql = `SELECT am.id, am.category, COALESCE(hvd.plate_no, lvd.plate_no, md.plate_no) AS plate_no
+    const sql = `SELECT am.id, am.category, am.description, am.status,
+      COALESCE(hvd.plate_no, lvd.plate_no, md.plate_no) AS plate_no
       FROM ${fromJoin}
       WHERE am.project_location = $1 AND am.category = ANY($2::text[])
-      ORDER BY am.category ASC NULLS LAST, plate_no ASC NULLS LAST
+      ORDER BY CASE am.category
+        WHEN 'Machinery' THEN 1
+        WHEN 'Heavy Vehicle' THEN 2
+        WHEN 'Light Vehicles & Bus' THEN 3
+        ELSE 4
+      END, plate_no ASC NULLS LAST
       LIMIT 2000`;
-    const rows = await query<{ id: string; category: string | null; plate_no: string | null }>(sql, [projectLocation, UTILIZATION_CATEGORIES]);
+    const rows = await query<{ id: string; category: string | null; description: string | null; status: string | null; plate_no: string | null }>(sql, [projectLocation, UTILIZATION_CATEGORIES]);
 
     const data = (rows ?? []).map((r) => ({
       id: String(r.id),
       category: r.category != null ? String(r.category) : null,
+      description: r.description != null ? String(r.description) : null,
       plate_no: r.plate_no != null ? String(r.plate_no) : null,
+      status: r.status != null ? String(r.status) : null,
     }));
 
     return NextResponse.json(data);

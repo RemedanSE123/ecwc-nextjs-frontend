@@ -123,15 +123,17 @@ export async function PATCH(
     }
     const previous_data = toPlain(current);
     const updated_data = toPlain(rows[0]);
-    await insertAuditLog({
-      user_phone: user.phone,
-      user_name: user.name,
-      action: 'asset_update',
-      entity_type: 'asset',
-      entity_id: id,
-      details: { asset_id: id, previous_data, updated_data, changes },
-      session_id: getSessionIdFromRequest(request),
-    });
+    if (changes.length > 0) {
+      await insertAuditLog({
+        user_phone: user.phone,
+        user_name: user.name,
+        action: 'asset_update',
+        entity_type: 'asset',
+        entity_id: id,
+        details: { asset_id: id, previous_data, updated_data, changes },
+        session_id: getSessionIdFromRequest(request),
+      });
+    }
     const statusChange = changes.find((c) => c.field === 'status');
     if (statusChange) {
       await query(

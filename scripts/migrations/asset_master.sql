@@ -28,3 +28,21 @@ CREATE INDEX idx_asset_master_status ON asset_master (status);
 CREATE INDEX idx_asset_master_responsible_person_pno ON asset_master (responsible_person_pno);
 CREATE INDEX idx_asset_master_serial_no ON asset_master (serial_no);
 CREATE INDEX idx_asset_master_ownership ON asset_master (ownership);
+
+
+
+ALTER TABLE asset_master
+ADD COLUMN detail_location TEXT;
+
+
+-- 1️⃣ Rename project_location to temp
+ALTER TABLE asset_master
+RENAME COLUMN project_location TO temp_location;
+
+-- 2️⃣ Rename detail_location to project_location
+ALTER TABLE asset_master
+RENAME COLUMN detail_location TO project_location;
+
+-- 3️⃣ Rename temp_location to detail_location
+ALTER TABLE asset_master
+RENAME COLUMN temp_location TO detail_location;

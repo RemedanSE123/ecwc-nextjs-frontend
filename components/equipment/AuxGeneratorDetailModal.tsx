@@ -3,10 +3,10 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
-import { X, Wrench, Hash, Calendar, Battery, FileText, Truck, Settings } from 'lucide-react';
-import { fetchMachineryDetails, type MachineryDetails } from '@/lib/api/assets';
+import { X, Zap } from 'lucide-react';
+import { fetchAuxGeneratorDetails, type AuxGeneratorDetails } from '@/lib/api/assets';
 
-interface MachineryDetailModalProps {
+interface AuxGeneratorDetailModalProps {
   assetId: string;
   onClose: () => void;
 }
@@ -34,8 +34,8 @@ function DetailRow({ icon: Icon, label, value }: { icon: React.ComponentType<{ c
   );
 }
 
-export default function MachineryDetailModal({ assetId, onClose }: MachineryDetailModalProps) {
-  const [details, setDetails] = useState<MachineryDetails | null>(null);
+export default function AuxGeneratorDetailModal({ assetId, onClose }: AuxGeneratorDetailModalProps) {
+  const [details, setDetails] = useState<AuxGeneratorDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -50,7 +50,7 @@ export default function MachineryDetailModal({ assetId, onClose }: MachineryDeta
     const load = async () => {
       setLoading(true);
       setError(null);
-      const result = await fetchMachineryDetails(assetId);
+      const result = await fetchAuxGeneratorDetails(assetId);
       setDetails(result.error ? null : result.data);
       if (result.error) setError(result.error);
       setLoading(false);
@@ -72,17 +72,17 @@ export default function MachineryDetailModal({ assetId, onClose }: MachineryDeta
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-[520px] max-h-[min(560px,85vh)] flex flex-col bg-white dark:bg-neutral-900 rounded-2xl shadow-xl border border-neutral-200/80 dark:border-neutral-700/80 overflow-hidden"
+        className="relative w-full max-w-[420px] max-h-[min(480px,85vh)] flex flex-col bg-white dark:bg-neutral-900 rounded-2xl shadow-xl border border-neutral-200/80 dark:border-neutral-700/80 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="shrink-0 px-5 py-4 flex items-center justify-between bg-gradient-to-r from-[#137638]/8 to-transparent dark:from-[#137638]/15 border-b border-neutral-100 dark:border-neutral-800">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-lg bg-[#137638]/15 dark:bg-[#137638]/25 flex items-center justify-center">
-              <Wrench className="h-5 w-5 text-[#137638] dark:text-emerald-400" />
+              <Zap className="h-5 w-5 text-[#137638] dark:text-emerald-400" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-foreground leading-tight">Machinery Details</h2>
-              <p className="text-sm text-muted-foreground">Equipment specifications</p>
+              <h2 className="text-base font-bold text-foreground leading-tight">Generator Rates</h2>
+              <p className="text-sm text-muted-foreground">Hourly rates for this auxiliary generator</p>
             </div>
           </div>
           <Button
@@ -97,30 +97,21 @@ export default function MachineryDetailModal({ assetId, onClose }: MachineryDeta
 
         <div className="flex-1 overflow-y-auto p-4 min-h-0">
           {loading ? (
-            <div className="flex items-center justify-center py-14">
+            <div className="flex items-center justify-center py-10">
               <div className="flex flex-col items-center gap-3">
                 <div className="h-8 w-8 rounded-full border-2 border-[#137638]/30 border-t-[#137638] animate-spin" />
                 <p className="text-sm text-muted-foreground">Loading…</p>
               </div>
             </div>
           ) : error ? (
-            <div className="py-12 text-center">
+            <div className="py-10 text-center">
               <p className="text-sm text-destructive font-medium">{error}</p>
             </div>
           ) : (
-            // Always show fields; if there's no DB row yet, values show as "—"
+            // Always show the three rate rows; if there's no DB row yet, values show as "—"
             (() => {
-              const d: MachineryDetails = details ?? {
+              const d: AuxGeneratorDetails = details ?? {
                 asset_id: assetId,
-                plate_no: null,
-                engine_make: null,
-                engine_model: null,
-                engine_serial_no: null,
-                capacity: null,
-                manuf_year: null,
-                libre: null,
-                tire_size: null,
-                battery_capacity: null,
                 rate_op: null,
                 rate_idle: null,
                 rate_down: null,
@@ -129,15 +120,6 @@ export default function MachineryDetailModal({ assetId, onClose }: MachineryDeta
               };
               return (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <DetailRow icon={FileText} label="Plate No." value={d.plate_no} />
-              <DetailRow icon={Settings} label="Engine Make" value={d.engine_make} />
-              <DetailRow icon={Settings} label="Engine Model" value={d.engine_model} />
-              <DetailRow icon={Hash} label="Engine Serial No." value={d.engine_serial_no} />
-              <DetailRow icon={Truck} label="Capacity" value={d.capacity} />
-              <DetailRow icon={Calendar} label="Manufacturing Year" value={d.manuf_year} />
-              <DetailRow icon={FileText} label="Libre" value={d.libre != null ? (d.libre ? 'Yes' : 'No') : null} />
-              <DetailRow icon={Truck} label="Tire Size" value={d.tire_size} />
-              <DetailRow icon={Battery} label="Battery Capacity" value={d.battery_capacity} />
               <DetailRow
                 icon={BrIcon}
                 label="Rate/hr (OP) Birr"
@@ -176,3 +158,4 @@ export default function MachineryDetailModal({ assetId, onClose }: MachineryDeta
 
   return typeof document !== 'undefined' ? createPortal(content, document.body) : null;
 }
+

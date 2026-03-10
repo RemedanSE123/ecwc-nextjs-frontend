@@ -10,6 +10,9 @@ CREATE TABLE IF NOT EXISTS light_vehicle_details (
     battery_capacity TEXT,
     insurance_coverage TEXT,
     bolo_renewal_date DATE,
+    rate_op NUMERIC(12, 2),
+    rate_idle NUMERIC(12, 2),
+    rate_down NUMERIC(12, 2),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );

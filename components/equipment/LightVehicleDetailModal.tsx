@@ -11,6 +11,14 @@ interface LightVehicleDetailModalProps {
   onClose: () => void;
 }
 
+function BrIcon({ className }: { className?: string }) {
+  return (
+    <span className={className}>
+      Br
+    </span>
+  );
+}
+
 function DetailRow({ icon: Icon, label, value }: { icon: React.ComponentType<{ className?: string }>; label: string; value: React.ReactNode }) {
   const display = value ?? '—';
   return (
@@ -99,22 +107,79 @@ export default function LightVehicleDetailModal({ assetId, onClose }: LightVehic
             <div className="py-12 text-center">
               <p className="text-sm text-destructive font-medium">{error}</p>
             </div>
-          ) : !details ? (
-            <div className="py-12 text-center">
-              <p className="text-sm text-muted-foreground">No light vehicle details for this asset.</p>
-            </div>
           ) : (
-            <div className="space-y-1">
-              <DetailRow icon={FileText} label="Plate No." value={details.plate_no} />
-              <DetailRow icon={Hash} label="Engine Serial No." value={details.engine_serial_no} />
-              <DetailRow icon={Truck} label="Capacity" value={details.capacity} />
-              <DetailRow icon={Calendar} label="Manufacturing Year" value={details.manuf_year} />
-              <DetailRow icon={FileText} label="Libre" value={details.libre != null ? (details.libre ? 'Yes' : 'No') : null} />
-              <DetailRow icon={Truck} label="Tire Size" value={details.tire_size} />
-              <DetailRow icon={Battery} label="Battery Capacity" value={details.battery_capacity} />
-              <DetailRow icon={Shield} label="Insurance Coverage" value={details.insurance_coverage} />
-              <DetailRow icon={Calendar} label="Bolo Renewal Date" value={details.bolo_renewal_date ? new Date(details.bolo_renewal_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : null} />
+            // Always show fields; if there's no DB row yet, values show as "—"
+            (() => {
+              const d: LightVehicleDetails = details ?? {
+                asset_id: assetId,
+                plate_no: null,
+                engine_serial_no: null,
+                capacity: null,
+                manuf_year: null,
+                libre: null,
+                tire_size: null,
+                battery_capacity: null,
+                insurance_coverage: null,
+                bolo_renewal_date: null,
+                rate_op: null,
+                rate_idle: null,
+                rate_down: null,
+                created_at: '',
+                updated_at: '',
+              };
+              return (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <DetailRow icon={FileText} label="Plate No." value={d.plate_no} />
+              <DetailRow icon={Hash} label="Engine Serial No." value={d.engine_serial_no} />
+              <DetailRow icon={Truck} label="Capacity" value={d.capacity} />
+              <DetailRow icon={Calendar} label="Manufacturing Year" value={d.manuf_year} />
+              <DetailRow icon={FileText} label="Libre" value={d.libre != null ? (d.libre ? 'Yes' : 'No') : null} />
+              <DetailRow icon={Truck} label="Tire Size" value={d.tire_size} />
+              <DetailRow icon={Battery} label="Battery Capacity" value={d.battery_capacity} />
+              <DetailRow icon={Shield} label="Insurance Coverage" value={d.insurance_coverage} />
+              <DetailRow
+                icon={Calendar}
+                label="Bolo Renewal Date"
+                value={
+                  d.bolo_renewal_date
+                    ? new Date(d.bolo_renewal_date).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                      })
+                    : null
+                }
+              />
+              <DetailRow
+                icon={BrIcon}
+                label="Rate/hr (OP) Birr"
+                value={
+                  d.rate_op != null
+                    ? `${Number(d.rate_op).toLocaleString(undefined, { minimumFractionDigits: 2 })} Birr`
+                    : null
+                }
+              />
+              <DetailRow
+                icon={BrIcon}
+                label="Rate/hr (Idle) Birr"
+                value={
+                  d.rate_idle != null
+                    ? `${Number(d.rate_idle).toLocaleString(undefined, { minimumFractionDigits: 2 })} Birr`
+                    : null
+                }
+              />
+              <DetailRow
+                icon={BrIcon}
+                label="Rate/hr (Down) Birr"
+                value={
+                  d.rate_down != null
+                    ? `${Number(d.rate_down).toLocaleString(undefined, { minimumFractionDigits: 2 })} Birr`
+                    : null
+                }
+              />
             </div>
+              );
+            })()
           )}
         </div>
       </div>
