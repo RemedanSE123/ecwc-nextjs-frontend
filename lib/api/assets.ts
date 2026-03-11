@@ -142,8 +142,12 @@ export interface EquipmentOption {
   id: string;
   category: string | null;
   description: string | null;
+  asset_no?: string | null;
   plate_no: string | null;
   status: string | null;
+  rate_op?: number | null;
+  rate_idle?: number | null;
+  rate_down?: number | null;
 }
 
 export async function fetchEquipmentOptions(projectLocation: string): Promise<EquipmentOption[]> {

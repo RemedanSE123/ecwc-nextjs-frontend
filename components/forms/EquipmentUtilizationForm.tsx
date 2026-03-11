@@ -293,9 +293,12 @@ type UtilRow = {
   assetId: string
   category: string
   description: string
+  assetNo: string
   plateNo: string
   status: string
-  rate: string
+  rateOp: string
+  rateIdle: string
+  rateDown: string
   firstHalfStart: string
   firstHalfEnd: string
   secondHalfStart: string
@@ -326,8 +329,12 @@ function rowHasAnyData(row: UtilRow): boolean {
     row.assetId ||
     row.category ||
     row.description ||
+    row.assetNo ||
     row.plateNo ||
     row.status ||
+    row.rateOp ||
+    row.rateIdle ||
+    row.rateDown ||
     row.firstHalfStart ||
     row.firstHalfEnd ||
     row.secondHalfStart ||
@@ -350,6 +357,7 @@ function rowHasAnyData(row: UtilRow): boolean {
 export default function EquipmentUtilizationForm() {
   const pdfRef = useRef<HTMLDivElement>(null)
   const setHeaderActions = useContext(FormModalHeaderActionsContext)
+  const [pdfDownloading, setPdfDownloading] = useState(false)
   const [header, setHeader] = useState({
     project: "",
     gcDate: new Date().toISOString().split("T")[0],
@@ -361,9 +369,12 @@ export default function EquipmentUtilizationForm() {
     assetId: "",
     category: "",
     description: "",
+    assetNo: "",
     plateNo: "",
     status: "",
-    rate: "",
+    rateOp: "",
+    rateIdle: "",
+    rateDown: "",
     firstHalfStart: "",
     firstHalfEnd: "",
     secondHalfStart: "",
@@ -456,8 +467,12 @@ export default function EquipmentUtilizationForm() {
       assetId: opt.id,
       category: opt.category ?? "",
       description: opt.description ?? "",
+      assetNo: (opt as any).asset_no ?? "",
       plateNo: opt.plate_no ?? "",
       status: opt.status ?? "",
+      rateOp: opt.rate_op != null ? String(opt.rate_op) : "",
+      rateIdle: opt.rate_idle != null ? String(opt.rate_idle) : "",
+      rateDown: opt.rate_down != null ? String(opt.rate_down) : "",
     }))
     const editable = (r: UtilRow) => ((r.status ?? "").trim().toLowerCase() === "op" || (r.status ?? "").trim().toLowerCase() === "idle")
     mapped.sort((a, b) => (editable(a) ? 0 : 1) - (editable(b) ? 0 : 1))
@@ -474,8 +489,12 @@ export default function EquipmentUtilizationForm() {
               assetId: option?.id ?? "",
               category: option?.category ?? "",
               description: option?.description ?? "",
+              assetNo: (option as any)?.asset_no ?? "",
               plateNo: option?.plate_no ?? "",
               status: option?.status ?? "",
+              rateOp: option?.rate_op != null ? String(option.rate_op) : "",
+              rateIdle: option?.rate_idle != null ? String(option.rate_idle) : "",
+              rateDown: option?.rate_down != null ? String(option.rate_down) : "",
             }
       )
       const updatedLast = nextRows[nextRows.length - 1]
@@ -632,28 +651,156 @@ export default function EquipmentUtilizationForm() {
   const ROWS_PER_PAGE = 22
   const previewPages = Math.ceil(Math.max(1, rows.length) / ROWS_PER_PAGE)
 
+  const previewTotals = (() => {
+    let worked = 0
+    let idle = 0
+    let down = 0
+    let revenue = 0
+    for (const r of rows) {
+      if (!r.assetId) continue
+      const workedHr =
+        (r.firstHalfStart && r.firstHalfEnd ? timeDurationHours(r.firstHalfStart, r.firstHalfEnd) : 0) +
+        (r.secondHalfStart && r.secondHalfEnd ? timeDurationHours(r.secondHalfStart, r.secondHalfEnd) : 0)
+      const idleHr = parseFloat(r.idleHrs || "0") || 0
+      const downHr = parseFloat(r.downHrs || "0") || 0
+      const rate = parseFloat(r.rateOp || "0") || 0
+      worked += workedHr
+      idle += idleHr
+      down += downHr
+      revenue += rate * workedHr
+    }
+    return {
+      worked,
+      idle,
+      down,
+      revenue,
+    }
+  })()
+
+  const handleDownloadPdf = async () => {
+    if (typeof window === "undefined") return
+    if (pdfDownloading) return
+    setPdfDownloading(true)
+    try {
+      const root = document.getElementById("utilization-preview-print")
+      if (!root) throw new Error("Preview not ready")
+      const pages = Array.from(root.querySelectorAll<HTMLElement>(".a4-page"))
+      if (!pages.length) throw new Error("No pages to export")
+
+      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+        import("html2canvas"),
+        import("jspdf"),
+      ])
+
+      const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4", compress: false })
+      const pageW = 297
+      const pageH = 210
+
+      for (let i = 0; i < pages.length; i++) {
+        const el = pages[i]
+        const canvas = await html2canvas(el, {
+          scale: 4,
+          useCORS: true,
+          backgroundColor: "#ffffff",
+        })
+        const imgData = canvas.toDataURL("image/png")
+        if (i > 0) doc.addPage()
+        doc.addImage(imgData, "PNG", 0, 0, pageW, pageH)
+      }
+
+      const date = (header.gcDate || new Date().toISOString().slice(0, 10)).replaceAll("/", "-")
+      doc.save(`equipment-utilization-${date}.pdf`)
+    } catch (e) {
+      console.error(e)
+      window.alert("Failed to download PDF. Please try again.")
+    } finally {
+      setPdfDownloading(false)
+    }
+  }
+
   return (
     <div id="form-print-area" className="w-full min-w-0 h-full min-h-0 flex flex-col p-0 m-0 overflow-hidden">
       <div ref={pdfRef} className="w-full min-w-0 flex-1 min-h-0 flex flex-col p-0 m-0 overflow-hidden">
         {/* Preview overlay — A4 report format with logo, paginated */}
         {previewOpen && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true">
-            <div className="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-zinc-200" style={{ width: "210mm", maxWidth: "100%", maxHeight: "95vh" }}>
-              <div className="flex items-center justify-between px-5 py-3 border-b border-zinc-200 bg-gradient-to-r from-slate-50 to-white">
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-1 bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true">
+            <div
+              className="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-zinc-200"
+              style={{
+                width: "297mm",
+                maxWidth: "100%",
+                maxHeight: "98vh",
+              }}
+            >
+              <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-zinc-200 bg-gradient-to-r from-slate-50 to-white">
                 <span className="text-sm font-semibold text-slate-700">Preview — A4 Report</span>
-                <button type="button" onClick={() => setPreviewOpen(false)} className="p-2 rounded-lg text-zinc-500 hover:bg-zinc-200 hover:text-zinc-800 transition-colors" aria-label="Close preview">
-                  <X className="h-5 w-5" />
-                </button>
+                <div className="flex items-center gap-2 no-print">
+                  <Button
+                    type="button"
+                    variant="default"
+                    size="sm"
+                    onClick={handleDownloadPdf}
+                    disabled={pdfDownloading}
+                    className="h-8 bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-60"
+                  >
+                    {pdfDownloading ? "Generating..." : "Download PDF"}
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewOpen(false)}
+                    className="p-2 rounded-lg text-zinc-500 hover:bg-zinc-200 hover:text-zinc-800 transition-colors"
+                    aria-label="Close preview"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
               </div>
-              <div className="overflow-y-auto flex-1 p-0 bg-zinc-100/50">
+              <div id="utilization-preview-print" className="overflow-y-auto flex-1 p-0 bg-white">
+                <style jsx global>{`
+                  @media print {
+                    @page {
+                      size: A4 landscape;
+                      margin: 0;
+                    }
+                    .no-print {
+                      display: none !important;
+                    }
+                    body * {
+                      visibility: hidden !important;
+                    }
+                    #utilization-preview-print,
+                    #utilization-preview-print * {
+                      visibility: visible !important;
+                    }
+                    #utilization-preview-print {
+                      position: absolute !important;
+                      left: 0 !important;
+                      top: 0 !important;
+                      width: 297mm !important;
+                      padding: 0 !important;
+                      margin: 0 !important;
+                      overflow: visible !important;
+                      background: white !important;
+                    }
+                    .a4-page {
+                      width: 297mm !important;
+                      min-height: 210mm !important;
+                      height: 210mm !important;
+                      page-break-after: always;
+                      break-after: page;
+                      box-shadow: none !important;
+                      margin: 0 !important;
+                    }
+                  }
+                `}</style>
                 {Array.from({ length: previewPages }).map((_, pageIdx) => {
                   const start = pageIdx * ROWS_PER_PAGE
                   const pageRows = rows.slice(start, start + ROWS_PER_PAGE)
                   return (
                     <div
                       key={pageIdx}
-                      className="a4-page bg-white mx-auto my-4 shadow-lg"
-                      style={{ width: "210mm", height: "297mm", minHeight: "297mm", padding: "12mm", boxSizing: "border-box" }}
+                      className="a4-page bg-white mx-auto my-0 shadow-lg"
+                      style={{ width: "297mm", minHeight: "210mm", padding: "10mm", boxSizing: "border-box" }}
                     >
                       {/* Standard header with logo — each page */}
                       <div className="grid grid-cols-[70px_1fr_120px] border-b-2 border-slate-800 mb-4">
@@ -686,8 +833,7 @@ export default function EquipmentUtilizationForm() {
                             <th className="border border-slate-600 px-1.5 py-1.5 text-center font-semibold">Worked Hr</th>
                             <th className="border border-slate-600 px-1.5 py-1.5 text-center font-semibold">Idle Hr</th>
                             <th className="border border-slate-600 px-1.5 py-1.5 text-center font-semibold">Down Hr</th>
-                            <th className="border border-slate-600 px-1.5 py-1.5 text-center font-semibold bg-slate-600">Total Hr</th>
-                            <th className="border border-slate-600 px-1.5 py-1.5 text-center font-semibold bg-amber-700/80">Min Agreed Hr</th>
+                            <th className="border border-slate-600 px-1.5 py-1.5 text-center font-semibold bg-amber-700/80">Total revenue (Birr)</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -697,7 +843,8 @@ export default function EquipmentUtilizationForm() {
                               (row.secondHalfStart && row.secondHalfEnd ? timeDurationHours(row.secondHalfStart, row.secondHalfEnd) : 0)
                             const idle = parseFloat(row.idleHrs) || 0
                             const down = parseFloat(row.downHrs) || 0
-                            const totalHr = (worked + idle + down).toFixed(2)
+                            const rate = parseFloat(row.rateOp || "0") || 0
+                            const revenue = (rate * worked).toFixed(2)
                             return (
                               <tr key={row.id} className="bg-white hover:bg-slate-50/50">
                                 <td className="border border-slate-300 px-1.5 py-1 text-center">{start + idx + 1}</td>
@@ -708,11 +855,29 @@ export default function EquipmentUtilizationForm() {
                                 <td className="border border-slate-300 px-1.5 py-1 text-center">{row.workedHrs}</td>
                                 <td className="border border-slate-300 px-1.5 py-1 text-center">{row.idleHrs}</td>
                                 <td className="border border-slate-300 px-1.5 py-1 text-center">{row.downHrs}</td>
-                                <td className="border border-slate-300 px-1.5 py-1 text-center bg-green-50 font-medium">{totalHr}</td>
-                                <td className="border border-slate-300 px-1.5 py-1 text-center bg-amber-50">—</td>
+                                <td className="border border-slate-300 px-1.5 py-1 text-center bg-amber-50 font-semibold tabular-nums">{revenue}</td>
                               </tr>
                             )
                           })}
+                          {pageIdx === previewPages - 1 && (
+                            <tr className="bg-slate-50">
+                              <td className="border border-slate-300 px-1.5 py-1 font-bold text-right" colSpan={5}>
+                                TOTAL
+                              </td>
+                              <td className="border border-slate-300 px-1.5 py-1 text-center font-bold tabular-nums">
+                                {previewTotals.worked.toFixed(2)}
+                              </td>
+                              <td className="border border-slate-300 px-1.5 py-1 text-center font-bold tabular-nums">
+                                {previewTotals.idle.toFixed(2)}
+                              </td>
+                              <td className="border border-slate-300 px-1.5 py-1 text-center font-bold tabular-nums">
+                                {previewTotals.down.toFixed(2)}
+                              </td>
+                              <td className="border border-slate-300 px-1.5 py-1 text-center font-bold tabular-nums bg-amber-50">
+                                {previewTotals.revenue.toFixed(2)}
+                              </td>
+                            </tr>
+                          )}
                         </tbody>
                       </table>
                       {pageIdx < previewPages - 1 ? (
@@ -808,9 +973,10 @@ export default function EquipmentUtilizationForm() {
                       <th className="border border-slate-600 px-1.5 py-2 text-center font-semibold text-slate-300 whitespace-nowrap w-8" rowSpan={2}>No</th>
                       <th className="border border-slate-600 px-2 py-2 text-left font-semibold text-slate-300 whitespace-nowrap min-w-[120px] w-[120px]" rowSpan={2}>Category</th>
                       <th className="border border-slate-600 px-2 py-2 text-left font-semibold text-slate-300 whitespace-nowrap min-w-[140px] w-[140px]" rowSpan={2}>Description</th>
+                      <th className="border border-slate-600 px-2 py-2 text-left font-semibold text-slate-300 whitespace-nowrap min-w-[90px] w-[90px]" rowSpan={2}>Asset No</th>
                       <th className="border border-slate-600 px-2 py-2 text-left font-semibold text-slate-300 whitespace-nowrap min-w-[100px] w-[100px]" rowSpan={2}>Plate No</th>
                       <th className="border border-slate-600 px-2 py-2 text-left font-semibold text-slate-300 whitespace-nowrap min-w-[80px] w-[80px]" rowSpan={2}>Status</th>
-                      <th className="border border-slate-600 px-2 py-2 text-left font-semibold text-slate-300 whitespace-nowrap min-w-[70px] w-[70px]" rowSpan={2}>Rate</th>
+                      <th className="border border-slate-600 px-1.5 py-2 text-left font-semibold text-slate-300 whitespace-nowrap min-w-[70px] w-[70px]" rowSpan={2}>Rate</th>
                       <th className="border border-slate-600 border-l-2 border-l-blue-400 px-2 py-2 text-center font-semibold text-slate-300 whitespace-nowrap" colSpan={2}>1st Half Hr</th>
                       <th className="border border-slate-600 px-1.5 py-2 text-center font-semibold text-slate-300 whitespace-nowrap" colSpan={2}>2nd Half Hr</th>
                       <th className="border border-slate-600 px-1.5 py-2 text-center font-semibold text-slate-300 whitespace-nowrap" rowSpan={2}>Worked Hrs</th>
@@ -873,37 +1039,18 @@ export default function EquipmentUtilizationForm() {
                           {index + 1}
                         </td>
                         <td className="border border-zinc-200 p-0 min-w-[120px] w-[120px]">
-                          <EquipmentCombobox
-                            row={row}
-                            equipmentOptions={equipmentOptions}
-                            openRowId={openEquipmentRowId}
-                            search={equipmentSearch}
-                            disabled={!header.project || loadingEquipment || rowDisabled}
-                            placeholder={!header.project ? "Select project first" : equipmentOptions.length === 0 ? "No equipment" : "Type to search..."}
-                            onOpen={() => {
-                              setOpenEquipmentRowId(row.id)
-                              setEquipmentSearch(row.category || "")
-                            }}
-                            onClose={() => {
-                              setOpenEquipmentRowId(null)
-                              setEquipmentSearch("")
-                            }}
-                            onSearchChange={setEquipmentSearch}
-                            onSelect={(opt) => {
-                              setRowEquipment(row.id, opt)
-                              setOpenEquipmentRowId(null)
-                              setEquipmentSearch("")
-                            }}
-                            onClear={() => {
-                              setRowEquipment(row.id, null)
-                              setOpenEquipmentRowId(null)
-                              setEquipmentSearch("")
-                            }}
-                            cellInputClass={cellInput}
+                          <Input
+                            className={cn(cellInput, "bg-zinc-50")}
+                            value={row.category}
+                            readOnly
+                            title="Auto-filled from selected project"
                           />
                         </td>
                         <td className="border border-zinc-200 p-0 min-w-[140px] w-[140px]">
                           <Input className={cn(cellInput, "bg-zinc-50")} value={row.description} readOnly />
+                        </td>
+                        <td className="border border-zinc-200 p-0 min-w-[90px] w-[90px]">
+                          <Input className={cn(cellInput, "bg-zinc-50")} value={row.assetNo} readOnly />
                         </td>
                         <td className="border border-zinc-200 p-0 min-w-[100px] w-[100px]">
                           <Input className={cn(cellInput, "bg-zinc-50")} value={row.plateNo} readOnly />
@@ -912,7 +1059,14 @@ export default function EquipmentUtilizationForm() {
                           <Input className={cn(cellInput, "bg-zinc-50")} value={row.status} readOnly />
                         </td>
                         <td className="border border-zinc-200 p-0 min-w-[70px] w-[70px]">
-                          <Input className={cn(cellInput, rowDisabled && "bg-zinc-100 cursor-not-allowed")} value={row.rate} onChange={(e) => !rowDisabled && updateRow(row.id, "rate", e.target.value)} placeholder="—" readOnly={rowDisabled} />
+                          <Input
+                            className={cn(cellInput, rowDisabled && "bg-zinc-100 cursor-not-allowed")}
+                            value={row.rateOp}
+                            onChange={(e) => !rowDisabled && updateRow(row.id, "rateOp", e.target.value)}
+                            placeholder="—"
+                            readOnly={rowDisabled}
+                            title="Operational rate (Birr/hr)"
+                          />
                         </td>
                         <td className="border border-zinc-200 p-0">
                           <Select

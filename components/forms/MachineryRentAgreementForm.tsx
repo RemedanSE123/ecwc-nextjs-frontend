@@ -7,7 +7,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectItem } from "@/components/ui/select";
-import { Trash2, Plus, Search, Save, Printer, RefreshCw, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import {
+  Trash2,
+  Plus,
+  Search,
+  Save,
+  Printer,
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Eye,
+  X,
+} from "lucide-react";
 
 type DumpRateRow = {
   id: string;
@@ -67,6 +80,7 @@ export default function MachineryRentAgreementForm() {
   const [dumpRows, setDumpRows] = useState<DumpRateRow[]>([newDumpRateRow()]);
   const [preparedBy, setPreparedBy] = useState("");
   const [activeTab, setActiveTab] = useState("owner");
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const updateDumpRow = (id: string, field: keyof DumpRateRow, value: string) => {
     setDumpRows((prev) =>
@@ -123,6 +137,15 @@ export default function MachineryRentAgreementForm() {
               </Button>
               <Button size="sm" variant="outline" className="h-8 text-xs gap-1">
                 <RefreshCw className="h-3.5 w-3.5" /> Reset
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 text-xs gap-1 text-emerald-700 border-emerald-300 hover:bg-emerald-50"
+                type="button"
+                onClick={() => setPreviewOpen(true)}
+              >
+                <Eye className="h-3.5 w-3.5" /> Preview
               </Button>
             </div>
             
@@ -485,6 +508,260 @@ export default function MachineryRentAgreementForm() {
           </div>
         </CardContent>
       </Card>
+
+      {/* A4-style preview overlay */}
+      {previewOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-2 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-zinc-200 max-h-[98vh]">
+            {/* Preview header */}
+            <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-zinc-200 bg-gradient-to-r from-slate-50 to-white">
+              <span className="text-sm font-semibold text-slate-700">
+                Preview — Machinery Rent Agreement (A4)
+              </span>
+              <button
+                type="button"
+                onClick={() => setPreviewOpen(false)}
+                className="p-2 rounded-lg text-zinc-500 hover:bg-zinc-200 hover:text-zinc-800 transition-colors"
+                aria-label="Close preview"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="overflow-auto flex-1 bg-slate-100">
+              <div
+                className="a4-page bg-white mx-auto my-4 shadow-lg"
+                style={{
+                  width: "297mm",
+                  minHeight: "210mm",
+                  padding: "12mm",
+                  boxSizing: "border-box",
+                }}
+              >
+                {/* A4 content */}
+                <div className="grid grid-cols-[70px_1fr_120px] border-b-2 border-slate-800 mb-4">
+                  <div className="relative h-14 flex items-center justify-center border-r-2 border-slate-800 pr-2">
+                    <Image
+                      src="/ecwc png logo.png"
+                      alt="ECWC Logo"
+                      width={56}
+                      height={56}
+                      className="object-contain"
+                    />
+                  </div>
+                  <div className="flex flex-col justify-center px-4 text-center border-r-2 border-slate-800">
+                    <p className="text-sm font-bold text-slate-900">
+                      ETHIOPIAN CONSTRUCTION WORKS CORPORATION
+                    </p>
+                    <p className="text-xs font-semibold text-slate-700 mt-0.5">
+                      RENTED MACHINERIES AGREEMENT
+                    </p>
+                  </div>
+                  <div className="flex flex-col justify-center px-3 text-[10px] text-slate-700 font-medium">
+                    <p>
+                      <b>Document No.</b>
+                    </p>
+                    <p>OF/ECWC/2024/001</p>
+                    <p className="mt-1">
+                      <b>Date:</b> {header.date || new Date().toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Owner & Equipment summary */}
+                <div className="grid grid-cols-2 gap-6 text-[11px] text-slate-800 mb-4">
+                  <div className="space-y-1.5">
+                    <p className="font-semibold border-b border-slate-200 pb-1">
+                      Owner information
+                    </p>
+                    <p>
+                      <span className="font-medium">Owner:</span>{" "}
+                      {header.owner || "—"}
+                    </p>
+                    <p>
+                      <span className="font-medium">የባለቤቱ ስም:</span>{" "}
+                      {header.ownerAmharic || "—"}
+                    </p>
+                    <p>
+                      <span className="font-medium">TIN No:</span>{" "}
+                      {header.tinNo || "—"}
+                    </p>
+                    <p>
+                      <span className="font-medium">Address:</span>{" "}
+                      {header.address || "—"}
+                    </p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <p className="font-semibold border-b border-slate-200 pb-1">
+                      Equipment information
+                    </p>
+                    <p>
+                      <span className="font-medium">Equipment type:</span>{" "}
+                      {header.equipType || "—"}
+                    </p>
+                    <p>
+                      <span className="font-medium">Make / Model:</span>{" "}
+                      {header.makeModel || "—"}
+                    </p>
+                    <p>
+                      <span className="font-medium">Plate No:</span>{" "}
+                      {header.plateNo || "—"}
+                    </p>
+                    <p>
+                      <span className="font-medium">Capacity:</span>{" "}
+                      {header.capacity || "—"}
+                    </p>
+                    <p>
+                      <span className="font-medium">Mfg. year:</span>{" "}
+                      {header.mfgYear || "—"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Contract summary */}
+                <div className="grid grid-cols-2 gap-6 text-[11px] text-slate-800 mb-4">
+                  <div className="space-y-1.5">
+                    <p className="font-semibold border-b border-slate-200 pb-1">
+                      Contract details
+                    </p>
+                    <p>
+                      <span className="font-medium">Duration:</span>{" "}
+                      {header.contractDuration || "—"}
+                    </p>
+                    <p>
+                      <span className="font-medium">Status:</span>{" "}
+                      {header.contractStatus || "—"}
+                    </p>
+                    <p>
+                      <span className="font-medium">Rented for project:</span>{" "}
+                      {header.rentedForProject || "—"}
+                    </p>
+                    <p>
+                      <span className="font-medium">Min hours per day:</span>{" "}
+                      {header.minHourPerDay || "—"}
+                    </p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <p className="font-semibold border-b border-slate-200 pb-1">
+                      References
+                    </p>
+                    <p>
+                      <span className="font-medium">Ref. No:</span>{" "}
+                      {header.refNo || "—"}
+                    </p>
+                    <p>
+                      <span className="font-medium">Manual Ref. No:</span>{" "}
+                      {header.manualRefNo || "—"}
+                    </p>
+                    <p>
+                      <span className="font-medium">Eth. date:</span>{" "}
+                      {header.ethDate || "—"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Rates */}
+                <div className="mb-4">
+                  <p className="font-semibold border-b border-slate-200 pb-1 text-[11px] text-slate-800">
+                    Rates & pricing
+                  </p>
+                  <table className="w-full border-collapse text-[11px] mt-1">
+                    <tbody>
+                      <tr>
+                        <td className="border border-slate-300 px-2 py-1 font-medium w-48">
+                          Operational rate (Birr/hr)
+                        </td>
+                        <td className="border border-slate-300 px-2 py-1">
+                          {agreedRates.operationalRate || "—"}
+                        </td>
+                        <td className="border border-slate-300 px-2 py-1 font-medium w-48">
+                          Idle rate (Birr/hr)
+                        </td>
+                        <td className="border border-slate-300 px-2 py-1">
+                          {agreedRates.idleRate || "—"}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="border border-slate-300 px-2 py-1 font-medium">
+                          Day rate (Birr/hr)
+                        </td>
+                        <td className="border border-slate-300 px-2 py-1">
+                          {agreedRates.dayRate || "—"}
+                        </td>
+                        <td className="border border-slate-300 px-2 py-1 font-medium">
+                          Night rate (Birr/hr)
+                        </td>
+                        <td className="border border-slate-300 px-2 py-1">
+                          {agreedRates.nightRate || "—"}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="border border-slate-300 px-2 py-1 font-medium">
+                          Gas oil rate (Birr/ltr)
+                        </td>
+                        <td className="border border-slate-300 px-2 py-1">
+                          {agreedRates.gasOilRate || "—"}
+                        </td>
+                        <td className="border border-slate-300 px-2 py-1 font-medium">
+                          Gas oil subsidy (Birr/ltr)
+                        </td>
+                        <td className="border border-slate-300 px-2 py-1">
+                          {agreedRates.gasOilSubsidy || "—"}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Dump rates table */}
+                <div>
+                  <p className="font-semibold border-b border-slate-200 pb-1 text-[11px] text-slate-800 mb-1">
+                    Distance based dump truck rates
+                  </p>
+                  <table className="w-full border-collapse text-[11px]">
+                    <thead>
+                      <tr className="bg-slate-700 text-slate-50">
+                        <th className="border border-slate-600 px-1.5 py-1 text-center w-12">
+                          No
+                        </th>
+                        <th className="border border-slate-600 px-1.5 py-1 text-center">
+                          From (km)
+                        </th>
+                        <th className="border border-slate-600 px-1.5 py-1 text-center">
+                          To (km)
+                        </th>
+                        <th className="border border-slate-600 px-1.5 py-1 text-center">
+                          Rate (Birr/trip)
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {dumpRows.map((r, i) => (
+                        <tr
+                          key={r.id}
+                          className="bg-white odd:bg-slate-50/40"
+                        >
+                          <td className="border border-slate-300 px-1.5 py-1 text-center">
+                            {i + 1}
+                          </td>
+                          <td className="border border-slate-300 px-1.5 py-1 text-center">
+                            {r.fromKm}
+                          </td>
+                          <td className="border border-slate-300 px-1.5 py-1 text-center">
+                            {r.toKm}
+                          </td>
+                          <td className="border border-slate-300 px-1.5 py-1 text-center">
+                            {r.rate}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

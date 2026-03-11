@@ -43,6 +43,19 @@ export default function SectionPage({ title, formItems, icon }: SectionPageProps
   ];
 
   const totalForms = formItems.length;
+  const useTwoColumns = totalForms > 6;
+
+  const getDisplayIndex = (i: number): number => {
+    if (!useTwoColumns) return i + 1;
+    const isEven = i % 2 === 0;
+    if (isEven) {
+      // Left column: 0,2,4,... → 1,2,3,...
+      return i / 2 + 1;
+    }
+    const rows = Math.ceil(totalForms / 2);
+    // Right column: 1,3,5,... → rows+1, rows+2,...
+    return rows + (i - 1) / 2 + 1;
+  };
 
   return (
     <Layout>
@@ -96,7 +109,7 @@ export default function SectionPage({ title, formItems, icon }: SectionPageProps
               </span>
             </div>
 
-            <div className={totalForms > 6 ? 'grid grid-cols-1 sm:grid-cols-2 gap-1' : 'flex flex-col gap-1'}>
+            <div className={useTwoColumns ? 'grid grid-cols-1 sm:grid-cols-2 gap-1' : 'flex flex-col gap-1'}>
               {formItems.map((item, i) => (
                 <div
                   key={i}
@@ -110,7 +123,7 @@ export default function SectionPage({ title, formItems, icon }: SectionPageProps
                   <span className={`w-6 text-right text-xs font-mono shrink-0 select-none ${
                     item.component ? 'text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-600 dark:group-hover:text-zinc-300' : 'text-zinc-300 dark:text-zinc-700'
                   }`}>
-                    {String(i + 1).padStart(2, '0')}
+                    {String(getDisplayIndex(i)).padStart(2, '0')}
                   </span>
 
                   <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
