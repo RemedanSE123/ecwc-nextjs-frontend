@@ -11,6 +11,11 @@ interface StatusHistoryModalProps {
   onClose: () => void;
 }
 
+type HistoryEntryWithDuration = AssetStatusHistoryEntry & {
+  durationDays?: number;
+  durationLabel?: string;
+};
+
 function formatDateTime(iso: string): string {
   try {
     return new Date(iso).toLocaleString('en-US', {
@@ -24,11 +29,52 @@ function formatDateTime(iso: string): string {
   }
 }
 
+function computeDurations(entries: AssetStatusHistoryEntry[]): HistoryEntryWithDuration[] {
+  if (!entries || entries.length === 0) return [];
+
+  // Ensure newest first (matches API, but sort defensively)
+  const sorted = [...entries].sort((a, b) => {
+    const da = new Date(a.created_at).getTime();
+    const db = new Date(b.created_at).getTime();
+    return db - da;
+  });
+
+  const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+  return sorted.map((entry, index) => {
+    const statusToNorm = (entry.status_to ?? '').trim().toLowerCase();
+    // No duration label when status changed TO OP/Operational
+    if (statusToNorm === 'op' || statusToNorm === 'operational') {
+      return { ...entry };
+    }
+
+    const startMs = new Date(entry.created_at).getTime();
+    const endMs =
+      index === 0
+        ? Date.now()
+        : new Date(sorted[index - 1].created_at).getTime();
+
+    if (!Number.isFinite(startMs) || !Number.isFinite(endMs) || endMs <= startMs) {
+      return { ...entry };
+    }
+
+    let days = Math.floor((endMs - startMs) / MS_PER_DAY);
+    if (days < 1) days = 1;
+
+    const baseStatus = entry.status_to || '';
+    const labelStatus = baseStatus || 'Status';
+    const dayWord = days === 1 ? 'day' : 'days';
+    const durationLabel = `${labelStatus} for ${days} ${dayWord}`;
+
+    return { ...entry, durationDays: days, durationLabel };
+  });
+}
+
 function StatusBadge({ status }: { status: string }) {
   const base = 'inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-semibold';
   const lower = status.toLowerCase();
   if (lower === 'operational' || lower === 'op') return <span className={`${base} bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300`}>{status}</span>;
-  if (lower === 'idle') return <span className={`${base} bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300`}>{status}</span>;
+  if (lower === 'idle') return <span className={`${base} bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300`}>{status}</span>;
   if (lower === 'down') return <span className={`${base} bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300`}>{status}</span>;
   return <span className={`${base} bg-slate-100 text-slate-600 dark:bg-slate-700/50 dark:text-slate-300`}>{status}</span>;
 }
@@ -116,7 +162,14 @@ export default function StatusHistoryModal({ assetId, onClose }: StatusHistoryMo
             </div>
           ) : (
             <div className="space-y-2">
-              {history.map((entry) => (
+              {computeDurations(history).slice().reverse().map((entry) => {
+                const isIdle =
+                  (entry.status_to ?? '').trim().toLowerCase() === 'idle';
+                const durationColorClasses = isIdle
+                  ? 'bg-blue-50 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200'
+                  : 'bg-red-50 text-red-800 dark:bg-red-900/40 dark:text-red-200';
+
+                return (
                   <div
                     key={entry.id}
                     className="flex items-center gap-4 p-3 rounded-lg bg-neutral-50/80 dark:bg-neutral-800/40 hover:bg-neutral-100/80 dark:hover:bg-neutral-800/60 transition-colors border border-transparent hover:border-neutral-200/60 dark:hover:border-neutral-700/50"
@@ -132,8 +185,20 @@ export default function StatusHistoryModal({ assetId, onClose }: StatusHistoryMo
                         <StatusBadge status={entry.status_to} />
                       )}
                     </div>
+                    {entry.durationLabel && (
+                      <div className="flex-1 flex justify-center">
+                        <span
+                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${durationColorClasses}`}
+                        >
+                          {entry.durationLabel}
+                        </span>
+                      </div>
+                    )}
                     <div className="shrink-0 text-right min-w-0">
-                      <p className="text-xs font-medium text-foreground truncate max-w-[140px]" title={entry.changed_by_name}>
+                      <p
+                        className="text-xs font-medium text-foreground truncate max-w-[140px]"
+                        title={entry.changed_by_name}
+                      >
                         {entry.changed_by_name}
                       </p>
                       <p className="text-xs text-muted-foreground">
@@ -141,7 +206,8 @@ export default function StatusHistoryModal({ assetId, onClose }: StatusHistoryMo
                       </p>
                     </div>
                   </div>
-                ))}
+                );
+              })}
             </div>
           )}
         </div>

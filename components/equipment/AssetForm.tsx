@@ -186,20 +186,9 @@ export default function AssetForm({
   }, [facets?.make, form.make, isEdit]);
 
   const shouldShowRates = useMemo(() => {
-    // When ownership is Rental (any case/spacing), rates come from a separate agreement, so hide inputs
-    const ownershipNorm = (form.ownership ?? '').trim().toLowerCase();
-    if (ownershipNorm === 'rental') return false;
-
-    const cat = form.category;
-    const desc = form.description.toLowerCase();
-    if (!cat) return false;
-    if (cat === HEAVY_VEHICLE_CATEGORY) return true;
-    if (cat === LIGHT_VEHICLE_CATEGORY) return true;
-    if (cat === MACHINERY_CATEGORY) return true;
-    if (cat === PLANT_CATEGORY) return true;
-    if (cat === AUXILIARY_CATEGORY && desc.includes('generator')) return true;
+    // Rate fields are now hidden in both create and edit flows.
     return false;
-  }, [form.category, form.description, form.ownership]);
+  }, []);
 
   // When category changes, clear description if it's not in the new category's list (create mode)
   useEffect(() => {
