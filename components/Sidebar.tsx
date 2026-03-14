@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useMemo } from 'react';
-import { FULL_ACCESS_PHONES, NO_OVERVIEW_PHONES, ASSETS_AND_MAP_PHONES } from '@/lib/auth';
+import { FULL_ACCESS_PHONES, NO_OVERVIEW_PHONES, NO_OVERVIEW_HIDDEN_HREFS, ASSETS_AND_MAP_PHONES } from '@/lib/auth';
 import {
   LayoutDashboard,
   Wrench,
@@ -102,7 +102,7 @@ export default function Sidebar({ isCollapsed = false, onToggleCollapse, userPho
       return navigation.filter((item) => item.name === 'ECWC Assets' || item.name === 'Compound Map');
     }
     if (NO_OVERVIEW_PHONES.some((p) => normalizePhone(p) === phone)) {
-      return navigation.filter((item) => item.href !== '/dashboard');
+      return navigation.filter((item) => !NO_OVERVIEW_HIDDEN_HREFS.includes(item.href));
     }
     return navigation;
   }, [userPhone]);

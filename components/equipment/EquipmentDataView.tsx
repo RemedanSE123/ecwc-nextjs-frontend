@@ -538,25 +538,20 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
           {dataCompletenessOpen && (
             <CardContent className="pt-0 px-4 pb-4">
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                {(['Image', 'Location', 'Asset No', 'Description', 'Serial No', 'Make', 'Model', 'Status', 'Responsible', 'Phone', 'Ownership', 'Remark'] as const)
-                  .filter((col) => completeness.columns[col] != null)
-                  .map((col) => {
-                    const v = completeness.columns[col]!;
-                    return (
-                      <div key={col} className="p-3 rounded-lg bg-background border border-border text-[11px]">
-                        <div className="flex justify-between items-center font-medium mb-1.5 gap-2">
-                          <span className="truncate text-foreground">{col}</span>
-                          <span className={`shrink-0 font-semibold tabular-nums ${v.pctEmpty > 50 ? 'text-amber-600 dark:text-amber-400' : v.pctEmpty > 20 ? 'text-orange-600 dark:text-orange-400' : 'text-green-600 dark:text-green-400'}`}>
-                            {v.pctEmpty}% empty
-                          </span>
-                        </div>
-                        <Progress value={v.pctFilled} className="h-2 rounded-full" />
-                        <p className="text-[10px] text-muted-foreground mt-1 tabular-nums">
-                          {v.filled.toLocaleString()} filled · {v.empty.toLocaleString()} empty
-                        </p>
-                      </div>
-                    );
-                  })}
+                {Object.entries(completeness.columns).map(([col, v]) => (
+                  <div key={col} className="p-3 rounded-lg bg-background border border-border text-[11px]">
+                    <div className="flex justify-between items-center font-medium mb-1.5 gap-2">
+                      <span className="truncate text-foreground">{col}</span>
+                      <span className={`shrink-0 font-semibold tabular-nums ${v.pctEmpty > 50 ? 'text-amber-600 dark:text-amber-400' : v.pctEmpty > 20 ? 'text-orange-600 dark:text-orange-400' : 'text-green-600 dark:text-green-400'}`}>
+                        {v.pctEmpty}% empty
+                      </span>
+                    </div>
+                    <Progress value={v.pctFilled} className="h-2 rounded-full" />
+                    <p className="text-[10px] text-muted-foreground mt-1 tabular-nums">
+                      {v.filled.toLocaleString()} filled · {v.empty.toLocaleString()} empty
+                    </p>
+                  </div>
+                ))}
               </div>
             </CardContent>
           )}

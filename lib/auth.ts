@@ -41,8 +41,15 @@ export const ASSET_CHANGE_NOTIFICATION_PHONES = ['0929517703', '0983007020', '09
 
 /** Full sidebar access (all nav items) */
 export const FULL_ACCESS_PHONES = ['0929517703', '0983007020'];
-/** All except Overview */
+/** All except Overview, Machinery Maintenance, Equipment Admin, Common Data */
 export const NO_OVERVIEW_PHONES = ['0912293712'];
+/** Nav hrefs hidden for NO_OVERVIEW_PHONES (Overview + Machinery Maintenance, Equipment Admin, Common Data) */
+export const NO_OVERVIEW_HIDDEN_HREFS = [
+  '/dashboard',
+  '/machinery-maintenance',
+  '/equipment-administration',
+  '/common-data',
+];
 /** Only ECWC Assets (expanded) + Compound Map */
 export const ASSETS_AND_MAP_PHONES = [
   '0927763207', '0921133084', '0980194463',

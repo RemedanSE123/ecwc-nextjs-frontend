@@ -9,9 +9,62 @@ function getErrorMessage(err: unknown): string {
   return String(err);
 }
 
+/** Detail table columns for completeness (excludes rate_*, created_at, updated_at) */
+const DETAIL_COMPLETENESS: Record<string, { table: string; alias: string; columns: { name: string; label: string }[] }> = {
+  'light-vehicles': {
+    table: 'light_vehicle_details',
+    alias: 'lvd',
+    columns: [
+      { name: 'plate_no', label: 'Plate No' },
+      { name: 'engine_serial_no', label: 'Engine Serial No' },
+      { name: 'capacity', label: 'Capacity' },
+      { name: 'manuf_year', label: 'Manuf Year' },
+      { name: 'libre', label: 'Libre' },
+      { name: 'tire_size', label: 'Tire Size' },
+      { name: 'battery_capacity', label: 'Battery Capacity' },
+      { name: 'insurance_coverage', label: 'Insurance Coverage' },
+      { name: 'bolo_renewal_date', label: 'Bolo Renewal Date' },
+    ],
+  },
+  'heavy-vehicles': {
+    table: 'heavy_vehicle_details',
+    alias: 'hvd',
+    columns: [
+      { name: 'plate_no', label: 'Plate No' },
+      { name: 'chassis_serial_no', label: 'Chassis Serial No' },
+      { name: 'engine_make', label: 'Engine Make' },
+      { name: 'engine_model', label: 'Engine Model' },
+      { name: 'engine_serial_no', label: 'Engine Serial No' },
+      { name: 'capacity', label: 'Capacity' },
+      { name: 'manuf_year', label: 'Manuf Year' },
+      { name: 'libre', label: 'Libre' },
+      { name: 'tire_size', label: 'Tire Size' },
+      { name: 'battery_capacity', label: 'Battery Capacity' },
+      { name: 'insurance_coverage', label: 'Insurance Coverage' },
+      { name: 'bolo_renewal_date', label: 'Bolo Renewal Date' },
+    ],
+  },
+  machinery: {
+    table: 'machinery_details',
+    alias: 'md',
+    columns: [
+      { name: 'plate_no', label: 'Plate No' },
+      { name: 'engine_make', label: 'Engine Make' },
+      { name: 'engine_model', label: 'Engine Model' },
+      { name: 'engine_serial_no', label: 'Engine Serial No' },
+      { name: 'capacity', label: 'Capacity' },
+      { name: 'manuf_year', label: 'Manuf Year' },
+      { name: 'libre', label: 'Libre' },
+      { name: 'tire_size', label: 'Tire Size' },
+      { name: 'battery_capacity', label: 'Battery Capacity' },
+    ],
+  },
+};
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
+    const categoryGroup = searchParams.get('category_group') || undefined;
     const { whereClause, params } = buildAssetWhereClause(searchParams);
 
     const cols = [
@@ -65,6 +118,32 @@ export async function GET(request: NextRequest) {
       const pctEmpty = totalFromQuery ? Math.round((empty / totalFromQuery) * 100) : 0;
       const pctFilled = totalFromQuery ? Math.round((filled / totalFromQuery) * 100) : 0;
       results[columnLabels[col] || col] = { filled, empty, pctEmpty, pctFilled };
+    }
+
+    // Add detail columns for this category (excludes rate_*, created_at, updated_at)
+    const detailConfig = categoryGroup ? DETAIL_COMPLETENESS[categoryGroup] : undefined;
+    if (detailConfig && totalFromQuery > 0) {
+      const { table, alias, columns } = detailConfig;
+      const detailFilters = columns.map(
+        (c) => `COUNT(*) FILTER (WHERE (${alias}.${c.name} IS NOT NULL) AND (TRIM(COALESCE(${alias}.${c.name}::text, '')) != ''))::int AS detail_${c.name}_filled`
+      ).join(', ');
+      const detailRow = await query<Record<string, number>>(
+        `SELECT ${detailFilters}
+         FROM asset_master am
+         LEFT JOIN ${table} ${alias} ON am.id = ${alias}.asset_id
+         WHERE ${whereClause}`,
+        params
+      );
+      const dRow = detailRow?.[0];
+      if (dRow) {
+        for (const c of columns) {
+          const filled = Number(dRow[`detail_${c.name}_filled`]) || 0;
+          const empty = Math.max(0, totalFromQuery - filled);
+          const pctEmpty = totalFromQuery ? Math.round((empty / totalFromQuery) * 100) : 0;
+          const pctFilled = totalFromQuery ? Math.round((filled / totalFromQuery) * 100) : 0;
+          results[c.label] = { filled, empty, pctEmpty, pctFilled };
+        }
+      }
     }
 
     return NextResponse.json({ total: totalFromQuery, columns: results });
