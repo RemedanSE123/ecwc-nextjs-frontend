@@ -74,7 +74,7 @@ const navigation: NavItem[] = [
   
   { name: 'Machinery Maintenance', href: '/machinery-maintenance', icon: Wrench },
   { name: 'Machinery Operations ', href: '/machinery-operations', icon: ClipboardList },
-  { name: 'Equipment Management', href: '/equipment-administration', icon: Settings },
+  { name: 'Equipment Admin', href: '/equipment-administration', icon: Settings },
   { name: 'Common Data', href: '/common-data', icon: Database },
   { name: 'Compound Map', href: '/compound-map', icon: MapPin },
   { name: 'Announcements', href: '/announcements', icon: Megaphone },

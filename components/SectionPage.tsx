@@ -16,9 +16,10 @@ interface SectionPageProps {
   title?: string;
   formItems: FormItem[];
   icon?: React.ReactNode;
+  reportItems?: FormItem[];
 }
 
-export default function SectionPage({ title, formItems, icon }: SectionPageProps) {
+export default function SectionPage({ title, formItems, icon, reportItems }: SectionPageProps) {
   const [activeTab, setActiveTab] = useState<TabId>('form');
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState('');
@@ -151,13 +152,22 @@ export default function SectionPage({ title, formItems, icon }: SectionPageProps
 
         {/* Report tab */}
         {activeTab === 'report' && (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-12 h-12 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mb-4">
-              <BarChart2 className="w-6 h-6 text-zinc-400 dark:text-zinc-500" />
-            </div>
-            <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Reports coming soon</p>
-            <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">This section will be available in a future update.</p>
-          </div>
+          <>
+            {reportItems && reportItems.length > 0 ? (
+              <div className="mt-2">
+                {/* When reportItems are provided, render the first report directly without a list container */}
+                {reportItems[0]?.component}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <div className="w-12 h-12 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mb-4">
+                  <BarChart2 className="w-6 h-6 text-zinc-400 dark:text-zinc-500" />
+                </div>
+                <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Reports coming soon</p>
+                <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">This section will be available in a future update.</p>
+              </div>
+            )}
+          </>
         )}
 
         {/* Data tab */}

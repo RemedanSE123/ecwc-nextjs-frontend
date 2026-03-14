@@ -29,6 +29,15 @@ CREATE INDEX idx_asset_master_responsible_person_pno ON asset_master (responsibl
 CREATE INDEX idx_asset_master_serial_no ON asset_master (serial_no);
 CREATE INDEX idx_asset_master_ownership ON asset_master (ownership);
 
+-- Uniqueness (case/whitespace insensitive) for asset_no and serial_no
+CREATE UNIQUE INDEX IF NOT EXISTS idx_asset_master_asset_no_unique
+  ON asset_master (LOWER(TRIM(asset_no)))
+  WHERE asset_no IS NOT NULL AND TRIM(asset_no) <> '';
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_asset_master_serial_no_unique
+  ON asset_master (LOWER(TRIM(serial_no)))
+  WHERE serial_no IS NOT NULL AND TRIM(serial_no) <> '';
+
 
 
 ALTER TABLE asset_master

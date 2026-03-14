@@ -133,7 +133,6 @@ export default function HeavyVehicleDetailModal({ assetId, onClose }: HeavyVehic
               return (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <DetailRow icon={FileText} label="Plate No." value={d.plate_no} />
-              <DetailRow icon={Hash} label="Chassis/Serial No." value={d.chassis_serial_no} />
               <DetailRow icon={Settings} label="Engine Make" value={d.engine_make} />
               <DetailRow icon={Settings} label="Engine Model" value={d.engine_model} />
               <DetailRow icon={Hash} label="Engine Serial No." value={d.engine_serial_no} />

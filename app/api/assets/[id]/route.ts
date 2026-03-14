@@ -88,6 +88,39 @@ export async function PATCH(
       }
       return out;
     };
+    // Determine prospective asset_no / serial_no (new value if provided, otherwise current)
+    const nextAssetNoRaw =
+      'asset_no' in body ? (body.asset_no ?? '') : (current.asset_no ?? '');
+    const nextSerialNoRaw =
+      'serial_no' in body ? (body.serial_no ?? '') : (current.serial_no ?? '');
+    const nextAssetNo = typeof nextAssetNoRaw === 'string' ? nextAssetNoRaw.trim() : String(nextAssetNoRaw ?? '').trim();
+    const nextSerialNo = typeof nextSerialNoRaw === 'string' ? nextSerialNoRaw.trim() : String(nextSerialNoRaw ?? '').trim();
+
+    if (nextAssetNo) {
+      const dup = await query<{ id: string }>(
+        `SELECT id FROM asset_master WHERE LOWER(TRIM(asset_no)) = LOWER(TRIM($1)) AND id <> $2 LIMIT 1`,
+        [nextAssetNo, id]
+      );
+      if (dup && dup.length > 0) {
+        return NextResponse.json(
+          { error: 'Validation error', detail: 'An asset with this Asset No already exists. Asset No must be unique.' },
+          { status: 400 }
+        );
+      }
+    }
+    if (nextSerialNo) {
+      const dup = await query<{ id: string }>(
+        `SELECT id FROM asset_master WHERE LOWER(TRIM(serial_no)) = LOWER(TRIM($1)) AND id <> $2 LIMIT 1`,
+        [nextSerialNo, id]
+      );
+      if (dup && dup.length > 0) {
+        return NextResponse.json(
+          { error: 'Validation error', detail: 'An asset with this Serial No already exists. Serial No must be unique.' },
+          { status: 400 }
+        );
+      }
+    }
+
     const setParts: string[] = [];
     const values: (string | null)[] = [];
     let idx = 1;
@@ -197,6 +230,18 @@ export async function DELETE(
       [id]
     );
     const before = beforeRows?.[0];
+    // Delete from detail tables first to avoid FK violations (works even if DB has no ON DELETE CASCADE)
+    const detailTables = [
+      'light_vehicle_details',
+      'heavy_vehicle_details',
+      'machinery_details',
+      'plant_details',
+      'aux_generator_rates',
+      'asset_status_history',
+    ];
+    for (const table of detailTables) {
+      await query(`DELETE FROM ${table} WHERE asset_id = $1`, [id]);
+    }
     const rows = await query<Record<string, unknown>>(
       'DELETE FROM asset_master WHERE id = $1 RETURNING *',
       [id]

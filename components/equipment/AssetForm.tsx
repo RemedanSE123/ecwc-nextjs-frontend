@@ -129,6 +129,11 @@ export default function AssetForm({
     remark: asset?.remark ?? '',
   });
 
+  const isIdConflictError =
+    !!error &&
+    (error.toLowerCase().includes('asset no must be unique') ||
+      error.toLowerCase().includes('serial no must be unique'));
+
   // Fetch unique options for selected category (description, make)
   useEffect(() => {
     if (!form.category.trim()) {
@@ -409,25 +414,6 @@ export default function AssetForm({
     }
     setError(null);
 
-    // Create: check duplicate asset_no (asset must be unique)
-    if (!isEdit && form.asset_no.trim()) {
-      setSaving(true);
-      try {
-        const res = await fetchAssets({ search: form.asset_no.trim(), limit: 20 });
-        const isDuplicate = res.data.some(
-          (a) => (a.asset_no || '').trim().toLowerCase() === form.asset_no.trim().toLowerCase()
-        );
-        if (isDuplicate) {
-          setError('An asset with this Asset No already exists. Asset No must be unique.');
-          setSaving(false);
-          return;
-        }
-      } catch {
-        // proceed if check fails (e.g. network)
-      }
-      setSaving(false);
-    }
-
     setSaving(true);
     try {
       if (isEdit && asset) {
@@ -599,7 +585,39 @@ export default function AssetForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6 relative">
+      {isIdConflictError && (
+        <div className="fixed inset-0 z-[9999] flex items-start justify-center pt-16 px-4 bg-black/40">
+          <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl border border-red-200">
+            <div className="px-5 py-4 border-b border-red-100 flex items-center justify-between bg-red-50">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-red-100 text-red-700 text-sm font-semibold">
+                  !
+                </span>
+                <div>
+                  <p className="text-sm font-semibold text-red-800">Duplicate identifier</p>
+                  <p className="text-xs text-red-700/80">
+                    Asset No and Serial No must be unique across all assets.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setError(null)}
+                className="text-xs font-medium text-red-700 hover:text-red-900"
+              >
+                Close
+              </button>
+            </div>
+            <div className="px-5 py-4 text-sm text-red-800">
+              <p>{error}</p>
+              <p className="mt-2 text-xs text-red-700/80">
+                Please change the Asset No and/or Serial No to a value that is not used by another asset, then try again.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
       {error && (
         <div className="rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm px-4 py-3 flex items-center gap-2 shadow-sm">
           <span className="font-medium">Error:</span>
@@ -781,14 +799,6 @@ export default function AssetForm({
                   id="hv_plate_no"
                   value={detailFields.plate_no}
                   onChange={(e) => setDetailFields((f) => ({ ...f, plate_no: e.target.value }))}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="hv_chassis_serial_no">Chassis Serial No</Label>
-                <Input
-                  id="hv_chassis_serial_no"
-                  value={detailFields.chassis_serial_no}
-                  onChange={(e) => setDetailFields((f) => ({ ...f, chassis_serial_no: e.target.value }))}
                 />
               </div>
               <div className="space-y-1.5">

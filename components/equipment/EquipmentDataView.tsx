@@ -930,15 +930,13 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
                                         <DetailRow icon={Building2} label="Ownership" value={highlightText(a.ownership, searchRegex)} />
                                         <DetailRow icon={Settings} label="Make" value={highlightText(a.make, searchRegex)} />
                                         <DetailRow icon={Box} label="Model" value={highlightText(a.model, searchRegex)} />
-                                        {((a.category ?? '') === HEAVY_VEHICLE_CATEGORY || (a.category ?? '') === LIGHT_VEHICLE_CATEGORY || (a.category ?? '') === MACHINERY_CATEGORY) ? (
+                                        {((a.category ?? '') === HEAVY_VEHICLE_CATEGORY || (a.category ?? '') === LIGHT_VEHICLE_CATEGORY || (a.category ?? '') === MACHINERY_CATEGORY) && (
                                           <DetailRow icon={Hash} label="Plate No" value={highlightText(a.plate_no, searchRegex)} mono copyable rawValue={a.plate_no ?? undefined} />
-                                        ) : (
-                                          <DetailRow icon={Hash} label="Serial No" value={highlightText(a.serial_no, searchRegex)} mono copyable rawValue={a.serial_no} />
                                         )}
                                         <DetailRow icon={Gauge} label="Status" value={highlightText(a.status, searchRegex)} badge />
                                         <DetailRow icon={User} label="Responsible person" value={highlightText(a.responsible_person_name, searchRegex)} />
                                         <DetailRow icon={Phone} label="Phone number" value={highlightText(a.responsible_person_pno, searchRegex)} />
-                                        <DetailRow icon={Calendar} label="Created" value={formatDateSafe(a.created_at)} />
+                                        <DetailRow icon={Hash} label="Serial No" value={highlightText(a.serial_no, searchRegex)} mono copyable rawValue={a.serial_no} />
                                         <DetailRow icon={Clock} label="Updated" value={formatDateSafe(a.updated_at)} />
                                       </div>
                                       </div>

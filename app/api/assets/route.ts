@@ -35,6 +35,34 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Enforce unique asset_no and serial_no (case/whitespace insensitive)
+    const assetNo = (body.asset_no ?? '').trim();
+    if (assetNo) {
+      const dup = await query<{ id: string }>(
+        `SELECT id FROM asset_master WHERE LOWER(TRIM(asset_no)) = LOWER(TRIM($1)) LIMIT 1`,
+        [assetNo]
+      );
+      if (dup && dup.length > 0) {
+        return NextResponse.json(
+          { error: 'Validation error', detail: 'An asset with this Asset No already exists. Asset No must be unique.' },
+          { status: 400 }
+        );
+      }
+    }
+    const serialNo = (body.serial_no ?? '').trim();
+    if (serialNo) {
+      const dup = await query<{ id: string }>(
+        `SELECT id FROM asset_master WHERE LOWER(TRIM(serial_no)) = LOWER(TRIM($1)) LIMIT 1`,
+        [serialNo]
+      );
+      if (dup && dup.length > 0) {
+        return NextResponse.json(
+          { error: 'Validation error', detail: 'An asset with this Serial No already exists. Serial No must be unique.' },
+          { status: 400 }
+        );
+      }
+    }
     const values: (string | null)[] = [];
     for (const key of ASSET_COLUMNS) {
       const v = body[key];

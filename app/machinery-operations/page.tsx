@@ -4,6 +4,7 @@ import SectionPage from '@/components/SectionPage';
 import type { FormItem } from '@/components/SectionPage';
 import { ClipboardList } from 'lucide-react';
 import EquipmentUtilizationForm from '@/components/forms/EquipmentUtilizationForm';
+import EquipmentUtilizationReport from '@/components/forms/EquipmentUtilizationReport';
 import DailyDownForm from '@/components/forms/DailyDownForm';
 import EquipmentTransferForm from '@/components/forms/EquipmentTransferForm';
 import EquipmentUtilizationPlan from '@/components/forms/EquipmentUtilizationPlan';
@@ -33,11 +34,19 @@ const FORM_ITEMS: FormItem[] = [
   { name: 'Rental Machineries Maintenance Labor Cost Entry' },
 ];
 
+const REPORT_ITEMS: FormItem[] = [
+  {
+    name: 'Equipment Utilization Report (Daily Machines, Trucks and Vehicles Time Utilization Register)',
+    component: <EquipmentUtilizationReport />,
+  },
+];
+
 export default function MachineryOperationsPage() {
   return (
     <SectionPage
       title={undefined}
       formItems={FORM_ITEMS}
+      reportItems={REPORT_ITEMS}
       icon={<ClipboardList className="h-6 w-6" />}
     />
   );
