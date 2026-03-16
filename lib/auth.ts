@@ -41,14 +41,15 @@ export const ASSET_CHANGE_NOTIFICATION_PHONES = ['0929517703', '0983007020', '09
 
 /** Full sidebar access (all nav items) */
 export const FULL_ACCESS_PHONES = ['0929517703', '0983007020'];
-/** All except Overview, Machinery Maintenance, Equipment Admin, Common Data */
+/** All except Overview, Machinery Maintenance, Equipment Admin, Common Data, Time Sheet */
 export const NO_OVERVIEW_PHONES = ['0912293712'];
-/** Nav hrefs hidden for NO_OVERVIEW_PHONES (Overview + Machinery Maintenance, Equipment Admin, Common Data) */
+/** Nav hrefs hidden for NO_OVERVIEW_PHONES (Overview + Machinery Maintenance, Equipment Admin, Common Data, Time Sheet) */
 export const NO_OVERVIEW_HIDDEN_HREFS = [
   '/dashboard',
   '/machinery-maintenance',
   '/equipment-administration',
   '/common-data',
+  '/forms',
 ];
 /** Only ECWC Assets (expanded) + Compound Map */
 export const ASSETS_AND_MAP_PHONES = [
@@ -125,6 +126,9 @@ export function clearSession(): void {
 export function getInactivityMs(): number {
   return INACTIVITY_MS;
 }
+
+/** Phones allowed to edit rate_op / rate_idle / rate_down on assets */
+export const RATE_EDIT_PHONES: string[] = ['0929517703', '0983007020', '0912293712'];
 
 /** Returns headers to send with mutating API requests so server can attribute audit. Client-only. */
 export function getAuthHeaders(): Record<string, string> {

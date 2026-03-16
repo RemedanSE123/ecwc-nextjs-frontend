@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/select';
 import type { Asset } from '@/types/asset';
 import { EQUIPMENT_CATEGORIES, SLUG_TO_DB_CATEGORY } from '@/types/asset';
+import { getSession, RATE_EDIT_PHONES } from '@/lib/auth';
 import {
   createAsset,
   updateAsset,
@@ -128,6 +129,14 @@ export default function AssetForm({
     responsible_person_pno: asset?.responsible_person_pno ?? '+251',
     remark: asset?.remark ?? '',
   });
+  const [canEditRates, setCanEditRates] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const session = getSession();
+    const phone = session?.user?.phone?.replace(/\s/g, '') ?? '';
+    setCanEditRates(RATE_EDIT_PHONES.includes(phone));
+  }, []);
 
   const isIdConflictError =
     !!error &&
@@ -191,9 +200,15 @@ export default function AssetForm({
   }, [facets?.make, form.make, isEdit]);
 
   const shouldShowRates = useMemo(() => {
-    // Rate fields are now hidden in both create and edit flows.
-    return false;
-  }, []);
+    const cat = (asset?.category ?? form.category ?? '').trim();
+    return [
+      HEAVY_VEHICLE_CATEGORY,
+      LIGHT_VEHICLE_CATEGORY,
+      MACHINERY_CATEGORY,
+      PLANT_CATEGORY,
+      AUXILIARY_CATEGORY,
+    ].includes(cat);
+  }, [asset?.category, form.category]);
 
   // When category changes, clear description if it's not in the new category's list (create mode)
   useEffect(() => {
@@ -1092,6 +1107,7 @@ export default function AssetForm({
                   step="0.01"
                   value={detailRates.rate_op}
                   onChange={(e) => setDetailRates((r) => ({ ...r, rate_op: e.target.value }))}
+                  disabled={!canEditRates}
                   placeholder="e.g. 1500.00"
                 />
               </div>
@@ -1103,6 +1119,7 @@ export default function AssetForm({
                   step="0.01"
                   value={detailRates.rate_idle}
                   onChange={(e) => setDetailRates((r) => ({ ...r, rate_idle: e.target.value }))}
+                  disabled={!canEditRates}
                   placeholder="e.g. 800.00"
                 />
               </div>
@@ -1114,6 +1131,7 @@ export default function AssetForm({
                   step="0.01"
                   value={detailRates.rate_down}
                   onChange={(e) => setDetailRates((r) => ({ ...r, rate_down: e.target.value }))}
+                  disabled={!canEditRates}
                   placeholder="e.g. 0.00"
                 />
               </div>
