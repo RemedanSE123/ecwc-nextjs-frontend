@@ -201,14 +201,20 @@ export default function AssetForm({
 
   const shouldShowRates = useMemo(() => {
     const cat = (asset?.category ?? form.category ?? '').trim();
-    return [
-      HEAVY_VEHICLE_CATEGORY,
-      LIGHT_VEHICLE_CATEGORY,
-      MACHINERY_CATEGORY,
-      PLANT_CATEGORY,
-      AUXILIARY_CATEGORY,
-    ].includes(cat);
-  }, [asset?.category, form.category]);
+    const desc = (asset?.description ?? form.description ?? '').toLowerCase();
+
+    // Rates apply to all Heavy, Light, Machinery, and Plant equipment
+    if ([HEAVY_VEHICLE_CATEGORY, LIGHT_VEHICLE_CATEGORY, MACHINERY_CATEGORY, PLANT_CATEGORY].includes(cat)) {
+      return true;
+    }
+
+    // For Auxiliary category, only generators have rates
+    if (cat === AUXILIARY_CATEGORY) {
+      return desc.includes('generator');
+    }
+
+    return false;
+  }, [asset?.category, form.category, asset?.description, form.description]);
 
   // When category changes, clear description if it's not in the new category's list (create mode)
   useEffect(() => {
