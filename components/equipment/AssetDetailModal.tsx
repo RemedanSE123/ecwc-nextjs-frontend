@@ -111,7 +111,7 @@ export default function AssetDetailModal({ asset, onClose, onEdit, onDelete }: A
             <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
             <div>
               <p className="text-xs text-muted-foreground mb-0.5">Project Location</p>
-              <p className="text-sm font-medium">{asset.project_location || '-'}</p>
+              <p className="text-sm font-medium">{asset.project_name || '-'}</p>
             </div>
           </div>
 

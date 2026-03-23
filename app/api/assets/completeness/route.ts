@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
 
     const cols = [
       'image_s3_key',
-      'project_location',
+      'project_name',
       'category',
       'asset_no',
       'description',
@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
 
     const columnLabels: Record<string, string> = {
       image_s3_key: 'Image',
-      project_location: 'Location',
+      project_name: 'Location',
       category: 'Category',
       asset_no: 'Asset No',
       description: 'Description',
@@ -99,11 +99,30 @@ export async function GET(request: NextRequest) {
       remark: 'Remark',
     };
 
-    const filters = cols.map(
-      (col) => `COUNT(*) FILTER (WHERE (${col} IS NOT NULL) AND (TRIM(COALESCE(${col}::text, '')) != ''))::int AS ${col}_filled`
-    ).join(', ');
+    const colExpr: Record<string, string> = {
+      image_s3_key: 'am.image_s3_key',
+      project_name: 'p.project_name',
+      category: 'am.category',
+      asset_no: 'am.asset_no',
+      description: 'am.description',
+      serial_no: 'am.serial_no',
+      make: 'am.make',
+      model: 'am.model',
+      status: 'am.status',
+      responsible_person_name: 'am.responsible_person_name',
+      responsible_person_pno: 'am.responsible_person_pno',
+      ownership: 'am.ownership',
+      remark: 'am.remark',
+    };
+    const filters = cols.map((col) => {
+      const expr = colExpr[col] ?? `am.${col}`;
+      return `COUNT(*) FILTER (WHERE (${expr} IS NOT NULL) AND (TRIM(COALESCE(${expr}::text, '')) != ''))::int AS ${col}_filled`;
+    }).join(', ');
     const oneRow = await query<Record<string, number>>(
-      `SELECT COUNT(*)::int AS total, ${filters} FROM asset_master WHERE ${whereClause}`,
+      `SELECT COUNT(*)::int AS total, ${filters}
+       FROM asset_master am
+       LEFT JOIN projects p ON am.project_id = p.id
+       WHERE ${whereClause}`,
       params
     );
     const row = oneRow?.[0];
@@ -130,6 +149,7 @@ export async function GET(request: NextRequest) {
       const detailRow = await query<Record<string, number>>(
         `SELECT ${detailFilters}
          FROM asset_master am
+         LEFT JOIN projects p ON am.project_id = p.id
          LEFT JOIN ${table} ${alias} ON am.id = ${alias}.asset_id
          WHERE ${whereClause}`,
         params

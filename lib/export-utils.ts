@@ -99,14 +99,14 @@ export function exportToExcel(data: Record<string, unknown>[], filename = 'dashb
 export function exportStatsToExcel(
   byCategory: { category: string; count: number }[],
   byStatus: { status: string; count: number }[],
-  byLocation: { project_location: string; count: number }[],
+  byLocation: { project_name: string; count: number }[],
   total: number
 ) {
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([{ total }]), 'Summary');
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(byCategory), 'By Category');
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(byStatus), 'By Status');
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(byLocation.map((l) => ({ location: l.project_location, count: l.count }))), 'By Location');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(byLocation.map((l) => ({ location: l.project_name, count: l.count }))), 'By Location');
   XLSX.writeFile(wb, `ecwc-dashboard-${new Date().toISOString().slice(0, 10)}.xlsx`);
 }
 

@@ -25,7 +25,7 @@ export function buildAssetWhereClause(searchParams: URLSearchParams): { whereCla
   const categoryArr = getParamValues(searchParams, 'category');
   const categoryGroup = searchParams.get('category_group') || undefined;
   const statusArr = getParamValues(searchParams, 'status');
-  const project_locationArr = getParamValues(searchParams, 'project_location');
+  const project_nameArr = getParamValues(searchParams, 'project_name');
   const makeArr = getParamValues(searchParams, 'make');
   const modelArr = getParamValues(searchParams, 'model');
   const ownershipArr = getParamValues(searchParams, 'ownership');
@@ -59,22 +59,22 @@ export function buildAssetWhereClause(searchParams: URLSearchParams): { whereCla
   if (statusVals.length > 0 || statusBlanks) {
     const parts: string[] = [];
     if (statusVals.length > 0) {
-      parts.push(`(status = ${statusVals.map((_, i) => `$${idx + i}`).join(' OR status = ')})`);
+      parts.push(`(am.status = ${statusVals.map((_, i) => `$${idx + i}`).join(' OR am.status = ')})`);
       statusVals.forEach((v) => params.push(v));
       idx += statusVals.length;
     }
-    if (statusBlanks) parts.push(blankCondition('status'));
+    if (statusBlanks) parts.push(blankCondition('am.status'));
     if (parts.length > 0) conditions.push(`(${parts.join(' OR ')})`);
   }
-  const { values: locVals, includeBlanks: locBlanks } = splitValues(project_locationArr);
+  const { values: locVals, includeBlanks: locBlanks } = splitValues(project_nameArr);
   if (locVals.length > 0 || locBlanks) {
     const parts: string[] = [];
     if (locVals.length > 0) {
-      parts.push(`(project_location = ${locVals.map((_, i) => `$${idx + i}`).join(' OR project_location = ')})`);
+      parts.push(`(COALESCE(p.project_name, '') = ${locVals.map((_, i) => `$${idx + i}`).join(" OR COALESCE(p.project_name, '') = ")})`);
       locVals.forEach((v) => params.push(v));
       idx += locVals.length;
     }
-    if (locBlanks) parts.push(blankCondition('project_location'));
+    if (locBlanks) parts.push(blankCondition('p.project_name'));
     if (parts.length > 0) conditions.push(`(${parts.join(' OR ')})`);
   }
   const { values: makeVals, includeBlanks: makeBlanks } = splitValues(makeArr);
@@ -132,11 +132,11 @@ export function buildAssetWhereClause(searchParams: URLSearchParams): { whereCla
       description ILIKE $${idx} OR asset_no ILIKE $${idx + 1} OR
       serial_no ILIKE $${idx + 2} OR make ILIKE $${idx + 3} OR
       model ILIKE $${idx + 4} OR responsible_person_name ILIKE $${idx + 5} OR
-      project_location ILIKE $${idx + 6} OR category ILIKE $${idx + 7} OR
+      COALESCE(p.project_name, '') ILIKE $${idx + 6} OR category ILIKE $${idx + 7} OR
       ownership ILIKE $${idx + 8} OR remark ILIKE $${idx + 9} OR
-      EXISTS (SELECT 1 FROM heavy_vehicle_details hvd WHERE hvd.asset_id = asset_master.id AND hvd.plate_no ILIKE $${idx + 10}) OR
-      EXISTS (SELECT 1 FROM light_vehicle_details lvd WHERE lvd.asset_id = asset_master.id AND lvd.plate_no ILIKE $${idx + 11}) OR
-      EXISTS (SELECT 1 FROM machinery_details md WHERE md.asset_id = asset_master.id AND md.plate_no ILIKE $${idx + 12})
+      EXISTS (SELECT 1 FROM heavy_vehicle_details hvd WHERE hvd.asset_id = am.id AND hvd.plate_no ILIKE $${idx + 10}) OR
+      EXISTS (SELECT 1 FROM light_vehicle_details lvd WHERE lvd.asset_id = am.id AND lvd.plate_no ILIKE $${idx + 11}) OR
+      EXISTS (SELECT 1 FROM machinery_details md WHERE md.asset_id = am.id AND md.plate_no ILIKE $${idx + 12})
     )`);
     params.push(pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern);
     idx += 13;

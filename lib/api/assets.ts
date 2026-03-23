@@ -9,7 +9,7 @@ export function getAssetImageUrl(key: string | null): string | null {
   return `${typeof window === 'undefined' ? '' : ''}/api/assets/image?key=${encodeURIComponent(key)}`;
 }
 
-const MULTI_KEYS = ['status', 'project_location', 'make', 'model', 'ownership', 'description'] as const;
+const MULTI_KEYS = ['status', 'project_name', 'make', 'model', 'ownership', 'description'] as const;
 
 /** Special value sent to API to filter for blank/empty cells (Excel-like). */
 export const BLANK_FILTER_VALUE = '__BLANK__';
@@ -150,9 +150,29 @@ export interface EquipmentOption {
   rate_down?: number | null;
 }
 
+export interface ProjectRecord {
+  id: string;
+  project_name: string;
+  status: 'active' | 'inactive' | 'closed';
+  manager_name?: string | null;
+  manager_phone?: string | null;
+  start_date?: string | null;
+  end_date?: string | null;
+  remark?: string | null;
+}
+
+export async function fetchProjects(status?: 'active' | 'inactive' | 'closed'): Promise<ProjectRecord[]> {
+  const params = new URLSearchParams();
+  if (status) params.set('status', status);
+  const q = params.toString();
+  const res = await fetch(`${API_BASE}/api/projects${q ? `?${q}` : ''}`);
+  if (!res.ok) return handleApiError(res, 'Failed to fetch projects');
+  return res.json();
+}
+
 export async function fetchEquipmentOptions(projectLocation: string): Promise<EquipmentOption[]> {
   const params = new URLSearchParams();
-  params.set('project_location', projectLocation);
+  params.set('project_name', projectLocation);
   const res = await fetch(`${API_BASE}/api/assets/equipment-options?${params.toString()}`);
   if (!res.ok) return handleApiError(res, 'Failed to fetch equipment options');
   return res.json();

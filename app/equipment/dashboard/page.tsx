@@ -358,7 +358,7 @@ export default function EquipmentDashboardPage() {
   const totalIdle = statusSummary?.grandTotal?.idle ?? 0;
   const totalDown = total - totalOp - totalIdle;
   const totalAvailability = total ? Math.round((totalOp / total) * 100) : 0;
-  const totalProjectSites = stats?.uniqueProjectSites ?? stats?.byLocation?.filter((l) => l.project_location !== 'Unassigned')?.length ?? 0;
+  const totalProjectSites = stats?.uniqueProjectSites ?? stats?.byLocation?.filter((l) => l.project_name !== 'Unassigned')?.length ?? 0;
 
   const fleetDownBreakdown = (() => {
     const gt = statusSummary?.grandTotal;

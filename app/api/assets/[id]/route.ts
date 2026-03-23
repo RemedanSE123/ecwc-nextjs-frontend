@@ -10,6 +10,25 @@ function getErrorMessage(err: unknown): string {
   return String(err);
 }
 
+async function getOrCreateProjectId(projectLocation: string | null | undefined): Promise<string | null> {
+  const normalized = (projectLocation ?? '').trim();
+  if (!normalized) return null;
+  const existing = await query<{ id: string }>(
+    'SELECT id FROM projects WHERE LOWER(TRIM(project_name)) = LOWER(TRIM($1)) LIMIT 1',
+    [normalized]
+  );
+  if (existing?.[0]?.id) return existing[0].id;
+  const created = await query<{ id: string }>(
+    `INSERT INTO projects (project_name, status)
+     VALUES ($1, 'active')
+     ON CONFLICT ((LOWER(TRIM(project_name))))
+     DO UPDATE SET project_name = EXCLUDED.project_name
+     RETURNING id`,
+    [normalized]
+  );
+  return created?.[0]?.id ?? null;
+}
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: { id: string } }
@@ -23,7 +42,10 @@ export async function GET(
       );
     }
     const rows = await query(
-      'SELECT * FROM asset_master WHERE id = $1',
+      `SELECT am.*, p.project_name AS project_name
+       FROM asset_master am
+       LEFT JOIN projects p ON am.project_id = p.id
+       WHERE am.id = $1`,
       [id]
     );
     if (!rows?.length) {
@@ -64,13 +86,16 @@ export async function PATCH(
     }
     const body = await request.json();
     const allowed = [
-      'image_s3_key', 'project_location', 'category', 'asset_no', 'description',
+      'image_s3_key', 'project_name', 'category', 'asset_no', 'description',
       'serial_no', 'make', 'model', 'status', 'responsible_person_name',
       'responsible_person_pno', 'ownership', 'remark',
     ];
     const assetDataKeys = ['id', ...allowed];
     const currentRows = await query<Record<string, unknown>>(
-      'SELECT * FROM asset_master WHERE id = $1',
+      `SELECT am.*, p.project_name AS project_name
+       FROM asset_master am
+       LEFT JOIN projects p ON am.project_id = p.id
+       WHERE am.id = $1`,
       [id]
     );
     const current = currentRows?.[0];
@@ -134,8 +159,14 @@ export async function PATCH(
       if (oldStr !== newStr) {
         changes.push({ field: key, from: oldStr, to: newStr });
       }
-      setParts.push(`${key} = $${idx}`);
-      values.push(newVal);
+      if (key === 'project_name') {
+        const projectId = await getOrCreateProjectId(newStr);
+        setParts.push(`project_id = $${idx}`);
+        values.push(projectId);
+      } else {
+        setParts.push(`${key} = $${idx}`);
+        values.push(newVal);
+      }
       idx++;
     }
     if (setParts.length === 0) {
@@ -147,7 +178,17 @@ export async function PATCH(
     setParts.push(`updated_at = NOW()`);
     values.push(id);
     const sql = `UPDATE asset_master SET ${setParts.join(', ')} WHERE id = $${idx} RETURNING *`;
-    const rows = await query<Record<string, unknown>>(sql, values);
+    const updatedRows = await query<Record<string, unknown>>(sql, values);
+    const updatedId = updatedRows?.[0]?.id as string | undefined;
+    const rows = updatedId
+      ? await query<Record<string, unknown>>(
+          `SELECT am.*, p.project_name AS project_name
+           FROM asset_master am
+           LEFT JOIN projects p ON am.project_id = p.id
+           WHERE am.id = $1`,
+          [updatedId]
+        )
+      : [];
     if (!rows?.length) {
       return NextResponse.json(
         { error: 'Asset not found' },
@@ -226,7 +267,10 @@ export async function DELETE(
       );
     }
     const beforeRows = await query<Record<string, unknown>>(
-      'SELECT * FROM asset_master WHERE id = $1',
+      `SELECT am.*, p.project_name AS project_name
+       FROM asset_master am
+       LEFT JOIN projects p ON am.project_id = p.id
+       WHERE am.id = $1`,
       [id]
     );
     const before = beforeRows?.[0];
@@ -253,7 +297,7 @@ export async function DELETE(
       );
     }
     const assetDataKeys = [
-      'id', 'image_s3_key', 'project_location', 'category', 'asset_no', 'description',
+      'id', 'image_s3_key', 'project_name', 'category', 'asset_no', 'description',
       'serial_no', 'make', 'model', 'status', 'responsible_person_name',
       'responsible_person_pno', 'ownership', 'remark',
     ];

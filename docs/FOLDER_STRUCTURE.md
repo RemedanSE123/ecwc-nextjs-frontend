@@ -40,7 +40,9 @@ ecwc-erp-frontend/
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/assets` | List assets with `category`, `status`, `project_location`, `search`, `ownership`, `page`, `limit` |
+| GET | `/api/assets` | List assets with `category`, `status`, `project_name`, `search`, `ownership`, `page`, `limit` |
+| GET/POST | `/api/projects` | List/create projects (`project_name`, `status`, manager, dates) |
+| PATCH/DELETE | `/api/projects/[id]` | Update or delete project (delete blocked if linked assets exist) |
 | GET | `/api/assets/stats?category=` | KPI stats: total, byCategory, byStatus, byLocation |
 | GET | `/api/assets/reports?category=` | Report data: categoryBreakdown, statusBreakdown, locationBreakdown, recentAssets |
 

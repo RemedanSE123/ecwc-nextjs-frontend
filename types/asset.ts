@@ -1,7 +1,8 @@
 export interface Asset {
   id: string;
   image_s3_key: string | null;
-  project_location: string | null;
+  project_id?: string | null;
+  project_name: string | null;
   category: string;
   asset_no: string | null;
   description: string;
@@ -23,7 +24,7 @@ export interface AssetFilters {
   category?: string | string[];
   category_group?: string;  // slug e.g. plant-equipment
   status?: string | string[];
-  project_location?: string | string[];
+  project_name?: string | string[];
   search?: string;
   description?: string | string[];  // filter by exact description(s), multi-select
   make?: string | string[];
@@ -40,7 +41,7 @@ export interface AssetFacets {
   category?: string[];
   description?: string[];
   status: string[];
-  project_location: string[];
+  project_name: string[];
   make: string[];
   model: string[];
   ownership: string[];
@@ -64,8 +65,8 @@ export interface AssetStats {
   total: number;
   byCategory: { category: string; count: number; operational?: number }[];
   byStatus: { status: string; count: number }[];
-  byLocation: { project_location: string; count: number }[];
-  /** Number of distinct project_location values (excluding null, empty, Unassigned). */
+  byLocation: { project_name: string; count: number }[];
+  /** Number of distinct project_name values (excluding null, empty, Unassigned). */
   uniqueProjectSites?: number;
 }
 

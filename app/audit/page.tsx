@@ -170,7 +170,7 @@ const FIELD_LABELS: Record<string, string> = {
   key: 'File key',
   filename: 'Filename',
   image_s3_key: 'Image',
-  project_location: 'Project location',
+  project_name: 'Project location',
   asset_no: 'Asset number',
   serial_no: 'Serial number',
   make: 'Make',
@@ -210,7 +210,7 @@ function formatDetailKey(key: string): string {
 /** Render a full asset object (previous_data, updated_data, deleted_asset, asset_snapshot) as key-value list */
 function renderAssetData(data: Record<string, unknown>): ReactNode {
   const order = [
-    'id', 'asset_no', 'description', 'category', 'project_location', 'serial_no', 'make', 'model',
+    'id', 'asset_no', 'description', 'category', 'project_name', 'serial_no', 'make', 'model',
     'status', 'responsible_person_name', 'responsible_person_pno', 'ownership',
     'image_s3_key', 'remark',
   ];

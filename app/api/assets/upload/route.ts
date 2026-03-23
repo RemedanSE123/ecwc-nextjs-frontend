@@ -9,7 +9,7 @@ const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
 const ASSET_DATA_KEYS = [
-  'id', 'image_s3_key', 'project_location', 'category', 'asset_no', 'description',
+  'id', 'image_s3_key', 'project_name', 'category', 'asset_no', 'description',
   'serial_no', 'make', 'model', 'status', 'responsible_person_name',
   'responsible_person_pno', 'ownership', 'remark',
 ] as const;
@@ -67,7 +67,13 @@ export async function POST(request: NextRequest) {
     let entityId: string | null = null;
     let asset_snapshot: Record<string, string | null> | null = null;
     if (assetId) {
-      const rows = await query<Record<string, unknown>>('SELECT * FROM asset_master WHERE id = $1', [assetId]);
+      const rows = await query<Record<string, unknown>>(
+        `SELECT am.*, p.project_name AS project_name
+         FROM asset_master am
+         LEFT JOIN projects p ON am.project_id = p.id
+         WHERE am.id = $1`,
+        [assetId]
+      );
       const asset = rows?.[0];
       if (asset) {
         entityId = assetId;

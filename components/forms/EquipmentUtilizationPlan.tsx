@@ -82,7 +82,7 @@ export default function EquipmentUtilizationPlan() {
     setLoadingProjects(true);
     fetchAssetFacets()
       .then((data) => {
-        if (!cancelled) setProjects(data.project_location ?? []);
+        if (!cancelled) setProjects(data.project_name ?? []);
       })
       .catch(() => {
         if (!cancelled) setProjects([]);
@@ -159,7 +159,7 @@ export default function EquipmentUtilizationPlan() {
       try {
         setLoadingAssets(true);
         const first = await fetchAssets({
-          project_location: project,
+          project_name: project,
           category: allowedCategories,
           include_details: true,
           page: 1,
@@ -172,7 +172,7 @@ export default function EquipmentUtilizationPlan() {
           const rest = await Promise.all(
             pages.map((p) =>
               fetchAssets({
-                project_location: project,
+                project_name: project,
                 category: allowedCategories,
                 include_details: true,
                 page: p,

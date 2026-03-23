@@ -50,8 +50,8 @@ export default function EquipmentUtilizationReport() {
   }, [])
 
   const projectOptions = useMemo(
-    () => (facets?.project_location ?? []) as string[],
-    [facets?.project_location]
+    () => (facets?.project_name ?? []) as string[],
+    [facets?.project_name]
   )
   const categoryOptions = useMemo(
     () => (facets?.category ?? []) as string[],

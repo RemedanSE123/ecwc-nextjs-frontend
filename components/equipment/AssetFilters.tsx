@@ -160,7 +160,7 @@ function MultiSelectFilter({
 /** Which filter columns have blank/empty values (from completeness API). When true, show "(Blanks)" option. */
 export interface HasBlanksForFilters {
   category?: boolean;
-  project_location?: boolean;
+  project_name?: boolean;
   description?: boolean;
   make?: boolean;
   model?: boolean;
@@ -234,7 +234,7 @@ export default function AssetFilters({
   const hasActiveFilters = !!(
     toArray(filters.category).length > 0 ||
     toArray(filters.status).length > 0 ||
-    toArray(filters.project_location).length > 0 ||
+    toArray(filters.project_name).length > 0 ||
     toArray(filters.make).length > 0 ||
     toArray(filters.model).length > 0 ||
     toArray(filters.ownership).length > 0 ||
@@ -246,7 +246,7 @@ export default function AssetFilters({
   const categoryOptionsList = categoryOptions.map((o) => o.value);
   // Excel-like: always use parent-provided full option lists when provided (no fallback to cascaded facets)
   const statusOptions = statusOptionsProp != null ? statusOptionsProp : (facets?.status ?? []);
-  const locationOptions = locationOptionsProp != null ? locationOptionsProp : (facets?.project_location ?? []);
+  const locationOptions = locationOptionsProp != null ? locationOptionsProp : (facets?.project_name ?? []);
   const makeOptions = makeOptionsProp != null ? makeOptionsProp : (facets?.make ?? []);
   const modelOptions = modelOptionsProp != null ? modelOptionsProp : (facets?.model ?? []);
   const ownershipOptions = ownershipOptionsProp != null ? ownershipOptionsProp : (facets?.ownership ?? []);
@@ -287,11 +287,11 @@ export default function AssetFilters({
         <MultiSelectFilter
           label="Location"
           options={locationOptions}
-          selected={toArray(filters.project_location)}
-          onSelectedChange={(v) => onFiltersChange({ project_location: v.length ? v : undefined, page: 1 })}
+          selected={toArray(filters.project_name)}
+          onSelectedChange={(v) => onFiltersChange({ project_name: v.length ? v : undefined, page: 1 })}
           placeholder="Location"
           className="w-[110px] sm:w-[120px]"
-          includeBlanksOption={hasBlanksFor.project_location !== false}
+          includeBlanksOption={hasBlanksFor.project_name !== false}
         />
         <MultiSelectFilter
           label="Description"
@@ -397,10 +397,10 @@ export default function AssetFilters({
           <MultiSelectFilter
             label="Location"
             options={locationOptions}
-            selected={toArray(filters.project_location)}
-            onSelectedChange={(v) => onFiltersChange({ project_location: v.length ? v : undefined, page: 1 })}
+            selected={toArray(filters.project_name)}
+            onSelectedChange={(v) => onFiltersChange({ project_name: v.length ? v : undefined, page: 1 })}
             placeholder="Location"
-            includeBlanksOption={hasBlanksFor.project_location !== false}
+            includeBlanksOption={hasBlanksFor.project_name !== false}
           />
         </div>
         <div>

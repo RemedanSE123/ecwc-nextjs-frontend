@@ -55,3 +55,38 @@ RENAME COLUMN detail_location TO project_location;
 -- 3️⃣ Rename temp_location to detail_location
 ALTER TABLE asset_master
 RENAME COLUMN temp_location TO detail_location;
+
+ALTER TABLE asset_master
+DROP COLUMN detail_location;
+
+[3/23/2026 11:03 AM] Remedan: ALTER TABLE asset_master
+DROP COLUMN detail_location;
+[3/23/2026 11:16 AM] Remedan: CREATE TABLE projects (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    project_name TEXT NOT NULL UNIQUE,
+    status TEXT DEFAULT 'active',
+    manager_name TEXT,
+    manager_phone TEXT,
+    start_date DATE,
+    end_date DATE,
+    remark TEXT,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+[3/23/2026 11:18 AM] Remedan: INSERT INTO projects (project_name)
+SELECT DISTINCT project_location
+FROM asset_master
+WHERE project_location IS NOT NULL;
+[3/23/2026 11:18 AM] Remedan: ALTER TABLE asset_master
+ADD COLUMN project_id UUID;
+[3/23/2026 11:20 AM] Remedan: UPDATE asset_master a
+SET project_id = p.id
+FROM projects p
+WHERE a.project_location = p.project_name;
+[3/23/2026 11:23 AM] Remedan: ALTER TABLE asset_master
+ADD CONSTRAINT fk_asset_project
+FOREIGN KEY (project_id)
+REFERENCES projects(id);
+[3/23/2026 11:24 AM] Remedan: CREATE INDEX idx_asset_master_project_id
+ON asset_master(project_id);
+
+

@@ -123,7 +123,7 @@ export default function AssetForm({
     make: asset?.make ?? '',
     model: asset?.model ?? '',
     status: asset?.status ?? '',
-    project_location: asset?.project_location ?? '',
+    project_name: asset?.project_name ?? '',
     ownership: asset?.ownership ?? '',
     responsible_person_name: asset?.responsible_person_name ?? '',
     responsible_person_pno: asset?.responsible_person_pno ?? '+251',
@@ -156,7 +156,7 @@ export default function AssetForm({
       .finally(() => setFacetsLoading(false));
   }, [form.category]);
 
-  // Fetch ALL options (no category filter) for project_location, status, ownership
+  // Fetch ALL options (no category filter) for project_name, status, ownership
   useEffect(() => {
     setAllFacetsLoading(true);
     fetchAssetFacets({})
@@ -185,9 +185,9 @@ export default function AssetForm({
     return ensureCurrentInList(list, form.status);
   }, [allFacets?.status, form.status, isEdit]);
   const projectLocationOptions = useMemo(() => {
-    const list = [...new Set(allFacets?.project_location ?? [])].filter(Boolean).sort() as string[];
-    return ensureCurrentInList(list, form.project_location);
-  }, [allFacets?.project_location, form.project_location, isEdit]);
+    const list = [...new Set(allFacets?.project_name ?? [])].filter(Boolean).sort() as string[];
+    return ensureCurrentInList(list, form.project_name);
+  }, [allFacets?.project_name, form.project_name, isEdit]);
   const ownershipOptions = useMemo(() => {
     const list = [...new Set(allFacets?.ownership ?? [])].filter(Boolean) as string[];
     if (!list.includes('Rental')) list.push('Rental');
@@ -236,7 +236,7 @@ export default function AssetForm({
         make: asset.make ?? '',
         model: asset.model ?? '',
         status: asset.status ?? '',
-        project_location: asset.project_location ?? '',
+        project_name: asset.project_name ?? '',
         ownership: asset.ownership ?? '',
         responsible_person_name: asset.responsible_person_name ?? '',
         responsible_person_pno: asset.responsible_person_pno ?? '',
@@ -731,11 +731,11 @@ export default function AssetForm({
           </div>
           {/* Project Location */}
           <div className="space-y-2">
-            <Label htmlFor="project_location">Project Location</Label>
+            <Label htmlFor="project_name">Project Location</Label>
             <SearchableCombobox
-              id="project_location"
-              value={form.project_location}
-              onChange={(v) => update('project_location', v)}
+              id="project_name"
+              value={form.project_name}
+              onChange={(v) => update('project_name', v)}
               options={projectLocationOptions}
               placeholder="Type to search location"
               loading={allFacetsLoading}

@@ -12,10 +12,29 @@ function getErrorMessage(err: unknown): string {
 }
 
 const ASSET_COLUMNS = [
-  'image_s3_key', 'project_location', 'category', 'asset_no', 'description',
+  'image_s3_key', 'project_id', 'category', 'asset_no', 'description',
   'serial_no', 'make', 'model', 'status', 'responsible_person_name',
   'responsible_person_pno', 'ownership', 'remark',
 ] as const;
+
+async function getOrCreateProjectId(projectLocation: string | null | undefined): Promise<string | null> {
+  const normalized = (projectLocation ?? '').trim();
+  if (!normalized) return null;
+  const existing = await query<{ id: string }>(
+    'SELECT id FROM projects WHERE LOWER(TRIM(project_name)) = LOWER(TRIM($1)) LIMIT 1',
+    [normalized]
+  );
+  if (existing?.[0]?.id) return existing[0].id;
+  const created = await query<{ id: string }>(
+    `INSERT INTO projects (project_name, status)
+     VALUES ($1, 'active')
+     ON CONFLICT ((LOWER(TRIM(project_name))))
+     DO UPDATE SET project_name = EXCLUDED.project_name
+     RETURNING id`,
+    [normalized]
+  );
+  return created?.[0]?.id ?? null;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -63,14 +82,29 @@ export async function POST(request: NextRequest) {
         );
       }
     }
+    const projectId = await getOrCreateProjectId(body.project_name ?? null);
     const values: (string | null)[] = [];
     for (const key of ASSET_COLUMNS) {
+      if (key === 'project_id') {
+        values.push(projectId);
+        continue;
+      }
       const v = body[key];
       values.push(v === undefined || v === '' ? null : String(v));
     }
     const placeholders = values.map((_, i) => `$${i + 1}`).join(', ');
     const sql = `INSERT INTO asset_master (${ASSET_COLUMNS.join(', ')}) VALUES (${placeholders}) RETURNING *`;
-    const rows = await query(sql, values);
+    const insertedRows = await query<{ id: string }>(sql, values);
+    const insertedId = insertedRows?.[0]?.id;
+    const rows = insertedId
+      ? await query<Record<string, unknown>>(
+          `SELECT am.*, p.project_name AS project_name
+           FROM asset_master am
+           LEFT JOIN projects p ON am.project_id = p.id
+           WHERE am.id = $1`,
+          [insertedId]
+        )
+      : [];
     if (!rows?.length) {
       return NextResponse.json(
         { error: 'Insert failed' },
@@ -154,7 +188,7 @@ export async function GET(request: NextRequest) {
     const categoryArr = getParamValues(searchParams, 'category');
     const categoryGroup = searchParams.get('category_group') || undefined;
     const statusArr = getParamValues(searchParams, 'status');
-    const project_locationArr = getParamValues(searchParams, 'project_location');
+    const project_nameArr = getParamValues(searchParams, 'project_name');
     const makeArr = getParamValues(searchParams, 'make');
     const modelArr = getParamValues(searchParams, 'model');
     const ownershipArr = getParamValues(searchParams, 'ownership');
@@ -192,22 +226,22 @@ export async function GET(request: NextRequest) {
     if (statusVals.length > 0 || statusBlanks) {
       const parts: string[] = [];
       if (statusVals.length > 0) {
-        parts.push(`(status = ${statusVals.map((_, i) => `$${idx + i}`).join(' OR status = ')})`);
+        parts.push(`(am.status = ${statusVals.map((_, i) => `$${idx + i}`).join(' OR am.status = ')})`);
         statusVals.forEach((v) => params.push(v));
         idx += statusVals.length;
       }
-      if (statusBlanks) parts.push(blankCondition('status'));
+      if (statusBlanks) parts.push(blankCondition('am.status'));
       if (parts.length > 0) conditions.push(`(${parts.join(' OR ')})`);
     }
-    const { values: locVals, includeBlanks: locBlanks } = splitValues(project_locationArr);
+    const { values: locVals, includeBlanks: locBlanks } = splitValues(project_nameArr);
     if (locVals.length > 0 || locBlanks) {
       const parts: string[] = [];
       if (locVals.length > 0) {
-        parts.push(`(project_location = ${locVals.map((_, i) => `$${idx + i}`).join(' OR project_location = ')})`);
+        parts.push(`(COALESCE(p.project_name, '') = ${locVals.map((_, i) => `$${idx + i}`).join(" OR COALESCE(p.project_name, '') = ")})`);
         locVals.forEach((v) => params.push(v));
         idx += locVals.length;
       }
-      if (locBlanks) parts.push(blankCondition('project_location'));
+      if (locBlanks) parts.push(blankCondition('p.project_name'));
       if (parts.length > 0) conditions.push(`(${parts.join(' OR ')})`);
     }
     const { values: makeVals, includeBlanks: makeBlanks } = splitValues(makeArr);
@@ -265,7 +299,7 @@ export async function GET(request: NextRequest) {
         am.description ILIKE $${idx} OR am.asset_no ILIKE $${idx + 1} OR
         am.serial_no ILIKE $${idx + 2} OR am.make ILIKE $${idx + 3} OR
         am.model ILIKE $${idx + 4} OR am.responsible_person_name ILIKE $${idx + 5} OR
-        am.project_location ILIKE $${idx + 6} OR am.category ILIKE $${idx + 7} OR
+        COALESCE(p.project_name, '') ILIKE $${idx + 6} OR am.category ILIKE $${idx + 7} OR
         am.ownership ILIKE $${idx + 8} OR am.remark ILIKE $${idx + 9} OR
         hvd.plate_no ILIKE $${idx + 10} OR lvd.plate_no ILIKE $${idx + 11} OR md.plate_no ILIKE $${idx + 12}
       )`);
@@ -275,7 +309,11 @@ export async function GET(request: NextRequest) {
 
     const whereClause = conditions.join(' AND ');
 
-    const fromJoin = `asset_master am LEFT JOIN heavy_vehicle_details hvd ON am.id = hvd.asset_id LEFT JOIN light_vehicle_details lvd ON am.id = lvd.asset_id LEFT JOIN machinery_details md ON am.id = md.asset_id`;
+    const fromJoin = `asset_master am
+      LEFT JOIN projects p ON am.project_id = p.id
+      LEFT JOIN heavy_vehicle_details hvd ON am.id = hvd.asset_id
+      LEFT JOIN light_vehicle_details lvd ON am.id = lvd.asset_id
+      LEFT JOIN machinery_details md ON am.id = md.asset_id`;
     const countQuery = `SELECT COUNT(*)::int as total FROM ${fromJoin} WHERE ${whereClause}`;
     const countRes = await query<{ total: number }>(countQuery, params);
     const total = countRes?.[0]?.total ?? 0;
@@ -284,7 +322,7 @@ export async function GET(request: NextRequest) {
     const detailCols = includeDetails
       ? `, hvd.plate_no AS hvd_plate_no, hvd.chassis_serial_no AS hvd_chassis_serial_no, hvd.engine_make AS hvd_engine_make, hvd.engine_model AS hvd_engine_model, hvd.engine_serial_no AS hvd_engine_serial_no, hvd.capacity AS hvd_capacity, hvd.manuf_year AS hvd_manuf_year, hvd.libre AS hvd_libre, hvd.tire_size AS hvd_tire_size, hvd.battery_capacity AS hvd_battery_capacity, hvd.insurance_coverage AS hvd_insurance_coverage, hvd.bolo_renewal_date AS hvd_bolo_renewal_date, lvd.plate_no AS lvd_plate_no, lvd.engine_serial_no AS lvd_engine_serial_no, lvd.capacity AS lvd_capacity, lvd.manuf_year AS lvd_manuf_year, lvd.libre AS lvd_libre, lvd.tire_size AS lvd_tire_size, lvd.battery_capacity AS lvd_battery_capacity, lvd.insurance_coverage AS lvd_insurance_coverage, lvd.bolo_renewal_date AS lvd_bolo_renewal_date, md.plate_no AS md_plate_no, md.engine_make AS md_engine_make, md.engine_model AS md_engine_model, md.engine_serial_no AS md_engine_serial_no, md.capacity AS md_capacity, md.manuf_year AS md_manuf_year, md.libre AS md_libre, md.tire_size AS md_tire_size, md.battery_capacity AS md_battery_capacity`
       : '';
-    const dataQuery = `SELECT am.*, COALESCE(hvd.plate_no, lvd.plate_no, md.plate_no) AS plate_no${detailCols} FROM ${fromJoin} WHERE ${whereClause} ORDER BY am.project_location ASC NULLS LAST, am.created_at DESC LIMIT $${idx} OFFSET $${idx + 1}`;
+    const dataQuery = `SELECT am.*, p.project_name AS project_name, COALESCE(hvd.plate_no, lvd.plate_no, md.plate_no) AS plate_no${detailCols} FROM ${fromJoin} WHERE ${whereClause} ORDER BY p.project_name ASC NULLS LAST, am.created_at DESC LIMIT $${idx} OFFSET $${idx + 1}`;
     const data = await query(dataQuery, params);
 
     return NextResponse.json({

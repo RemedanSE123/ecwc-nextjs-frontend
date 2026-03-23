@@ -14,10 +14,10 @@ function getErrorMessage(err: unknown): string {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const projectLocation = searchParams.get('project_location')?.trim();
+    const projectLocation = searchParams.get('project_name')?.trim();
     if (!projectLocation) {
       return NextResponse.json(
-        { error: 'Validation error', detail: 'project_location is required' },
+        { error: 'Validation error', detail: 'project_name is required' },
         { status: 400 }
       );
     }
@@ -27,14 +27,15 @@ export async function GET(request: NextRequest) {
       LEFT JOIN light_vehicle_details lvd ON am.id = lvd.asset_id
       LEFT JOIN machinery_details md ON am.id = md.asset_id
       LEFT JOIN plant_details pd ON am.id = pd.asset_id
-      LEFT JOIN aux_generator_rates ag ON am.id = ag.asset_id`;
+      LEFT JOIN aux_generator_rates ag ON am.id = ag.asset_id
+      LEFT JOIN projects p ON am.project_id = p.id`;
     const sql = `SELECT am.id, am.category, am.description, am.status, am.asset_no,
       COALESCE(hvd.plate_no, lvd.plate_no, md.plate_no) AS plate_no,
       COALESCE(hvd.rate_op, lvd.rate_op, md.rate_op, pd.rate_op, ag.rate_op) AS rate_op,
       COALESCE(hvd.rate_idle, lvd.rate_idle, md.rate_idle, pd.rate_idle, ag.rate_idle) AS rate_idle,
       COALESCE(hvd.rate_down, lvd.rate_down, md.rate_down, pd.rate_down, ag.rate_down) AS rate_down
       FROM ${fromJoin}
-      WHERE am.project_location = $1
+      WHERE COALESCE(p.project_name, '') = $1
         AND am.category = ANY($2::text[])
         AND (am.category <> 'Auxillary' OR am.description ILIKE '%generator%')
       ORDER BY

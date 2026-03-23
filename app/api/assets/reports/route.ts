@@ -23,9 +23,10 @@ export async function GET(request: NextRequest) {
       params.push(dbCategory);
     }
 
+    const categoryFilterAm = categoryFilter ? categoryFilter.replace('WHERE category', 'WHERE am.category') : '';
     const categoryRows = await query<{ category: string; total: number }>(
-      `SELECT category, COUNT(*)::int as total FROM asset_master ${categoryFilter}
-       GROUP BY category ORDER BY total DESC`,
+      `SELECT am.category AS category, COUNT(*)::int as total FROM asset_master am ${categoryFilterAm}
+       GROUP BY am.category ORDER BY total DESC`,
       params
     );
     const catTotal = categoryRows.reduce((s: number, r: { total: number }) => s + r.total, 0);
@@ -36,8 +37,8 @@ export async function GET(request: NextRequest) {
     }));
 
     const statusRows = await query<{ status: string; total: number }>(
-      `SELECT COALESCE(status, 'Unknown') as status, COUNT(*)::int as total FROM asset_master ${categoryFilter}
-       GROUP BY status ORDER BY total DESC`,
+      `SELECT COALESCE(am.status, 'Unknown') as status, COUNT(*)::int as total FROM asset_master am ${categoryFilterAm}
+       GROUP BY am.status ORDER BY total DESC`,
       params
     );
     const statusTotal = statusRows.reduce((s: number, r: { total: number }) => s + r.total, 0);
@@ -47,14 +48,16 @@ export async function GET(request: NextRequest) {
       percentage: statusTotal ? Math.round((r.total / statusTotal) * 100) : 0,
     }));
 
-    const locationExpr = `COALESCE(NULLIF(TRIM(project_location), ''), 'Unassigned')`;
+    const locationExpr = `COALESCE(NULLIF(TRIM(p.project_name), ''), 'Unassigned')`;
     const locationRows = await query<{ location: string; total: number; op: number; idle: number }>(
       `SELECT
          ${locationExpr} AS location,
          COUNT(*)::int AS total,
-         COUNT(*) FILTER (WHERE LOWER(TRIM(COALESCE(status, ''))) = 'op')::int AS op,
-         COUNT(*) FILTER (WHERE LOWER(TRIM(COALESCE(status, ''))) = 'idle')::int AS idle
-       FROM asset_master ${categoryFilter}
+         COUNT(*) FILTER (WHERE LOWER(TRIM(COALESCE(am.status, ''))) = 'op')::int AS op,
+         COUNT(*) FILTER (WHERE LOWER(TRIM(COALESCE(am.status, ''))) = 'idle')::int AS idle
+       FROM asset_master am
+       LEFT JOIN projects p ON am.project_id = p.id
+       ${categoryFilterAm}
        GROUP BY ${locationExpr}
        ORDER BY location ASC`,
       params
@@ -65,7 +68,9 @@ export async function GET(request: NextRequest) {
          ${locationExpr} AS location,
          TRIM(category) AS category,
          COUNT(*)::int AS count
-       FROM asset_master ${categoryFilter}
+       FROM asset_master am
+       LEFT JOIN projects p ON am.project_id = p.id
+       ${categoryFilterAm}
        GROUP BY ${locationExpr}, TRIM(category)`,
       params
     );
@@ -126,7 +131,11 @@ export async function GET(request: NextRequest) {
     const recentParams = [...params, 10];
     const limitIdx = params.length + 1;
     const recentAssets = await query(
-      `SELECT * FROM asset_master ${categoryFilter} ORDER BY created_at DESC LIMIT $${limitIdx}`,
+      `SELECT am.*, p.project_name AS project_name
+       FROM asset_master am
+       LEFT JOIN projects p ON am.project_id = p.id
+       ${categoryFilterAm}
+       ORDER BY am.created_at DESC LIMIT $${limitIdx}`,
       recentParams
     );
 

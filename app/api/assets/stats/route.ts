@@ -24,37 +24,42 @@ export async function GET(request: NextRequest) {
     }
 
     const totalRes = await query<{ total: number }>(
-      `SELECT COUNT(*)::int as total FROM asset_master ${categoryFilter}`,
+      `SELECT COUNT(*)::int as total FROM asset_master am ${categoryFilter ? categoryFilter.replace('WHERE category', 'WHERE am.category') : ''}`,
       params
     );
     const totalCount = totalRes?.[0]?.total ?? 0;
 
     const byCategory = await query<{ category: string; count: number }>(
-      `SELECT category, COUNT(*)::int as count
-       FROM asset_master ${categoryFilter}
-       GROUP BY category ORDER BY count DESC`,
+      `SELECT am.category as category, COUNT(*)::int as count
+       FROM asset_master am ${categoryFilter ? categoryFilter.replace('WHERE category', 'WHERE am.category') : ''}
+       GROUP BY am.category ORDER BY count DESC`,
       params
     );
 
     const byStatus = await query<{ status: string; count: number }>(
-      `SELECT COALESCE(status, 'Unknown') as status, COUNT(*)::int as count
-       FROM asset_master ${categoryFilter}
-       GROUP BY status ORDER BY count DESC`,
+      `SELECT COALESCE(am.status, 'Unknown') as status, COUNT(*)::int as count
+       FROM asset_master am ${categoryFilter ? categoryFilter.replace('WHERE category', 'WHERE am.category') : ''}
+       GROUP BY am.status ORDER BY count DESC`,
       params
     );
 
-    const byLocation = await query<{ project_location: string; count: number }>(
-      `SELECT COALESCE(project_location, 'Unassigned') as project_location, COUNT(*)::int as count
-       FROM asset_master ${categoryFilter}
-       GROUP BY project_location ORDER BY count DESC
+    const byLocation = await query<{ project_name: string; count: number }>(
+      `SELECT COALESCE(NULLIF(TRIM(p.project_name), ''), 'Unassigned') as project_name, COUNT(*)::int as count
+       FROM asset_master am
+       LEFT JOIN projects p ON am.project_id = p.id
+       ${categoryFilter ? categoryFilter.replace('WHERE category', 'WHERE am.category') : ''}
+       GROUP BY COALESCE(NULLIF(TRIM(p.project_name), ''), 'Unassigned') ORDER BY count DESC
        LIMIT 20`,
       params
     );
 
-    const locationCondition = `${categoryFilter ? categoryFilter + ' AND' : 'WHERE'} (project_location IS NOT NULL AND TRIM(project_location) != '' AND project_location != 'Unassigned')`;
+    const categoryFilterAm = categoryFilter ? categoryFilter.replace('WHERE category', 'WHERE am.category') : '';
+    const locationCondition = `${categoryFilterAm ? categoryFilterAm + ' AND' : 'WHERE'} (p.project_name IS NOT NULL AND TRIM(p.project_name) != '' AND p.project_name != 'Unassigned')`;
     const uniqueSitesRes = await query<{ unique_project_sites: number }>(
-      `SELECT COUNT(DISTINCT project_location)::int as unique_project_sites
-       FROM asset_master ${locationCondition}`,
+      `SELECT COUNT(DISTINCT p.project_name)::int as unique_project_sites
+       FROM asset_master am
+       LEFT JOIN projects p ON am.project_id = p.id
+       ${locationCondition}`,
       params
     );
     const uniqueProjectSites = uniqueSitesRes?.[0]?.unique_project_sites ?? 0;

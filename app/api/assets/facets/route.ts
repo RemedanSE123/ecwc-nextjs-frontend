@@ -35,7 +35,7 @@ function buildFacetWhere(request: NextRequest): { whereClause: string; params: (
   const categoryArr = getParamValues(searchParams, 'category');
   const categoryGroup = searchParams.get('category_group') || undefined;
   const statusArr = getParamValues(searchParams, 'status');
-  const project_locationArr = getParamValues(searchParams, 'project_location');
+  const project_nameArr = getParamValues(searchParams, 'project_name');
   const makeArr = getParamValues(searchParams, 'make');
   const modelArr = getParamValues(searchParams, 'model');
   const ownershipArr = getParamValues(searchParams, 'ownership');
@@ -69,22 +69,22 @@ function buildFacetWhere(request: NextRequest): { whereClause: string; params: (
   if (statusVals.length > 0 || statusBlanks) {
     const parts: string[] = [];
     if (statusVals.length > 0) {
-      parts.push(`(status = ${statusVals.map((_, i) => `$${idx + i}`).join(' OR status = ')})`);
+      parts.push(`(am.status = ${statusVals.map((_, i) => `$${idx + i}`).join(' OR am.status = ')})`);
       statusVals.forEach((v) => params.push(v));
       idx += statusVals.length;
     }
-    if (statusBlanks) parts.push(blankCondition('status'));
+    if (statusBlanks) parts.push(blankCondition('am.status'));
     if (parts.length > 0) conditions.push(`(${parts.join(' OR ')})`);
   }
-  const { values: locVals, includeBlanks: locBlanks } = splitValues(project_locationArr);
+  const { values: locVals, includeBlanks: locBlanks } = splitValues(project_nameArr);
   if (locVals.length > 0 || locBlanks) {
     const parts: string[] = [];
     if (locVals.length > 0) {
-      parts.push(`(project_location = ${locVals.map((_, i) => `$${idx + i}`).join(' OR project_location = ')})`);
+      parts.push(`(COALESCE(p.project_name, '') = ${locVals.map((_, i) => `$${idx + i}`).join(" OR COALESCE(p.project_name, '') = ")})`);
       locVals.forEach((v) => params.push(v));
       idx += locVals.length;
     }
-    if (locBlanks) parts.push(blankCondition('project_location'));
+    if (locBlanks) parts.push(blankCondition('p.project_name'));
     if (parts.length > 0) conditions.push(`(${parts.join(' OR ')})`);
   }
   const { values: makeVals, includeBlanks: makeBlanks } = splitValues(makeArr);
@@ -142,11 +142,11 @@ function buildFacetWhere(request: NextRequest): { whereClause: string; params: (
       description ILIKE $${idx} OR asset_no ILIKE $${idx + 1} OR
       serial_no ILIKE $${idx + 2} OR make ILIKE $${idx + 3} OR
       model ILIKE $${idx + 4} OR responsible_person_name ILIKE $${idx + 5} OR
-      project_location ILIKE $${idx + 6} OR category ILIKE $${idx + 7} OR
+      COALESCE(p.project_name, '') ILIKE $${idx + 6} OR category ILIKE $${idx + 7} OR
       ownership ILIKE $${idx + 8} OR remark ILIKE $${idx + 9} OR
-      EXISTS (SELECT 1 FROM heavy_vehicle_details hvd WHERE hvd.asset_id = asset_master.id AND hvd.plate_no ILIKE $${idx + 10}) OR
-      EXISTS (SELECT 1 FROM light_vehicle_details lvd WHERE lvd.asset_id = asset_master.id AND lvd.plate_no ILIKE $${idx + 11}) OR
-      EXISTS (SELECT 1 FROM machinery_details md WHERE md.asset_id = asset_master.id AND md.plate_no ILIKE $${idx + 12})
+      EXISTS (SELECT 1 FROM heavy_vehicle_details hvd WHERE hvd.asset_id = am.id AND hvd.plate_no ILIKE $${idx + 10}) OR
+      EXISTS (SELECT 1 FROM light_vehicle_details lvd WHERE lvd.asset_id = am.id AND lvd.plate_no ILIKE $${idx + 11}) OR
+      EXISTS (SELECT 1 FROM machinery_details md WHERE md.asset_id = am.id AND md.plate_no ILIKE $${idx + 12})
     )`);
     params.push(pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern, pattern);
     idx += 13;
@@ -159,15 +159,16 @@ export async function GET(request: NextRequest) {
   try {
     const { whereClause, params } = buildFacetWhere(request);
 
+    const fromClause = 'asset_master am LEFT JOIN projects p ON am.project_id = p.id';
     const [categoryRes, descriptionRes, statusRes, locationRes, makeRes, modelRes, ownershipRes, responsibleRes] = await Promise.all([
-      query<{ category: string }>(`SELECT DISTINCT category FROM asset_master WHERE ${whereClause} AND category IS NOT NULL AND TRIM(category::text) != '' ORDER BY category`, params),
-      query<{ description: string }>(`SELECT DISTINCT description FROM asset_master WHERE ${whereClause} AND description IS NOT NULL AND TRIM(description::text) != '' ORDER BY description LIMIT 500`, params),
-      query<{ status: string }>(`SELECT DISTINCT status FROM asset_master WHERE ${whereClause} AND status IS NOT NULL AND TRIM(status::text) != '' ORDER BY status`, params),
-      query<{ project_location: string }>(`SELECT DISTINCT project_location FROM asset_master WHERE ${whereClause} AND project_location IS NOT NULL AND TRIM(project_location::text) != '' ORDER BY project_location`, params),
-      query<{ make: string }>(`SELECT DISTINCT make FROM asset_master WHERE ${whereClause} AND make IS NOT NULL AND TRIM(make::text) != '' ORDER BY make`, params),
-      query<{ model: string }>(`SELECT DISTINCT model FROM asset_master WHERE ${whereClause} AND model IS NOT NULL AND TRIM(model::text) != '' ORDER BY model`, params),
-      query<{ ownership: string }>(`SELECT DISTINCT ownership FROM asset_master WHERE ${whereClause} AND ownership IS NOT NULL AND TRIM(ownership::text) != '' ORDER BY ownership`, params),
-      query<{ responsible_person_name: string }>(`SELECT DISTINCT responsible_person_name FROM asset_master WHERE ${whereClause} AND responsible_person_name IS NOT NULL AND TRIM(responsible_person_name::text) != '' ORDER BY responsible_person_name`, params),
+      query<{ category: string }>(`SELECT DISTINCT am.category AS category FROM ${fromClause} WHERE ${whereClause} AND am.category IS NOT NULL AND TRIM(am.category::text) != '' ORDER BY category`, params),
+      query<{ description: string }>(`SELECT DISTINCT am.description AS description FROM ${fromClause} WHERE ${whereClause} AND am.description IS NOT NULL AND TRIM(am.description::text) != '' ORDER BY description LIMIT 500`, params),
+      query<{ status: string }>(`SELECT DISTINCT am.status AS status FROM ${fromClause} WHERE ${whereClause} AND am.status IS NOT NULL AND TRIM(am.status::text) != '' ORDER BY status`, params),
+      query<{ project_name: string }>(`SELECT DISTINCT p.project_name AS project_name FROM ${fromClause} WHERE ${whereClause} AND p.project_name IS NOT NULL AND TRIM(p.project_name::text) != '' ORDER BY project_name`, params),
+      query<{ make: string }>(`SELECT DISTINCT am.make AS make FROM ${fromClause} WHERE ${whereClause} AND am.make IS NOT NULL AND TRIM(am.make::text) != '' ORDER BY make`, params),
+      query<{ model: string }>(`SELECT DISTINCT am.model AS model FROM ${fromClause} WHERE ${whereClause} AND am.model IS NOT NULL AND TRIM(am.model::text) != '' ORDER BY model`, params),
+      query<{ ownership: string }>(`SELECT DISTINCT am.ownership AS ownership FROM ${fromClause} WHERE ${whereClause} AND am.ownership IS NOT NULL AND TRIM(am.ownership::text) != '' ORDER BY ownership`, params),
+      query<{ responsible_person_name: string }>(`SELECT DISTINCT am.responsible_person_name AS responsible_person_name FROM ${fromClause} WHERE ${whereClause} AND am.responsible_person_name IS NOT NULL AND TRIM(am.responsible_person_name::text) != '' ORDER BY responsible_person_name`, params),
     ]);
 
     const toStrings = <T extends Record<string, unknown>>(rows: T[] | undefined, key: keyof T): string[] =>
@@ -177,7 +178,7 @@ export async function GET(request: NextRequest) {
       category: toStrings(categoryRes, 'category'),
       description: toStrings(descriptionRes, 'description'),
       status: toStrings(statusRes, 'status'),
-      project_location: toStrings(locationRes, 'project_location'),
+      project_name: toStrings(locationRes, 'project_name'),
       make: toStrings(makeRes, 'make'),
       model: toStrings(modelRes, 'model'),
       ownership: toStrings(ownershipRes, 'ownership'),

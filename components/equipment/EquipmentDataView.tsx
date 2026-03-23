@@ -194,7 +194,7 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
   headerSearchRef.current = filters;
   const loadMoreSentinelRef = useRef<HTMLDivElement>(null);
   /** All Assets table column sort */
-  const [assetsTableSortBy, setAssetsTableSortBy] = useState<string>('project_location');
+  const [assetsTableSortBy, setAssetsTableSortBy] = useState<string>('project_name');
   const [assetsTableSortOrder, setAssetsTableSortOrder] = useState<'asc' | 'desc'>('asc');
 
   useEffect(() => {
@@ -276,7 +276,7 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
 
   // Fetch facets using current filters so Location, Status, etc. only show options that exist for the selected Category (and other filters)
   const toArray = (v: string | string[] | undefined): string[] => (v == null ? [] : Array.isArray(v) ? v : [v]);
-  const facetFilterKey = `${toArray(filters.category).join(',')}|${toArray(filters.status).join(',')}|${toArray(filters.project_location).join(',')}|${toArray(filters.make).join(',')}|${toArray(filters.model).join(',')}|${toArray(filters.ownership).join(',')}|${toArray(filters.description).join(',')}|${filters.search ?? ''}|${filters.responsible_person_name ?? ''}|${categoryGroup ?? ''}`;
+  const facetFilterKey = `${toArray(filters.category).join(',')}|${toArray(filters.status).join(',')}|${toArray(filters.project_name).join(',')}|${toArray(filters.make).join(',')}|${toArray(filters.model).join(',')}|${toArray(filters.ownership).join(',')}|${toArray(filters.description).join(',')}|${filters.search ?? ''}|${filters.responsible_person_name ?? ''}|${categoryGroup ?? ''}`;
   useEffect(() => {
     setFacetsError(null);
     setFacets(null);
@@ -300,13 +300,13 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
       responsible_person_name: filters.responsible_person_name,
       category: filters.category,
       status: filters.status,
-      project_location: filters.project_location,
+      project_name: filters.project_name,
       make: filters.make,
       model: filters.model,
       ownership: filters.ownership,
       description: filters.description,
     }),
-    [categoryGroup, filters.search, filters.responsible_person_name, filters.category, filters.status, filters.project_location, filters.make, filters.model, filters.ownership, filters.description]
+    [categoryGroup, filters.search, filters.responsible_person_name, filters.category, filters.status, filters.project_name, filters.make, filters.model, filters.ownership, filters.description]
   );
   const facetsFetchIdRef = useRef(0);
   useEffect(() => {
@@ -316,7 +316,7 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
     Promise.all([
       fetchAssetFacets({ ...base, category: undefined }),
       fetchAssetFacets({ ...base, status: undefined }),
-      fetchAssetFacets({ ...base, project_location: undefined }),
+      fetchAssetFacets({ ...base, project_name: undefined }),
       fetchAssetFacets({ ...base, make: undefined }),
       fetchAssetFacets({ ...base, model: undefined }),
       fetchAssetFacets({ ...base, ownership: undefined }),
@@ -327,7 +327,7 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
         setFacetsForDropdown({
           category: fCat?.category ?? [],
           status: fStatus?.status ?? [],
-          project_location: fLoc?.project_location ?? [],
+          project_name: fLoc?.project_name ?? [],
           make: fMake?.make ?? [],
           model: fModel?.model ?? [],
           ownership: fOwn?.ownership ?? [],
@@ -353,10 +353,10 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
       next.status = statusArr.length ? statusArr : undefined;
       changed = true;
     }
-    const locAllowList = facetsForDropdown?.project_location ?? facets?.project_location ?? [];
-    const locArr = toArray(f.project_location).filter((l) => l === BLANK_FILTER_VALUE || locAllowList.includes(l));
-    if (locArr.length !== toArray(f.project_location).length) {
-      next.project_location = locArr.length ? locArr : undefined;
+    const locAllowList = facetsForDropdown?.project_name ?? facets?.project_name ?? [];
+    const locArr = toArray(f.project_name).filter((l) => l === BLANK_FILTER_VALUE || locAllowList.includes(l));
+    if (locArr.length !== toArray(f.project_name).length) {
+      next.project_name = locArr.length ? locArr : undefined;
       changed = true;
     }
     const makeAllowList = facetsForDropdown?.make ?? facets?.make ?? [];
@@ -393,14 +393,14 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
   }, [facets, facetsForDropdown]);
 
   const effectiveFacets = useMemo(() => {
-    const empty: AssetFacets = { category: [], description: [], status: [], project_location: [], make: [], model: [], ownership: [], responsible_person_name: [] };
+    const empty: AssetFacets = { category: [], description: [], status: [], project_name: [], make: [], model: [], ownership: [], responsible_person_name: [] };
     const fromApi = facets ?? empty;
     const toStr = (v: string | null | undefined): v is string => v != null && v !== '';
     const fromData = {
       category: [...new Set(data.map((a) => a.category).filter(toStr))].sort(),
       description: [...new Set(data.map((a) => a.description).filter(toStr))].sort(),
       status: [...new Set(data.map((a) => a.status).filter(toStr))].sort(),
-      project_location: [...new Set(data.map((a) => a.project_location).filter(toStr))].sort(),
+      project_name: [...new Set(data.map((a) => a.project_name).filter(toStr))].sort(),
       make: [...new Set(data.map((a) => a.make).filter(toStr))].sort(),
       model: [...new Set(data.map((a) => a.model).filter(toStr))].sort(),
       ownership: [...new Set(data.map((a) => a.ownership).filter(toStr))].sort(),
@@ -410,7 +410,7 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
       category: fromApi.category?.length ? fromApi.category : fromData.category,
       description: fromApi.description?.length ? fromApi.description : fromData.description,
       status: fromApi.status?.length ? fromApi.status : fromData.status,
-      project_location: fromApi.project_location?.length ? fromApi.project_location : fromData.project_location,
+      project_name: fromApi.project_name?.length ? fromApi.project_name : fromData.project_name,
       make: fromApi.make?.length ? fromApi.make : fromData.make,
       model: fromApi.model?.length ? fromApi.model : fromData.model,
       ownership: fromApi.ownership?.length ? fromApi.ownership : fromData.ownership,
@@ -439,8 +439,8 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
     [filters.status, facetsForDropdown?.status, effectiveFacets.status]
   );
   const locationOptionsForFilter = useMemo(
-    () => [...new Set([...toArray(filters.project_location), ...(facetsForDropdown?.project_location ?? effectiveFacets.project_location ?? [])])].sort(),
-    [filters.project_location, facetsForDropdown?.project_location, effectiveFacets.project_location]
+    () => [...new Set([...toArray(filters.project_name), ...(facetsForDropdown?.project_name ?? effectiveFacets.project_name ?? [])])].sort(),
+    [filters.project_name, facetsForDropdown?.project_name, effectiveFacets.project_name]
   );
   const makeOptionsForFilter = useMemo(
     () => [...new Set([...toArray(filters.make), ...(facetsForDropdown?.make ?? effectiveFacets.make ?? [])])].sort(),
@@ -460,7 +460,7 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
     const cols = completeness?.columns ?? {};
     return {
       category: (cols['Category']?.empty ?? 0) > 0,
-      project_location: (cols['Location']?.empty ?? 0) > 0,
+      project_name: (cols['Location']?.empty ?? 0) > 0,
       description: (cols['Description']?.empty ?? 0) > 0,
       make: (cols['Make']?.empty ?? 0) > 0,
       model: (cols['Model']?.empty ?? 0) > 0,
@@ -474,7 +474,7 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
   const sortedData = useMemo(() => {
     const key = assetsTableSortBy;
     const order = assetsTableSortOrder === 'asc' ? 1 : -1;
-    const strKeys = ['project_location', 'asset_no', 'description', 'category', 'status'];
+    const strKeys = ['project_name', 'asset_no', 'description', 'category', 'status'];
     return [...data].sort((a, b) => {
       const va = (a as unknown as Record<string, unknown>)[key];
       const vb = (b as unknown as Record<string, unknown>)[key];
@@ -653,7 +653,7 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
               />
               {/* KPI in header row: result count based on filters */}
               {(() => {
-                const hasFilters = toArray(filters.category).length > 0 || toArray(filters.status).length > 0 || toArray(filters.project_location).length > 0 || toArray(filters.make).length > 0 || toArray(filters.model).length > 0 || toArray(filters.ownership).length > 0 || toArray(filters.description).length > 0 || (filters.search ?? '').trim();
+                const hasFilters = toArray(filters.category).length > 0 || toArray(filters.status).length > 0 || toArray(filters.project_name).length > 0 || toArray(filters.make).length > 0 || toArray(filters.model).length > 0 || toArray(filters.ownership).length > 0 || toArray(filters.description).length > 0 || (filters.search ?? '').trim();
                 return (
                   <p className="text-xs text-muted-foreground shrink-0 ml-auto tabular-nums">
                     Showing <span className="font-medium text-foreground">{loading ? '…' : total.toLocaleString()}</span> asset{total !== 1 ? 's' : ''}{hasFilters ? ' matching filters' : ''}
@@ -682,9 +682,9 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
                   <tr className="bg-green-600 text-white text-left text-[11px] font-semibold uppercase tracking-wider">
                     <th className="py-2 px-3 w-12 text-right">#</th>
                     <th className="py-2 px-3 whitespace-nowrap w-16">Image</th>
-                    {(['project_location', 'asset_no', 'description', 'category', 'status'] as const).map((key) => {
+                    {(['project_name', 'asset_no', 'description', 'category', 'status'] as const).map((key) => {
                       const labels: Record<string, string> = {
-                        project_location: 'Project location',
+                        project_name: 'Project location',
                         asset_no: 'Asset number',
                         description: 'Description',
                         category: 'Category',
@@ -756,7 +756,7 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
                                 )}
                               </div>
                             </td>
-                            <td className={`py-2 px-3 text-foreground text-xs ${!categoryGroup ? 'max-w-[140px] truncate' : 'whitespace-nowrap'}`} title={a.project_location ?? ''}>{highlightText(a.project_location, searchRegex)}</td>
+                            <td className={`py-2 px-3 text-foreground text-xs ${!categoryGroup ? 'max-w-[140px] truncate' : 'whitespace-nowrap'}`} title={a.project_name ?? ''}>{highlightText(a.project_name, searchRegex)}</td>
                             <td className="py-2 px-3 whitespace-nowrap">
                               <span className="inline-flex items-center rounded px-2 py-0.5 text-[11px] font-normal bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-500 border border-emerald-300 dark:border-emerald-700/60">
                                 {highlightText(a.asset_no, searchRegex) || '—'}
@@ -921,7 +921,7 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
                                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-0.5 flex-1">
                                         <DetailRow icon={Truck} label="Category" value={highlightText(a.category, searchRegex)} />
                                         <DetailRow icon={FileText} label="Description" value={highlightText(a.description, searchRegex)} />
-                                        <DetailRow icon={MapPin} label="Location" value={highlightText(a.project_location, searchRegex)} />
+                                        <DetailRow icon={MapPin} label="Location" value={highlightText(a.project_name, searchRegex)} />
                                         <DetailRow icon={Building2} label="Ownership" value={highlightText(a.ownership, searchRegex)} />
                                         <DetailRow icon={Settings} label="Make" value={highlightText(a.make, searchRegex)} />
                                         <DetailRow icon={Box} label="Model" value={highlightText(a.model, searchRegex)} />

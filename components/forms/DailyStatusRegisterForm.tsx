@@ -48,7 +48,7 @@ export default function DailyStatusRegisterForm() {
     fetchAssetFacets()
       .then((facets) => {
         if (cancelled) return
-        setProjects(facets.project_location ?? [])
+        setProjects(facets.project_name ?? [])
         const uniqStatus = Array.from(new Set(facets.status ?? [])).filter(Boolean).sort()
         setStatusOptions(uniqStatus)
       })

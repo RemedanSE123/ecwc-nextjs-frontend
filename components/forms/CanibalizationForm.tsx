@@ -65,7 +65,7 @@ export default function CanibalizationForm() {
     setLoadingProjects(true);
     fetchAssetFacets()
       .then((data) => {
-        if (!cancelled) setProjects(data.project_location ?? []);
+        if (!cancelled) setProjects(data.project_name ?? []);
       })
       .catch(() => {
         if (!cancelled) setProjects([]);
