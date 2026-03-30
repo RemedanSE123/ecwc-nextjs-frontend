@@ -3,10 +3,9 @@
 import SectionPage from '@/components/SectionPage';
 import type { FormItem } from '@/components/SectionPage';
 import { Database } from 'lucide-react';
-import ProjectManager from '@/components/common-data/ProjectManager';
 
 const FORM_ITEMS: FormItem[] = [
-  { name: 'Projects (Location + Status)', component: <ProjectManager /> },
+  { name: 'Projects (Location + Status)', href: '/common-data/projects' },
   { name: 'Activities List' },
   { name: 'Parts List' },
   { name: 'Fuel Type Entry' },

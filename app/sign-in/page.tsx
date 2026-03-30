@@ -20,6 +20,7 @@ import {
 } from "lucide-react"
 import { motion } from "framer-motion"
 import { validateUser, setSession, getSession, isSessionExpired, getAuthHeaders } from "@/lib/auth"
+import { apiUrl } from "@/lib/api-client"
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -72,7 +73,7 @@ function SignInForm() {
     }
     setSession(user)
     try {
-      await fetch('/api/audit', {
+      await fetch(apiUrl('/api/v1/audit'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ action: 'login' }),
@@ -230,9 +231,19 @@ function SignInForm() {
               </form>
             </CardContent>
             <CardFooter className="relative z-10 pt-4 pb-8 mb-2">
-              <p className="text-xs text-muted-foreground text-center w-full">
-                Only whitelisted accounts can sign in. Contact admin for access.
-              </p>
+              <div className="w-full space-y-3">
+                <p className="text-xs text-muted-foreground text-center">
+                  Only whitelisted accounts can sign in. Contact admin for access.
+                </p>
+                <div className="flex items-center justify-center">
+                  <Link
+                    href="/sign-up"
+                    className="text-xs font-semibold text-black dark:text-white hover:opacity-80 underline underline-offset-4 transition-opacity"
+                  >
+                    Don't have an account? Go to <span className="text-[#137638]">Sign Up</span>
+                  </Link>
+                </div>
+              </div>
             </CardFooter>
           </Card>
         </motion.div>

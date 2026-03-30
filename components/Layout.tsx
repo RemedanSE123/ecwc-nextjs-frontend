@@ -7,6 +7,7 @@ import Header from '@/components/Header';
 import { Loader2 } from 'lucide-react';
 import { getSession, isSessionExpired, clearSession, touchSession } from '@/lib/auth';
 import { SidebarContext } from '@/lib/sidebar-context';
+import { apiUrl } from '@/lib/api-client';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -25,7 +26,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           'X-User-Name': session.user.name,
         };
         if (session.sessionId) headers['X-Session-Id'] = session.sessionId;
-        await fetch('/api/audit', {
+        await fetch(apiUrl('/api/v1/audit'), {
           method: 'POST',
           headers,
           body: JSON.stringify({ action: 'logout', details: { reason: 'inactivity' } }),

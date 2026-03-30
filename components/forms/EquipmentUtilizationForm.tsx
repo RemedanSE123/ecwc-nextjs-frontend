@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectItem } from "@/components/ui/select"
-import { Trash2, ChevronDown, ChevronUp, Eye, X, AlertCircle } from "lucide-react"
+import { Trash2, ChevronDown, ChevronUp, Eye, X } from "lucide-react"
 import { fetchAssetFacets, fetchEquipmentOptions, type EquipmentOption } from "@/lib/api/assets"
+import { getSession } from "@/lib/auth"
 import { FormModalHeaderActionsContext } from "@/components/FormModal"
 import { cn } from "@/lib/utils"
 
@@ -63,37 +64,33 @@ function formatMinutesAsLabel(totalMinutes: number): string {
   return `${h}:${mm}`
 }
 
-type ShiftValue = "" | "Day" | "Night"
+type HalfBucket = "dayFirst" | "daySecond" | "nightFirst" | "nightSecond"
 
-/** Check if a time is within the allowed range for the given shift and half. */
-function isTimeInShiftRange(value: string, shift: ShiftValue, half: "first" | "second"): boolean {
-  if (!shift || !value) return false
-  const minutes = timeToMinutes(value)
-
-  const DAY_FIRST_MIN = 6 * 60
-  const DAY_FIRST_MAX = 12 * 60
-  const DAY_SECOND_MIN = 12 * 60
-  const DAY_SECOND_MAX = 18 * 60
-
-  const NIGHT_FIRST_EDGE = 23 * 60 + 59 // 23:59
-  const NIGHT_FIRST_MAX = 5 * 60 + 59  // 05:59
-  const NIGHT_SECOND_MIN = 6 * 60
-  const NIGHT_SECOND_MAX = 12 * 60
-
-  if (shift === "Day") {
-    if (half === "first") {
-      return minutes >= DAY_FIRST_MIN && minutes <= DAY_FIRST_MAX
+function generateHalfOptions(bucket: HalfBucket): string[] {
+  const results: string[] = []
+  const pushRange = (startMin: number, endMin: number, stepMin = 30) => {
+    for (let t = startMin; t <= endMin; t += stepMin) {
+      const h = Math.floor(t / 60)
+      const m = t % 60
+      const hh = h.toString().padStart(2, "0")
+      const mm = m.toString().padStart(2, "0")
+      results.push(`${hh}:${mm}`)
     }
-    return minutes >= DAY_SECOND_MIN && minutes <= DAY_SECOND_MAX
   }
 
-  // Night shift
-  if (half === "first") {
-    // 11:59 PM–5:59 AM → [23:59, 24:00) U [00:00, 05:59]
-    return minutes >= NIGHT_FIRST_EDGE || minutes <= NIGHT_FIRST_MAX
+  if (bucket === "dayFirst") {
+    pushRange(6 * 60, 12 * 60, 30)
+  } else if (bucket === "daySecond") {
+    pushRange(12 * 60, 18 * 60, 30)
+  } else if (bucket === "nightFirst") {
+    results.push("23:59")
+    pushRange(0, 5 * 60 + 30, 30)
+    results.push("05:59")
+  } else {
+    pushRange(6 * 60, 12 * 60, 30)
   }
-  // Night 2nd half: 6:00 AM–12:00 PM
-  return minutes >= NIGHT_SECOND_MIN && minutes <= NIGHT_SECOND_MAX
+
+  return results
 }
 
 function formatTimeLabel(hhmm: string): string {
@@ -107,59 +104,15 @@ function formatTimeLabel(hhmm: string): string {
   return `${h}:${mm} ${suffix}`
 }
 
-function generateHalfOptions(shift: ShiftValue, half: "first" | "second"): string[] {
-  if (!shift) return []
-
-  const results: string[] = []
-  const pushRange = (startMin: number, endMin: number, stepMin = 30) => {
-    for (let t = startMin; t <= endMin; t += stepMin) {
-      const h = Math.floor(t / 60)
-      const m = t % 60
-      const hh = h.toString().padStart(2, "0")
-      const mm = m.toString().padStart(2, "0")
-      results.push(`${hh}:${mm}`)
-    }
-  }
-
-  if (shift === "Day") {
-    if (half === "first") {
-      // 6:00–12:00
-      pushRange(6 * 60, 12 * 60, 30)
-    } else {
-      // 12:00–18:00
-      pushRange(12 * 60, 18 * 60, 30)
-    }
-  } else {
-    if (half === "first") {
-      // Night 1st half: include 23:59, then 00:00–05:30 and 05:59
-      results.push("23:59")
-      pushRange(0, 5 * 60 + 30, 30)
-      results.push("05:59")
-    } else {
-      // Night 2nd half: 6:00–12:00
-      pushRange(6 * 60, 12 * 60, 30)
-    }
-  }
-
-  return results
-}
-
-/** End must be after start within the same half. Night 1st half: 23:59 is before 00:00–05:59. */
-function isEndAfterStart(shift: ShiftValue, half: "first" | "second", startHHMM: string, endHHMM: string): boolean {
+/** End must be after start within the same half. */
+function isEndAfterStart(bucket: HalfBucket, startHHMM: string, endHHMM: string): boolean {
   if (!startHHMM || !endHHMM) return true
   const s = timeToMinutes(startHHMM)
   const e = timeToMinutes(endHHMM)
-
-  if (shift === "Day") {
-    if (half === "first") return s < e
-    return s < e
-  }
-  // Night
-  if (half === "first") {
-    const NIGHT_EDGE = 23 * 60 + 59
-    const NIGHT_END = 5 * 60 + 59
-    if (s >= NIGHT_EDGE) return e <= NIGHT_END
-    return e <= NIGHT_END && s < e
+  if (bucket === "nightFirst") {
+    // Treat 23:59 as before 00:00 for overnight half.
+    const norm = (m: number) => (m === 23 * 60 + 59 ? -1 : m)
+    return norm(e) > norm(s)
   }
   return s < e
 }
@@ -251,15 +204,15 @@ function EquipmentCombobox({
       {isOpen && typeof document !== "undefined" && createPortal(
         <div
           ref={dropdownRef}
-          className="fixed z-[9999] overflow-y-auto rounded-md border border-zinc-200 bg-white shadow-lg max-h-[200px] min-w-[220px]"
+          className="fixed z-[9999] overflow-y-auto rounded-lg border border-emerald-200 bg-white shadow-xl shadow-emerald-900/10 max-h-[220px] min-w-[220px]"
           style={{ top: pos.top, left: pos.left, width: pos.width }}
         >
           <div className="p-1">
             <button
               type="button"
               className={cn(
-                "w-full text-left cursor-pointer select-none rounded-sm py-1.5 px-2 text-xs hover:bg-zinc-100 whitespace-nowrap",
-                !row.assetId && "bg-zinc-50"
+                "w-full text-left cursor-pointer select-none rounded-md py-1.5 px-2 text-xs hover:bg-emerald-50 whitespace-nowrap",
+                !row.assetId && "bg-emerald-50/80"
               )}
               onClick={onClear}
             >
@@ -303,6 +256,10 @@ type UtilRow = {
   firstHalfEnd: string
   secondHalfStart: string
   secondHalfEnd: string
+  nightFirstHalfStart: string
+  nightFirstHalfEnd: string
+  nightSecondHalfStart: string
+  nightSecondHalfEnd: string
   workedHrs: string
   idleHrs: string
   idleReason: string
@@ -339,6 +296,10 @@ function rowHasAnyData(row: UtilRow): boolean {
     row.firstHalfEnd ||
     row.secondHalfStart ||
     row.secondHalfEnd ||
+    row.nightFirstHalfStart ||
+    row.nightFirstHalfEnd ||
+    row.nightSecondHalfStart ||
+    row.nightSecondHalfEnd ||
     (row.workedHrs !== "0.00" && row.workedHrs !== "") ||
     (row.idleHrs !== "0" && row.idleHrs !== "") ||
     row.idleReason ||
@@ -361,7 +322,6 @@ export default function EquipmentUtilizationForm() {
   const [header, setHeader] = useState({
     project: "",
     gcDate: new Date().toISOString().split("T")[0],
-    shift: "" as ShiftValue,
     refNo: "",
   })
   const newUtilRow = (): UtilRow => ({
@@ -379,6 +339,10 @@ export default function EquipmentUtilizationForm() {
     firstHalfEnd: "",
     secondHalfStart: "",
     secondHalfEnd: "",
+    nightFirstHalfStart: "",
+    nightFirstHalfEnd: "",
+    nightSecondHalfStart: "",
+    nightSecondHalfEnd: "",
     workedHrs: "0.00",
     idleHrs: "0",
     idleReason: "",
@@ -420,6 +384,13 @@ export default function EquipmentUtilizationForm() {
     )
     return () => setHeaderActions(null)
   }, [setHeaderActions])
+
+  useEffect(() => {
+    const session = getSession()
+    if (session?.user?.name) {
+      setRecordedBy(session.user.name)
+    }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -522,7 +493,16 @@ export default function EquipmentUtilizationForm() {
           const b = parseFloat(next.engineFinal) || 0
           next.engineDiff = (b - a).toFixed(1)
         }
-        const timeFieldNames: (keyof UtilRow)[] = ["firstHalfStart", "firstHalfEnd", "secondHalfStart", "secondHalfEnd"]
+        const timeFieldNames: (keyof UtilRow)[] = [
+          "firstHalfStart",
+          "firstHalfEnd",
+          "secondHalfStart",
+          "secondHalfEnd",
+          "nightFirstHalfStart",
+          "nightFirstHalfEnd",
+          "nightSecondHalfStart",
+          "nightSecondHalfEnd",
+        ]
         if (timeFieldNames.includes(field)) {
           const m1 =
             next.firstHalfStart && next.firstHalfEnd
@@ -532,7 +512,15 @@ export default function EquipmentUtilizationForm() {
             next.secondHalfStart && next.secondHalfEnd
               ? timeDurationMinutes(next.secondHalfStart, next.secondHalfEnd)
               : 0
-          const totalMinutes = Math.max(0, m1) + Math.max(0, m2)
+          const m3 =
+            next.nightFirstHalfStart && next.nightFirstHalfEnd
+              ? timeDurationMinutes(next.nightFirstHalfStart, next.nightFirstHalfEnd)
+              : 0
+          const m4 =
+            next.nightSecondHalfStart && next.nightSecondHalfEnd
+              ? timeDurationMinutes(next.nightSecondHalfStart, next.nightSecondHalfEnd)
+              : 0
+          const totalMinutes = Math.max(0, m1) + Math.max(0, m2) + Math.max(0, m3) + Math.max(0, m4)
           next.workedHrs = formatMinutesAsLabel(totalMinutes)
         }
 
@@ -542,6 +530,10 @@ export default function EquipmentUtilizationForm() {
           field === "firstHalfEnd" ||
           field === "secondHalfStart" ||
           field === "secondHalfEnd" ||
+          field === "nightFirstHalfStart" ||
+          field === "nightFirstHalfEnd" ||
+          field === "nightSecondHalfStart" ||
+          field === "nightSecondHalfEnd" ||
           field === "idleHrs" ||
           field === "downHrs"
         ) {
@@ -583,7 +575,15 @@ export default function EquipmentUtilizationForm() {
       row.secondHalfStart && row.secondHalfEnd
         ? timeDurationMinutes(row.secondHalfStart, row.secondHalfEnd)
         : 0
-    const totalMinutes = Math.max(0, m1) + Math.max(0, m2)
+    const m3 =
+      row.nightFirstHalfStart && row.nightFirstHalfEnd
+        ? timeDurationMinutes(row.nightFirstHalfStart, row.nightFirstHalfEnd)
+        : 0
+    const m4 =
+      row.nightSecondHalfStart && row.nightSecondHalfEnd
+        ? timeDurationMinutes(row.nightSecondHalfStart, row.nightSecondHalfEnd)
+        : 0
+    const totalMinutes = Math.max(0, m1) + Math.max(0, m2) + Math.max(0, m3) + Math.max(0, m4)
     return totalMinutes / 60
   }
 
@@ -596,39 +596,42 @@ export default function EquipmentUtilizationForm() {
 
   const handleTimeChange = (
     rowId: string,
-    field: "firstHalfStart" | "firstHalfEnd" | "secondHalfStart" | "secondHalfEnd",
-    half: "first" | "second",
+    field:
+      | "firstHalfStart"
+      | "firstHalfEnd"
+      | "secondHalfStart"
+      | "secondHalfEnd"
+      | "nightFirstHalfStart"
+      | "nightFirstHalfEnd"
+      | "nightSecondHalfStart"
+      | "nightSecondHalfEnd",
+    half: "first" | "second" | "nightFirst" | "nightSecond",
     rawValue: string
   ) => {
     const value = rawValue
 
-    if (!header.shift) {
-      if (value) {
-        window.alert("Please select Shift (Day/Night) first.")
-      }
-      updateRow(rowId, field, "")
-      return
-    }
-
-    if (value && !isTimeInShiftRange(value, header.shift, half)) {
-      const msg =
-        header.shift === "Day"
-          ? half === "first"
-            ? "Day shift 1st half time must be between 6:00 AM and 12:00 PM."
-            : "Day shift 2nd half time must be between 12:00 PM and 6:00 PM."
-          : half === "first"
-            ? "Night shift 1st half time must be between 11:59 PM and 5:59 AM."
-            : "Night shift 2nd half time must be between 6:00 AM and 12:00 PM."
-      window.alert(msg)
-      updateRow(rowId, field, "")
-      return
-    }
-
     const row = rows.find((r) => r.id === rowId)
     if (row && value) {
-      const start = half === "first" ? (field === "firstHalfStart" ? value : row.firstHalfStart) : (field === "secondHalfStart" ? value : row.secondHalfStart)
-      const end = half === "first" ? (field === "firstHalfEnd" ? value : row.firstHalfEnd) : (field === "secondHalfEnd" ? value : row.secondHalfEnd)
-      if (start && end && !isEndAfterStart(header.shift, half, start, end)) {
+      const start = half === "first"
+        ? (field === "firstHalfStart" ? value : row.firstHalfStart)
+        : half === "second"
+          ? (field === "secondHalfStart" ? value : row.secondHalfStart)
+          : half === "nightFirst"
+            ? (field === "nightFirstHalfStart" ? value : row.nightFirstHalfStart)
+            : (field === "nightSecondHalfStart" ? value : row.nightSecondHalfStart)
+      const end = half === "first"
+        ? (field === "firstHalfEnd" ? value : row.firstHalfEnd)
+        : half === "second"
+          ? (field === "secondHalfEnd" ? value : row.secondHalfEnd)
+          : half === "nightFirst"
+            ? (field === "nightFirstHalfEnd" ? value : row.nightFirstHalfEnd)
+            : (field === "nightSecondHalfEnd" ? value : row.nightSecondHalfEnd)
+      const bucket: HalfBucket =
+        half === "first" ? "dayFirst" :
+        half === "second" ? "daySecond" :
+        half === "nightFirst" ? "nightFirst" :
+        "nightSecond"
+      if (start && end && !isEndAfterStart(bucket, start, end)) {
         window.alert("End time must be after start time.")
         updateRow(rowId, field, "")
         return
@@ -644,8 +647,20 @@ export default function EquipmentUtilizationForm() {
     return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
   }
 
-  const recordedByLabel = recordedBy === "u2" ? "User 1" : recordedBy === "u3" ? "User 2" : "—"
+  const recordedByLabel = recordedBy || "—"
   const checkedByLabel = checkedBy === "c2" ? "Supervisor A" : checkedBy === "c3" ? "Supervisor B" : "—"
+
+  const handleSubmitRegister = () => {
+    if (!header.project.trim()) {
+      window.alert("Please select project before submitting.")
+      return
+    }
+    if (!recordedBy.trim()) {
+      window.alert("Recorded by is required.")
+      return
+    }
+    setPreviewOpen(true)
+  }
 
   /** Rows per A4 page — ~22 rows fit with header/footer */
   const ROWS_PER_PAGE = 22
@@ -660,7 +675,9 @@ export default function EquipmentUtilizationForm() {
       if (!r.assetId) continue
       const workedHr =
         (r.firstHalfStart && r.firstHalfEnd ? timeDurationHours(r.firstHalfStart, r.firstHalfEnd) : 0) +
-        (r.secondHalfStart && r.secondHalfEnd ? timeDurationHours(r.secondHalfStart, r.secondHalfEnd) : 0)
+        (r.secondHalfStart && r.secondHalfEnd ? timeDurationHours(r.secondHalfStart, r.secondHalfEnd) : 0) +
+        (r.nightFirstHalfStart && r.nightFirstHalfEnd ? timeDurationHours(r.nightFirstHalfStart, r.nightFirstHalfEnd) : 0) +
+        (r.nightSecondHalfStart && r.nightSecondHalfEnd ? timeDurationHours(r.nightSecondHalfStart, r.nightSecondHalfEnd) : 0)
       const idleHr = parseFloat(r.idleHrs || "0") || 0
       const downHr = parseFloat(r.downHrs || "0") || 0
       const rate = parseFloat(r.rateOp || "0") || 0
@@ -723,17 +740,20 @@ export default function EquipmentUtilizationForm() {
       <div ref={pdfRef} className="w-full min-w-0 flex-1 min-h-0 flex flex-col p-0 m-0 overflow-hidden">
         {/* Preview overlay — A4 report format with logo, paginated */}
         {previewOpen && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-1 bg-black/60 backdrop-blur-sm" role="dialog" aria-modal="true">
-            <div
-              className="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-zinc-200"
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-2 bg-slate-950/65 backdrop-blur-md" role="dialog" aria-modal="true">
+            <Card
+              className="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-emerald-200/80 ring-1 ring-emerald-100"
               style={{
                 width: "297mm",
                 maxWidth: "100%",
                 maxHeight: "98vh",
               }}
             >
-              <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-zinc-200 bg-gradient-to-r from-slate-50 to-white">
-                <span className="text-sm font-semibold text-slate-700">Preview — A4 Report</span>
+              <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-emerald-300 bg-gradient-to-r from-[#137638] via-emerald-700 to-[#137638]">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-200" />
+                  <span className="text-sm font-semibold text-white tracking-wide">Preview — A4 Report</span>
+                </div>
                 <div className="flex items-center gap-2 no-print">
                   <Button
                     type="button"
@@ -741,21 +761,21 @@ export default function EquipmentUtilizationForm() {
                     size="sm"
                     onClick={handleDownloadPdf}
                     disabled={pdfDownloading}
-                    className="h-8 bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-60"
+                    className="h-8 bg-white/15 border border-white/40 hover:bg-white/25 text-white backdrop-blur-sm disabled:opacity-60"
                   >
                     {pdfDownloading ? "Generating..." : "Download PDF"}
                   </Button>
                   <button
                     type="button"
                     onClick={() => setPreviewOpen(false)}
-                    className="p-2 rounded-lg text-zinc-500 hover:bg-zinc-200 hover:text-zinc-800 transition-colors"
+                    className="p-2 rounded-lg text-white/85 hover:bg-white/20 hover:text-white transition-colors"
                     aria-label="Close preview"
                   >
                     <X className="h-5 w-5" />
                   </button>
                 </div>
               </div>
-              <div id="utilization-preview-print" className="overflow-y-auto flex-1 p-0 bg-white">
+              <CardContent id="utilization-preview-print" className="overflow-y-auto flex-1 p-0 bg-white">
                 <style jsx global>{`
                   @media print {
                     @page {
@@ -819,28 +839,29 @@ export default function EquipmentUtilizationForm() {
                       <div className="flex justify-between text-xs text-slate-600 mb-3">
                         <span>Project: {header.project || "—"}</span>
                         <span>G.C. Date: {formatPreviewDate(header.gcDate)}</span>
-                        <span>Shift: {header.shift || "—"}</span>
                         <span>Ref: {header.refNo || "—"}</span>
                       </div>
                       <table className="w-full border-collapse text-[10px]">
                         <thead>
-                          <tr className="bg-slate-700 text-slate-100">
-                            <th className="border border-slate-600 px-1.5 py-1.5 text-left font-semibold">No</th>
-                            <th className="border border-slate-600 px-1.5 py-1.5 text-left font-semibold">Category</th>
-                            <th className="border border-slate-600 px-1.5 py-1.5 text-left font-semibold">Description</th>
-                            <th className="border border-slate-600 px-1.5 py-1.5 text-left font-semibold">Plate No</th>
-                            <th className="border border-slate-600 px-1.5 py-1.5 text-left font-semibold">Status</th>
-                            <th className="border border-slate-600 px-1.5 py-1.5 text-center font-semibold">Worked Hr</th>
-                            <th className="border border-slate-600 px-1.5 py-1.5 text-center font-semibold">Idle Hr</th>
-                            <th className="border border-slate-600 px-1.5 py-1.5 text-center font-semibold">Down Hr</th>
-                            <th className="border border-slate-600 px-1.5 py-1.5 text-center font-semibold bg-amber-700/80">Total revenue (Birr)</th>
+                          <tr className="bg-emerald-700 text-emerald-50">
+                            <th className="border border-emerald-600 px-1.5 py-1.5 text-left font-semibold">No</th>
+                            <th className="border border-emerald-600 px-1.5 py-1.5 text-left font-semibold">Category</th>
+                            <th className="border border-emerald-600 px-1.5 py-1.5 text-left font-semibold">Description</th>
+                            <th className="border border-emerald-600 px-1.5 py-1.5 text-left font-semibold">Plate No</th>
+                            <th className="border border-emerald-600 px-1.5 py-1.5 text-left font-semibold">Status</th>
+                            <th className="border border-emerald-600 px-1.5 py-1.5 text-center font-semibold">Worked Hr</th>
+                            <th className="border border-emerald-600 px-1.5 py-1.5 text-center font-semibold">Idle Hr</th>
+                            <th className="border border-emerald-600 px-1.5 py-1.5 text-center font-semibold">Down Hr</th>
+                            <th className="border border-emerald-600 px-1.5 py-1.5 text-center font-semibold bg-emerald-800">Total revenue (Birr)</th>
                           </tr>
                         </thead>
                         <tbody>
                           {pageRows.map((row, idx) => {
                             const worked =
                               (row.firstHalfStart && row.firstHalfEnd ? timeDurationHours(row.firstHalfStart, row.firstHalfEnd) : 0) +
-                              (row.secondHalfStart && row.secondHalfEnd ? timeDurationHours(row.secondHalfStart, row.secondHalfEnd) : 0)
+                              (row.secondHalfStart && row.secondHalfEnd ? timeDurationHours(row.secondHalfStart, row.secondHalfEnd) : 0) +
+                              (row.nightFirstHalfStart && row.nightFirstHalfEnd ? timeDurationHours(row.nightFirstHalfStart, row.nightFirstHalfEnd) : 0) +
+                              (row.nightSecondHalfStart && row.nightSecondHalfEnd ? timeDurationHours(row.nightSecondHalfStart, row.nightSecondHalfEnd) : 0)
                             const idle = parseFloat(row.idleHrs) || 0
                             const down = parseFloat(row.downHrs) || 0
                             const rate = parseFloat(row.rateOp || "0") || 0
@@ -892,18 +913,18 @@ export default function EquipmentUtilizationForm() {
                     </div>
                   )
                 })}
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           </div>
         )}
 
-        <Card className="w-full min-w-0 flex-1 min-h-0 border-0 shadow-none rounded-none bg-white overflow-hidden flex flex-col">
+        <Card className="w-full min-w-0 flex-1 min-h-0 border-0 shadow-none rounded-none bg-slate-50/50 overflow-hidden flex flex-col">
 
           <CardContent className="px-4 pb-4 pt-0 bg-white min-w-0 flex flex-col flex-1 min-h-0 overflow-hidden">
 
             {/* Document info row — compact, attractive */}
-            <div className="shrink-0 mb-4 px-4">
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-3 bg-gradient-to-r from-emerald-50/80 via-slate-50 to-sky-50/60 rounded-xl p-4 border border-slate-200/80 shadow-sm">
+            <div className="shrink-0 py-3">
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-3 bg-transparent rounded-none p-0 border-0 shadow-none">
               <div className="flex items-center gap-2 flex-1 min-w-0 max-w-full">
                 <Label className="text-xs font-semibold text-slate-700 shrink-0 w-16">Project</Label>
                 <Select
@@ -922,7 +943,7 @@ export default function EquipmentUtilizationForm() {
                     setOpenEquipmentRowId(null)
                     setEquipmentSearch("")
                   }}
-                  className="[&_button]:h-8 [&_button]:text-xs [&_button]:px-2 [&_button]:rounded-lg [&_button]:border-slate-300 [&_button]:hover:bg-slate-50 min-w-[320px] flex-1 max-w-[640px]"
+                  className="[&_button]:h-9 [&_button]:text-sm [&_button]:px-3 [&_button]:rounded-lg [&_button]:border-slate-300 [&_button]:hover:bg-slate-50 min-w-[320px] flex-1 max-w-[640px]"
                   disabled={loadingProjects}
                 >
                   <SelectItem value="__none__">Select project...</SelectItem>
@@ -937,79 +958,61 @@ export default function EquipmentUtilizationForm() {
                 <Label className="text-xs font-semibold text-slate-700 shrink-0">Date</Label>
                 <Input
                   type="date"
-                  className="h-9 border border-slate-300 rounded-lg px-3 text-sm w-40 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
+                  className="h-9 border border-slate-300 rounded-lg px-3 text-sm w-40 bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
                   value={header.gcDate}
                   onChange={(e) => setHeader((p) => ({ ...p, gcDate: e.target.value }))}
                 />
               </div>
               <div className="flex items-center gap-2">
-                <Label className="text-xs font-semibold text-slate-700 shrink-0">Shift</Label>
-                <Select
-                  value={header.shift || "__none__"}
-                  onValueChange={(v) =>
-                    setHeader((p) => ({ ...p, shift: (v === "__none__" ? "" : (v as Exclude<ShiftValue, "">)) }))
-                  }
-                  className="[&_button]:h-9 [&_button]:text-sm [&_button]:px-3 [&_button]:rounded-lg [&_button]:border-slate-300 [&_button]:hover:bg-white [&_button]:shadow-sm w-32"
-                >
-                  <SelectItem value="__none__">Select...</SelectItem>
-                  <SelectItem value="Day">Day</SelectItem>
-                  <SelectItem value="Night">Night</SelectItem>
-                </Select>
-              </div>
-              <div className="flex items-center gap-2">
                 <Label className="text-xs font-semibold text-slate-700 shrink-0">Ref.No.</Label>
-                <Input className="h-9 border border-slate-300 rounded-lg px-3 text-sm w-32 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200" value={header.refNo} onChange={(e) => setHeader((p) => ({ ...p, refNo: e.target.value }))} />
+                <Input className="h-9 border border-slate-300 rounded-lg px-3 text-sm w-40 bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200" value={header.refNo} onChange={(e) => setHeader((p) => ({ ...p, refNo: e.target.value }))} />
               </div>
             </div>
             </div>
 
             {/* Equipment entries — scrollable table */}
-            <div className="w-full border border-slate-300 rounded-xl overflow-hidden flex-1 min-h-0 flex flex-col shadow-md bg-white">
+            <div className="w-full border border-slate-300 rounded-xl overflow-hidden flex-1 min-h-0 flex flex-col shadow-[0_10px_30px_-18px_rgba(2,6,23,0.30)] bg-white">
               <div className="overflow-auto flex-1 min-h-0">
-                <table className="text-xs border-collapse min-w-[1250px] w-full">
-                  <thead className="sticky top-0 z-[1] bg-gradient-to-r from-slate-900 to-slate-800">
-                    <tr className="bg-gradient-to-r from-slate-900 to-slate-800 border-b border-slate-700">
-                      <th className="border border-slate-600 px-1 py-2 text-center font-semibold text-slate-300 whitespace-nowrap w-8" rowSpan={2}></th>
-                      <th className="border border-slate-600 px-1.5 py-2 text-center font-semibold text-slate-300 whitespace-nowrap w-8" rowSpan={2}>No</th>
-                      <th className="border border-slate-600 px-2 py-2 text-left font-semibold text-slate-300 whitespace-nowrap min-w-[120px] w-[120px]" rowSpan={2}>Category</th>
-                      <th className="border border-slate-600 px-2 py-2 text-left font-semibold text-slate-300 whitespace-nowrap min-w-[140px] w-[140px]" rowSpan={2}>Description</th>
-                      <th className="border border-slate-600 px-2 py-2 text-left font-semibold text-slate-300 whitespace-nowrap min-w-[90px] w-[90px]" rowSpan={2}>Asset No</th>
-                      <th className="border border-slate-600 px-2 py-2 text-left font-semibold text-slate-300 whitespace-nowrap min-w-[100px] w-[100px]" rowSpan={2}>Plate No</th>
-                      <th className="border border-slate-600 px-2 py-2 text-left font-semibold text-slate-300 whitespace-nowrap min-w-[80px] w-[80px]" rowSpan={2}>Status</th>
-                      <th className="border border-slate-600 px-1.5 py-2 text-left font-semibold text-slate-300 whitespace-nowrap min-w-[70px] w-[70px]" rowSpan={2}>Rate</th>
-                      <th className="border border-slate-600 border-l-2 border-l-blue-400 px-2 py-2 text-center font-semibold text-slate-300 whitespace-nowrap" colSpan={2}>1st Half Hr</th>
-                      <th className="border border-slate-600 px-1.5 py-2 text-center font-semibold text-slate-300 whitespace-nowrap" colSpan={2}>2nd Half Hr</th>
-                      <th className="border border-slate-600 px-1.5 py-2 text-center font-semibold text-slate-300 whitespace-nowrap" rowSpan={2}>Worked Hrs</th>
-                      <th className="border border-slate-600 px-1.5 py-2 text-center font-semibold text-slate-300 whitespace-nowrap" rowSpan={2}>Idle Hrs</th>
-                      <th className="border border-slate-600 px-1.5 py-2 text-center font-semibold text-slate-300 whitespace-nowrap" rowSpan={2}>Idle Reason</th>
-                      <th className="border border-slate-600 px-1.5 py-2 text-center font-semibold text-slate-300 whitespace-nowrap" rowSpan={2}>Down Hrs</th>
-                      <th className="border border-slate-600 px-1.5 py-2 text-center font-semibold text-slate-300 whitespace-nowrap" rowSpan={2}>Down Reason</th>
-                      <th className="border border-slate-600 px-1.5 py-2 text-center font-semibold text-slate-300 whitespace-nowrap" colSpan={3}>Engine Hr/Km</th>
-                      <th className="border border-slate-600 px-1.5 py-2 text-center font-semibold text-slate-300 whitespace-nowrap" rowSpan={2}>Fuel in Liters</th>
-                      <th className="border border-slate-600 px-1.5 py-2 text-center font-semibold text-slate-300 whitespace-nowrap" rowSpan={2}>Hr/Km Reading</th>
-                      <th className="border border-slate-600 px-1.5 py-2 text-center font-semibold text-slate-300 whitespace-nowrap" colSpan={2}>Operator</th>
-                      <th className="border border-slate-600 px-1.5 py-2 text-center font-semibold text-slate-300 whitespace-nowrap" rowSpan={2}>Type of Work</th>
+                <table className="text-xs border-collapse min-w-[1540px] w-full">
+                  <thead className="sticky top-0 z-[1] bg-gradient-to-r from-[#137638] via-emerald-700 to-[#137638] shadow-[inset_0_-1px_0_rgba(255,255,255,0.12)]">
+                    <tr className="bg-gradient-to-r from-[#137638] via-emerald-700 to-[#137638]">
+                      <th className="px-1 py-2 text-center font-semibold tracking-wide text-emerald-50 whitespace-nowrap w-8" rowSpan={2}></th>
+                      <th className="px-1.5 py-2 text-center font-semibold tracking-wide text-emerald-50/95 whitespace-nowrap w-8" rowSpan={2}>No</th>
+                      <th className="px-2 py-2 text-left font-semibold tracking-wide text-emerald-50/95 whitespace-nowrap min-w-[120px] w-[120px]" rowSpan={2}>Category</th>
+                      <th className="px-2 py-2 text-left font-semibold tracking-wide text-emerald-50/95 whitespace-nowrap min-w-[140px] w-[140px]" rowSpan={2}>Description</th>
+                      <th className="px-2 py-2 text-left font-semibold tracking-wide text-emerald-50/95 whitespace-nowrap min-w-[90px] w-[90px]" rowSpan={2}>Asset No</th>
+                      <th className="px-2 py-2 text-left font-semibold tracking-wide text-emerald-50/95 whitespace-nowrap min-w-[100px] w-[100px]" rowSpan={2}>Plate No</th>
+                      <th className="px-2 py-2 text-left font-semibold tracking-wide text-emerald-50/95 whitespace-nowrap min-w-[80px] w-[80px]" rowSpan={2}>Status</th>
+                      <th className="px-1.5 py-2 text-left font-semibold tracking-wide text-emerald-50/95 whitespace-nowrap min-w-[70px] w-[70px] border-r-2 border-r-emerald-200/80" rowSpan={2}>Rate</th>
+                      <th className="px-2 py-2 text-center font-semibold tracking-wide text-emerald-50/95 whitespace-nowrap border-l-2 border-l-emerald-200/80" colSpan={2}>Day 1st Half Hr</th>
+                      <th className="px-1.5 py-2 text-center font-semibold tracking-wide text-emerald-50/95 whitespace-nowrap border-l border-emerald-400/40" colSpan={2}>Day 2nd Half Hr</th>
+                      <th className="px-1.5 py-2 text-center font-semibold tracking-wide text-emerald-50/95 whitespace-nowrap border-l border-emerald-400/40" colSpan={2}>Night 1st Half Hr</th>
+                      <th className="px-1.5 py-2 text-center font-semibold tracking-wide text-emerald-50/95 whitespace-nowrap border-l border-emerald-400/40" colSpan={2}>Night 2nd Half Hr</th>
+                      <th className="px-1.5 py-2 text-center font-semibold tracking-wide text-emerald-50/95 whitespace-nowrap border-l border-emerald-400/40" rowSpan={2}>Worked Hrs</th>
+                      <th className="px-1.5 py-2 text-center font-semibold tracking-wide text-emerald-50/95 whitespace-nowrap" rowSpan={2}>Idle Hrs</th>
+                      <th className="px-1.5 py-2 text-center font-semibold tracking-wide text-emerald-50/95 whitespace-nowrap" rowSpan={2}>Idle Reason</th>
+                      <th className="px-1.5 py-2 text-center font-semibold tracking-wide text-emerald-50/95 whitespace-nowrap" rowSpan={2}>Down Hrs</th>
+                      <th className="px-1.5 py-2 text-center font-semibold tracking-wide text-emerald-50/95 whitespace-nowrap" rowSpan={2}>Down Reason</th>
+                      <th className="px-1.5 py-2 text-center font-semibold tracking-wide text-emerald-50/95 whitespace-nowrap border-l border-emerald-400/40" colSpan={3}>Engine Hr/Km</th>
+                      <th className="px-1.5 py-2 text-center font-semibold tracking-wide text-emerald-50/95 whitespace-nowrap" rowSpan={2}>Fuel in Liters</th>
+                      <th className="px-1.5 py-2 text-center font-semibold tracking-wide text-emerald-50/95 whitespace-nowrap" rowSpan={2}>Hr/Km Reading</th>
+                      <th className="px-1.5 py-2 text-center font-semibold tracking-wide text-emerald-50/95 whitespace-nowrap border-l border-emerald-400/40" colSpan={2}>Operator</th>
+                      <th className="px-1.5 py-2 text-center font-semibold tracking-wide text-emerald-50/95 whitespace-nowrap" rowSpan={2}>Type of Work</th>
                     </tr>
-                    <tr className="bg-slate-800 border-b border-slate-700">
-                      <th
-                        className="border border-slate-600 border-l-2 border-l-blue-400 px-1 py-1 text-center text-slate-400 whitespace-nowrap"
-                        title={!header.shift ? "Select Shift (Day/Night) first, then choose times" : undefined}
-                      >
-                        <span className="inline-flex items-center gap-1">
-                          Start
-                          {!header.shift && (
-                            <AlertCircle className="h-3 w-3 text-yellow-400" />
-                          )}
-                        </span>
-                      </th>
-                      <th className="border border-slate-600 px-1 py-1 text-center text-slate-400 whitespace-nowrap">End</th>
-                      <th className="border border-slate-600 px-1 py-1 text-center text-slate-400 whitespace-nowrap">Start</th>
-                      <th className="border border-slate-600 px-1 py-1 text-center text-slate-400 whitespace-nowrap">End</th>
-                      <th className="border border-slate-600 px-1 py-1 text-center text-slate-400 whitespace-nowrap">Initial</th>
-                      <th className="border border-slate-600 px-1 py-1 text-center text-slate-400 whitespace-nowrap">Final</th>
-                      <th className="border border-slate-600 px-1 py-1 text-center text-slate-400 whitespace-nowrap">Diff</th>
-                      <th className="border border-slate-600 px-1 py-1 text-center text-slate-400 whitespace-nowrap">1st Half</th>
-                      <th className="border border-slate-600 px-1 py-1 text-center text-slate-400 whitespace-nowrap">2nd Half</th>
+                    <tr className="bg-emerald-900/20">
+                      <th className="px-1 py-1 text-center text-emerald-100/90 whitespace-nowrap border-l-2 border-l-emerald-200/80">Start</th>
+                      <th className="px-1 py-1 text-center text-emerald-100/90 whitespace-nowrap">End</th>
+                      <th className="px-1 py-1 text-center text-emerald-100/90 whitespace-nowrap border-l border-emerald-400/40">Start</th>
+                      <th className="px-1 py-1 text-center text-emerald-100/90 whitespace-nowrap">End</th>
+                      <th className="px-1 py-1 text-center text-emerald-100/90 whitespace-nowrap border-l border-emerald-400/40">Start</th>
+                      <th className="px-1 py-1 text-center text-emerald-100/90 whitespace-nowrap">End</th>
+                      <th className="px-1 py-1 text-center text-emerald-100/90 whitespace-nowrap border-l border-emerald-400/40">Start</th>
+                      <th className="px-1 py-1 text-center text-emerald-100/90 whitespace-nowrap">End</th>
+                      <th className="px-1 py-1 text-center text-emerald-100/90 whitespace-nowrap border-l border-emerald-400/40">Initial</th>
+                      <th className="px-1 py-1 text-center text-emerald-100/90 whitespace-nowrap">Final</th>
+                      <th className="px-1 py-1 text-center text-emerald-100/90 whitespace-nowrap">Diff</th>
+                      <th className="px-1 py-1 text-center text-emerald-100/90 whitespace-nowrap border-l border-emerald-400/40">1st Half</th>
+                      <th className="px-1 py-1 text-center text-emerald-100/90 whitespace-nowrap">2nd Half</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1020,7 +1023,11 @@ export default function EquipmentUtilizationForm() {
                         key={row.id}
                         className={cn(
                           "transition-colors",
-                          rowDisabled ? "bg-amber-50/70 hover:bg-amber-50" : "bg-white hover:bg-slate-50/40"
+                          rowDisabled
+                            ? "bg-amber-50/80 hover:bg-amber-50"
+                            : index % 2 === 0
+                              ? "bg-white hover:bg-emerald-50/50"
+                              : "bg-emerald-50/20 hover:bg-emerald-50/60"
                         )}
                       >
                         <td className="border border-slate-200 p-0 text-center align-middle w-8">
@@ -1079,11 +1086,11 @@ export default function EquipmentUtilizationForm() {
                                 v === "__none__" ? "" : v
                               )
                             }
-                            disabled={!header.shift || rowDisabled}
+                            disabled={rowDisabled}
                             className={cellSelect}
                           >
                             <SelectItem value="__none__">—</SelectItem>
-                            {generateHalfOptions(header.shift, "first").map((t) => (
+                            {generateHalfOptions("dayFirst").map((t) => (
                               <SelectItem key={t} value={t}>
                                 {formatTimeLabel(t)}
                               </SelectItem>
@@ -1101,11 +1108,11 @@ export default function EquipmentUtilizationForm() {
                                 v === "__none__" ? "" : v
                               )
                             }
-                            disabled={!header.shift || rowDisabled}
+                            disabled={rowDisabled}
                             className={cellSelect}
                           >
                             <SelectItem value="__none__">—</SelectItem>
-                            {generateHalfOptions(header.shift, "first").map((t) => (
+                            {generateHalfOptions("dayFirst").map((t) => (
                               <SelectItem key={t} value={t}>
                                 {formatTimeLabel(t)}
                               </SelectItem>
@@ -1123,11 +1130,11 @@ export default function EquipmentUtilizationForm() {
                                 v === "__none__" ? "" : v
                               )
                             }
-                            disabled={!header.shift || rowDisabled}
+                            disabled={rowDisabled}
                             className={cellSelect}
                           >
                             <SelectItem value="__none__">—</SelectItem>
-                            {generateHalfOptions(header.shift, "second").map((t) => (
+                            {generateHalfOptions("daySecond").map((t) => (
                               <SelectItem key={t} value={t}>
                                 {formatTimeLabel(t)}
                               </SelectItem>
@@ -1145,18 +1152,106 @@ export default function EquipmentUtilizationForm() {
                                 v === "__none__" ? "" : v
                               )
                             }
-                            disabled={!header.shift || rowDisabled}
+                            disabled={rowDisabled}
                             className={cellSelect}
                           >
                             <SelectItem value="__none__">—</SelectItem>
-                            {generateHalfOptions(header.shift, "second").map((t) => (
+                            {generateHalfOptions("daySecond").map((t) => (
                               <SelectItem key={t} value={t}>
                                 {formatTimeLabel(t)}
                               </SelectItem>
                             ))}
                           </Select>
                         </td>
-                        <td className="border border-zinc-200 p-0"><Input className={cn(cellInput, "bg-zinc-50")} value={row.workedHrs} readOnly title="Auto-calculated from 1st & 2nd half times" /></td>
+                        <td className="border border-zinc-200 p-0">
+                          <Select
+                            value={row.nightFirstHalfStart || "__none__"}
+                            onValueChange={(v) =>
+                              handleTimeChange(
+                                row.id,
+                                "nightFirstHalfStart",
+                                "nightFirst",
+                                v === "__none__" ? "" : v
+                              )
+                            }
+                            disabled={rowDisabled}
+                            className={cellSelect}
+                          >
+                            <SelectItem value="__none__">—</SelectItem>
+                            {generateHalfOptions("nightFirst").map((t) => (
+                              <SelectItem key={t} value={t}>
+                                {formatTimeLabel(t)}
+                              </SelectItem>
+                            ))}
+                          </Select>
+                        </td>
+                        <td className="border border-zinc-200 p-0">
+                          <Select
+                            value={row.nightFirstHalfEnd || "__none__"}
+                            onValueChange={(v) =>
+                              handleTimeChange(
+                                row.id,
+                                "nightFirstHalfEnd",
+                                "nightFirst",
+                                v === "__none__" ? "" : v
+                              )
+                            }
+                            disabled={rowDisabled}
+                            className={cellSelect}
+                          >
+                            <SelectItem value="__none__">—</SelectItem>
+                            {generateHalfOptions("nightFirst").map((t) => (
+                              <SelectItem key={t} value={t}>
+                                {formatTimeLabel(t)}
+                              </SelectItem>
+                            ))}
+                          </Select>
+                        </td>
+                        <td className="border border-zinc-200 p-0">
+                          <Select
+                            value={row.nightSecondHalfStart || "__none__"}
+                            onValueChange={(v) =>
+                              handleTimeChange(
+                                row.id,
+                                "nightSecondHalfStart",
+                                "nightSecond",
+                                v === "__none__" ? "" : v
+                              )
+                            }
+                            disabled={rowDisabled}
+                            className={cellSelect}
+                          >
+                            <SelectItem value="__none__">—</SelectItem>
+                            {generateHalfOptions("nightSecond").map((t) => (
+                              <SelectItem key={t} value={t}>
+                                {formatTimeLabel(t)}
+                              </SelectItem>
+                            ))}
+                          </Select>
+                        </td>
+                        <td className="border border-zinc-200 p-0">
+                          <Select
+                            value={row.nightSecondHalfEnd || "__none__"}
+                            onValueChange={(v) =>
+                              handleTimeChange(
+                                row.id,
+                                "nightSecondHalfEnd",
+                                "nightSecond",
+                                v === "__none__" ? "" : v
+                              )
+                            }
+                            disabled={rowDisabled}
+                            className={cellSelect}
+                          >
+                            <SelectItem value="__none__">—</SelectItem>
+                            {generateHalfOptions("nightSecond").map((t) => (
+                              <SelectItem key={t} value={t}>
+                                {formatTimeLabel(t)}
+                              </SelectItem>
+                            ))}
+                          </Select>
+                        </td>
+                        <td className="border border-zinc-200 p-0"><Input className={cn(cellInput, "bg-zinc-50")} value={row.workedHrs} readOnly title="Auto-calculated from 1st/2nd half and night shift times" /></td>
                         <td className="border border-zinc-200 p-0">
                           <Input
                             className={cn(cellInput, isInvalidHours(row.idleHrs) && "ring-1 ring-red-500 rounded", rowDisabled && "bg-zinc-100 cursor-not-allowed")}
@@ -1265,74 +1360,65 @@ export default function EquipmentUtilizationForm() {
             </div>
 
             {/* Signature Fields */}
-            <div className="shrink-0 mt-4 w-full min-w-0 pt-4 border-t-2 border-slate-200 overflow-hidden">
-              <div className="flex flex-wrap items-center gap-8 px-1">
+            <div className="shrink-0 mt-4 w-full min-w-0 pt-4 border-t-2 border-emerald-200/80 overflow-hidden">
+              <div className="flex items-center justify-between gap-4 px-1">
                 <div className="flex items-center gap-2 min-w-[200px]">
-                  <Label className="text-sm font-semibold text-slate-700 shrink-0">Recorded by</Label>
-                  <Select
-                    value={recordedBy || "__none__"}
-                    onValueChange={(v) => setRecordedBy(v === "__none__" ? "" : v)}
-                    className="min-w-[180px] [&_button]:h-9 [&_button]:text-sm [&_button]:rounded-lg [&_button]:border-slate-300"
-                  >
-                    <SelectItem value="__none__">Select...</SelectItem>
-                    <SelectItem value="u2">User 1</SelectItem>
-                    <SelectItem value="u3">User 2</SelectItem>
-                  </Select>
+                  <Label className="text-sm font-semibold text-slate-900 shrink-0">Recorded by</Label>
+                  <Input
+                    value={recordedBy || "User"}
+                    readOnly
+                    className="h-9 min-w-[220px] border-slate-300 bg-white text-sm font-semibold text-slate-900"
+                  />
                 </div>
-                <div className="flex items-center gap-2 min-w-[200px]">
-                  <Label className="text-sm font-semibold text-slate-700 shrink-0">Checked by</Label>
-                  <Select
-                    value={checkedBy || "__none__"}
-                    onValueChange={(v) => setCheckedBy(v === "__none__" ? "" : v)}
-                    className="min-w-[180px] [&_button]:h-9 [&_button]:text-sm [&_button]:rounded-lg [&_button]:border-slate-300"
-                  >
-                    <SelectItem value="__none__">Select...</SelectItem>
-                    <SelectItem value="c2">Supervisor A</SelectItem>
-                    <SelectItem value="c3">Supervisor B</SelectItem>
-                  </Select>
-                </div>
+                <Button
+                  type="button"
+                  onClick={handleSubmitRegister}
+                  className="h-9 px-5 bg-[#137638] hover:bg-[#0f6430] text-white"
+                >
+                  Submit Register
+                </Button>
               </div>
             </div>
 
             {/* Collapsible Legends */}
-            <div className="shrink-0 mt-4 w-full rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+            <div className="shrink-0 mt-4 w-full rounded-xl border border-slate-300 overflow-hidden shadow-sm bg-white">
               <button
                 type="button"
                 onClick={() => setLegendsExpanded((p) => !p)}
-                className="w-full flex items-center justify-between gap-2 px-4 py-3 bg-gradient-to-r from-slate-100 to-slate-50 hover:from-slate-200 hover:to-slate-100 text-left text-sm font-semibold text-slate-700 border-b border-slate-200 transition-colors"
+                className="w-full flex items-center justify-between gap-2 px-4 py-3 bg-white hover:bg-slate-50 text-left text-sm font-semibold text-slate-900 border-b border-slate-200 transition-colors"
               >
-                <span>Idle Time Reasons, Shifts & Down Time Reasons</span>
+                <span>Idle Time Reasons & Down Time Reasons</span>
                 {legendsExpanded ? <ChevronUp className="h-4 w-4 shrink-0" /> : <ChevronDown className="h-4 w-4 shrink-0" />}
               </button>
               {legendsExpanded && (
-                <div className="flex flex-wrap items-start gap-6 rounded-b-xl bg-gradient-to-br from-slate-50 to-slate-100 px-5 py-4">
+                <div className="flex flex-wrap items-start gap-6 rounded-b-xl bg-white px-5 py-4">
                   <div className="flex-1 min-w-[140px]">
-                    <p className="text-xs font-bold text-slate-800 uppercase tracking-wide mb-2">Idle Time Reasons</p>
-                    <div className="space-y-1 text-xs text-slate-700">
+                    <p className="text-xs font-bold text-slate-900 uppercase tracking-wide mb-2">Idle Time Reasons</p>
+                    <div className="space-y-1 text-xs text-slate-900">
                       {IDLE_REASONS.slice(0, 4).map((r) => (
                         <p key={r.value}><span className="font-bold text-slate-900">{r.value}</span> — {r.full}</p>
                       ))}
                     </div>
                   </div>
                   <div className="flex-1 min-w-[140px]">
-                    <p className="text-xs font-bold text-slate-800 uppercase tracking-wide mb-2">Idle Time Reasons</p>
-                    <div className="space-y-1 text-xs text-slate-700">
+                    <p className="text-xs font-bold text-slate-900 uppercase tracking-wide mb-2">Idle Time Reasons</p>
+                    <div className="space-y-1 text-xs text-slate-900">
                       {IDLE_REASONS.slice(4, 8).map((r) => (
                         <p key={r.value}><span className="font-bold text-slate-900">{r.value}</span> — {r.full}</p>
                       ))}
                     </div>
                   </div>
                   <div className="flex-1 min-w-[140px]">
-                    <p className="text-xs font-bold text-slate-800 uppercase tracking-wide mb-2">Idle Time Reasons</p>
-                    <div className="space-y-1 text-xs text-slate-700">
+                    <p className="text-xs font-bold text-slate-900 uppercase tracking-wide mb-2">Idle Time Reasons</p>
+                    <div className="space-y-1 text-xs text-slate-900">
                       {IDLE_REASONS.slice(8).map((r) => (
                         <p key={r.value}><span className="font-bold text-slate-900">{r.value}</span> — {r.full}</p>
                       ))}
                     </div>
                   </div>
                   <div className="flex-1 min-w-[140px]">
-                    <p className="text-xs font-bold text-slate-800 uppercase tracking-wide mb-2">Shifts</p>
-                    <div className="text-xs text-slate-700 space-y-1">
+                    <p className="text-xs font-bold text-slate-900 uppercase tracking-wide mb-2">Shifts</p>
+                    <div className="text-xs text-slate-900 space-y-1">
                       <p>Day — 1st Half: 6:00 AM – 12:00 PM</p>
                       <p className="ml-6">2nd Half: 12:00 PM – 6:00 PM</p>
                       <p>Night — 1st Half: 11:59 PM – 5:59 AM</p>
@@ -1340,8 +1426,8 @@ export default function EquipmentUtilizationForm() {
                     </div>
                   </div>
                   <div className="flex-1 min-w-[140px]">
-                    <p className="text-xs font-bold text-slate-800 uppercase tracking-wide mb-2">Down Time Reasons</p>
-                    <div className="space-y-1 text-xs text-slate-700">
+                    <p className="text-xs font-bold text-slate-900 uppercase tracking-wide mb-2">Down Time Reasons</p>
+                    <div className="space-y-1 text-xs text-slate-900">
                       {DOWN_REASONS.map((r) => (
                         <p key={r.value}><span className="font-bold text-slate-900">{r.value}</span> — {r.full}</p>
                       ))}

@@ -42,14 +42,13 @@ interface NavItem {
 }
 
 const navigation: NavItem[] = [
-  { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Dashboard', href: '/equipment/dashboard', icon: LayoutDashboard },
   
   {
     name: 'ECWC Assets',
     href: '/equipment',
     icon: Wrench,
     children: [
-      { name: 'Dashboard', href: '/equipment/dashboard', icon: LayoutDashboard },
       { name: 'Plant', href: '/equipment/plant-equipment', icon: Wrench },
       { name: 'Machinery', href: '/equipment/machinery', icon: Wrench },
       { name: 'Heavy Vehicles', href: '/equipment/heavy-vehicles', icon: Truck },
@@ -58,23 +57,11 @@ const navigation: NavItem[] = [
       { name: 'Auxiliary Equipment', href: '/equipment/auxiliary-equipment', icon: Drill },
     ],
   },
-  {
-    name: 'Time Sheet',
-    href: '/forms',
-    icon: ClipboardList,
-    children: [
-      { name: 'Dry Load TS', href: '/forms/dry-cargo-timesheet', icon: FileText },
-      { name: 'Machinery TS', href: '/forms/construction-equipment-timesheet', icon: FileText },
-      { name: 'Dump Truck TS', href: '/forms/dump-truck-timesheet', icon: FileText },
-      { name: 'Light Vehicle TS', href: '/forms/light-vehicle-timesheet', icon: FileText },
-      { name: 'Wagon Drill TS', href: '/forms/wagon-drill-timesheet', icon: FileText },
-      { name: 'Rate Reference', href: '/rates', icon: BrIcon },
-    ],
-  },
+
   
-  { name: 'Machinery Maintenance', href: '/machinery-maintenance', icon: Wrench },
+  //{ name: 'Machinery Maintenance', href: '/machinery-maintenance', icon: Wrench },
   { name: 'Machinery Operations ', href: '/machinery-operations', icon: ClipboardList },
-  { name: 'Equipment Admin', href: '/equipment-administration', icon: Settings },
+  //{ name: 'Equipment Admin', href: '/equipment-administration', icon: Settings },
   { name: 'Common Data', href: '/common-data', icon: Database },
   { name: 'Compound Map', href: '/compound-map', icon: MapPin },
   { name: 'Announcements', href: '/announcements', icon: Megaphone },

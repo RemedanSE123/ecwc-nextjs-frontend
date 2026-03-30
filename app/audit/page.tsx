@@ -17,6 +17,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { AUTH_ACCOUNTS } from '@/lib/auth';
 import { exportAssetsToCsv } from '@/lib/export-utils';
+import { apiUrl } from '@/lib/api-client';
 import { History, Download, ChevronLeft, ChevronRight, X, User, Clock, Hash, Activity, FileText, Columns, Calendar, FilterX, Filter } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 
@@ -506,7 +507,7 @@ export default function AuditPage() {
     params.set('limit', String(limit));
     params.set('sort', sort);
     try {
-      const res = await fetch(`/api/audit?${params.toString()}`);
+      const res = await fetch(apiUrl(`/api/v1/audit?${params.toString()}`));
       if (!res.ok) throw new Error('Failed to fetch audit log');
       const data: AuditResponse = await res.json();
       setResponse(data);

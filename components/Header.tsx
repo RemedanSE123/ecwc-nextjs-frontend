@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { getSession, clearSession } from '@/lib/auth';
 import { getUnreadCount } from '@/lib/announcements-seen';
 import { AnnouncementBodyWithStatus } from '@/lib/announcement-body';
+import { apiUrl } from '@/lib/api-client';
 
 interface AnnouncementItem {
   id: number;
@@ -62,7 +63,7 @@ export default function Header({ sidebarCollapsed = false, sidebarOpen = false, 
   useEffect(() => {
     if (!notificationsOpen) return;
     setAnnouncementsLoading(true);
-    fetch('/api/announcements?limit=30')
+    fetch(apiUrl('/api/v1/announcements?limit=30'))
       .then((res) => (res.ok ? res.json() : { data: [] }))
       .then((json) => {
         const data = json.data ?? [];
@@ -76,7 +77,7 @@ export default function Header({ sidebarCollapsed = false, sidebarOpen = false, 
   useEffect(() => {
     if (notificationsOpen) return;
     const fetchBadge = () => {
-      fetch('/api/announcements?limit=50')
+      fetch(apiUrl('/api/v1/announcements?limit=50'))
         .then((res) => (res.ok ? res.json() : { data: [] }))
         .then((json) => {
           const data = json.data ?? [];
@@ -111,7 +112,7 @@ export default function Header({ sidebarCollapsed = false, sidebarOpen = false, 
           'X-User-Name': session.user.name,
         };
         if (session.sessionId) headers['X-Session-Id'] = session.sessionId;
-        await fetch('/api/audit', {
+        await fetch(apiUrl('/api/v1/audit'), {
           method: 'POST',
           headers,
           body: JSON.stringify({ action: 'logout', details: { reason: 'manual' } }),

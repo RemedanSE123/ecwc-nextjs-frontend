@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
 import FormModal from '@/components/FormModal';
 import { FileText, BarChart2, Database, ChevronRight } from 'lucide-react';
@@ -10,6 +11,7 @@ type TabId = 'form' | 'report' | 'data';
 export interface FormItem {
   name: string;
   component?: React.ReactNode;
+  href?: string;
 }
 
 interface SectionPageProps {
@@ -20,12 +22,17 @@ interface SectionPageProps {
 }
 
 export default function SectionPage({ title, formItems, icon, reportItems }: SectionPageProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>('form');
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState('');
   const [modalContent, setModalContent] = useState<React.ReactNode>(null);
 
   const handleFormClick = (item: FormItem) => {
+    if (item.href) {
+      router.push(item.href);
+      return;
+    }
     if (!item.component) return;
     setModalTitle(item.name);
     setModalContent(item.component);
@@ -116,13 +123,13 @@ export default function SectionPage({ title, formItems, icon, reportItems }: Sec
                   key={i}
                   onClick={() => handleFormClick(item)}
                   className={`group flex items-center gap-3 px-3.5 py-2.5 rounded-lg border transition-all duration-150 ${
-                    item.component
+                    (item.component || item.href)
                       ? 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/60 hover:border-zinc-400 dark:hover:border-zinc-500 hover:shadow-sm cursor-pointer'
                       : 'border-zinc-100 dark:border-zinc-800 bg-zinc-50/60 dark:bg-zinc-900/40 cursor-default'
                   }`}
                 >
                   <span className={`w-6 text-right text-xs font-mono shrink-0 select-none ${
-                    item.component ? 'text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-600 dark:group-hover:text-zinc-300' : 'text-zinc-300 dark:text-zinc-700'
+                    (item.component || item.href) ? 'text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-600 dark:group-hover:text-zinc-300' : 'text-zinc-300 dark:text-zinc-700'
                   }`}>
                     {String(getDisplayIndex(i)).padStart(2, '0')}
                   </span>
@@ -132,14 +139,14 @@ export default function SectionPage({ title, formItems, icon, reportItems }: Sec
                   }`} />
 
                   <span className={`flex-1 text-sm leading-snug ${
-                    item.component
+                    (item.component || item.href)
                       ? 'text-zinc-800 dark:text-zinc-200 group-hover:text-zinc-900 dark:group-hover:text-white font-medium'
                       : 'text-zinc-400 dark:text-zinc-600'
                   }`}>
                     {item.name}
                   </span>
 
-                  {item.component ? (
+                  {(item.component || item.href) ? (
                     <ChevronRight className="w-4 h-4 text-zinc-300 dark:text-zinc-600 group-hover:text-zinc-500 dark:group-hover:text-zinc-400 shrink-0 transition-transform duration-150 group-hover:translate-x-0.5" />
                   ) : (
                     <span className="w-4 shrink-0" />

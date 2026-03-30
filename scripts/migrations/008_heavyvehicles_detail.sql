@@ -3,7 +3,7 @@ CREATE TABLE heavy_vehicle_details (
   asset_id UUID PRIMARY KEY REFERENCES asset_master(id) ON DELETE CASCADE,
 
   plate_no TEXT,
-  chassis_serial_no TEXT,
+  chassis_serial_no TEXT,//duplicate in asset maste as serial number
   engine_make TEXT,
   engine_model TEXT,
   engine_serial_no TEXT,
@@ -36,7 +36,7 @@ CREATE INDEX idx_heavy_vehicle_engine_serial
 CREATE INDEX idx_heavy_vehicle_manuf_year
   ON heavy_vehicle_details (manuf_year);
 
-CREATE INDEX idx_heavy_vehicle_insurance_coverage
+CREATE INDEX idx_heavy_vehicle_insurance_coveragey
   ON heavy_vehicle_details (insurance_coverage);
 
 CREATE INDEX idx_heavy_vehicle_bolo_renewal_date

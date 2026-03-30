@@ -11,6 +11,7 @@ import { getAuthHeaders, getSession, canSendAnnouncement } from '@/lib/auth';
 import { markAnnouncementsAsSeen, getUnreadCount, getLastSeenAnnouncementId } from '@/lib/announcements-seen';
 import { Megaphone, Send, Plus, User, Search, X, ChevronDown, ChevronUp, Sparkles, Calendar } from 'lucide-react';
 import { AnnouncementBodyWithStatus } from '@/lib/announcement-body';
+import { apiUrl } from '@/lib/api-client';
 
 interface Announcement {
   id: number;
@@ -90,7 +91,7 @@ export default function AnnouncementsPage() {
   const fetchList = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/announcements?page=${page}&limit=${limit}`);
+      const res = await fetch(apiUrl(`/api/v1/announcements?page=${page}&limit=${limit}`));
       if (!res.ok) throw new Error('Failed to load');
       const json: AnnouncementsResponse = await res.json();
       const data = json.data ?? [];
@@ -140,7 +141,7 @@ export default function AnnouncementsPage() {
     }
     setSubmitting(true);
     try {
-      const res = await fetch('/api/announcements', {
+      const res = await fetch(apiUrl('/api/v1/announcements'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ title, body: formBody.trim() || title }),
