@@ -15,7 +15,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AUTH_ACCOUNTS } from '@/lib/auth';
 import { exportAssetsToCsv } from '@/lib/export-utils';
 import { apiUrl } from '@/lib/api-client';
 import { History, Download, ChevronLeft, ChevronRight, X, User, Clock, Hash, Activity, FileText, Columns, Calendar, FilterX, Filter } from 'lucide-react';
@@ -599,20 +598,13 @@ export default function AuditPage() {
           <CardContent className="space-y-4 pt-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-6">
               <div className="min-w-0 space-y-2 p-3 rounded-lg bg-background/60 dark:bg-muted/20 border border-border/60 hover:border-[#16A34A]/30 transition-colors">
-                <Label className="text-xs font-medium text-foreground">User</Label>
-                <Select value={userPhone || 'all'} onValueChange={(v) => setUserPhone(v === 'all' ? '' : v)} className="w-full min-w-0" dropdownMinWidth={280}>
-                  <SelectTrigger className="h-9 rounded-md border-border/80 focus:ring-2 focus:ring-[#16A34A]/30 focus:border-[#16A34A]">
-                    <SelectValue placeholder="All users" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All users</SelectItem>
-                    {AUTH_ACCOUNTS.map((a) => (
-                      <SelectItem key={a.phone} value={a.phone} className="whitespace-nowrap">
-                        {a.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label className="text-xs font-medium text-foreground">User Phone</Label>
+                <Input
+                  placeholder="Filter by phone"
+                  value={userPhone}
+                  onChange={(e) => setUserPhone(e.target.value)}
+                  className="h-9 rounded-md border-border/80 focus-visible:ring-2 focus-visible:ring-[#16A34A]/30 focus-visible:border-[#16A34A]"
+                />
               </div>
               <div className="min-w-0 space-y-2 p-3 rounded-lg bg-background/60 dark:bg-muted/20 border border-border/60 hover:border-[#16A34A]/30 transition-colors">
                 <Label className="text-xs font-medium text-foreground">Asset ID</Label>

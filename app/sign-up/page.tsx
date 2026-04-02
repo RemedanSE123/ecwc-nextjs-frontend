@@ -34,6 +34,7 @@ import {
   Home
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
+import { fetchDepartments, fetchPositions, fetchProjectsForLocation, fetchSupervisors, fetchWorkLocations, registerAuth, uploadUserImage } from "@/lib/api/auth"
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -86,6 +87,8 @@ interface ReferenceData {
   departments: Department[]
   positions: Position[]
   workLocations: WorkLocation[]
+  projects: { id: string; name: string }[]
+  supervisors: { id: string; full_name: string; job_title?: string | null }[]
 }
 
 export default function SignUpPage() {
@@ -102,8 +105,9 @@ export default function SignUpPage() {
     department: "",
     position: "",
     workLocation: "",
-    location: "",
+    projectLocation: "",
     supervisor: "",
+    jobTitle: "",
     
     // Step 3: Account Security
     password: "",
@@ -112,14 +116,19 @@ export default function SignUpPage() {
   const [referenceData, setReferenceData] = useState<ReferenceData>({
     departments: [],
     positions: [],
-    workLocations: []
+    workLocations: [],
+    projects: [],
+    supervisors: [],
   })
   const [profileImage, setProfileImage] = useState<string | null>(null)
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null)
   const [agreedToTerms, setAgreedToTerms] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [loadErrors, setLoadErrors] = useState<string[]>([])
+  const [loadStatus, setLoadStatus] = useState<{ departments: number; positions: number; projects: number; workLocations: number; supervisors: number } | null>(null)
 
   // Always light mode on sign-up (ignore landing page theme)
   useEffect(() => {
@@ -128,29 +137,50 @@ export default function SignUpPage() {
 
   // Reference data
   useEffect(() => {
-    // Using mock data
-    setReferenceData({
-      departments: [
-        { id: '1', name: 'Equipment Department', code: 'EQP' },
-        { id: '2', name: 'Maintenance Department', code: 'MNT' },
-        { id: '3', name: 'Operations Department', code: 'OPS' },
-      ],
-      positions: [
-        { id: '1', title: 'Equipment Manager', department_id: '1', department_name: 'Equipment Department' },
-        { id: '2', title: 'Maintenance Technician', department_id: '2', department_name: 'Maintenance Department' },
-        { id: '3', title: 'Operations Coordinator', department_id: '3', department_name: 'Operations Department' },
-      ],
-      workLocations: [
-        { id: '1', name: 'Head Office', city: 'Addis Ababa' },
-        { id: '2', name: 'Branch Office', city: 'Dire Dawa' },
-        { id: '3', name: 'Site Office', city: 'Hawassa' },
-      ],
+    Promise.allSettled([
+      fetchDepartments(),
+      fetchPositions(),
+      fetchWorkLocations(),
+      fetchProjectsForLocation(),
+      fetchSupervisors(),
+    ]).then((results) => {
+      const [depsRes, posRes, wlRes, projRes, supRes] = results
+
+      const errors: string[] = []
+      const departments = depsRes.status === "fulfilled" ? depsRes.value : []
+      const positions = posRes.status === "fulfilled" ? posRes.value : []
+      const workLocations = wlRes.status === "fulfilled" ? wlRes.value : []
+      const projects = projRes.status === "fulfilled" ? projRes.value : []
+      const supervisors = supRes.status === "fulfilled" ? supRes.value : []
+      setLoadStatus({
+        departments: departments.length,
+        positions: positions.length,
+        projects: projects.length,
+        workLocations: workLocations.length,
+        supervisors: supervisors.length,
+      })
+
+      if (depsRes.status === "rejected") errors.push(`Departments: ${depsRes.reason instanceof Error ? depsRes.reason.message : "Unknown error"}`)
+      if (posRes.status === "rejected") errors.push(`Positions: ${posRes.reason instanceof Error ? posRes.reason.message : "Unknown error"}`)
+      if (wlRes.status === "rejected") errors.push(`Work Locations: ${wlRes.reason instanceof Error ? wlRes.reason.message : "Unknown error"}`)
+      if (projRes.status === "rejected") errors.push(`Projects: ${projRes.reason instanceof Error ? projRes.reason.message : "Unknown error"}`)
+      if (supRes.status === "rejected") errors.push(`Supervisors: ${supRes.reason instanceof Error ? supRes.reason.message : "Unknown error"}`)
+
+      setLoadErrors(errors)
+      setReferenceData({
+        departments: departments.map((d) => ({ id: d.id, name: d.name, code: d.name.slice(0, 3).toUpperCase() })),
+        positions: positions.map((p) => ({ id: p.id, title: p.title, department_id: p.department_id, department_name: p.department_name })),
+        workLocations: workLocations.map((w) => ({ id: w.id, name: w.name, city: "" })),
+        projects: projects.map((p) => ({ id: p.id, name: p.project_name })),
+        supervisors: supervisors.map((s) => ({ id: s.id, full_name: s.full_name, job_title: s.job_title })),
+      })
     })
   }, [])
 
-  // Get all positions
+  // Filter positions by selected department
   const getFilteredPositions = () => {
-    return referenceData.positions
+    if (!formData.department) return referenceData.positions
+    return referenceData.positions.filter((p) => p.department_id === formData.department)
   }
 
   // Check if Site Office is selected
@@ -160,6 +190,14 @@ export default function SignUpPage() {
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.name === "phone") {
+      const digitsOnly = e.target.value.replace(/\D/g, "").slice(0, 9)
+      setFormData((prev) => ({
+        ...prev,
+        phone: digitsOnly,
+      }))
+      return
+    }
     setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value,
@@ -171,13 +209,14 @@ export default function SignUpPage() {
       ...prev,
       [name]: value,
       // Reset position when department changes
-      ...(name === 'department' && { position: '' })
+      ...(name === 'department' && { position: '', jobTitle: '' })
     }))
   }
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
+      setProfileImageFile(file)
       const reader = new FileReader()
       reader.onload = (e) => {
         setProfileImage(e.target?.result as string)
@@ -224,6 +263,11 @@ export default function SignUpPage() {
       return
     }
 
+    if (!/^\d{9}$/.test(formData.phone)) {
+      setError("Phone number must be exactly 9 digits after +251")
+      return
+    }
+
     if (!agreedToTerms) {
       setError("Please agree to the terms and conditions")
       return
@@ -231,18 +275,38 @@ export default function SignUpPage() {
 
     setIsLoading(true)
 
-    // Registration submission
-    setTimeout(() => {
-      const fullPhoneNumber = formData.phone ? `+251${formData.phone.replace(/\s/g, '')}` : ''
-      console.log('Registration attempt:', { 
-        ...formData, 
-        phone: fullPhoneNumber,
-        profileImage, 
-        agreedToTerms 
+    try {
+      const selectedPosition = referenceData.positions.find((p) => p.id === formData.position)
+      const backendPhone = formData.phone ? `0${formData.phone}` : ''
+      let profileImagePath: string | undefined
+      if (profileImageFile) {
+        const uploaded = await uploadUserImage(profileImageFile)
+        profileImagePath = uploaded.path
+      }
+      const resp = await registerAuth({
+        full_name: formData.fullName,
+        email: formData.email,
+        phone: backendPhone,
+        profile_image: profileImagePath,
+        employee_id: formData.employeeId || undefined,
+        department_id: selectedPosition?.department_id || undefined,
+        position_id: formData.position || undefined,
+        // Work location comes from work_locations table.
+        work_location_id: formData.workLocation || undefined,
+        // Project location comes from projects table and is saved as text.
+        site_location: referenceData.projects.find((p) => p.id === formData.projectLocation)?.name || undefined,
+        supervisor_name: formData.supervisor || undefined,
+        job_title: formData.jobTitle || selectedPosition?.title || undefined,
+        password: formData.password,
+        agreed_to_terms: agreedToTerms,
       })
+      setError(resp.message)
+      setTimeout(() => router.push('/sign-in'), 1500)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Registration failed")
+    } finally {
       setIsLoading(false)
-      router.push('/sign-in')
-    }, 1000)
+    }
   }
 
   const { checks, strength } = checkPasswordStrength(formData.password)
@@ -370,9 +434,12 @@ export default function SignUpPage() {
                       id="phone"
                       name="phone"
                       type="tel"
-                      placeholder="91 234 5678"
+                      placeholder="9XXXXXXXX"
                       value={formData.phone}
                       onChange={handleChange}
+                      inputMode="numeric"
+                      pattern="\d{9}"
+                      maxLength={9}
                       required
                       disabled={isLoading}
                       className="bg-background/50 h-9 text-sm rounded-l-none"
@@ -395,7 +462,7 @@ export default function SignUpPage() {
             exit="exit"
             className="space-y-3"
           >
-            {/* Row 1: Work Location and Position/Role */}
+            {/* Row 1: Work Location and Department */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="workLocation" className="flex items-center gap-2 text-sm">
@@ -414,30 +481,36 @@ export default function SignUpPage() {
                     </SelectItem>
                   ))}
                 </Select>
+                {referenceData.workLocations.length === 0 && (
+                  <p className="text-xs text-red-600 mt-1">No work locations found in `work_locations` table.</p>
+                )}
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="position" className="flex items-center gap-2 text-sm">
+                <Label htmlFor="department" className="flex items-center gap-2 text-sm">
                   <Briefcase className="h-3.5 w-3.5 text-[#70c82a]" />
-                  Position/Role *
+                  Department *
                 </Label>
                 <Select
-                  value={formData.position}
-                  onValueChange={(value) => handleSelectChange('position', value)}
+                  value={formData.department}
+                  onValueChange={(value) => handleSelectChange('department', value)}
                   disabled={isLoading}
                   className="bg-background/50 h-9 text-sm"
                 >
-                  {getFilteredPositions().map((position) => (
-                    <SelectItem key={position.id} value={position.id}>
-                      {position.title}
+                  {referenceData.departments.map((department) => (
+                    <SelectItem key={department.id} value={department.id}>
+                      {department.name}
                     </SelectItem>
                   ))}
                 </Select>
+                {referenceData.departments.length === 0 && (
+                  <p className="text-xs text-red-600 mt-1">No departments found in `departments` table.</p>
+                )}
               </div>
             </div>
 
-            {/* Row 2: Employee ID and Supervisor */}
-            <div className="grid grid-cols-2 gap-4">
+            {/* Row 2: Employee ID and Job Title/Position */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="employeeId" className="flex items-center gap-2 text-sm">
                   <Badge className="h-3.5 w-3.5 text-[#70c82a]" />
@@ -455,38 +528,95 @@ export default function SignUpPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="supervisor" className="text-sm">Supervisor/Manager</Label>
-                <Input
-                  id="supervisor"
-                  name="supervisor"
-                  placeholder="Manager Name"
-                  value={formData.supervisor}
-                  onChange={handleChange}
+                <Label htmlFor="jobTitle" className="text-sm">Job Title</Label>
+                <Select
+                  value={formData.jobTitle}
+                  onValueChange={(value) => {
+                    handleSelectChange('jobTitle', value)
+                    const selected = referenceData.positions.find((p) => p.title === value && (!formData.department || p.department_id === formData.department))
+                    if (selected) handleSelectChange('position', selected.id)
+                  }}
                   disabled={isLoading}
                   className="bg-background/50 h-9 text-sm"
-                />
+                >
+                  {getFilteredPositions().map((position) => (
+                    <SelectItem key={position.id} value={position.title}>
+                      {position.title}
+                    </SelectItem>
+                  ))}
+                </Select>
+                {getFilteredPositions().length === 0 && (
+                  <p className="text-xs text-red-600 mt-1">No positions found for selected department.</p>
+                )}
               </div>
+
             </div>
 
-            {/* Conditional Location field - Only show when Site is selected */}
-            {isSiteSelected() && (
+            {/* Row 3: Line Manager and conditional Project Location (same row) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="location" className="flex items-center gap-2 text-sm">
-                  <MapPin className="h-3.5 w-3.5 text-[#70c82a]" />
-                  Location *
-                </Label>
-                <Input
-                  id="location"
-                  name="location"
-                  placeholder="Enter specific site location"
-                  value={formData.location}
-                  onChange={handleChange}
-                  required
+                <Label htmlFor="supervisor" className="text-sm">Line Manager /Supervisor</Label>
+                <Select
+                  value={formData.supervisor}
+                  onValueChange={(value) => handleSelectChange('supervisor', value)}
                   disabled={isLoading}
                   className="bg-background/50 h-9 text-sm"
-                />
+                >
+                  {referenceData.supervisors.map((s) => (
+                    <SelectItem key={s.id} value={s.full_name}>
+                      {s.full_name}{s.job_title ? ` - ${s.job_title}` : ""}
+                    </SelectItem>
+                  ))}
+                </Select>
+                {referenceData.supervisors.length === 0 && (
+                  <p className="text-xs text-red-600 mt-1">No supervisors found in `employees` table.</p>
+                )}
               </div>
+
+              {isSiteSelected() && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="projectLocation" className="flex items-center gap-2 text-sm">
+                    <MapPin className="h-3.5 w-3.5 text-[#70c82a]" />
+                    Project Location *
+                  </Label>
+                  <Select
+                    value={formData.projectLocation}
+                    onValueChange={(value) => handleSelectChange('projectLocation', value)}
+                    disabled={isLoading}
+                    className="bg-background/50 h-9 text-sm"
+                  >
+                    {referenceData.projects.map((project) => (
+                      <SelectItem key={project.id} value={project.id}>
+                        {project.name}
+                      </SelectItem>
+                    ))}
+                  </Select>
+                  {referenceData.projects.length === 0 && (
+                    <p className="text-xs text-red-600 mt-1">No projects found in `projects` table.</p>
+                  )}
+                </div>
+              )}
+            </div>
+            {loadErrors.length > 0 && (
+              <Alert variant="destructive">
+                <AlertDescription>
+                  <div className="text-xs">
+                    <div className="font-semibold mb-1">Dropdown fetch errors:</div>
+                    {loadErrors.map((e, idx) => (
+                      <div key={idx}>- {e}</div>
+                    ))}
+                  </div>
+                </AlertDescription>
+              </Alert>
             )}
+            <Alert>
+              <AlertDescription>
+                <div className="text-[11px] leading-5 text-muted-foreground">
+                  <div><span className="font-semibold">API:</span> {process.env.NEXT_PUBLIC_API_BASE_URL || "(same origin)"}</div>
+                  <div><span className="font-semibold">Rows:</span> departments={loadStatus?.departments ?? 0}, positions={loadStatus?.positions ?? 0}, workLocations={loadStatus?.workLocations ?? 0}, projects={loadStatus?.projects ?? 0}, supervisors={loadStatus?.supervisors ?? 0}</div>
+                </div>
+              </AlertDescription>
+            </Alert>
           </motion.div>
         )
 

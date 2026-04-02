@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -309,6 +310,7 @@ function getCategoryStats(
 }
 
 export default function EquipmentDashboardPage() {
+  const searchParams = useSearchParams();
   const [stats, setStats] = useState<AssetStats | null>(null);
   const [report, setReport] = useState<AssetReportData | null>(null);
   const [statusSummary, setStatusSummary] = useState<Awaited<ReturnType<typeof fetchStatusSummary>> | null>(null);
@@ -333,14 +335,34 @@ export default function EquipmentDashboardPage() {
   type LocationSortBy = (typeof locationSortColumns)[number];
   const [locationSortBy, setLocationSortBy] = useState<LocationSortBy>('location');
   const [locationSortOrder, setLocationSortOrder] = useState<'asc' | 'desc'>('asc');
+  const routeTab = searchParams.get('tab');
+  const routeSearch = searchParams.get('search') ?? undefined;
+  const routeAssetId = searchParams.get('assetId') ?? undefined;
 
   useEffect(() => {
-    Promise.all([fetchAssetStats(), fetchAssetReports(), fetchStatusSummary(), fetchStatusSummary()])
-      .then(([s, r, ss, ssOverall]) => {
+    if (routeTab === 'all-assets' || routeSearch || routeAssetId) {
+      setActiveTab('all-assets');
+    }
+  }, [routeTab, routeSearch, routeAssetId]);
+
+  useEffect(() => {
+    if (activeTab !== 'all-assets') return;
+    if (!(routeTab === 'all-assets' || routeSearch || routeAssetId)) return;
+    const node = allAssetsSectionRef.current;
+    if (!node) return;
+    const timer = window.setTimeout(() => {
+      node.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 120);
+    return () => window.clearTimeout(timer);
+  }, [activeTab, routeTab, routeSearch, routeAssetId]);
+
+  useEffect(() => {
+    Promise.all([fetchAssetStats(), fetchAssetReports(), fetchStatusSummary()])
+      .then(([s, r, ss]) => {
         setStats(s);
         setReport(r);
         setStatusSummary(ss);
-        setStatusSummaryReport(ssOverall);
+        setStatusSummaryReport(ss);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -1658,6 +1680,8 @@ export default function EquipmentDashboardPage() {
                 <EquipmentDataView
                   categoryName="All Assets"
                   useInfiniteScroll
+                  initialSearch={routeSearch}
+                  focusAssetId={routeAssetId}
                 />
               </div>
             </TabsContent>

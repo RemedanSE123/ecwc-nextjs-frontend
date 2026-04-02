@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useMemo } from 'react';
-import { FULL_ACCESS_PHONES, NO_OVERVIEW_PHONES, NO_OVERVIEW_HIDDEN_HREFS, ASSETS_AND_MAP_PHONES } from '@/lib/auth';
+import { can } from '@/lib/auth';
 import {
   LayoutDashboard,
   Wrench,
@@ -63,6 +63,16 @@ const navigation: NavItem[] = [
   { name: 'Machinery Operations ', href: '/machinery-operations', icon: ClipboardList },
   //{ name: 'Equipment Admin', href: '/equipment-administration', icon: Settings },
   { name: 'Common Data', href: '/common-data', icon: Database },
+  {
+    name: 'Employee Access',
+    href: '/admin/employees',
+    icon: UserCheck,
+    children: [
+      { name: 'Employees', href: '/admin/employees', icon: UserCheck },
+      { name: 'Master Data CRUD', href: '/admin/master-data', icon: Database },
+      { name: 'Access Control', href: '/admin/access-control', icon: Settings },
+    ],
+  },
   { name: 'Compound Map', href: '/compound-map', icon: MapPin },
   { name: 'Announcements', href: '/announcements', icon: Megaphone },
   { name: 'Audit Trail', href: '/audit', icon: History },
@@ -71,12 +81,7 @@ const navigation: NavItem[] = [
 interface SidebarProps {
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
-  /** Current user phone for role-based nav. Full: 0929517703, 0983007020. No Overview: 0912293712. Assets+Map only: 0927763207, 0921133084, 0980194463. */
   userPhone?: string | null;
-}
-
-function normalizePhone(phone: string): string {
-  return phone.replace(/\s/g, '');
 }
 
 export default function Sidebar({ isCollapsed = false, onToggleCollapse, userPhone }: SidebarProps) {
@@ -84,14 +89,32 @@ export default function Sidebar({ isCollapsed = false, onToggleCollapse, userPho
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
   const visibleNav = useMemo(() => {
-    const phone = userPhone ? normalizePhone(userPhone) : '';
-    if (ASSETS_AND_MAP_PHONES.some((p) => normalizePhone(p) === phone)) {
-      return navigation.filter((item) => item.name === 'ECWC Assets' || item.name === 'Compound Map');
-    }
-    if (NO_OVERVIEW_PHONES.some((p) => normalizePhone(p) === phone)) {
-      return navigation.filter((item) => !NO_OVERVIEW_HIDDEN_HREFS.includes(item.href));
-    }
-    return navigation;
+    const permissionByHref: Record<string, string> = {
+      '/equipment/dashboard': 'page:view:equipment_dashboard',
+      '/equipment': 'page:view:assets',
+      '/equipment/plant-equipment': 'page:view:assets',
+      '/equipment/machinery': 'page:view:assets',
+      '/equipment/heavy-vehicles': 'page:view:assets',
+      '/equipment/light-vehicles': 'page:view:assets',
+      '/equipment/factory-equipment': 'page:view:assets',
+      '/equipment/auxiliary-equipment': 'page:view:assets',
+      '/machinery-operations': 'page:view:assets',
+      '/common-data': 'page:view:master_data',
+      '/admin/employees': 'page:view:employee_access',
+      '/admin/master-data': 'page:view:master_data',
+      '/admin/access-control': 'page:view:access_control',
+      '/compound-map': 'page:view:assets',
+      '/announcements': 'page:view:announcements',
+      '/audit': 'page:view:audit',
+    };
+
+    return navigation
+      .filter((item) => can(permissionByHref[item.href] ?? 'page:view:*'))
+      .map((item) => ({
+        ...item,
+        children: item.children?.filter((child) => can(permissionByHref[child.href] ?? 'page:view:*')),
+      }))
+      .filter((item) => !item.children || item.children.length > 0);
   }, [userPhone]);
 
   // Standalone form routes: do not add or remove Time Sheet from expanded state (no expand/collapse)
@@ -108,10 +131,6 @@ export default function Sidebar({ isCollapsed = false, onToggleCollapse, userPho
         parentsToExpand.push(item.name);
       }
     });
-    const phone = userPhone ? normalizePhone(userPhone) : '';
-    if (ASSETS_AND_MAP_PHONES.some((p) => normalizePhone(p) === phone)) {
-      parentsToExpand.push('ECWC Assets');
-    }
     setExpandedItems((prev) => {
       // On Daily Down / Equipment Utilization / Equipment Transfer, don't change expanded state at all
       if (isStandaloneFormRoute) {

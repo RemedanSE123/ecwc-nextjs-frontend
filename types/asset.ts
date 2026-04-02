@@ -21,6 +21,7 @@ export interface Asset {
 }
 
 export interface AssetFilters {
+  asset_id?: string;
   category?: string | string[];
   category_group?: string;  // slug e.g. plant-equipment
   status?: string | string[];

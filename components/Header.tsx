@@ -1,13 +1,15 @@
 'use client';
 
-import { Search, Bell, User, ChevronDown, Settings, LogOut, Menu, X, Megaphone } from 'lucide-react';
+import { Search, Bell, User, ChevronDown, LogOut, Menu, X, Megaphone, Phone, Mail, ShieldCheck } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { getSession, clearSession } from '@/lib/auth';
+import { getSession, clearSession, getSessionUpdatedEventName, getAuthHeaders, updateSessionUser } from '@/lib/auth';
 import { getUnreadCount } from '@/lib/announcements-seen';
 import { AnnouncementBodyWithStatus } from '@/lib/announcement-body';
 import { apiUrl } from '@/lib/api-client';
+import { getUserImageUrl } from '@/lib/api/auth';
+import { getAnnouncementTargetUrl } from '@/lib/announcement-target';
 
 interface AnnouncementItem {
   id: number;
@@ -15,6 +17,9 @@ interface AnnouncementItem {
   body: string;
   created_by_name: string;
   created_at: string;
+  entity_type?: string | null;
+  entity_id?: string | null;
+  action?: string | null;
 }
 
 function formatAgo(iso: string): string {
@@ -45,6 +50,8 @@ export default function Header({ sidebarCollapsed = false, sidebarOpen = false, 
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [userName, setUserName] = useState<string>('');
   const [userPhone, setUserPhone] = useState<string>('');
+  const [userEmail, setUserEmail] = useState<string>('');
+  const [userImage, setUserImage] = useState<string | null>(null);
   const [announcements, setAnnouncements] = useState<AnnouncementItem[]>([]);
   const [announcementsLoading, setAnnouncementsLoading] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -52,18 +59,78 @@ export default function Header({ sidebarCollapsed = false, sidebarOpen = false, 
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const session = getSession();
-    if (session?.user) {
-      setUserName(session.user.name);
-      setUserPhone(session.user.phone);
-    }
+    const syncUser = () => {
+      const session = getSession();
+      if (session?.user) {
+        setUserName(session.user.name);
+        setUserPhone(session.user.phone);
+        setUserEmail(session.user.email || '');
+        setUserImage(getUserImageUrl(session.user.profile_image));
+      } else {
+        setUserName('');
+        setUserPhone('');
+        setUserEmail('');
+        setUserImage(null);
+      }
+    };
+    syncUser();
+    const onStorage = (e: StorageEvent) => {
+      if (!e.key || e.key === 'ecwc_session') syncUser();
+    };
+    const eventName = getSessionUpdatedEventName();
+    const onSession = () => syncUser();
+    window.addEventListener('storage', onStorage);
+    window.addEventListener(eventName, onSession);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener(eventName, onSession);
+    };
   }, []);
+
+  // Fallback: hydrate profile image from /auth/me in case current session was created
+  // before profile_image was stored in local session payload.
+  useEffect(() => {
+    const session = getSession();
+    if (!session?.accessToken) return;
+    if (userImage) return;
+
+    fetch(apiUrl('/api/v1/auth/me'), { headers: { ...getAuthHeaders() } })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((profile) => {
+        const rawImage = (profile?.profile_image as string | null | undefined) ?? null;
+        const normalized = getUserImageUrl(rawImage);
+        if (normalized) {
+          setUserImage(normalized);
+          updateSessionUser({ profile_image: rawImage });
+        }
+      })
+      .catch(() => {
+        // Ignore; initials fallback remains.
+      });
+  }, [userImage]);
+
+  const initials = (userName || 'U')
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((x) => x[0]?.toUpperCase() || '')
+    .join('') || 'U';
+
+  const profileRole =
+    userPhone === '0911000000' || userEmail.toLowerCase() === 'superadmin@ecwc.gov.et'
+      ? 'System Super Admin'
+      : 'ECWC User';
 
   // Fetch announcements for dropdown when opened
   useEffect(() => {
     if (!notificationsOpen) return;
+    const session = getSession();
+    if (!session?.accessToken) {
+      setAnnouncements([]);
+      return;
+    }
     setAnnouncementsLoading(true);
-    fetch(apiUrl('/api/v1/announcements?limit=30'))
+    fetch(apiUrl('/api/v1/announcements?limit=30'), { headers: { ...getAuthHeaders() } })
       .then((res) => (res.ok ? res.json() : { data: [] }))
       .then((json) => {
         const data = json.data ?? [];
@@ -76,8 +143,14 @@ export default function Header({ sidebarCollapsed = false, sidebarOpen = false, 
   // Fetch announcements for unread badge when dropdown is closed; poll and refetch on focus
   useEffect(() => {
     if (notificationsOpen) return;
+    const eventName = getSessionUpdatedEventName();
     const fetchBadge = () => {
-      fetch(apiUrl('/api/v1/announcements?limit=50'))
+      const session = getSession();
+      if (!session?.accessToken) {
+        setUnreadCount(0);
+        return;
+      }
+      fetch(apiUrl('/api/v1/announcements?limit=50'), { headers: { ...getAuthHeaders() } })
         .then((res) => (res.ok ? res.json() : { data: [] }))
         .then((json) => {
           const data = json.data ?? [];
@@ -86,15 +159,20 @@ export default function Header({ sidebarCollapsed = false, sidebarOpen = false, 
         })
         .catch(() => setUnreadCount(0));
     };
+    const onSeen = () => fetchBadge();
     fetchBadge();
     const interval = setInterval(fetchBadge, 15000);
     const onFocus = () => fetchBadge();
     window.addEventListener('focus', onFocus);
+    window.addEventListener(eventName, fetchBadge);
+    window.addEventListener('announcements-seen', onSeen);
     return () => {
       clearInterval(interval);
       window.removeEventListener('focus', onFocus);
+      window.removeEventListener(eventName, fetchBadge);
+      window.removeEventListener('announcements-seen', onSeen);
     };
-  }, [notificationsOpen, pathname]);
+  }, [notificationsOpen, pathname, userPhone]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -216,7 +294,7 @@ export default function Header({ sidebarCollapsed = false, sidebarOpen = false, 
                   announcements.map((a) => (
                     <Link
                       key={a.id}
-                      href="/announcements"
+                      href={getAnnouncementTargetUrl(a)}
                       onClick={() => setNotificationsOpen(false)}
                       className="block px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-50 dark:border-gray-800 last:border-b-0 transition-colors"
                     >
@@ -248,8 +326,19 @@ export default function Header({ sidebarCollapsed = false, sidebarOpen = false, 
             onClick={() => setUserMenuOpen(!userMenuOpen)}
             className="flex items-center gap-2 hover:opacity-90 transition-opacity"
           >
-            <div className="w-7 h-7 bg-gradient-to-br from-green-600 to-green-700 rounded-full flex items-center justify-center text-white font-medium text-xs shadow-sm">
-              <User className="w-3.5 h-3.5" />
+            <div className="w-9 h-9 bg-gradient-to-br from-green-600 to-green-700 rounded-full flex items-center justify-center text-white font-semibold text-[11px] shadow-sm ring-2 ring-green-100 overflow-hidden">
+              {userImage ? (
+                <img
+                  src={userImage}
+                  alt={userName || 'User'}
+                  className="w-full h-full rounded-full object-cover object-center"
+                  loading="eager"
+                  decoding="async"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                initials
+              )}
             </div>
             <div className="hidden lg:flex flex-col items-start">
               <span className="text-[11px] font-medium text-gray-900 leading-tight">{userName || 'User'}</span>
@@ -259,19 +348,51 @@ export default function Header({ sidebarCollapsed = false, sidebarOpen = false, 
           </button>
 
           {userMenuOpen && (
-            <div className="absolute right-0 top-full mt-1.5 w-52 bg-white rounded-md shadow-lg border border-gray-200 py-0.5 z-50">
-              <div className="px-3 py-2.5 border-b border-gray-100">
-                <p className="text-[11px] font-medium text-gray-900">{userName || 'User'}</p>
-                <p className="text-[10px] text-gray-500 mt-0.5">{userPhone || ''}</p>
+            <div className="absolute right-0 top-full mt-1.5 w-72 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-50">
+              <div className="px-3 py-3 border-b border-gray-100 bg-gradient-to-r from-green-50 to-white rounded-t-xl space-y-2.5">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-11 h-11 rounded-full bg-gradient-to-br from-green-600 to-green-700 text-white text-xs font-bold flex items-center justify-center shadow-sm ring-2 ring-green-100 overflow-hidden shrink-0">
+                    {userImage ? (
+                      <img
+                        src={userImage}
+                        alt={userName || 'User'}
+                        className="w-full h-full rounded-full object-cover object-center"
+                        loading="eager"
+                        decoding="async"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      initials
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-gray-900 truncate">{userName || 'User'}</p>
+                    <p className="text-[10px] text-green-700 font-medium truncate">{profileRole}</p>
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2 rounded-md bg-white/80 border border-gray-100 px-2 py-1.5">
+                    <Phone className="w-3.5 h-3.5 text-green-600" />
+                    <span className="text-[11px] text-gray-700 truncate">{userPhone || '-'}</span>
+                  </div>
+                  <div className="flex items-center gap-2 rounded-md bg-white/80 border border-gray-100 px-2 py-1.5">
+                    <Mail className="w-3.5 h-3.5 text-green-600" />
+                    <span className="text-[11px] text-gray-700 truncate">{userEmail || '-'}</span>
+                  </div>
+                  <div className="flex items-center gap-2 rounded-md bg-white/80 border border-gray-100 px-2 py-1.5">
+                    <ShieldCheck className="w-3.5 h-3.5 text-green-600" />
+                    <span className="text-[11px] text-gray-700 truncate">{profileRole}</span>
+                  </div>
+                </div>
               </div>
-              <button className="w-full px-3 py-2 text-left text-[11px] text-gray-700 hover:bg-gray-50 flex items-center gap-2.5 transition-colors">
+              <Link
+                href="/profile"
+                onClick={() => setUserMenuOpen(false)}
+                className="w-full px-3 py-2.5 text-left text-[11px] text-gray-700 hover:bg-gray-50 flex items-center gap-2.5 transition-colors"
+              >
                 <User className="w-3.5 h-3.5 text-gray-400" />
                 <span>My Profile</span>
-              </button>
-              <button className="w-full px-3 py-2 text-left text-[11px] text-gray-700 hover:bg-gray-50 flex items-center gap-2.5 transition-colors">
-                <Settings className="w-3.5 h-3.5 text-gray-400" />
-                <span>Settings</span>
-              </button>
+              </Link>
               <div className="border-t border-gray-100 my-0.5"></div>
               <button
                 type="button"

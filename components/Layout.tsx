@@ -4,17 +4,44 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
+import ProfilePopup from '@/components/ProfilePopup';
 import { Loader2 } from 'lucide-react';
-import { getSession, isSessionExpired, clearSession, touchSession } from '@/lib/auth';
+import { can, getSession, isSessionExpired, clearSession, touchSession } from '@/lib/auth';
 import { SidebarContext } from '@/lib/sidebar-context';
 import { apiUrl } from '@/lib/api-client';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
+  const canAccessRoute = useCallback((route: string) => {
+    if (route.startsWith('/equipment')) return can('page:view:assets');
+    if (route.startsWith('/announcements')) return can('page:view:announcements');
+    if (route.startsWith('/audit')) return can('page:view:audit');
+    if (route.startsWith('/admin/master-data')) return can('page:view:master_data');
+    if (route.startsWith('/admin/access-control')) return can('page:view:access_control');
+    if (route.startsWith('/admin/employees')) return can('page:view:employee_access');
+    if (route.startsWith('/profile')) return can('page:view:profile');
+    return true;
+  }, []);
+
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
+  const [accessDenied, setAccessDenied] = useState(false);
+  const [showAccessDeniedPopup, setShowAccessDeniedPopup] = useState(false);
+
+  const getDefaultAuthorizedRoute = useCallback((): string | null => {
+    const candidates: Array<{ route: string; permission: string }> = [
+      { route: '/equipment/dashboard', permission: 'page:view:equipment_dashboard' },
+      { route: '/equipment', permission: 'page:view:assets' },
+      { route: '/announcements', permission: 'page:view:announcements' },
+      { route: '/profile', permission: 'page:view:profile' },
+    ];
+    for (const item of candidates) {
+      if (can(item.permission)) return item.route;
+    }
+    return null;
+  }, []);
 
   const redirectToSignIn = useCallback(async () => {
     const session = getSession();
@@ -44,15 +71,30 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const session = getSession();
     if (!session) {
+      setAccessDenied(false);
       redirectToSignIn();
       return;
     }
     if (isSessionExpired(session)) {
+      setAccessDenied(false);
       redirectToSignIn();
       return;
     }
+    if (!canAccessRoute(pathname || '')) {
+      setShowAccessDeniedPopup(true);
+      const fallbackRoute = getDefaultAuthorizedRoute();
+      if (fallbackRoute && fallbackRoute !== pathname) {
+        setAccessDenied(false);
+        router.replace(fallbackRoute);
+        return;
+      }
+      setAccessDenied(true);
+      setAuthChecked(true);
+      return;
+    }
+    setAccessDenied(false);
     setAuthChecked(true);
-  }, [pathname, redirectToSignIn]);
+  }, [pathname, redirectToSignIn, canAccessRoute, router, getDefaultAuthorizedRoute]);
 
   // Inactivity check every 60s
   useEffect(() => {
@@ -92,8 +134,36 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     );
   }
 
+  if (accessDenied) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-50 px-4">
+        <div className="max-w-md rounded-xl border bg-white p-6 text-center shadow-sm">
+          <h2 className="text-lg font-semibold text-gray-900">No page access assigned</h2>
+          <p className="mt-2 text-sm text-gray-600">
+            Your account is logged in, but no page permissions are assigned yet. Please contact admin to assign access.
+          </p>
+          <button
+            onClick={() => {
+              clearSession();
+              router.replace('/sign-in');
+            }}
+            className="mt-4 rounded-md bg-[#137638] px-4 py-2 text-sm font-medium text-white hover:bg-[#0f5c2b]"
+          >
+            Back to Sign In
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
+      <ProfilePopup
+        open={showAccessDeniedPopup}
+        title="Access Denied"
+        message="You do not have permission to perform this action or open this page. Please contact your administrator."
+        onClose={() => setShowAccessDeniedPopup(false)}
+      />
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div

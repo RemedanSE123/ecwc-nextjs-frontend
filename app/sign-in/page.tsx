@@ -19,8 +19,9 @@ import {
   Lock 
 } from "lucide-react"
 import { motion } from "framer-motion"
-import { validateUser, setSession, getSession, isSessionExpired, getAuthHeaders } from "@/lib/auth"
+import { setSessionWithTokens, getSession, isSessionExpired, getAuthHeaders } from "@/lib/auth"
 import { apiUrl } from "@/lib/api-client"
+import { loginAuth } from "@/lib/api/auth"
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -50,6 +51,11 @@ function SignInForm() {
     }
   }, [router])
 
+  // Prefetch dashboard route to improve post-login transition speed.
+  useEffect(() => {
+    router.prefetch('/equipment/dashboard')
+  }, [router])
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData((prev) => ({
       ...prev,
@@ -60,26 +66,35 @@ function SignInForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
-    if (formData.password.length !== 6 || !/^\d{6}$/.test(formData.password)) {
-      setError("Password must be exactly 6 digits.")
-      return
-    }
     setIsLoading(true)
-    const user = validateUser(formData.phone.trim(), formData.password)
-    if (!user) {
-      setError("Invalid phone number or password. Only whitelisted accounts can sign in.")
-      setIsLoading(false)
-      return
-    }
-    setSession(user)
     try {
-      await fetch(apiUrl('/api/v1/audit'), {
+      const login = await loginAuth(formData.phone.trim(), formData.password)
+      setSessionWithTokens(
+        {
+          id: login.user.id,
+          phone: login.user.phone,
+          name: login.user.name,
+          email: login.user.email,
+          profile_image: login.user.profile_image ?? null,
+          roles: login.user.roles ?? [],
+          permissions: login.user.permissions ?? [],
+        },
+        login.access_token,
+        login.refresh_token
+      )
+      // Non-blocking audit call: never delay successful navigation.
+      void fetch(apiUrl('/api/v1/audit'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
         body: JSON.stringify({ action: 'login' }),
+      }).catch(() => {
+        // Ignore audit failures on login path.
       })
     } catch (err) {
-      if (typeof console !== 'undefined') console.warn('Audit log (login) failed:', err)
+      const msg = err instanceof Error ? err.message : "Invalid credentials"
+      setError(msg)
+      setIsLoading(false)
+      return
     }
     router.push("/equipment/dashboard")
     setIsLoading(false)
@@ -183,18 +198,17 @@ function SignInForm() {
                 <div className="space-y-2">
                   <Label htmlFor="password" className="flex items-center gap-2">
                     <Lock className="h-4 w-4 text-[#70c82a]" />
-                    Password (6 digits) *
+                    Password *
                   </Label>
                   <div className="relative">
                     <Input
                       id="password"
                       name="password"
                       type={showPassword ? "text" : "password"}
-                      placeholder="6-digit password"
+                      placeholder="Enter your password"
                       value={formData.password}
                       onChange={handleChange}
                       required
-                      maxLength={6}
                       disabled={isLoading}
                       className="bg-background/50 pr-10 h-9 text-sm"
                     />
@@ -233,7 +247,7 @@ function SignInForm() {
             <CardFooter className="relative z-10 pt-4 pb-8 mb-2">
               <div className="w-full space-y-3">
                 <p className="text-xs text-muted-foreground text-center">
-                  Only whitelisted accounts can sign in. Contact admin for access.
+                  Use your registered account. Contact admin if your account is not active.
                 </p>
                 <div className="flex items-center justify-center">
                   <Link
@@ -241,6 +255,14 @@ function SignInForm() {
                     className="text-xs font-semibold text-black dark:text-white hover:opacity-80 underline underline-offset-4 transition-opacity"
                   >
                     Don't have an account? Go to <span className="text-[#137638]">Sign Up</span>
+                  </Link>
+                </div>
+                <div className="flex items-center justify-center">
+                  <Link
+                    href="/forgot-password"
+                    className="text-xs font-semibold text-[#137638] hover:opacity-80 underline underline-offset-4 transition-opacity"
+                  >
+                    Forgot password?
                   </Link>
                 </div>
               </div>

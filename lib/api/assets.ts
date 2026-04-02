@@ -2,9 +2,10 @@ import type { Asset, AssetFilters, AssetsResponse, AssetStats, AssetReportData, 
 import { getAuthHeaders } from '@/lib/auth';
 import { apiUrl } from '@/lib/api-client';
 
-/** Build URL for viewing an asset image (redirects to presigned S3 URL). */
+/** Build URL for viewing an asset image from local backend uploads. */
 export function getAssetImageUrl(key: string | null): string | null {
   if (!key) return null;
+  if (key.startsWith("/uploads/")) return apiUrl(key);
   return apiUrl(`/api/v1/assets/image?key=${encodeURIComponent(key)}`);
 }
 
@@ -24,6 +25,7 @@ function buildAssetsQuery(filters: AssetFilters): string {
     arr.filter((v) => v !== '').forEach((v) => search.append(k, v));
   };
   set('category_group', filters.category_group);
+  set('asset_id', filters.asset_id);
   set('search', filters.search);
   set('responsible_person_name', filters.responsible_person_name);
   set('page', String(filters.page ?? 1));
@@ -51,7 +53,9 @@ async function handleApiError(res: Response, fallback: string): Promise<never> {
 
 export async function fetchAssets(filters: AssetFilters = {}): Promise<AssetsResponse> {
   const q = buildAssetsQuery(filters);
-  const res = await fetch(apiUrl(`/api/v1/assets${q ? `?${q}` : ''}`));
+  const res = await fetch(apiUrl(`/api/v1/assets${q ? `?${q}` : ''}`), {
+    headers: { ...getAuthHeaders() },
+  });
   if (!res.ok) return handleApiError(res, 'Failed to fetch assets');
   return res.json();
 }
@@ -61,7 +65,9 @@ export async function fetchAssetStats(category?: string, categoryGroup?: string)
   if (category) params.set('category', category);
   if (categoryGroup) params.set('category_group', categoryGroup);
   const q = params.toString() ? `?${params}` : '';
-  const res = await fetch(apiUrl(`/api/v1/assets/stats${q}`));
+  const res = await fetch(apiUrl(`/api/v1/assets/stats${q}`), {
+    headers: { ...getAuthHeaders() },
+  });
   if (!res.ok) return handleApiError(res, 'Failed to fetch asset stats');
   return res.json();
 }
@@ -71,7 +77,9 @@ export async function fetchAssetReports(category?: string, categoryGroup?: strin
   if (category) params.set('category', category);
   if (categoryGroup) params.set('category_group', categoryGroup);
   const q = params.toString() ? `?${params}` : '';
-  const res = await fetch(apiUrl(`/api/v1/assets/reports${q}`));
+  const res = await fetch(apiUrl(`/api/v1/assets/reports${q}`), {
+    headers: { ...getAuthHeaders() },
+  });
   if (!res.ok) return handleApiError(res, 'Failed to fetch asset reports');
   return res.json();
 }
@@ -102,7 +110,9 @@ export interface StatusSummaryResponse {
 
 export async function fetchStatusSummary(categoryGroup?: string): Promise<StatusSummaryResponse> {
   const params = categoryGroup ? `?category_group=${encodeURIComponent(categoryGroup)}` : '';
-  const res = await fetch(apiUrl(`/api/v1/assets/reports/status-summary${params}`));
+  const res = await fetch(apiUrl(`/api/v1/assets/reports/status-summary${params}`), {
+    headers: { ...getAuthHeaders() },
+  });
   if (!res.ok) return handleApiError(res, 'Failed to fetch status summary');
   return res.json();
 }
@@ -119,6 +129,7 @@ function buildFacetsQuery(filters: AssetFilters): string {
     arr.filter((v) => v !== '').forEach((v) => search.append(k, v));
   };
   set('category_group', filters.category_group);
+  set('asset_id', filters.asset_id);
   set('search', filters.search);
   set('responsible_person_name', filters.responsible_person_name);
   appendAll('category', filters.category);
@@ -132,7 +143,9 @@ export async function fetchAssetFacets(filtersOrGroup?: AssetFilters | string): 
       ? { category_group: filtersOrGroup }
       : filtersOrGroup ?? {};
   const q = buildFacetsQuery(filters);
-  const res = await fetch(apiUrl(`/api/v1/assets/facets${q ? `?${q}` : ''}`));
+  const res = await fetch(apiUrl(`/api/v1/assets/facets${q ? `?${q}` : ''}`), {
+    headers: { ...getAuthHeaders() },
+  });
   if (!res.ok) return handleApiError(res, 'Failed to fetch filter options');
   return res.json();
 }
@@ -164,7 +177,9 @@ export async function fetchProjects(status?: 'active' | 'inactive' | 'closed'): 
   const params = new URLSearchParams();
   if (status) params.set('status', status);
   const q = params.toString();
-  const res = await fetch(apiUrl(`/api/v1/projects${q ? `?${q}` : ''}`));
+  const res = await fetch(apiUrl(`/api/v1/projects${q ? `?${q}` : ''}`), {
+    headers: { ...getAuthHeaders() },
+  });
   if (!res.ok) return handleApiError(res, 'Failed to fetch projects');
   return res.json();
 }
@@ -172,7 +187,9 @@ export async function fetchProjects(status?: 'active' | 'inactive' | 'closed'): 
 export async function fetchEquipmentOptions(projectLocation: string): Promise<EquipmentOption[]> {
   const params = new URLSearchParams();
   params.set('project_name', projectLocation);
-  const res = await fetch(apiUrl(`/api/v1/assets/equipment-options/list?${params.toString()}`));
+  const res = await fetch(apiUrl(`/api/v1/assets/equipment-options/list?${params.toString()}`), {
+    headers: { ...getAuthHeaders() },
+  });
   if (!res.ok) return handleApiError(res, 'Failed to fetch equipment options');
   return res.json();
 }
@@ -184,6 +201,7 @@ export async function fetchAssetCompleteness(filtersOrGroup?: AssetFilters | str
   } else if (filtersOrGroup) {
     const f = filtersOrGroup;
     if (f.category_group) params.set('category_group', f.category_group);
+    if (f.asset_id) params.set('asset_id', f.asset_id);
     if (f.search) params.set('search', f.search);
     if (f.responsible_person_name) params.set('responsible_person_name', f.responsible_person_name);
     const appendAll = (k: string, val: string | string[] | undefined) => {
@@ -195,13 +213,17 @@ export async function fetchAssetCompleteness(filtersOrGroup?: AssetFilters | str
     MULTI_KEYS.forEach((key) => appendAll(key, f[key]));
   }
   const q = params.toString() ? `?${params}` : '';
-  const res = await fetch(apiUrl(`/api/v1/assets/completeness${q}`));
+  const res = await fetch(apiUrl(`/api/v1/assets/completeness${q}`), {
+    headers: { ...getAuthHeaders() },
+  });
   if (!res.ok) return handleApiError(res, 'Failed to fetch completeness');
   return res.json();
 }
 
 export async function fetchAsset(id: string): Promise<Asset> {
-  const res = await fetch(apiUrl(`/api/v1/assets/${encodeURIComponent(id)}`));
+  const res = await fetch(apiUrl(`/api/v1/assets/${encodeURIComponent(id)}`), {
+    headers: { ...getAuthHeaders() },
+  });
   if (!res.ok) return handleApiError(res, 'Failed to fetch asset');
   return res.json();
 }
@@ -217,7 +239,9 @@ export interface AssetStatusHistoryEntry {
 }
 
 export async function fetchAssetStatusHistory(assetId: string): Promise<AssetStatusHistoryEntry[]> {
-  const res = await fetch(apiUrl(`/api/v1/assets/${encodeURIComponent(assetId)}/status-history`));
+  const res = await fetch(apiUrl(`/api/v1/assets/${encodeURIComponent(assetId)}/status-history`), {
+    headers: { ...getAuthHeaders() },
+  });
   if (!res.ok) return handleApiError(res, 'Failed to fetch status history');
   return res.json();
 }
@@ -247,7 +271,9 @@ export type VehicleDetailsResult<T> = { data: T | null; error: string | null };
 
 export async function fetchHeavyVehicleDetails(assetId: string): Promise<VehicleDetailsResult<HeavyVehicleDetails>> {
   try {
-    const res = await fetch(apiUrl(`/api/v1/assets/${encodeURIComponent(assetId)}/heavy-vehicle-details`));
+    const res = await fetch(apiUrl(`/api/v1/assets/${encodeURIComponent(assetId)}/heavy-vehicle-details`), {
+      headers: { ...getAuthHeaders() },
+    });
     const body = await res.json().catch(() => null);
     if (!res.ok) {
       const msg = (body && (body.detail || body.error)) || res.statusText || 'Failed to fetch heavy vehicle details';
@@ -279,7 +305,9 @@ export interface LightVehicleDetails {
 
 export async function fetchLightVehicleDetails(assetId: string): Promise<VehicleDetailsResult<LightVehicleDetails>> {
   try {
-    const res = await fetch(apiUrl(`/api/v1/assets/${encodeURIComponent(assetId)}/light-vehicle-details`));
+    const res = await fetch(apiUrl(`/api/v1/assets/${encodeURIComponent(assetId)}/light-vehicle-details`), {
+      headers: { ...getAuthHeaders() },
+    });
     const body = await res.json().catch(() => null);
     if (!res.ok) {
       const msg = (body && (body.detail || body.error)) || res.statusText || 'Failed to fetch light vehicle details';
@@ -311,7 +339,9 @@ export interface MachineryDetails {
 
 export async function fetchMachineryDetails(assetId: string): Promise<VehicleDetailsResult<MachineryDetails>> {
   try {
-    const res = await fetch(apiUrl(`/api/v1/assets/${encodeURIComponent(assetId)}/machinery-details`));
+    const res = await fetch(apiUrl(`/api/v1/assets/${encodeURIComponent(assetId)}/machinery-details`), {
+      headers: { ...getAuthHeaders() },
+    });
     const body = await res.json().catch(() => null);
     if (!res.ok) {
       const msg = (body && (body.detail || body.error)) || res.statusText || 'Failed to fetch machinery details';
@@ -397,7 +427,9 @@ export interface PlantDetails {
 
 export async function fetchPlantDetails(assetId: string): Promise<VehicleDetailsResult<PlantDetails>> {
   try {
-    const res = await fetch(apiUrl(`/api/v1/assets/${encodeURIComponent(assetId)}/plant-details`));
+    const res = await fetch(apiUrl(`/api/v1/assets/${encodeURIComponent(assetId)}/plant-details`), {
+      headers: { ...getAuthHeaders() },
+    });
     const body = await res.json().catch(() => null);
     if (!res.ok) {
       const msg = (body && (body.detail || body.error)) || res.statusText || 'Failed to fetch plant details';
@@ -429,7 +461,9 @@ export interface AuxGeneratorDetails {
 
 export async function fetchAuxGeneratorDetails(assetId: string): Promise<VehicleDetailsResult<AuxGeneratorDetails>> {
   try {
-    const res = await fetch(apiUrl(`/api/v1/assets/${encodeURIComponent(assetId)}/aux-generator-details`));
+    const res = await fetch(apiUrl(`/api/v1/assets/${encodeURIComponent(assetId)}/aux-generator-details`), {
+      headers: { ...getAuthHeaders() },
+    });
     const body = await res.json().catch(() => null);
     if (!res.ok) {
       const msg = (body && (body.detail || body.error)) || res.statusText || 'Failed to fetch auxiliary generator details';
@@ -470,7 +504,9 @@ export async function fetchStatusTrend(period: 'day' | 'week' | 'month' = 'day',
   const params = new URLSearchParams();
   params.set('period', period);
   params.set('category', category);
-  const res = await fetch(apiUrl(`/api/v1/assets/reports/status-trend?${params}`));
+  const res = await fetch(apiUrl(`/api/v1/assets/reports/status-trend?${params}`), {
+    headers: { ...getAuthHeaders() },
+  });
   if (!res.ok) return handleApiError(res, 'Failed to fetch status trend');
   return res.json();
 }

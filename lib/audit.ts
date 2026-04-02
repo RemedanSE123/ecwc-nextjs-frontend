@@ -5,22 +5,18 @@
 
 import { NextRequest } from 'next/server';
 import { query } from '@/lib/db';
-import { AUTH_ACCOUNTS } from '@/lib/auth';
 
 export interface AuditUser {
   phone: string;
   name: string;
 }
 
-/** Read X-User-Phone and X-User-Name from request; validate phone against whitelist. */
+/** Read X-User-Phone and X-User-Name from request. */
 export function getUserFromRequest(request: NextRequest): AuditUser | null {
   const phone = request.headers.get('X-User-Phone')?.trim();
   const name = request.headers.get('X-User-Name')?.trim();
   if (!phone || !name) return null;
-  const normalized = phone.replace(/\s/g, '');
-  const account = AUTH_ACCOUNTS.find((a) => a.phone.replace(/\s/g, '') === normalized);
-  if (!account) return null;
-  return { phone: account.phone, name: account.name };
+  return { phone, name };
 }
 
 /** Read X-Session-Id from request (one per login; distinguishes phone vs laptop vs PC). */

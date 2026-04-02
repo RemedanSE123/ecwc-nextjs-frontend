@@ -1,17 +1,19 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getAuthHeaders, getSession, canSendAnnouncement } from '@/lib/auth';
+import { getAuthHeaders, canSendAnnouncement } from '@/lib/auth';
 import { markAnnouncementsAsSeen, getUnreadCount, getLastSeenAnnouncementId } from '@/lib/announcements-seen';
 import { Megaphone, Send, Plus, User, Search, X, ChevronDown, ChevronUp, Sparkles, Calendar } from 'lucide-react';
 import { AnnouncementBodyWithStatus } from '@/lib/announcement-body';
 import { apiUrl } from '@/lib/api-client';
+import { getAnnouncementTargetUrl } from '@/lib/announcement-target';
 
 interface Announcement {
   id: number;
@@ -20,6 +22,9 @@ interface Announcement {
   created_by_phone: string;
   created_by_name: string;
   created_at: string;
+  entity_type?: string | null;
+  entity_id?: string | null;
+  action?: string | null;
 }
 
 interface AnnouncementsResponse {
@@ -71,8 +76,8 @@ const BODY_PREVIEW_LINES = 3;
 const LINE_HEIGHT = 1.4;
 
 export default function AnnouncementsPage() {
-  const session = getSession();
-  const canSend = session ? canSendAnnouncement(session.user.phone) : false;
+  const router = useRouter();
+  const canSend = canSendAnnouncement();
   const [list, setList] = useState<Announcement[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -91,7 +96,9 @@ export default function AnnouncementsPage() {
   const fetchList = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(apiUrl(`/api/v1/announcements?page=${page}&limit=${limit}`));
+      const res = await fetch(apiUrl(`/api/v1/announcements?page=${page}&limit=${limit}`), {
+        headers: { ...getAuthHeaders() },
+      });
       if (!res.ok) throw new Error('Failed to load');
       const json: AnnouncementsResponse = await res.json();
       const data = json.data ?? [];
@@ -334,6 +341,15 @@ export default function AnnouncementsPage() {
                 return (
                   <Card
                     key={a.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => router.push(getAnnouncementTargetUrl(a))}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        router.push(getAnnouncementTargetUrl(a));
+                      }
+                    }}
                     className={`overflow-hidden transition-all duration-200 hover:shadow-lg border-2 ${
                       isNew
                         ? 'border-[#16A34A]/40 dark:border-green-700/50 bg-green-50/40 dark:bg-green-950/25'

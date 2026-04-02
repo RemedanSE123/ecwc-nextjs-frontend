@@ -3,12 +3,20 @@
  * Uses sessionStorage so each tab/session shows unread until user visits /announcements.
  */
 
-const STORAGE_KEY = 'ecwc_announcements_last_seen_id';
+import { getSession } from '@/lib/auth';
+
+const STORAGE_KEY_PREFIX = 'ecwc_announcements_last_seen_id';
+
+function getStorageKey(): string {
+  if (typeof window === 'undefined') return STORAGE_KEY_PREFIX;
+  const userKey = getSession()?.user?.id || getSession()?.user?.phone || 'guest';
+  return `${STORAGE_KEY_PREFIX}:${userKey}`;
+}
 
 export function getLastSeenAnnouncementId(): number {
   if (typeof window === 'undefined') return 0;
   try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
+    const raw = sessionStorage.getItem(getStorageKey());
     if (!raw) return 0;
     const n = parseInt(raw, 10);
     return Number.isFinite(n) ? n : 0;
@@ -22,7 +30,7 @@ export function markAnnouncementsAsSeen(ids: number[]): void {
   if (typeof window === 'undefined' || !ids.length) return;
   const current = getLastSeenAnnouncementId();
   const maxId = Math.max(current, ...ids);
-  sessionStorage.setItem(STORAGE_KEY, String(maxId));
+  sessionStorage.setItem(getStorageKey(), String(maxId));
   window.dispatchEvent(new CustomEvent('announcements-seen'));
 }
 

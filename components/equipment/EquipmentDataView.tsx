@@ -158,11 +158,21 @@ interface EquipmentDataViewProps {
   initialLimit?: number;
   /** If true, load 50 initially and fetch 50 more when user scrolls to bottom (no Next button). */
   useInfiniteScroll?: boolean;
+  /** Optional initial text search from route context. */
+  initialSearch?: string;
+  /** Optional asset to auto-focus/open when loaded. */
+  focusAssetId?: string;
 }
 
-export default function EquipmentDataView({ categoryGroup, categoryName, initialLimit, useInfiniteScroll }: EquipmentDataViewProps) {
+export default function EquipmentDataView({ categoryGroup, categoryName, initialLimit, useInfiniteScroll, initialSearch, focusAssetId }: EquipmentDataViewProps) {
   const pageSize = useInfiniteScroll ? INFINITE_SCROLL_PAGE_SIZE : (initialLimit ?? 20);
-  const [filters, setFilters] = useState<AssetFilters>({ category_group: categoryGroup, page: 1, limit: pageSize });
+  const [filters, setFilters] = useState<AssetFilters>({
+    asset_id: focusAssetId ?? undefined,
+    category_group: categoryGroup,
+    page: 1,
+    limit: pageSize,
+    search: initialSearch?.trim() || undefined,
+  });
   const [data, setData] = useState<Asset[]>([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -188,8 +198,9 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
   const [auxGeneratorDetailAssetId, setAuxGeneratorDetailAssetId] = useState<string | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [headerSearch, setHeaderSearch] = useState(filters.search ?? '');
+  const [headerSearch, setHeaderSearch] = useState((initialSearch?.trim() || filters.search) ?? '');
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [pendingFocusAssetId, setPendingFocusAssetId] = useState<string | null>(focusAssetId ?? null);
   const headerSearchRef = useRef(filters);
   headerSearchRef.current = filters;
   const loadMoreSentinelRef = useRef<HTMLDivElement>(null);
@@ -199,8 +210,28 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
 
   useEffect(() => {
     const limit = useInfiniteScroll ? INFINITE_SCROLL_PAGE_SIZE : (initialLimit ?? 20);
-    setFilters((f) => ({ ...f, category_group: categoryGroup, page: 1, limit }));
-  }, [categoryGroup, useInfiniteScroll, initialLimit]);
+    setFilters((f) => ({
+      ...f,
+      asset_id: focusAssetId ?? f.asset_id,
+      category_group: categoryGroup,
+      page: 1,
+      limit,
+      search: initialSearch?.trim() || f.search,
+    }));
+  }, [categoryGroup, useInfiniteScroll, initialLimit, focusAssetId]);
+
+  useEffect(() => {
+    const seeded = initialSearch?.trim() || '';
+    if (!seeded) return;
+    setHeaderSearch(seeded);
+    setFilters((f) => ({ ...f, search: seeded, page: 1 }));
+  }, [initialSearch]);
+
+  useEffect(() => {
+    if (!focusAssetId) return;
+    setPendingFocusAssetId(focusAssetId);
+    setFilters((f) => ({ ...f, asset_id: focusAssetId, page: 1 }));
+  }, [focusAssetId]);
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -486,6 +517,14 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
       return 0;
     });
   }, [data, assetsTableSortBy, assetsTableSortOrder]);
+
+  useEffect(() => {
+    if (!pendingFocusAssetId || data.length === 0) return;
+    const exists = data.some((a) => a.id === pendingFocusAssetId);
+    if (!exists) return;
+    setExpandedId(pendingFocusAssetId);
+    setPendingFocusAssetId(null);
+  }, [pendingFocusAssetId, data]);
 
   const resetFilters = () => {
     setFilters({ category_group: categoryGroup, page: 1, limit: pageSize });

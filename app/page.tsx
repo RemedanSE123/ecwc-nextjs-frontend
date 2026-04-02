@@ -3,7 +3,7 @@
 import { useState, useEffect, useLayoutEffect, useRef } from "react"
 import dynamic from "next/dynamic"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
@@ -735,6 +735,7 @@ const AnimatedEquipmentProgress = ({
 
 export default function LandingPage() {
   const pathname = usePathname()
+  const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [scrollToBottom, setScrollToBottom] = useState(true)
@@ -777,6 +778,11 @@ export default function LandingPage() {
       clearTimeout(stop)
     }
   }, [pathname])
+
+  // Warm up sign-in route to reduce first-click delay in dev.
+  useEffect(() => {
+    router.prefetch('/sign-in')
+  }, [router])
 
   useEffect(() => {
     const handleScroll = () => {
@@ -1254,9 +1260,9 @@ export default function LandingPage() {
                       </div>
                       <span className="text-xs text-muted-foreground">Showing <span className="font-bold text-foreground">5</span> of <span className="font-bold text-foreground">2,500+</span> assets</span>
                     </div>
-                    <a href="/sign-in" className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-gradient-to-r from-[#70c82a] to-[#5ab523] hover:from-[#5ab523] hover:to-[#4a9e1d] text-xs font-bold text-black transition-all duration-300 shadow-md shadow-[#70c82a]/25 hover:shadow-lg hover:shadow-[#70c82a]/40 hover:-translate-y-0.5">
+                    <Link href="/sign-in" className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-gradient-to-r from-[#70c82a] to-[#5ab523] hover:from-[#5ab523] hover:to-[#4a9e1d] text-xs font-bold text-black transition-all duration-300 shadow-md shadow-[#70c82a]/25 hover:shadow-lg hover:shadow-[#70c82a]/40 hover:-translate-y-0.5">
                       Access full register <ArrowRight className="w-3.5 h-3.5" />
-                    </a>
+                    </Link>
                   </div>
                 </div>
                 </div>
