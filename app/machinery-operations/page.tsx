@@ -5,13 +5,7 @@ import type { FormItem } from '@/components/SectionPage';
 import { ClipboardList } from 'lucide-react';
 import EquipmentUtilizationForm from '@/components/forms/EquipmentUtilizationForm';
 import EquipmentUtilizationReport from '@/components/forms/EquipmentUtilizationReport';
-import DailyDownForm from '@/components/forms/DailyDownForm';
-import EquipmentTransferForm from '@/components/forms/EquipmentTransferForm';
-import EquipmentUtilizationPlan from '@/components/forms/EquipmentUtilizationPlan';
-import DailyDumpTrucksTripRegister from '@/components/forms/DailyDumpTrucksTripRegister';
 import MachineryRentAgreementForm from '@/components/forms/MachineryRentAgreementForm';
-import MachinesTyreReplacementForm from '@/components/forms/MachinesTyreReplacementForm';
-import CanibalizationForm from '@/components/forms/CanibalizationForm';
 import DailyStatusRegisterForm from '@/components/forms/DailyStatusRegisterForm';
 
 const FORM_ITEMS: FormItem[] = [

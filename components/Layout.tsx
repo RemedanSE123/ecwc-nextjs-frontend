@@ -6,7 +6,7 @@ import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
 import ProfilePopup from '@/components/ProfilePopup';
 import { Loader2 } from 'lucide-react';
-import { can, getSession, isSessionExpired, clearSession, touchSession } from '@/lib/auth';
+import { can, getSession, isSessionExpired, clearSession, touchSession, refreshAccessTokenIfNeeded } from '@/lib/auth';
 import { SidebarContext } from '@/lib/sidebar-context';
 import { apiUrl } from '@/lib/api-client';
 
@@ -106,6 +106,42 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       }
     }, 60 * 1000);
     return () => clearInterval(interval);
+  }, [authChecked, redirectToSignIn]);
+
+  // Keep access token fresh for active users to avoid 401 loops after ~60 minutes.
+  useEffect(() => {
+    if (!authChecked) return;
+    let mounted = true;
+
+    const ensureFresh = async (force = false) => {
+      const session = getSession();
+      if (!session) return;
+      const ok = await refreshAccessTokenIfNeeded(force);
+      if (!ok && mounted) {
+        const latest = getSession();
+        if (!latest || isSessionExpired(latest)) {
+          redirectToSignIn();
+        }
+      }
+    };
+
+    void ensureFresh(false);
+    const interval = setInterval(() => {
+      void ensureFresh(false);
+    }, 60 * 1000);
+
+    const handleVisibilityOrFocus = () => {
+      void ensureFresh(false);
+    };
+    window.addEventListener('visibilitychange', handleVisibilityOrFocus);
+    window.addEventListener('focus', handleVisibilityOrFocus);
+
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+      window.removeEventListener('visibilitychange', handleVisibilityOrFocus);
+      window.removeEventListener('focus', handleVisibilityOrFocus);
+    };
   }, [authChecked, redirectToSignIn]);
 
   // Touch session on user activity

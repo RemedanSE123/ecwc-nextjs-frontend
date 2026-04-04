@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { RefreshCw, MapPin, Search, ChevronRight, ChevronDown } from 'lucide-react';
+import { RefreshCw, MapPin, Search, ChevronRight, ChevronDown, Menu, X } from 'lucide-react';
 import { parseKml, FALLBACK_LOCATIONS, type MapLocation } from '@/lib/kmlParser';
 import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 
 /* ── Group definitions ─────────────────────────────────────────────── */
 interface LocationGroup {
@@ -72,6 +73,20 @@ export default function CompoundMap() {
   });
   const selectedItemRef = useRef<HTMLLIElement>(null);
   const isInitialSelection = useRef(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)');
+    const sync = () => {
+      const desktop = mq.matches;
+      setIsDesktop(desktop);
+      if (desktop) setSidebarOpen(true);
+    };
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
 
   const loadKml = useCallback(async () => {
     setLoading(true);
@@ -130,14 +145,45 @@ export default function CompoundMap() {
     setExpandedGroups((prev) => ({ ...prev, [id]: !prev[id] }));
 
   return (
-    <div className="flex h-full w-full min-h-0 gap-4">
-      {/* Sidebar — grouped tree */}
-      <aside className="w-72 lg:w-80 shrink-0 flex flex-col h-full rounded-xl border border-border bg-card shadow-lg overflow-hidden ring-1 ring-black/5">
+    <div className="relative flex flex-col md:flex-row h-full w-full min-h-[70vh] md:min-h-0 gap-0 md:gap-4 overflow-x-hidden">
+      {/* Mobile overlay */}
+      {sidebarOpen && !isDesktop && (
+        <button
+          type="button"
+          aria-label="Close locations panel"
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar — grouped tree (slides in on mobile) */}
+      <aside
+        id="compound-map-sidebar"
+        className={cn(
+          'flex flex-col rounded-xl border border-border bg-card shadow-lg overflow-hidden ring-1 ring-black/5',
+          'md:relative md:z-0 md:h-full md:w-72 lg:w-80 md:shrink-0 md:translate-x-0 md:opacity-100',
+          'fixed z-50 left-3 top-20 bottom-6 w-[min(18.5rem,calc(100vw-1.5rem))] max-h-[min(calc(100dvh-6rem),560px)]',
+          'md:!relative md:!left-auto md:!top-auto md:!bottom-auto md:!right-auto md:!translate-x-0 md:!opacity-100 md:!pointer-events-auto md:!max-h-none',
+          !isDesktop && !sidebarOpen && '-translate-x-[calc(100%+2rem)] opacity-0 pointer-events-none',
+          !isDesktop && sidebarOpen && 'translate-x-0 opacity-100',
+          !isDesktop && 'transition-transform duration-300 ease-out',
+        )}
+      >
         {/* Header */}
         <div className="shrink-0 px-4 py-3.5 border-b border-border bg-gradient-to-br from-[#70c82a]/5 via-muted/20 to-transparent">
           <div className="flex items-center justify-between gap-2 mb-3">
             <h2 className="text-sm font-bold text-foreground tracking-tight">Locations</h2>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
+              {!isDesktop && (
+                <button
+                  type="button"
+                  onClick={() => setSidebarOpen(false)}
+                  className="md:hidden p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                  aria-label="Close panel"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
               <span className="inline-flex items-center justify-center min-w-[1.5rem] h-5 px-1.5 rounded-full bg-[#70c82a]/20 text-[#70c82a] text-[10px] font-bold tabular-nums">
                 {locations.length}
               </span>
@@ -215,7 +261,10 @@ export default function CompoundMap() {
                             <li key={loc.id} ref={selected ? selectedItemRef : undefined}>
                               <button
                                 type="button"
-                                onClick={() => setSelectedId(loc.id)}
+                                onClick={() => {
+                                  setSelectedId(loc.id);
+                                  if (!isDesktop) setSidebarOpen(false);
+                                }}
                                 className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-left transition-all duration-200 group ${
                                   selected
                                     ? `${group.bgColor} border-l-2 ${group.borderColor} font-semibold`
@@ -244,7 +293,10 @@ export default function CompoundMap() {
                   <li key={loc.id} ref={selected ? selectedItemRef : undefined} className="list-none">
                     <button
                       type="button"
-                      onClick={() => setSelectedId(loc.id)}
+                      onClick={() => {
+                        setSelectedId(loc.id);
+                        if (!isDesktop) setSidebarOpen(false);
+                      }}
                       className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-left transition-all duration-200 border-l-2 ${
                         selected ? 'bg-[#70c82a]/15 border-[#70c82a] font-semibold' : 'border-transparent hover:bg-muted/60 hover:border-border'
                       }`}
@@ -277,8 +329,21 @@ export default function CompoundMap() {
         </div>
       </aside>
 
-      {/* Map area — same height as sidebar */}
-      <div className="flex-1 min-w-0 h-full flex flex-col min-h-0">
+      {/* Map area — full width on mobile; hamburger opens sidebar */}
+      <div className="flex-1 min-w-0 h-full flex flex-col min-h-[50vh] md:min-h-0 relative pt-12 md:pt-0">
+        <div className="absolute top-0 left-0 right-0 z-30 flex md:hidden items-center justify-between gap-2 px-1 pb-2">
+          <button
+            type="button"
+            onClick={() => setSidebarOpen((o) => !o)}
+            className="inline-flex items-center gap-2 rounded-lg border border-border bg-background/95 px-3 py-2 text-sm font-semibold text-foreground shadow-md backdrop-blur-sm hover:border-[#70c82a]/50 hover:bg-[#70c82a]/5"
+            aria-expanded={sidebarOpen}
+            aria-controls="compound-map-sidebar"
+          >
+            {sidebarOpen ? <X className="h-5 w-5 text-[#70c82a]" /> : <Menu className="h-5 w-5 text-[#70c82a]" />}
+            Locations
+          </button>
+          <span className="text-xs font-medium text-muted-foreground truncate">ECWC Compound map</span>
+        </div>
         {error && (
           <div className="mb-2 rounded-md bg-amber-500/90 px-4 py-2 text-sm text-white flex items-center justify-between gap-2">
             <span>{error}</span>

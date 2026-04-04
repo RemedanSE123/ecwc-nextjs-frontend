@@ -27,15 +27,18 @@ export default function ForgotPasswordPage() {
     setSuccess("")
 
     if (!identifier.trim()) {
-      setError("Please enter your email or phone number.")
+      setError("Please enter your registered email address or phone number.")
       return
     }
 
     setIsLoading(true)
     try {
       const resp = await forgotPassword(identifier.trim())
-      setSuccess(resp.message || "If account exists, reset instructions were sent.")
-      setTimeout(() => router.push("/sign-in"), 2500)
+      setSuccess(
+        resp.message ||
+          "If an account matches your details, you will receive password reset instructions shortly."
+      )
+      setTimeout(() => router.push("/sign-in"), 4000)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to request reset.")
     } finally {
@@ -85,14 +88,14 @@ export default function ForgotPasswordPage() {
               ) : (
                 <>
                   <Lock className="mr-2 h-4 w-4" />
-                  Send Reset Link
+                  Send reset link
                 </>
               )}
             </Button>
 
             <div className="pt-2 text-sm text-muted-foreground flex items-center justify-between">
               <Link href="/sign-in" className="text-[#70c82a] hover:underline">
-                Back to Sign In
+                Back to sign-in
               </Link>
             </div>
           </form>

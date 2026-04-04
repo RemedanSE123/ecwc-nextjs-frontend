@@ -10,6 +10,7 @@ import { AnnouncementBodyWithStatus } from '@/lib/announcement-body';
 import { apiUrl } from '@/lib/api-client';
 import { getUserImageUrl } from '@/lib/api/auth';
 import { getAnnouncementTargetUrl } from '@/lib/announcement-target';
+import { startAnnouncementsStream } from '@/lib/announcements-stream';
 
 interface AnnouncementItem {
   id: number;
@@ -53,6 +54,7 @@ export default function Header({ sidebarCollapsed = false, sidebarOpen = false, 
   const [userEmail, setUserEmail] = useState<string>('');
   const [userImage, setUserImage] = useState<string | null>(null);
   const [announcements, setAnnouncements] = useState<AnnouncementItem[]>([]);
+  const [, setBadgeFeed] = useState<AnnouncementItem[]>([]);
   const [announcementsLoading, setAnnouncementsLoading] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const notificationsRef = useRef<HTMLDivElement>(null);
@@ -121,6 +123,11 @@ export default function Header({ sidebarCollapsed = false, sidebarOpen = false, 
       ? 'System Super Admin'
       : 'ECWC User';
 
+  const mergeByNewest = (prev: AnnouncementItem[], incoming: AnnouncementItem, limit = 50): AnnouncementItem[] => {
+    const merged = [incoming, ...prev.filter((item) => item.id !== incoming.id)];
+    return merged.slice(0, limit);
+  };
+
   // Fetch announcements for dropdown when opened
   useEffect(() => {
     if (!notificationsOpen) return;
@@ -140,39 +147,61 @@ export default function Header({ sidebarCollapsed = false, sidebarOpen = false, 
       .finally(() => setAnnouncementsLoading(false));
   }, [notificationsOpen]);
 
-  // Fetch announcements for unread badge when dropdown is closed; poll and refetch on focus
+  // Initial badge feed hydrate + unread count (no aggressive polling).
   useEffect(() => {
-    if (notificationsOpen) return;
-    const eventName = getSessionUpdatedEventName();
     const fetchBadge = () => {
       const session = getSession();
       if (!session?.accessToken) {
+        setBadgeFeed([]);
         setUnreadCount(0);
         return;
       }
       fetch(apiUrl('/api/v1/announcements?limit=50'), { headers: { ...getAuthHeaders() } })
         .then((res) => (res.ok ? res.json() : { data: [] }))
         .then((json) => {
-          const data = json.data ?? [];
+          const data = (json.data ?? []) as AnnouncementItem[];
+          setBadgeFeed(data);
           const count = getUnreadCount(data);
           setUnreadCount(count);
         })
-        .catch(() => setUnreadCount(0));
+        .catch(() => {
+          setBadgeFeed([]);
+          setUnreadCount(0);
+        });
     };
     const onSeen = () => fetchBadge();
     fetchBadge();
-    const interval = setInterval(fetchBadge, 15000);
     const onFocus = () => fetchBadge();
     window.addEventListener('focus', onFocus);
-    window.addEventListener(eventName, fetchBadge);
     window.addEventListener('announcements-seen', onSeen);
     return () => {
-      clearInterval(interval);
       window.removeEventListener('focus', onFocus);
-      window.removeEventListener(eventName, fetchBadge);
       window.removeEventListener('announcements-seen', onSeen);
     };
-  }, [notificationsOpen, pathname, userPhone]);
+  }, [pathname, userPhone]);
+
+  // Realtime announcement events (manual + asset status changes) via SSE.
+  useEffect(() => {
+    const session = getSession();
+    if (!session?.accessToken) {
+      setUnreadCount(0);
+      return;
+    }
+    const stop = startAnnouncementsStream({
+      onAnnouncement: (announcement) => {
+        setBadgeFeed((prev) => {
+          const next = mergeByNewest(prev, announcement, 50);
+          setUnreadCount(getUnreadCount(next));
+          return next;
+        });
+        setAnnouncements((prev) => mergeByNewest(prev, announcement, 30));
+      },
+      onStatusChange: () => {
+        // No-op for now; reserved for optional UI connectivity indicator.
+      },
+    });
+    return () => stop();
+  }, [userPhone]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

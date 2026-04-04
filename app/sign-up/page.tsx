@@ -1,69 +1,126 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Checkbox } from "@/components/ui/checkbox"
-import { 
+import {
   Select,
   SelectItem,
 } from "@/components/ui/select"
 import Image from "next/image"
-import { 
-  Loader2, 
-  Eye, 
-  EyeOff, 
-  Mail, 
-  Lock, 
-  User, 
-  Phone, 
-  MapPin, 
-  Building,
+import {
+  Loader2,
+  Eye,
+  EyeOff,
+  Mail,
+  Lock,
+  User,
+  Phone,
+  MapPin,
   Briefcase,
   CheckCircle,
   XCircle,
   ChevronRight,
   ChevronLeft,
   Badge,
-  Home
+  Home,
+  Fingerprint,
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
-import { fetchDepartments, fetchPositions, fetchProjectsForLocation, fetchSupervisors, fetchWorkLocations, registerAuth, uploadUserImage } from "@/lib/api/auth"
+import {
+  fetchDepartments,
+  fetchPositions,
+  fetchProjectsForLocation,
+  fetchSupervisors,
+  fetchWorkLocations,
+  registerAuth,
+  uploadUserImage,
+} from "@/lib/api/auth"
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
   exit: { opacity: 0, y: -20 },
-  transition: { duration: 0.5 }
+  transition: { duration: 0.5 },
 }
 
 const stepVariants = {
   enter: { opacity: 0, x: 50 },
   center: { opacity: 1, x: 0 },
-  exit: { opacity: 0, x: -50 }
+  exit: { opacity: 0, x: -50 },
 }
 
-// Password strength checker
-const checkPasswordStrength = (password: string) => {
-  const checks = {
-    length: password.length >= 8,
-    uppercase: /[A-Z]/.test(password),
-    lowercase: /[a-z]/.test(password),
+function needsSupervisorField(locationName: string | undefined): boolean {
+  const n = (locationName || "").trim().toLowerCase()
+  if (n === "head office") return false
+  return n.includes("kality") || n.includes("project site")
+}
+
+/** Only actual project / site offices (e.g. Project Site) — not Kality Central Garage. */
+function needsProjectLocationField(locationName: string | undefined): boolean {
+  const n = (locationName || "").trim().toLowerCase()
+  return n.includes("project site")
+}
+
+function normalizeTitleForCompare(s: string): string {
+  return s
+    .trim()
+    .toLowerCase()
+    .replace(/\s*&\s*/g, " and ")
+    .replace(/\s+/g, " ")
+}
+
+/** Kality work sites (seed may be "Kality" or "Kality Central Garage"); not Project Site. */
+function isKalitySiteExcludingProjectSite(locationName: string | undefined): boolean {
+  const n = (locationName || "").trim().toLowerCase()
+  if (n.includes("project site")) return false
+  return n.includes("kality")
+}
+
+function isPlantEquipmentManagerTitle(jobTitle: string | undefined): boolean {
+  return normalizeTitleForCompare(jobTitle || "") === "plant and equipment manager"
+}
+
+/** Line manager omitted for Plant & Equipment Manager at any Kality site (not Project Site). */
+function supervisorRequiredForSignup(
+  locationName: string | undefined,
+  jobTitle: string | undefined,
+): boolean {
+  if (!needsSupervisorField(locationName)) return false
+  if (isKalitySiteExcludingProjectSite(locationName) && isPlantEquipmentManagerTitle(jobTitle)) return false
+  return true
+}
+
+function getPasswordChecks(password: string) {
+  return {
+    length: password.length >= 6,
+    letter: /[A-Za-z]/.test(password),
     number: /[0-9]/.test(password),
-    special: /[^A-Za-z0-9]/.test(password),
   }
-  
-  const strength = Object.values(checks).filter(Boolean).length
-  return { checks, strength }
 }
 
-// Types for our data
+function passwordMeetsRules(password: string): boolean {
+  const c = getPasswordChecks(password)
+  return c.length && c.letter && c.number
+}
+
+/** Sign-up is restricted to Gmail addresses (domain must be exactly gmail.com). */
+function isValidGmailEmail(email: string): boolean {
+  const t = email.trim().toLowerCase()
+  if (!t) return false
+  const parts = t.split("@")
+  if (parts.length !== 2) return false
+  const [local, domain] = parts
+  return local.length > 0 && domain === "gmail.com"
+}
+
 interface Department {
   id: string
   name: string
@@ -83,6 +140,18 @@ interface WorkLocation {
   city: string
 }
 
+/** Supervisors from Kality (any) and Project Site locations — used when the user selects Project Site. */
+function workLocationIdsKalityOrProjectSite(locations: WorkLocation[]): string[] {
+  const ids = new Set<string>()
+  for (const loc of locations) {
+    const n = loc.name.trim().toLowerCase()
+    if (n.includes("kality") || n.includes("project site")) {
+      ids.add(loc.id)
+    }
+  }
+  return Array.from(ids)
+}
+
 interface ReferenceData {
   departments: Department[]
   positions: Position[]
@@ -91,25 +160,22 @@ interface ReferenceData {
   supervisors: { id: string; full_name: string; job_title?: string | null }[]
 }
 
+const TOTAL_STEPS = 3
+
 export default function SignUpPage() {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState({
-    // Step 1: Personal Information
     fullName: "",
     email: "",
     phone: "",
     employeeId: "",
-    
-    // Step 2: Company & Position
     department: "",
     position: "",
     workLocation: "",
     projectLocation: "",
     supervisor: "",
     jobTitle: "",
-    
-    // Step 3: Account Security
     password: "",
     confirmPassword: "",
   })
@@ -122,80 +188,230 @@ export default function SignUpPage() {
   })
   const [profileImage, setProfileImage] = useState<string | null>(null)
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null)
-  const [agreedToTerms, setAgreedToTerms] = useState(false)
+  const [agreedToDevelopmentNotice, setAgreedToDevelopmentNotice] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [loadErrors, setLoadErrors] = useState<string[]>([])
-  const [loadStatus, setLoadStatus] = useState<{ departments: number; positions: number; projects: number; workLocations: number; supervisors: number } | null>(null)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [supervisorsLoading, setSupervisorsLoading] = useState(false)
+  const [departmentsLoading, setDepartmentsLoading] = useState(false)
+  const [positionsLoading, setPositionsLoading] = useState(false)
 
-  // Always light mode on sign-up (ignore landing page theme)
   useEffect(() => {
     document.documentElement.classList.remove("dark")
   }, [])
 
-  // Reference data
   useEffect(() => {
-    Promise.allSettled([
-      fetchDepartments(),
-      fetchPositions(),
-      fetchWorkLocations(),
-      fetchProjectsForLocation(),
-      fetchSupervisors(),
-    ]).then((results) => {
-      const [depsRes, posRes, wlRes, projRes, supRes] = results
-
-      const errors: string[] = []
-      const departments = depsRes.status === "fulfilled" ? depsRes.value : []
-      const positions = posRes.status === "fulfilled" ? posRes.value : []
+    Promise.allSettled([fetchWorkLocations(), fetchProjectsForLocation()]).then((results) => {
+      const [wlRes, projRes] = results
       const workLocations = wlRes.status === "fulfilled" ? wlRes.value : []
       const projects = projRes.status === "fulfilled" ? projRes.value : []
-      const supervisors = supRes.status === "fulfilled" ? supRes.value : []
-      setLoadStatus({
-        departments: departments.length,
-        positions: positions.length,
-        projects: projects.length,
-        workLocations: workLocations.length,
-        supervisors: supervisors.length,
-      })
-
-      if (depsRes.status === "rejected") errors.push(`Departments: ${depsRes.reason instanceof Error ? depsRes.reason.message : "Unknown error"}`)
-      if (posRes.status === "rejected") errors.push(`Positions: ${posRes.reason instanceof Error ? posRes.reason.message : "Unknown error"}`)
-      if (wlRes.status === "rejected") errors.push(`Work Locations: ${wlRes.reason instanceof Error ? wlRes.reason.message : "Unknown error"}`)
-      if (projRes.status === "rejected") errors.push(`Projects: ${projRes.reason instanceof Error ? projRes.reason.message : "Unknown error"}`)
-      if (supRes.status === "rejected") errors.push(`Supervisors: ${supRes.reason instanceof Error ? supRes.reason.message : "Unknown error"}`)
-
-      setLoadErrors(errors)
-      setReferenceData({
-        departments: departments.map((d) => ({ id: d.id, name: d.name, code: d.name.slice(0, 3).toUpperCase() })),
-        positions: positions.map((p) => ({ id: p.id, title: p.title, department_id: p.department_id, department_name: p.department_name })),
-        workLocations: workLocations.map((w) => ({ id: w.id, name: w.name, city: "" })),
+      setReferenceData((prev) => ({
+        ...prev,
+        workLocations: workLocations.map((w) => ({
+          id: w.id,
+          name: w.name,
+          city: "",
+        })),
         projects: projects.map((p) => ({ id: p.id, name: p.project_name })),
-        supervisors: supervisors.map((s) => ({ id: s.id, full_name: s.full_name, job_title: s.job_title })),
-      })
+      }))
     })
   }, [])
 
-  // Filter positions by selected department
+  useEffect(() => {
+    if (!formData.workLocation) {
+      setDepartmentsLoading(false)
+      setReferenceData((prev) => ({ ...prev, departments: [], positions: [] }))
+      return
+    }
+    let cancelled = false
+    setDepartmentsLoading(true)
+    fetchDepartments(formData.workLocation)
+      .then((departments) => {
+        if (cancelled) return
+        setReferenceData((prev) => ({
+          ...prev,
+          departments: departments.map((d) => ({
+            id: d.id,
+            name: d.name,
+            code: d.name.slice(0, 3).toUpperCase(),
+          })),
+        }))
+        setDepartmentsLoading(false)
+      })
+      .catch(() => {
+        if (cancelled) return
+        setReferenceData((prev) => ({ ...prev, departments: [], positions: [] }))
+        setDepartmentsLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [formData.workLocation])
+
+  useEffect(() => {
+    if (!formData.department) {
+      setPositionsLoading(false)
+      setReferenceData((prev) => ({ ...prev, positions: [] }))
+      return
+    }
+    let cancelled = false
+    setPositionsLoading(true)
+    fetchPositions(formData.department)
+      .then((positions) => {
+        if (cancelled) return
+        setReferenceData((prev) => ({
+          ...prev,
+          positions: positions.map((p) => ({
+            id: p.id,
+            title: p.title,
+            department_id: p.department_id,
+            department_name: p.department_name,
+          })),
+        }))
+        setPositionsLoading(false)
+      })
+      .catch(() => {
+        if (cancelled) return
+        setReferenceData((prev) => ({ ...prev, positions: [] }))
+        setPositionsLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [formData.department])
+
+  const selectedWorkLocationName = referenceData.workLocations.find(
+    (l) => l.id === formData.workLocation
+  )?.name
+  const supervisorFieldRequired = supervisorRequiredForSignup(
+    selectedWorkLocationName,
+    formData.jobTitle,
+  )
+  const projectFieldRequired = needsProjectLocationField(selectedWorkLocationName)
+  const passwordChecks = useMemo(() => getPasswordChecks(formData.password), [formData.password])
+
+  const workLocationsKey = useMemo(
+    () => [...referenceData.workLocations.map((w) => w.id)].sort().join(","),
+    [referenceData.workLocations],
+  )
+
+  const step1Complete = useMemo(
+    () =>
+      !!profileImageFile &&
+      formData.fullName.trim().length > 0 &&
+      isValidGmailEmail(formData.email) &&
+      /^\d{9}$/.test(formData.phone),
+    [profileImageFile, formData.fullName, formData.email, formData.phone],
+  )
+
+  const step2Complete = useMemo(() => {
+    if (!formData.workLocation || !formData.department || !formData.employeeId.trim()) return false
+    if (!formData.position || !formData.jobTitle.trim()) return false
+    if (supervisorFieldRequired) {
+      if (!formData.supervisor || supervisorsLoading) return false
+    }
+    if (projectFieldRequired && !formData.projectLocation) return false
+    return true
+  }, [
+    formData.workLocation,
+    formData.department,
+    formData.employeeId,
+    formData.position,
+    formData.jobTitle,
+    formData.supervisor,
+    formData.projectLocation,
+    supervisorFieldRequired,
+    projectFieldRequired,
+    supervisorsLoading,
+  ])
+
+  const step3Complete = useMemo(
+    () =>
+      passwordMeetsRules(formData.password) &&
+      formData.confirmPassword.length > 0 &&
+      formData.password === formData.confirmPassword &&
+      agreedToDevelopmentNotice,
+    [formData.password, formData.confirmPassword, agreedToDevelopmentNotice],
+  )
+
+  useEffect(() => {
+    if (!formData.workLocation || !supervisorFieldRequired) {
+      setSupervisorsLoading(false)
+      setReferenceData((prev) => ({ ...prev, supervisors: [] }))
+      return
+    }
+
+    let cancelled = false
+    setSupervisorsLoading(true)
+
+    const load = async () => {
+      try {
+        let locationIds: string[]
+        if (projectFieldRequired) {
+          locationIds = workLocationIdsKalityOrProjectSite(referenceData.workLocations)
+          if (locationIds.length === 0) {
+            if (!cancelled) {
+              setReferenceData((prev) => ({ ...prev, supervisors: [] }))
+              setSupervisorsLoading(false)
+            }
+            return
+          }
+        } else {
+          locationIds = [formData.workLocation]
+        }
+
+        const supervisorDepartmentId = projectFieldRequired ? undefined : formData.department || undefined
+        const lists = await Promise.all(
+          locationIds.map((id) => fetchSupervisors(supervisorDepartmentId, id)),
+        )
+        const merged = new Map<string, { id: string; full_name: string; job_title?: string | null }>()
+        for (const list of lists) {
+          for (const s of list) {
+            merged.set(s.id, {
+              id: s.id,
+              full_name: s.full_name,
+              job_title: s.job_title,
+            })
+          }
+        }
+        const supervisors = Array.from(merged.values()).sort((a, b) =>
+          a.full_name.localeCompare(b.full_name),
+        )
+        if (!cancelled) {
+          setReferenceData((prev) => ({ ...prev, supervisors }))
+          setSupervisorsLoading(false)
+        }
+      } catch {
+        if (!cancelled) {
+          setReferenceData((prev) => ({ ...prev, supervisors: [] }))
+          setSupervisorsLoading(false)
+        }
+      }
+    }
+
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [formData.workLocation, formData.department, supervisorFieldRequired, projectFieldRequired, workLocationsKey])
+
+  useEffect(() => {
+    if (!supervisorFieldRequired && formData.supervisor) {
+      setFormData((prev) => ({ ...prev, supervisor: "" }))
+    }
+  }, [supervisorFieldRequired, formData.supervisor])
+
   const getFilteredPositions = () => {
     if (!formData.department) return referenceData.positions
     return referenceData.positions.filter((p) => p.department_id === formData.department)
   }
 
-  // Check if Site Office is selected
-  const isSiteSelected = () => {
-    const selectedLocation = referenceData.workLocations.find(loc => loc.id === formData.workLocation)
-    return selectedLocation?.name === 'Site Office' || selectedLocation?.name?.toLowerCase().includes('site')
-  }
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.name === "phone") {
       const digitsOnly = e.target.value.replace(/\D/g, "").slice(0, 9)
-      setFormData((prev) => ({
-        ...prev,
-        phone: digitsOnly,
-      }))
+      setFormData((prev) => ({ ...prev, phone: digitsOnly }))
       return
     }
     setFormData((prev) => ({
@@ -205,12 +421,22 @@ export default function SignUpPage() {
   }
 
   const handleSelectChange = (name: string, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-      // Reset position when department changes
-      ...(name === 'department' && { position: '', jobTitle: '' })
-    }))
+    setFormData((prev) => {
+      const next = { ...prev, [name]: value }
+      if (name === "department") {
+        next.position = ""
+        next.jobTitle = ""
+        next.supervisor = ""
+      }
+      if (name === "workLocation") {
+        next.department = ""
+        next.position = ""
+        next.jobTitle = ""
+        next.supervisor = ""
+        next.projectLocation = ""
+      }
+      return next
+    })
   }
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -218,90 +444,133 @@ export default function SignUpPage() {
     if (file) {
       setProfileImageFile(file)
       const reader = new FileReader()
-      reader.onload = (e) => {
-        setProfileImage(e.target?.result as string)
+      reader.onload = (ev) => {
+        setProfileImage(ev.target?.result as string)
       }
       reader.readAsDataURL(file)
     }
   }
 
+  const validateStep = (step: number): boolean => {
+    setError("")
+    switch (step) {
+      case 1: {
+        if (!profileImageFile) {
+          setError("Please upload a profile picture.")
+          return false
+        }
+        if (!formData.fullName.trim()) {
+          setError("Full name is required.")
+          return false
+        }
+        if (!formData.email.trim()) {
+          setError("Email is required.")
+          return false
+        }
+        if (!isValidGmailEmail(formData.email)) {
+          setError("Please use a Gmail address (must end with @gmail.com).")
+          return false
+        }
+        if (!/^\d{9}$/.test(formData.phone)) {
+          setError("Phone number must be exactly 9 digits after +251.")
+          return false
+        }
+        return true
+      }
+      case 2: {
+        if (!formData.workLocation) {
+          setError("Work location is required.")
+          return false
+        }
+        if (!formData.department) {
+          setError("Department is required.")
+          return false
+        }
+        if (!formData.employeeId.trim()) {
+          setError("Employee ID is required.")
+          return false
+        }
+        if (!formData.position || !formData.jobTitle.trim()) {
+          setError("Job title is required.")
+          return false
+        }
+        if (supervisorFieldRequired) {
+          if (!formData.supervisor) {
+            setError("Line manager / supervisor is required for this work location.")
+            return false
+          }
+        }
+        if (projectFieldRequired) {
+          if (!formData.projectLocation) {
+            setError("Project location is required for this work location.")
+            return false
+          }
+        }
+        return true
+      }
+      case 3: {
+        if (!passwordMeetsRules(formData.password)) {
+          setError("Password must be at least 6 characters and include at least one letter and one number.")
+          return false
+        }
+        if (formData.password !== formData.confirmPassword) {
+          setError("Passwords do not match.")
+          return false
+        }
+        if (!agreedToDevelopmentNotice) {
+          setError("Please acknowledge the development / hard copy evidence notice.")
+          return false
+        }
+        return true
+      }
+      default:
+        return true
+    }
+  }
+
   const nextStep = () => {
-    // Validation removed - no backend connection
-    setCurrentStep(prev => Math.min(prev + 1, 3))
+    if (!validateStep(currentStep)) return
+    setCurrentStep((prev) => Math.min(prev + 1, TOTAL_STEPS))
   }
 
   const prevStep = () => {
-    setCurrentStep(prev => Math.max(prev - 1, 1))
-  }
-
-  const validateStep = (step: number): boolean => {
-    // Validation removed - no backend connection
-    return true
-  }
-
-  const handleSubmit = async (e?: React.FormEvent) => {
-    if (e) {
-      e.preventDefault()
-      e.stopPropagation()
-    }
-    
-    // Only submit if we're on step 3
-    if (currentStep !== 3) {
-      return
-    }
-
     setError("")
+    setCurrentStep((prev) => Math.max(prev - 1, 1))
+  }
 
-    // Validate that passwords are filled
-    if (!formData.password || !formData.confirmPassword) {
-      setError("Please fill in both password fields")
-      return
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match")
-      return
-    }
-
-    if (!/^\d{9}$/.test(formData.phone)) {
-      setError("Phone number must be exactly 9 digits after +251")
-      return
-    }
-
-    if (!agreedToTerms) {
-      setError("Please agree to the terms and conditions")
-      return
-    }
+  const handleSubmit = async () => {
+    if (currentStep !== TOTAL_STEPS) return
+    if (!validateStep(TOTAL_STEPS)) return
 
     setIsLoading(true)
+    setError("")
 
     try {
       const selectedPosition = referenceData.positions.find((p) => p.id === formData.position)
-      const backendPhone = formData.phone ? `0${formData.phone}` : ''
+      const backendPhone = formData.phone ? `0${formData.phone}` : ""
       let profileImagePath: string | undefined
       if (profileImageFile) {
         const uploaded = await uploadUserImage(profileImageFile)
         profileImagePath = uploaded.path
       }
-      const resp = await registerAuth({
+      await registerAuth({
         full_name: formData.fullName,
         email: formData.email,
         phone: backendPhone,
         profile_image: profileImagePath,
-        employee_id: formData.employeeId || undefined,
-        department_id: selectedPosition?.department_id || undefined,
-        position_id: formData.position || undefined,
-        // Work location comes from work_locations table.
-        work_location_id: formData.workLocation || undefined,
-        // Project location comes from projects table and is saved as text.
-        site_location: referenceData.projects.find((p) => p.id === formData.projectLocation)?.name || undefined,
-        supervisor_name: formData.supervisor || undefined,
-        job_title: formData.jobTitle || selectedPosition?.title || undefined,
+        employee_id: formData.employeeId.trim(),
+        department_id: selectedPosition?.department_id || formData.department,
+        position_id: formData.position,
+        work_location_id: formData.workLocation,
+        site_location: projectFieldRequired
+          ? referenceData.projects.find((p) => p.id === formData.projectLocation)?.name
+          : undefined,
+        supervisor_name: supervisorFieldRequired ? formData.supervisor : undefined,
+        job_title: formData.jobTitle || selectedPosition?.title || "",
         password: formData.password,
-        agreed_to_terms: agreedToTerms,
+        agreed_to_terms: agreedToDevelopmentNotice,
       })
-      setError(resp.message)
-      setTimeout(() => router.push('/sign-in'), 1500)
+      setShowSuccessModal(true)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed")
     } finally {
@@ -309,32 +578,27 @@ export default function SignUpPage() {
     }
   }
 
-  const { checks, strength } = checkPasswordStrength(formData.password)
-  const passwordStrengthColors = [
-    "bg-red-500",
-    "bg-orange-500",
-    "bg-yellow-500",
-    "bg-lime-500",
-    "bg-green-500"
-  ]
-
   const renderStepIndicator = () => (
     <div className="flex items-center justify-center mb-4">
       {[1, 2, 3].map((step) => (
         <div key={step} className="flex items-center">
-          <div className={`flex items-center justify-center w-5 h-5 rounded-full border text-xs ${
-            step === currentStep 
-              ? "bg-[#70c82a] border-[#70c82a] text-white" 
-              : step < currentStep 
+          <div
+            className={`flex items-center justify-center w-5 h-5 rounded-full border text-xs ${
+              step === currentStep
                 ? "bg-[#70c82a] border-[#70c82a] text-white"
-                : "border-muted-foreground text-muted-foreground"
-          }`}>
+                : step < currentStep
+                  ? "bg-[#70c82a] border-[#70c82a] text-white"
+                  : "border-muted-foreground text-muted-foreground"
+            }`}
+          >
             {step < currentStep ? <CheckCircle className="h-2.5 w-2.5" /> : step}
           </div>
           {step < 3 && (
-            <div className={`w-6 h-0.5 mx-1 ${
-              step < currentStep ? "bg-[#70c82a]" : "bg-muted"
-            }`} />
+            <div
+              className={`w-6 h-0.5 mx-1 ${
+                step < currentStep ? "bg-[#70c82a]" : "bg-muted"
+              }`}
+            />
           )}
         </div>
       ))}
@@ -354,10 +618,9 @@ export default function SignUpPage() {
             className="space-y-3"
           >
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-5 items-start">
-              {/* Left Section - Profile Picture Upload */}
               <div className="flex flex-col items-center lg:items-center w-full lg:max-w-xs lg:pl-8">
                 <div className="relative mb-4">
-                  <div className="w-28 h-28 rounded-full bg-muted flex items-center justify-center overflow-hidden border-4 border-[#70c82a]/20 dark:border-[#70c82a]/30 shadow-lg">
+                  <div className="w-28 h-28 rounded-full bg-muted flex items-center justify-center overflow-hidden border-4 border-[#70c82a]/20 shadow-lg">
                     {profileImage ? (
                       <img
                         src={profileImage}
@@ -365,10 +628,13 @@ export default function SignUpPage() {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <User className="text-muted-foreground" style={{ width: '4.5rem', height: '4.5rem' }} />
+                      <User className="text-muted-foreground" style={{ width: "4.5rem", height: "4.5rem" }} />
                     )}
                   </div>
-                  <label htmlFor="profileImage" className="absolute bottom-0 right-0 bg-[#70c82a] text-white p-2.5 rounded-full cursor-pointer hover:bg-[#5aa022] transition-colors shadow-lg z-10">
+                  <label
+                    htmlFor="profileImage"
+                    className="absolute bottom-0 right-0 bg-[#70c82a] text-white p-2.5 rounded-full cursor-pointer hover:bg-[#5aa022] transition-colors shadow-lg z-10"
+                  >
                     <input
                       type="file"
                       id="profileImage"
@@ -380,11 +646,10 @@ export default function SignUpPage() {
                   </label>
                 </div>
                 <div className="text-center space-y-1 w-full">
-                  <p className="text-lg font-semibold text-foreground">Upload Profile Picture</p>
+                  <p className="text-lg font-semibold text-foreground">Upload Profile Picture *</p>
                 </div>
               </div>
 
-              {/* Right Section - Form Fields */}
               <div className="space-y-2.5 w-full">
                 <div className="space-y-1.5">
                   <Label htmlFor="fullName" className="flex items-center gap-2 text-sm">
@@ -397,7 +662,6 @@ export default function SignUpPage() {
                     placeholder="John Doe"
                     value={formData.fullName}
                     onChange={handleChange}
-                    required
                     disabled={isLoading}
                     className="bg-background/50 h-9 text-sm"
                   />
@@ -412,13 +676,13 @@ export default function SignUpPage() {
                     id="email"
                     name="email"
                     type="email"
-                    placeholder="john.doe@ecwc.gov.et"
+                    placeholder="you@gmail.com"
                     value={formData.email}
                     onChange={handleChange}
-                    required
                     disabled={isLoading}
                     className="bg-background/50 h-9 text-sm"
                   />
+                 
                 </div>
 
                 <div className="space-y-1.5">
@@ -440,13 +704,11 @@ export default function SignUpPage() {
                       inputMode="numeric"
                       pattern="\d{9}"
                       maxLength={9}
-                      required
                       disabled={isLoading}
                       className="bg-background/50 h-9 text-sm rounded-l-none"
                     />
                   </div>
                 </div>
-
               </div>
             </div>
           </motion.div>
@@ -462,16 +724,15 @@ export default function SignUpPage() {
             exit="exit"
             className="space-y-3"
           >
-            {/* Row 1: Work Location and Department */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="workLocation" className="flex items-center gap-2 text-sm">
+                <Label className="flex items-center gap-2 text-sm">
                   <MapPin className="h-3.5 w-3.5 text-[#70c82a]" />
                   Work Location *
                 </Label>
                 <Select
                   value={formData.workLocation}
-                  onValueChange={(value) => handleSelectChange('workLocation', value)}
+                  onValueChange={(value) => handleSelectChange("workLocation", value)}
                   disabled={isLoading}
                   className="bg-background/50 h-9 text-sm"
                 >
@@ -481,20 +742,17 @@ export default function SignUpPage() {
                     </SelectItem>
                   ))}
                 </Select>
-                {referenceData.workLocations.length === 0 && (
-                  <p className="text-xs text-red-600 mt-1">No work locations found in `work_locations` table.</p>
-                )}
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="department" className="flex items-center gap-2 text-sm">
+                <Label className="flex items-center gap-2 text-sm">
                   <Briefcase className="h-3.5 w-3.5 text-[#70c82a]" />
                   Department *
                 </Label>
                 <Select
                   value={formData.department}
-                  onValueChange={(value) => handleSelectChange('department', value)}
-                  disabled={isLoading}
+                  onValueChange={(value) => handleSelectChange("department", value)}
+                  disabled={isLoading || !formData.workLocation || departmentsLoading}
                   className="bg-background/50 h-9 text-sm"
                 >
                   {referenceData.departments.map((department) => (
@@ -503,18 +761,14 @@ export default function SignUpPage() {
                     </SelectItem>
                   ))}
                 </Select>
-                {referenceData.departments.length === 0 && (
-                  <p className="text-xs text-red-600 mt-1">No departments found in `departments` table.</p>
-                )}
               </div>
             </div>
 
-            {/* Row 2: Employee ID and Job Title/Position */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="employeeId" className="flex items-center gap-2 text-sm">
                   <Badge className="h-3.5 w-3.5 text-[#70c82a]" />
-                  Employee ID
+                  Employee ID *
                 </Label>
                 <Input
                   id="employeeId"
@@ -528,15 +782,19 @@ export default function SignUpPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="jobTitle" className="text-sm">Job Title</Label>
+                <Label className="text-sm">Job Title *</Label>
                 <Select
                   value={formData.jobTitle}
                   onValueChange={(value) => {
-                    handleSelectChange('jobTitle', value)
-                    const selected = referenceData.positions.find((p) => p.title === value && (!formData.department || p.department_id === formData.department))
-                    if (selected) handleSelectChange('position', selected.id)
+                    handleSelectChange("jobTitle", value)
+                    const selected = referenceData.positions.find(
+                      (p) =>
+                        p.title === value &&
+                        (!formData.department || p.department_id === formData.department)
+                    )
+                    if (selected) handleSelectChange("position", selected.id)
                   }}
-                  disabled={isLoading}
+                  disabled={isLoading || !formData.department || positionsLoading}
                   className="bg-background/50 h-9 text-sm"
                 >
                   {getFilteredPositions().map((position) => (
@@ -545,78 +803,58 @@ export default function SignUpPage() {
                     </SelectItem>
                   ))}
                 </Select>
-                {getFilteredPositions().length === 0 && (
-                  <p className="text-xs text-red-600 mt-1">No positions found for selected department.</p>
-                )}
               </div>
-
             </div>
 
-            {/* Row 3: Line Manager and conditional Project Location (same row) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="supervisor" className="text-sm">Line Manager /Supervisor</Label>
-                <Select
-                  value={formData.supervisor}
-                  onValueChange={(value) => handleSelectChange('supervisor', value)}
-                  disabled={isLoading}
-                  className="bg-background/50 h-9 text-sm"
-                >
-                  {referenceData.supervisors.map((s) => (
-                    <SelectItem key={s.id} value={s.full_name}>
-                      {s.full_name}{s.job_title ? ` - ${s.job_title}` : ""}
-                    </SelectItem>
-                  ))}
-                </Select>
-                {referenceData.supervisors.length === 0 && (
-                  <p className="text-xs text-red-600 mt-1">No supervisors found in `employees` table.</p>
-                )}
-              </div>
-
-              {isSiteSelected() && (
-                <div className="space-y-1.5">
-                  <Label htmlFor="projectLocation" className="flex items-center gap-2 text-sm">
-                    <MapPin className="h-3.5 w-3.5 text-[#70c82a]" />
-                    Project Location *
-                  </Label>
-                  <Select
-                    value={formData.projectLocation}
-                    onValueChange={(value) => handleSelectChange('projectLocation', value)}
-                    disabled={isLoading}
-                    className="bg-background/50 h-9 text-sm"
-                  >
-                    {referenceData.projects.map((project) => (
-                      <SelectItem key={project.id} value={project.id}>
-                        {project.name}
-                      </SelectItem>
-                    ))}
-                  </Select>
-                  {referenceData.projects.length === 0 && (
-                    <p className="text-xs text-red-600 mt-1">No projects found in `projects` table.</p>
-                  )}
-                </div>
-              )}
-            </div>
-            {loadErrors.length > 0 && (
-              <Alert variant="destructive">
-                <AlertDescription>
-                  <div className="text-xs">
-                    <div className="font-semibold mb-1">Dropdown fetch errors:</div>
-                    {loadErrors.map((e, idx) => (
-                      <div key={idx}>- {e}</div>
-                    ))}
+            {(supervisorFieldRequired || projectFieldRequired) && (
+              <div
+                className={`grid gap-4 ${
+                  supervisorFieldRequired && projectFieldRequired
+                    ? "grid-cols-1 md:grid-cols-2"
+                    : "grid-cols-1"
+                }`}
+              >
+                {supervisorFieldRequired && (
+                  <div className="space-y-1.5">
+                    <Label className="text-sm">Line Manager / Supervisor *</Label>
+                    <Select
+                      value={formData.supervisor}
+                      onValueChange={(value) => handleSelectChange("supervisor", value)}
+                      disabled={isLoading || supervisorsLoading || !formData.workLocation}
+                      className="bg-background/50 h-9 text-sm"
+                    >
+                      {referenceData.supervisors.map((s) => (
+                        <SelectItem key={s.id} value={s.full_name}>
+                          {s.full_name}
+                          {s.job_title ? ` - ${s.job_title}` : ""}
+                        </SelectItem>
+                      ))}
+                    </Select>
                   </div>
-                </AlertDescription>
-              </Alert>
+                )}
+
+                {projectFieldRequired && (
+                  <div className="space-y-1.5">
+                    <Label className="flex items-center gap-2 text-sm">
+                      <MapPin className="h-3.5 w-3.5 text-[#70c82a]" />
+                      Project Location *
+                    </Label>
+                    <Select
+                      value={formData.projectLocation}
+                      onValueChange={(value) => handleSelectChange("projectLocation", value)}
+                      disabled={isLoading}
+                      className="bg-background/50 h-9 text-sm"
+                    >
+                      {referenceData.projects.map((project) => (
+                        <SelectItem key={project.id} value={project.id}>
+                          {project.name}
+                        </SelectItem>
+                      ))}
+                    </Select>
+                  </div>
+                )}
+              </div>
             )}
-            <Alert>
-              <AlertDescription>
-                <div className="text-[11px] leading-5 text-muted-foreground">
-                  <div><span className="font-semibold">API:</span> {process.env.NEXT_PUBLIC_API_BASE_URL || "(same origin)"}</div>
-                  <div><span className="font-semibold">Rows:</span> departments={loadStatus?.departments ?? 0}, positions={loadStatus?.positions ?? 0}, workLocations={loadStatus?.workLocations ?? 0}, projects={loadStatus?.projects ?? 0}, supervisors={loadStatus?.supervisors ?? 0}</div>
-                </div>
-              </AlertDescription>
-            </Alert>
           </motion.div>
         )
 
@@ -631,19 +869,21 @@ export default function SignUpPage() {
             className="space-y-4"
           >
             <div className="space-y-2">
-              <Label htmlFor="password" className="flex items-center gap-2">
-                <Lock className="h-4 w-4 text-[#70c82a]" />
-                Password *
+              <Label htmlFor="password" className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                <span className="flex items-center gap-2">
+                  <Lock className="h-4 w-4 text-[#70c82a]" />
+                  Password *
+                </span>
+                <span className="text-xs font-normal text-muted-foreground">All three rules are required.</span>
               </Label>
               <div className="relative">
                 <Input
                   id="password"
                   name="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Create a strong password"
+                  placeholder="At least 6 characters, letters and numbers"
                   value={formData.password}
                   onChange={handleChange}
-                  required
                   disabled={isLoading}
                   className="bg-background/50 pr-10"
                 />
@@ -661,44 +901,38 @@ export default function SignUpPage() {
                   )}
                 </Button>
               </div>
-
-              {/* Password Strength Indicator */}
-              {formData.password && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  className="space-y-2 mt-3"
-                >
-                  <div className="flex gap-1 h-2">
-                    {[0, 1, 2, 3, 4].map((index) => (
-                      <div
-                        key={index}
-                        className={`flex-1 rounded-full transition-all duration-300 ${
-                          index < strength ? passwordStrengthColors[strength - 1] : "bg-muted"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    {Object.entries(checks).map(([key, value]) => (
-                      <div key={key} className="flex items-center gap-2">
-                        {value ? (
-                          <CheckCircle className="h-3 w-3 text-green-500" />
-                        ) : (
-                          <XCircle className="h-3 w-3 text-red-500" />
-                        )}
-                        <span className={value ? "text-green-600" : "text-muted-foreground"}>
-                          {key === "length" && "8+ characters"}
-                          {key === "uppercase" && "Uppercase letter"}
-                          {key === "lowercase" && "Lowercase letter"}
-                          {key === "number" && "Number"}
-                          {key === "special" && "Special character"}
-                        </span>
+              <div className="mt-1.5 rounded-md border border-dashed border-[#70c82a]/25 bg-gradient-to-r from-muted/40 via-muted/20 to-transparent px-2 py-1.5">
+                <div className="flex items-center gap-2">
+                  <Fingerprint className="h-3 w-3 shrink-0 text-[#70c82a]/80" aria-hidden />
+                  <div className="flex h-1 min-w-0 flex-1 gap-px overflow-hidden rounded-full bg-muted/80">
+                    {(
+                      [
+                        ["length", passwordChecks.length],
+                        ["letter", passwordChecks.letter],
+                        ["number", passwordChecks.number],
+                      ] as const
+                    ).map(([key, ok]) => (
+                      <div key={key} className="h-full min-w-0 flex-1 bg-muted-foreground/10">
+                        <div
+                          className="h-full bg-[#70c82a] transition-[width] duration-500 ease-out"
+                          style={{ width: ok ? "100%" : "0%" }}
+                        />
                       </div>
                     ))}
                   </div>
-                </motion.div>
-              )}
+                  <span className="shrink-0 font-mono text-[10px] tabular-nums text-muted-foreground">
+                    {[passwordChecks.length, passwordChecks.letter, passwordChecks.number].filter(Boolean).length}
+                    /3
+                  </span>
+                </div>
+                <p className="mt-1 text-[9px] leading-tight text-muted-foreground sm:text-[10px]">
+                  <span className={passwordChecks.length ? "font-medium text-[#70c82a]" : ""}>6+ chars</span>
+                  <span className="mx-1 text-border/80">·</span>
+                  <span className={passwordChecks.letter ? "font-medium text-[#70c82a]" : ""}>A–Z</span>
+                  <span className="mx-1 text-border/80">·</span>
+                  <span className={passwordChecks.number ? "font-medium text-[#70c82a]" : ""}>0–9</span>
+                </p>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -711,13 +945,7 @@ export default function SignUpPage() {
                   placeholder="Confirm your password"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  required
                   disabled={isLoading}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !agreedToTerms) {
-                      e.preventDefault()
-                    }
-                  }}
                   className="bg-background/50 pr-10 h-9 text-sm"
                 />
                 <Button
@@ -734,37 +962,43 @@ export default function SignUpPage() {
                   )}
                 </Button>
               </div>
-              {formData.confirmPassword && formData.password === formData.confirmPassword && (
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="text-green-600 text-xs flex items-center gap-1"
+              {formData.confirmPassword.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`text-xs flex items-center gap-1.5 font-medium ${
+                    formData.password === formData.confirmPassword
+                      ? "text-[#70c82a]"
+                      : "text-destructive"
+                  }`}
                 >
-                  <CheckCircle className="h-3 w-3" />
-                  Passwords match
-                </motion.p>
+                  {formData.password === formData.confirmPassword ? (
+                    <>
+                      <CheckCircle className="h-3.5 w-3.5 shrink-0" />
+                      Passwords match
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="h-3.5 w-3.5 shrink-0" />
+                      Passwords do not match
+                    </>
+                  )}
+                </motion.div>
               )}
             </div>
 
-            <div className="flex items-start space-x-2 pt-4">
+            <div className="flex items-start space-x-2 rounded-md border border-border/50 bg-muted/20 px-2 py-2 pt-1">
               <Checkbox
-                id="terms"
-                checked={agreedToTerms}
-                onChange={(e) => setAgreedToTerms(e.target.checked)}
+                id="devnotice"
+                checked={agreedToDevelopmentNotice}
+                onChange={(e) => setAgreedToDevelopmentNotice(e.target.checked)}
                 disabled={isLoading}
               />
-              <label
-                htmlFor="terms"
-                className="text-sm text-muted-foreground leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                I agree to the{" "}
-                <Link href="/terms" className="text-[#70c82a] hover:underline">
-                  Terms of Service
-                </Link>{" "}
-                and{" "}
-                <Link href="/privacy" className="text-[#70c82a] hover:underline">
-                  Privacy Policy
-                </Link>
+              <label htmlFor="devnotice" className="text-sm text-muted-foreground leading-snug">
+                I understand this system is under development until it is fully finished. Anything I record here
+                must be backed by{" "}
+                <span className="font-medium text-foreground">hard-copy evidence</span> until the system is
+                complete. *
               </label>
             </div>
           </motion.div>
@@ -777,38 +1011,74 @@ export default function SignUpPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Back to Home Button */}
       <div className="absolute top-4 left-4 z-50">
-        <Link 
-          href="/#overview" 
+        <Link
+          href="/#overview"
           scroll={true}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-background/80 dark:bg-zinc-900/80 border border-[#70c82a]/20 hover:border-[#70c82a] hover:bg-[#70c82a]/5 transition-all backdrop-blur-sm"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-background/80 border border-[#70c82a]/20 hover:border-[#70c82a] hover:bg-[#70c82a]/5 transition-all backdrop-blur-sm"
         >
           <Home className="h-4 w-4 text-[#70c82a]" />
           <span className="text-sm font-medium text-foreground">Back to Home</span>
         </Link>
       </div>
 
-      {/* Sign Up Form */}
-      <div className="flex-1 flex items-center justify-center px-4 py-8 bg-gradient-to-br from-[#70c82a]/5 via-background to-background dark:from-[#70c82a]/10 overflow-y-auto">
+      <AnimatePresence>
+        {showSuccessModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", damping: 18 }}
+              className="w-full max-w-md rounded-2xl border border-[#70c82a]/30 bg-card p-8 shadow-2xl text-center space-y-4"
+            >
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
+                className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#70c82a]/15"
+              >
+                <CheckCircle className="h-10 w-10 text-[#70c82a]" />
+              </motion.div>
+              <h2 className="text-xl font-semibold text-foreground">Registration successful</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Your account is created. Login stays disabled until an admin approves your access. If you enabled
+                email on the server, you may receive a welcome message. You can then sign in with your email and
+                password.
+              </p>
+              <Button
+                className="w-full bg-[#70c82a] hover:bg-[#5aa022] text-white"
+                onClick={() => router.push("/sign-in")}
+              >
+                Go to sign in
+              </Button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="flex-1 flex items-center justify-center px-4 py-8 bg-gradient-to-br from-[#70c82a]/5 via-background to-background overflow-y-auto">
         <motion.div
           initial="initial"
           animate="animate"
           variants={fadeInUp}
           className={`w-full transition-all duration-300 ${
-            currentStep === 3 ? 'max-w-xl' : 'max-w-3xl'
+            currentStep >= 3 ? "max-w-xl" : "max-w-3xl"
           }`}
         >
-          <Card className="border-0 shadow-2xl bg-gradient-to-br from-background/95 via-background/90 to-muted/30 dark:from-zinc-950/95 dark:via-zinc-950/90 dark:to-zinc-900/30 relative overflow-visible border border-[#70c82a]/20 backdrop-blur-xl">
-            <div className="absolute inset-0 bg-gradient-to-br from-[#70c82a]/10 via-[#70c82a]/5 to-[#5aa022]/10 dark:from-[#70c82a]/15 dark:via-[#70c82a]/10 dark:to-[#5aa022]/15" />
-            <div className="absolute top-0 right-0 w-64 h-64 bg-[#70c82a]/5 rounded-full blur-3xl"></div>
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#5aa022]/5 rounded-full blur-3xl"></div>
+          <Card className="shadow-2xl bg-gradient-to-br from-background/95 via-background/90 to-muted/30 relative overflow-visible border border-[#70c82a]/20 backdrop-blur-xl">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#70c82a]/10 via-[#70c82a]/5 to-[#5aa022]/10" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[#70c82a]/5 rounded-full blur-3xl" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#5aa022]/5 rounded-full blur-3xl" />
             <CardHeader className="space-y-2 relative z-10 pb-3 overflow-visible">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-                {/* Left Section - Logo */}
                 <div className="flex justify-center md:justify-start">
                   <Link href="/#overview" className="relative cursor-pointer hover:opacity-80 transition-opacity">
-                    <div className="absolute inset-0 bg-[#70c82a]/10 rounded-full blur-xl"></div>
+                    <div className="absolute inset-0 bg-[#70c82a]/10 rounded-full blur-xl" />
                     <Image
                       src="/ecwc png logo.png"
                       alt="ECWC Logo"
@@ -821,39 +1091,37 @@ export default function SignUpPage() {
                     />
                   </Link>
                 </div>
-                
-                {/* Right Section - Title and Description */}
+
                 <div className="text-center md:text-left space-y-3 relative overflow-visible">
                   <div className="space-y-2 overflow-visible">
-                    <CardTitle className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-[#70c82a] via-[#5aa022] to-[#70c82a] bg-clip-text text-transparent pb-2 leading-tight overflow-visible">
+                    <CardTitle className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-[#70c82a] via-[#5aa022] to-[#70c82a] bg-clip-text text-transparent pb-2 leading-tight">
                       Sign Up
                     </CardTitle>
-                    {currentStep !== 3 && (
-                      <p className="text-sm text-muted-foreground leading-relaxed mt-2">
-                        Create your account to access the PEMS
-                      </p>
-                    )}
+                    <p className="text-sm text-muted-foreground leading-relaxed mt-2">
+                      Create your account to access the PEMS
+                    </p>
                   </div>
-                  {/* Decorative horizontal line - left to right */}
                   <div className="relative mt-2">
-                    <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#70c82a] via-[#5aa022] to-[#70c82a]"></div>
+                    <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#70c82a] via-[#5aa022] to-[#70c82a]" />
                   </div>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="relative z-10 py-2 pb-3">
               {renderStepIndicator()}
-              
-              <form onSubmit={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-              }} onKeyDown={(e) => {
-                // Prevent form submission on Enter key
-                if (e.key === 'Enter') {
+
+              <form
+                onSubmit={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
-                }
-              }}>
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault()
+                    e.stopPropagation()
+                  }
+                }}
+              >
                 {error && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
@@ -866,9 +1134,7 @@ export default function SignUpPage() {
                   </motion.div>
                 )}
 
-                <AnimatePresence mode="wait">
-                  {renderStepContent()}
-                </AnimatePresence>
+                <AnimatePresence mode="wait">{renderStepContent()}</AnimatePresence>
 
                 <div className="flex justify-between mt-4">
                   <Button
@@ -882,21 +1148,26 @@ export default function SignUpPage() {
                     Previous
                   </Button>
 
-                  {currentStep < 3 ? (
+                  {currentStep < TOTAL_STEPS ? (
                     <Button
                       type="button"
                       onClick={nextStep}
-                      className="bg-[#70c82a] hover:bg-[#5aa022] text-white flex items-center gap-2"
+                      disabled={
+                        isLoading ||
+                        (currentStep === 1 && !step1Complete) ||
+                        (currentStep === 2 && !step2Complete)
+                      }
+                      className="bg-[#70c82a] hover:bg-[#5aa022] text-white flex items-center gap-2 disabled:opacity-50"
                     >
                       Next
                       <ChevronRight className="h-4 w-4" />
                     </Button>
                   ) : (
-                    <Button 
+                    <Button
                       type="button"
                       onClick={handleSubmit}
-                      className="bg-[#70c82a] hover:bg-[#5aa022] text-white w-32" 
-                      disabled={isLoading}
+                      className="bg-[#70c82a] hover:bg-[#5aa022] text-white min-w-[8rem] disabled:opacity-50"
+                      disabled={isLoading || !step3Complete}
                     >
                       {isLoading ? (
                         <>

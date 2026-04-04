@@ -74,7 +74,8 @@ import {
   Facebook,
   Twitter,
   Linkedin,
-  Send
+  Send,
+  Share2
 } from "lucide-react"
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -212,7 +213,7 @@ function EquipmentDescriptionBlock({ text }: { text: string }) {
       {application && (
         <div>
           <p className="font-semibold text-foreground/90 underline underline-offset-2 decoration-primary/50 mb-1.5">Application</p>
-          <ul className="grid grid-cols-2 gap-x-4 gap-y-1 ml-1 list-none">
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 ml-1 list-none">
             {appItems.map((item, j) => (
               <li key={j} className="text-muted-foreground flex items-start gap-1.5">
                 <span className="text-primary font-bold shrink-0">•</span>
@@ -415,18 +416,18 @@ const CommandCenterSection = () => {
   const statusColor = getStatusColor(utilization);
 
   return (
-    <section className="relative py-4 lg:py-6 bg-background dark:bg-zinc-950">
-      <div className="container mx-auto px-4 lg:px-8 relative z-10">
+    <section className="relative py-4 lg:py-6 bg-background dark:bg-zinc-950 overflow-x-hidden w-full max-w-[100vw]">
+      <div className="container mx-auto px-3 sm:px-4 lg:px-8 relative z-10 max-w-full">
         <div className="mb-2">
-          <h2 className="text-2xl md:text-4xl font-bold text-foreground mb-0.5 tracking-tight">
+          <h2 className="text-xl sm:text-2xl md:text-4xl font-bold text-foreground mb-0.5 tracking-tight">
             <span className="text-[#70c82a]">Equipment Command Center</span>
           </h2>
-          <p className="text-muted-foreground text-sm md:text-base font-medium">Every machine. Every detail. One intelligent system.</p>
+          <p className="text-muted-foreground text-xs sm:text-sm md:text-base font-medium">Every machine. Every detail. One intelligent system.</p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-4 items-center">
+        <div className="grid lg:grid-cols-2 gap-4 lg:gap-6 items-start min-w-0">
           {/* Left: Image Panel */}
-          <div className="relative h-[250px] md:h-[400px] flex items-center justify-center overflow-hidden">
+          <div className="relative h-[200px] sm:h-[280px] md:h-[400px] w-full max-w-full min-w-0 flex items-center justify-center overflow-hidden rounded-xl">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentCategory.id}
@@ -463,40 +464,42 @@ const CommandCenterSection = () => {
           </div>
 
           {/* Right: Data Panel + Fixed Search & Carousel */}
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 min-w-0 max-w-full">
             {/* Name + description (changes per category) */}
-            <div className="space-y-1">
-              <h3 className="text-3xl md:text-4xl font-bold text-foreground tracking-tight leading-tight">{currentCategory.name}</h3>
+            <div className="space-y-1 min-w-0">
+              <h3 className="text-xl sm:text-2xl md:text-4xl font-bold text-foreground tracking-tight leading-tight break-words">{currentCategory.name}</h3>
               <p className="text-[#70c82a] font-mono text-sm">Fleet Category #{currentCategory.id} of {equipmentCategories.length}</p>
-              <div className="text-xs sm:text-sm p-3 rounded-xl bg-muted/30 border border-border/60">
+              <div className="text-xs sm:text-sm p-2.5 sm:p-3 rounded-xl bg-muted/30 border border-border/60 min-w-0">
                 <EquipmentDescriptionBlock text={getEquipmentDescription(currentCategory.name)} />
               </div>
             </div>
 
             {/* Fixed search bar (never animates) */}
-            <div className="relative w-full">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+            <div className="relative w-full max-w-full min-w-0">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
               <input
                 type="text"
-                placeholder="Search equipment categories..."
+                placeholder="Search categories…"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 bg-input dark:bg-zinc-900/50 border border-border dark:border-zinc-700 rounded-lg text-xs text-foreground placeholder-muted-foreground focus:outline-none focus:border-[#70c82a] transition-colors"
+                className="w-full min-w-0 max-w-full pl-9 pr-3 py-2.5 bg-input dark:bg-zinc-900/50 border border-border dark:border-zinc-700 rounded-lg text-xs sm:text-sm text-foreground placeholder-muted-foreground focus:outline-none focus:border-[#70c82a] transition-colors box-border"
               />
             </div>
 
-            {/* Fixed carousel (never animates) */}
-            <div className="relative">
+            {/* Fixed carousel (never animates) — scroll contained; no page-wide horizontal scroll */}
+            <div className="relative w-full max-w-full min-w-0 -mx-1 px-1">
               <button
+                type="button"
                 onClick={() => handleNavigate('left')}
-                className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-background/95 dark:bg-zinc-900/95 border border-border dark:border-zinc-700 hover:border-[#70c82a] flex items-center justify-center transition-all hover:bg-muted dark:hover:bg-zinc-800 hover:scale-110 shadow-lg"
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-background/95 dark:bg-zinc-900/95 border border-border dark:border-zinc-700 hover:border-[#70c82a] flex items-center justify-center transition-all hover:bg-muted dark:hover:bg-zinc-800 hover:scale-110 shadow-lg"
                 aria-label="Scroll left"
               >
                 <ChevronRight className="w-4 h-4 text-muted-foreground hover:text-[#70c82a] rotate-180 transition-colors" />
               </button>
               <button
+                type="button"
                 onClick={() => handleNavigate('right')}
-                className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-background/95 dark:bg-zinc-900/95 border border-border dark:border-zinc-700 hover:border-[#70c82a] flex items-center justify-center transition-all hover:bg-muted dark:hover:bg-zinc-800 hover:scale-110 shadow-lg"
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-background/95 dark:bg-zinc-900/95 border border-border dark:border-zinc-700 hover:border-[#70c82a] flex items-center justify-center transition-all hover:bg-muted dark:hover:bg-zinc-800 hover:scale-110 shadow-lg"
                 aria-label="Scroll right"
               >
                 <ChevronRight className="w-4 h-4 text-muted-foreground hover:text-[#70c82a] transition-colors" />
@@ -504,7 +507,7 @@ const CommandCenterSection = () => {
 
               <div
                 ref={carouselRef}
-                className="overflow-x-auto overflow-y-hidden scrollbar-hide pb-2 px-10 cursor-grab active:cursor-grabbing select-none"
+                className="overflow-x-auto overflow-y-hidden overscroll-x-contain scrollbar-hide pb-2 px-8 sm:px-10 cursor-grab active:cursor-grabbing select-none touch-pan-x max-w-full"
                 style={{ scrollBehavior: 'smooth' }}
                 onMouseDown={(e) => {
                   if (!carouselRef.current) return;
@@ -822,13 +825,13 @@ export default function LandingPage() {
   }, [mobileMenuOpen])
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       {/* Header */}
       <motion.header
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
-        className="border-b border-[#70c82a]/20 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 sticky top-0 z-50 shadow-sm"
+        className="fixed top-0 left-0 right-0 z-50 w-full border-b border-[#70c82a]/20 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 shadow-sm shadow-[#70c82a]/5"
       >
         <div className="container mx-auto px-4 lg:px-8">
           <div className="flex h-14 items-center justify-between">
@@ -849,13 +852,17 @@ export default function LandingPage() {
                   alt="ECWC Logo"
                   width={64}
                   height={64}
-                  className="object-contain relative z-10 w-14 h-14 md:w-16 md:h-16"
+                  className="object-contain relative z-10 w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16"
                   quality={100}
                   unoptimized
                   priority
                   style={{ filter: 'drop-shadow(0 0 8px rgba(112, 200, 42, 0.3))' }}
                 />
               </motion.div>
+
+              <span className="sm:hidden font-bold text-base tracking-tight text-foreground leading-none bg-gradient-to-r from-[#70c82a] to-[#5aa022] bg-clip-text text-transparent">
+                ECWC
+              </span>
 
               <div className="hidden sm:flex flex-col">
                 <span className="text-[10px] md:text-xs font-bold bg-gradient-to-r from-[#70c82a] to-[#5aa022] bg-clip-text text-transparent leading-tight">
@@ -986,8 +993,9 @@ export default function LandingPage() {
         </div>
       </motion.header>
 
+      <main className="pt-14 min-h-0">
       {/* Hero Section - main overview (PEMS, Real-Time Monitoring, Live Equipment Dashboard) */}
-      <section id="overview" className="relative overflow-hidden py-12 lg:py-16 bg-background dark:bg-black scroll-mt-16">
+      <section id="overview" className="relative overflow-hidden py-12 lg:py-16 bg-background dark:bg-black scroll-mt-[4.5rem]">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(112,200,42,0.05),transparent_50%)] dark:bg-[radial-gradient(circle_at_30%_50%,rgba(112,200,42,0.05),transparent_50%)]" />
         <motion.div
           className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#70c82a] to-transparent"
@@ -1147,12 +1155,12 @@ export default function LandingPage() {
 
               </motion.div>
 
-              {/* Right Content - Dashboard Preview */}
+              {/* Right Content - Dashboard Preview (hidden on small screens — avoid cramped table + horizontal scroll) */}
               <motion.div
                 initial={{ opacity: 0, y: 40, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                className="relative lg:pl-4"
+                className="relative lg:pl-4 hidden lg:block"
               >
                 <div className="relative rounded-2xl">
                   {/* Outer glow ring */}
@@ -1462,7 +1470,7 @@ export default function LandingPage() {
       <CommandCenterSection />
 
       {/* Core Functional Areas - Enterprise Data-Driven */}
-      <section id="features" className="pt-16 pb-12 lg:pt-24 lg:pb-16 bg-background dark:bg-black relative overflow-hidden">
+      <section id="features" className="pt-16 pb-12 lg:pt-24 lg:pb-16 bg-background dark:bg-black relative overflow-hidden scroll-mt-[4.5rem]">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_15%,rgba(112,200,42,0.08),transparent_55%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_85%,rgba(112,200,42,0.06),transparent_55%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_50%,rgba(112,200,42,0.03),transparent_70%)]" />
@@ -1594,14 +1602,14 @@ export default function LandingPage() {
                     Live Data
                   </div>
                 </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
+                <div className="overflow-x-auto max-w-full">
+                  <table className="w-full min-w-0 table-fixed md:table-auto">
                     <thead>
                       <tr className="border-b border-border dark:border-zinc-800 bg-muted/30 dark:bg-zinc-900/40">
-                        <th className="text-left py-3 px-3 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Asset ID</th>
+                        <th className="text-left py-3 px-2 sm:px-3 text-[10px] font-black text-muted-foreground uppercase tracking-widest w-[28%] md:w-auto">Asset ID</th>
                         <th className="text-left py-3 px-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Type</th>
                         <th className="text-left py-3 px-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Status</th>
-                        <th className="text-right py-3 px-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Value</th>
+                        <th className="text-right py-3 px-2 text-[10px] font-black text-muted-foreground uppercase tracking-widest hidden md:table-cell">Value</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1632,15 +1640,15 @@ export default function LandingPage() {
                               {row.status}
                             </span>
                           </td>
-                          <td className="py-3 px-2 text-right text-sm font-semibold text-foreground">{row.value}</td>
+                          <td className="py-3 px-2 text-right text-sm font-semibold text-foreground hidden md:table-cell">{row.value}</td>
                         </motion.tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-                <div className="mt-6 pt-4 border-t border-border dark:border-zinc-800 flex justify-between items-center">
+                <div className="mt-6 pt-4 border-t border-border dark:border-zinc-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                   <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Total Fleet Value</span>
-                  <div className="text-3xl font-black bg-gradient-to-r from-[#70c82a] to-emerald-400 bg-clip-text text-transparent">Br 12.4M</div>
+                  <div className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-[#70c82a] to-emerald-400 bg-clip-text text-transparent">Br 12.4M</div>
                 </div>
               </div>
             </motion.div>
@@ -1689,7 +1697,7 @@ export default function LandingPage() {
                     </motion.div>
                   ))}
                 </div>
-                <div className="space-y-3 pt-2 border-t border-border/30 dark:border-zinc-800/50">
+                <div className="space-y-3 pt-2 border-t border-border/30 dark:border-zinc-800/50 hidden md:block">
                   {[
                     { label: "Work Orders This Month", value: 124, max: 150, barColor: "from-[#70c82a] to-emerald-400", glowColor: "shadow-[#70c82a]/40" },
                     { label: "Scheduled Maintenance", value: 89, max: 150, barColor: "from-[#70c82a] to-emerald-500", glowColor: "shadow-[#70c82a]/40" },
@@ -2365,7 +2373,7 @@ export default function LandingPage() {
       </section>
 
       {/* AI-Powered Decision Support - Professional Analytics */}
-      <section id="ai-support" className="py-32 bg-background dark:bg-zinc-950 relative overflow-hidden">
+      <section id="ai-support" className="py-32 bg-background dark:bg-zinc-950 relative overflow-hidden scroll-mt-[4.5rem]">
         <div className="absolute inset-0 bg-gradient-to-b from-background via-muted/30 to-background dark:from-black dark:via-zinc-950 dark:to-black" />
         <div className="container mx-auto px-4 lg:px-8 relative z-10">
           <motion.div
@@ -2558,8 +2566,8 @@ export default function LandingPage() {
               </div>
             </motion.div>
 
-            {/* ── Landscape Tablet ── */}
-            <motion.div initial={{ opacity: 0, x: 40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }} className="flex-1 w-full max-w-[780px] mx-auto xl:mx-0">
+            {/* ── Landscape Tablet (desktop / large tablet only) ── */}
+            <motion.div initial={{ opacity: 0, x: 40 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }} className="hidden lg:flex flex-1 w-full max-w-[780px] min-w-0 mx-auto lg:mx-0">
               <div className="relative">
                 <div className="absolute -inset-3 rounded-[2rem] bg-[#70c82a]/15 dark:bg-[#70c82a]/25 blur-2xl" />
                 {/* tablet frame */}
@@ -2720,7 +2728,7 @@ export default function LandingPage() {
   
 
       {/* ECWC Compound Map - below Why PEMS */}
-      <section id="compound-map" className="min-h-screen w-full flex flex-col bg-background dark:bg-zinc-950 border-t border-border dark:border-zinc-800/50">
+      <section id="compound-map" className="min-h-screen w-full max-w-[100vw] flex flex-col bg-background dark:bg-zinc-950 border-t border-border dark:border-zinc-800/50 overflow-x-hidden">
         <div className="shrink-0 relative overflow-hidden border-b border-border dark:border-zinc-800">
           <div className="absolute inset-0 bg-gradient-to-b from-background via-muted/30 to-background dark:from-black dark:via-zinc-950 dark:to-black" />
           <div className="container mx-auto px-4 lg:px-8 relative z-10 py-8 sm:py-10">
@@ -2749,62 +2757,209 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Ethiopia Digital 2030 – Alignment & Pillars */}
-      <section className="relative py-16 lg:py-24 overflow-hidden border-t border-border dark:border-zinc-800/50">
-        {/* Layered background */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#70c82a]/[0.07] via-[#70c82a]/[0.02] to-background dark:from-[#70c82a]/[0.08] dark:via-[#70c82a]/[0.03] dark:to-black" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(112,200,42,0.15),transparent)] dark:bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(112,200,42,0.12),transparent)]" />
-        <div className="container mx-auto px-4 lg:px-8 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-8"
-          >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#70c82a]/10 text-[#70c82a] text-xs font-bold uppercase tracking-widest mb-6 border border-[#70c82a]/20">
-              National Alignment
-            </div>
-            <h2 className="text-4xl md:text-6xl font-bold text-foreground mb-4">
-              Aligned with <span className="text-[#70c82a]"> Digital Ethiopia 2030</span>
-            </h2>
-            <p className="text-muted-foreground text-lg max-w-3xl mx-auto">
-              Built for the future: dynamic, intelligent, connected, and secure.
-            </p>
-          </motion.div>
-
-          {/* Pillar cards – premium style */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6 max-w-6xl mx-auto">
-            {[
-              { icon: Zap, title: 'Dynamic', desc: 'Real-time updates and adaptive workflows that scale with your operations.', accent: 'from-amber-500/20 to-[#70c82a]/20' },
-              { icon: Cpu, title: 'AI Support', desc: 'Intelligent insights and predictive maintenance powered by AI.', accent: 'from-violet-500/20 to-[#70c82a]/20' },
-              { icon: Database, title: 'Data Sharing', desc: 'Seamless, standards-based data sharing across sites and systems.', accent: 'from-blue-500/20 to-[#70c82a]/20' },
-              { icon: Shield, title: 'Secure', desc: 'Enterprise-grade security to protect data and operations.', accent: 'from-emerald-500/20 to-[#70c82a]/20' },
-            ].map((item, i) => (
+      {/* National Alignment — Digital Ethiopia 2030 (aligned with site ECWC theme) */}
+      <section
+        id="national-alignment"
+        className="relative py-16 lg:py-24 overflow-hidden border-t border-border dark:border-zinc-800/50 scroll-mt-[4.5rem] bg-background dark:bg-zinc-950"
+      >
+        <div className="absolute inset-0 bg-gradient-to-b from-[#70c82a]/[0.07] via-muted/20 to-background dark:from-[#70c82a]/[0.06] dark:via-zinc-950/80 dark:to-black pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(112,200,42,0.12),transparent_55%)] dark:bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(112,200,42,0.08),transparent_55%)] pointer-events-none" />
+        <motion.div
+          className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#70c82a] to-transparent origin-left"
+          initial={{ scaleX: 0 }}
+          whileInView={{ scaleX: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
+        />
+        <div className="container mx-auto px-4 lg:px-8 relative z-10 max-w-6xl">
+          <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.12fr)] gap-12 lg:gap-14 xl:gap-16 items-center">
+            {/* Left: National Alignment + Digital Ethiopia 2030 + Aligned with */}
+            <motion.div
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true, margin: "-80px" }}
+              variants={{
+                hidden: {},
+                show: { transition: { staggerChildren: 0.14, delayChildren: 0.06 } },
+              }}
+              className="text-center lg:text-left relative"
+            >
               <motion.div
-                key={item.title}
-                initial={{ opacity: 0, y: 32 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.1 + i * 0.1, duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-                whileHover={{ y: -4 }}
-                className="group relative"
+                aria-hidden
+                className="pointer-events-none absolute -left-8 top-0 h-48 w-48 rounded-full bg-[#70c82a]/[0.12] blur-[56px] dark:bg-[#70c82a]/[0.14]"
+                animate={{ opacity: [0.45, 0.75, 0.45], scale: [1, 1.05, 1] }}
+                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+              />
+              <motion.div
+                variants={{
+                  hidden: { opacity: 0, y: 16, scale: 0.96 },
+                  show: {
+                    opacity: 1,
+                    y: 0,
+                    scale: 1,
+                    transition: { type: "spring", stiffness: 260, damping: 22 },
+                  },
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#70c82a]/10 text-[#70c82a] text-xs font-bold uppercase tracking-widest border border-[#70c82a]/20 shadow-sm shadow-[#70c82a]/5 relative z-10"
               >
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#70c82a]/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                <div className="relative h-full rounded-2xl border-2 border-border dark:border-zinc-700/80 bg-card/80 dark:bg-zinc-900/90 backdrop-blur-sm p-6 md:p-7 shadow-lg shadow-black/5 dark:shadow-black/20 hover:shadow-xl hover:shadow-[#70c82a]/10 dark:hover:shadow-[#70c82a]/5 hover:border-[#70c82a]/40 transition-all duration-300 overflow-hidden">
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#70c82a] to-[#8fd936] rounded-l-2xl opacity-90" />
-                  <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-br ${item.accent} rounded-bl-full opacity-60`} />
-                  <div className="relative">
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#70c82a]/25 to-[#70c82a]/10 flex items-center justify-center border border-[#70c82a]/30 shadow-[0_4px_14px_rgba(112,200,42,0.2)] group-hover:scale-110 transition-transform duration-300">
-                        <item.icon className="w-6 h-6 text-[#70c82a]" />
-                      </div>
-                      <h3 className="text-xl font-bold text-foreground">{item.title}</h3>
-                    </div>
-                    <p className="text-sm text-muted-foreground leading-relaxed pl-0.5">{item.desc}</p>
-                  </div>
-                </div>
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#70c82a] opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#70c82a]" />
+                </span>
+                National Alignment
               </motion.div>
-            ))}
+
+              {/* Aligned with — above Digital Ethiopia; "with" matches #70c82a like 2030 */}
+              <motion.h3
+                variants={{
+                  hidden: { opacity: 0, y: 28, filter: "blur(10px)" },
+                  show: {
+                    opacity: 1,
+                    y: 0,
+                    filter: "blur(0px)",
+                    transition: { duration: 0.75, ease: [0.16, 1, 0.3, 1] },
+                  },
+                }}
+                className="relative z-10 mt-6 sm:mt-7 text-4xl sm:text-5xl lg:text-[3.25rem] font-black tracking-[-0.035em] leading-[1.05]"
+              >
+                <motion.span
+                  className="inline-block text-foreground"
+                  initial={{ opacity: 0, x: -12 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.15, duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  Aligned
+                </motion.span>
+                <motion.span
+                  className="inline-block ml-2.5 text-[#70c82a] drop-shadow-[0_0_28px_rgba(112,200,42,0.45)] dark:drop-shadow-[0_0_32px_rgba(112,200,42,0.35)]"
+                  initial={{ opacity: 0, scale: 0.85, rotate: -6 }}
+                  whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ type: "spring", stiffness: 400, damping: 18, delay: 0.22 }}
+                >
+                  with
+                </motion.span>
+              </motion.h3>
+
+              <motion.h2
+                variants={{
+                  hidden: { opacity: 0, y: 22 },
+                  show: {
+                    opacity: 1,
+                    y: 0,
+                    transition: { type: "spring", stiffness: 280, damping: 26, delay: 0.08 },
+                  },
+                }}
+                className="relative z-10 mt-4 sm:mt-5 text-3xl sm:text-4xl md:text-5xl font-bold text-foreground leading-[1.12] tracking-tight"
+              >
+                <motion.span
+                  className="inline-block"
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.35, duration: 0.4 }}
+                >
+                  Digital Ethiopia{" "}
+                </motion.span>
+                <motion.span
+                  className="inline-block text-[#70c82a] drop-shadow-[0_0_24px_rgba(112,200,42,0.35)]"
+                  initial={{ opacity: 0, y: 12, scale: 0.9 }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ type: "spring", stiffness: 420, damping: 20, delay: 0.42 }}
+                >
+                  2030
+                </motion.span>
+              </motion.h2>
+
+              <motion.div
+                variants={{
+                  hidden: { opacity: 0, scaleX: 0 },
+                  show: {
+                    opacity: 1,
+                    scaleX: 1,
+                    transition: { duration: 0.85, ease: [0.22, 1, 0.36, 1], delay: 0.12 },
+                  },
+                }}
+                className="mt-6 flex flex-col gap-2 origin-left mx-auto lg:mx-0 w-fit max-w-full relative z-10"
+              >
+                <motion.div
+                  className="h-[3px] w-[min(100%,14rem)] rounded-full bg-gradient-to-r from-[#70c82a] via-emerald-400 to-[#70c82a]/70 -rotate-[0.25deg] shadow-[0_2px_16px_rgba(112,200,42,0.35)]"
+                  initial={{ scaleX: 0 }}
+                  whileInView={{ scaleX: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.55, duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+                />
+                <motion.div
+                  className="h-[2px] w-[min(100%,11rem)] rounded-full bg-gradient-to-r from-[#70c82a]/50 to-emerald-400/60 ml-1 rotate-[0.35deg]"
+                  initial={{ scaleX: 0 }}
+                  whileInView={{ scaleX: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: 0.68, duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                />
+              </motion.div>
+            </motion.div>
+
+            {/* Right: 2×2 quadrants — internal cross lines only, no outer box */}
+            <motion.div
+              initial={{ opacity: 0, x: 28 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
+              className="relative w-full min-w-0"
+            >
+              <motion.div
+                aria-hidden
+                className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 h-56 w-56 rounded-full bg-[#70c82a]/[0.06] blur-[48px] dark:bg-[#70c82a]/[0.09]"
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 1.2, ease: "easeOut" }}
+              />
+              <div className="relative grid grid-cols-2">
+                {[
+                  { icon: Zap, title: "Dynamic", desc: "Real-time updates and adaptive workflows that scale with your operations." },
+                  { icon: Cpu, title: "AI Support", desc: "Intelligent insights and predictive maintenance powered by AI." },
+                  { icon: Share2, title: "Data Sharing", desc: "Seamless, standards-based data sharing across sites and systems." },
+                  { icon: Shield, title: "Secure", desc: "Enterprise-grade security to protect data and operations." },
+                ].map((item, i) => (
+                  <motion.div
+                    key={item.title}
+                    initial={{ opacity: 0, y: 28, scale: 0.94 }}
+                    whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                    viewport={{ once: true, margin: "-30px" }}
+                    transition={{
+                      delay: 0.12 + i * 0.1,
+                      type: "spring",
+                      stiffness: 360,
+                      damping: 26,
+                    }}
+                    whileHover={{ y: -4, transition: { duration: 0.2 } }}
+                    className={`group relative flex flex-col items-center justify-center text-center px-3 py-7 sm:px-5 sm:py-9 min-h-[150px] sm:min-h-[170px] border-[#70c82a]/20 dark:border-[#70c82a]/15 transition-colors duration-300 hover:bg-[#70c82a]/[0.07] ${
+                      i === 0 ? "border-r border-b" : i === 1 ? "border-b" : i === 2 ? "border-r" : ""
+                    }`}
+                  >
+                    <motion.div
+                      className="relative mb-3 sm:mb-4"
+                      whileHover={{ scale: 1.06 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 18 }}
+                    >
+                      <span className="flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#70c82a]/25 to-[#70c82a]/10 text-[#70c82a] ring-1 ring-[#70c82a]/30 shadow-[0_6px_20px_rgba(112,200,42,0.12)] group-hover:shadow-[0_10px_28px_rgba(112,200,42,0.22)] transition-shadow duration-300">
+                        <item.icon className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2.1} />
+                      </span>
+                      <CheckCircle2 className="absolute -bottom-0.5 -right-0.5 h-4 w-4 sm:h-5 sm:w-5 text-[#70c82a] bg-background dark:bg-zinc-950 rounded-full ring-2 ring-background" />
+                    </motion.div>
+                    <h4 className="text-sm sm:text-base font-bold text-foreground mb-1.5 sm:mb-2 tracking-tight">
+                      {item.title}
+                    </h4>
+                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-[13rem]">
+                      {item.desc}
+                    </p>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -2869,7 +3024,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-muted dark:bg-black pt-12 pb-4">
+      <footer className="relative bg-gradient-to-br from-muted/90 via-background to-[#70c82a]/[0.12] dark:from-zinc-950 dark:via-black dark:to-[#70c82a]/[0.08] pt-12 pb-4 border-t border-[#70c82a]/10">
         <div className="container mx-auto px-4 lg:px-8 text-foreground">
           <div className="grid grid-cols-1 md:grid-cols-5 gap-8 mb-8">
             {/* Logo Section */}
@@ -2951,9 +3106,11 @@ export default function LandingPage() {
                     <Link
                       key={i}
                       href={social.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="flex items-center gap-3 text-sm text-muted-foreground hover:text-[#70c82a] transition-colors group"
                     >
-                      <div className="w-8 h-8 rounded-lg bg-[#70c82a]/10 dark:bg-[#70c82a]/20 flex items-center justify-center group-hover:bg-[#70c82a]/20 dark:group-hover:bg-[#70c82a]/30 transition-colors border border-[#70c82a]/20">
+                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-background to-[#70c82a]/10 dark:from-zinc-900 dark:to-[#70c82a]/15 flex items-center justify-center shadow-md shadow-[#70c82a]/15 border border-[#70c82a]/25 group-hover:shadow-lg group-hover:shadow-[#70c82a]/25 group-hover:scale-105 transition-all duration-200">
                         <social.icon className="w-4 h-4 text-[#70c82a]" />
                       </div>
                       <span>{social.name}</span>
@@ -2987,6 +3144,8 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+
+      </main>
 
       {/* Scroll to top / bottom – corner arrow: down when above, up when below */}
       <AnimatePresence mode="wait">

@@ -246,9 +246,7 @@ function SignInForm() {
             </CardContent>
             <CardFooter className="relative z-10 pt-4 pb-8 mb-2">
               <div className="w-full space-y-3">
-                <p className="text-xs text-muted-foreground text-center">
-                  Use your registered account. Contact admin if your account is not active.
-                </p>
+               
                 <div className="flex items-center justify-center">
                   <Link
                     href="/sign-up"

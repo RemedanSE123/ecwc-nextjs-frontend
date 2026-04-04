@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -37,16 +37,16 @@ import {
   LabelList,
 } from 'recharts';
 import {
-  Wrench,
-  Truck,
-  Car,
-  FileText,
   Download,
   FileSpreadsheet,
   FileDown,
   ChevronRight,
   ChevronUp,
   ChevronDown,
+  Wrench,
+  Truck,
+  Car,
+  FileText,
   Drill,
   Factory,
   BarChart3,
@@ -121,6 +121,39 @@ function ChartTooltip({
   );
 }
 
+function FlipStatCard({
+  label,
+  value,
+  subtitle,
+  pct,
+  valueClassName,
+  className,
+}: {
+  label: string;
+  value: number;
+  subtitle: string;
+  pct: number;
+  valueClassName: string;
+  className: string;
+}) {
+  return (
+    <div className={`group [perspective:1000px] ${className}`}>
+      <div className="relative h-full min-h-[74px] w-full transition-transform duration-500 [transform-style:preserve-3d] group-hover:[transform:rotateY(180deg)]">
+        <div className="absolute inset-0 rounded-lg border bg-inherit px-2.5 py-2 sm:py-2.5 flex flex-col justify-center text-center [backface-visibility:hidden]">
+          <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">{label}</span>
+          <span className={`text-base sm:text-lg font-extrabold tabular-nums mt-0.5 ${valueClassName}`}>{value}</span>
+          <span className="text-[10px] text-muted-foreground leading-tight mt-0.5">{subtitle}</span>
+        </div>
+        <div className="absolute inset-0 rounded-lg border bg-inherit px-2.5 py-2 sm:py-2.5 flex flex-col justify-center text-center [transform:rotateY(180deg)] [backface-visibility:hidden]">
+          <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">{label} %</span>
+          <span className={`text-base sm:text-lg font-extrabold tabular-nums mt-0.5 ${valueClassName}`}>{pct}%</span>
+          <span className="text-[10px] text-muted-foreground leading-tight mt-0.5">of total fleet</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 interface CategoryCardProps {
   slug: string;
   name: string;
@@ -129,100 +162,126 @@ interface CategoryCardProps {
   stats: { total: number; op: number; idle: number; down: number; downBreakdown: { label: string; count: number }[] };
   pct: number;
   index: number;
+  muted?: boolean;
+  included: boolean;
+  onIncludedChange: (checked: boolean) => void;
+  /** `full` = title on its own row (top 4 categories). `inline` = icon+name+totals in left column (Factory / Auxiliary). */
+  titleLayout?: 'full' | 'inline';
 }
 
-function CategoryCard({ slug, name, icon: Icon, color, stats, pct, index }: CategoryCardProps) {
+function getCategoryStats(
+  statusSummary: Awaited<ReturnType<typeof fetchStatusSummary>> | null,
+  dbCategory: string
+) {
+  if (!statusSummary?.rows?.length)
+    return { total: 0, op: 0, idle: 0, down: 0, downBreakdown: [] as { label: string; count: number }[] };
+  const normalizeCategory = (v: string | null | undefined) => String(v ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
+  const target = normalizeCategory(dbCategory);
+  const rows = statusSummary.rows.filter((r) => normalizeCategory(r.category) === target);
+  let total = 0;
+  let op = 0;
+  let idle = 0;
+  const downParts: Record<string, number> = { ur: 0, down: 0, hr: 0, ui: 0, wi: 0, uc: 0, rfd: 0, afd: 0, accident: 0, other: 0 };
+  for (const r of rows) {
+    total += r.total;
+    op += r.op;
+    idle += r.idle;
+    downParts.ur += r.ur;
+    downParts.down += r.down;
+    downParts.hr += r.hr;
+    downParts.ui += r.ui;
+    downParts.wi += r.wi;
+    downParts.uc += r.uc;
+    downParts.rfd += r.rfd;
+    downParts.afd += r.afd;
+    downParts.accident += r.accident;
+    downParts.other += r.other;
+  }
+  const down = Object.values(downParts).reduce((a, b) => a + b, 0);
+  const downBreakdown = Object.entries(downParts)
+    .filter(([, c]) => c > 0)
+    .map(([k, c]) => ({ label: DOWN_BREAKDOWN_LABELS[k] ?? k, count: c }))
+    .sort((a, b) => b.count - a.count);
+  return { total, op, idle, down, downBreakdown };
+}
+
+function CategoryCard({
+  slug,
+  name,
+  icon: Icon,
+  color,
+  stats,
+  pct,
+  index,
+  muted,
+  included,
+  onIncludedChange,
+  titleLayout = 'full',
+}: CategoryCardProps) {
   const [showDownPopup, setShowDownPopup] = useState(false);
   const { sidebarOpen } = useSidebar();
   const popupZ = sidebarOpen ? 'z-30' : 'z-[200]';
   const wrapperZ = sidebarOpen ? 'z-20' : 'z-[100]';
   const downPct = stats.total ? Math.round((stats.down / stats.total) * 100) : 0;
-  const card = (
-    <Link href={`/equipment/${slug}`} className="block">
-      <Card
-        className="overflow-visible border border-border/80 shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 group relative bg-card rounded-lg sm:rounded-xl"
-        style={{ borderLeftWidth: '4px', borderLeftColor: color }}
+
+  const statsColumn = (
+    <div className="flex flex-col justify-center gap-0.5 sm:gap-1 p-2 sm:p-3">
+      <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs">
+        <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-green-500 shrink-0" />
+        <span className="text-muted-foreground text-[10px] sm:text-[11px]">OP:</span>
+        <span className="font-semibold text-green-600 dark:text-green-400 tabular-nums">{stats.op}</span>
+      </div>
+      <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs">
+        <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-blue-500 shrink-0" />
+        <span className="text-muted-foreground text-[10px] sm:text-[11px]">Idle:</span>
+        <span className="font-semibold text-blue-600 dark:text-blue-400 tabular-nums">{stats.idle}</span>
+      </div>
+      <div
+        className={`relative ${wrapperZ} flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs w-fit`}
+        onMouseEnter={() => setShowDownPopup(true)}
+        onMouseLeave={() => setShowDownPopup(false)}
       >
-        <CardContent className="p-0">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-0">
-            {/* Column 1: Category name, total, fleet % */}
-            <div className="flex items-center gap-1.5 sm:gap-2.5 p-2 sm:p-3 sm:border-r sm:border-b-0 border-b border-border/60 sm:border-b-transparent">
-              <div
-                className="p-1 sm:p-1.5 rounded-md shrink-0 group-hover:scale-105 transition-transform bg-muted/60"
-                style={{ color }}
-              >
-                <Icon className="h-3 w-3 sm:h-4 sm:w-4" style={{ color }} />
-              </div>
-              <div className="min-w-0">
-                <p className="font-semibold text-[10px] sm:text-xs text-foreground truncate">{name}</p>
-                <p className="text-base sm:text-xl font-bold tabular-nums text-foreground mt-0.5">{stats.total.toLocaleString()}</p>
-                <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5">{pct}% of fleet</p>
-              </div>
+        <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-red-500 shrink-0" />
+        <span className="text-muted-foreground text-[10px] sm:text-[11px]">Down:</span>
+        <span className="font-semibold text-red-600 dark:text-red-400 tabular-nums cursor-help underline decoration-dotted decoration-red-500/50 underline-offset-1">
+          {stats.down}
+        </span>
+        {showDownPopup && (
+          <div
+            className={`absolute ${popupZ} right-0 bottom-full mb-1.5 w-[200px] rounded-lg shadow-2xl border border-border bg-background overflow-hidden animate-in fade-in-0 zoom-in-95 duration-150 pointer-events-auto`}
+            style={{ isolation: 'isolate' }}
+            onMouseEnter={() => setShowDownPopup(true)}
+            onMouseLeave={() => setShowDownPopup(false)}
+          >
+            <div className="px-3 py-2 bg-red-500/10 border-b border-border font-semibold text-xs text-red-600 dark:text-red-400">
+              Down breakdown
             </div>
-            {/* Column 2: OP (green), Idle (blue), Down count (red), Down % (red) */}
-            <div className="flex flex-col justify-center gap-0.5 sm:gap-1 p-2 sm:p-3">
-              <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs">
-                <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-green-500 shrink-0" />
-                <span className="text-muted-foreground text-[10px] sm:text-[11px]">OP:</span>
-                <span className="font-semibold text-green-600 dark:text-green-400 tabular-nums">{stats.op}</span>
-              </div>
-              <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs">
-                <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-blue-500 shrink-0" />
-                <span className="text-muted-foreground text-[10px] sm:text-[11px]">Idle:</span>
-                <span className="font-semibold text-blue-600 dark:text-blue-400 tabular-nums">{stats.idle}</span>
-              </div>
-              <div
-                className={`relative ${wrapperZ} flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs w-fit`}
-                onMouseEnter={() => setShowDownPopup(true)}
-                onMouseLeave={() => setShowDownPopup(false)}
-              >
-                <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-red-500 shrink-0" />
-                <span className="text-muted-foreground text-[10px] sm:text-[11px]">Down:</span>
-                <span className="font-semibold text-red-600 dark:text-red-400 tabular-nums cursor-help underline decoration-dotted decoration-red-500/50 underline-offset-1">
-                  {stats.down}
-                </span>
-                {showDownPopup && (
+            <div className="p-2 space-y-1 max-h-44 overflow-y-auto">
+              {stats.downBreakdown.length > 0 ? (
+                stats.downBreakdown.map((d) => (
                   <div
-                    className={`absolute ${popupZ} right-0 bottom-full mb-1.5 w-[200px] rounded-lg shadow-2xl border border-border bg-background overflow-hidden animate-in fade-in-0 zoom-in-95 duration-150 pointer-events-auto`}
-                    style={{ isolation: 'isolate' }}
-                    onMouseEnter={() => setShowDownPopup(true)}
-                    onMouseLeave={() => setShowDownPopup(false)}
+                    key={d.label}
+                    className="flex justify-between items-center gap-2 py-1 px-2 rounded text-xs hover:bg-muted/50"
                   >
-                    <div className="px-3 py-2 bg-red-500/10 border-b border-border font-semibold text-xs text-red-600 dark:text-red-400">
-                      Down breakdown
-                    </div>
-                    <div className="p-2 space-y-1 max-h-44 overflow-y-auto">
-                      {stats.downBreakdown.length > 0 ? (
-                        stats.downBreakdown.map((d) => (
-                          <div
-                            key={d.label}
-                            className="flex justify-between items-center gap-2 py-1 px-2 rounded text-xs hover:bg-muted/50"
-                          >
-                            <span className="text-foreground">{d.label}</span>
-                            <span className="font-bold tabular-nums text-red-600 dark:text-red-400">{d.count}</span>
-                          </div>
-                        ))
-                      ) : (
-                        <p className="text-xs text-muted-foreground py-2">No breakdown</p>
-                      )}
-                    </div>
+                    <span className="text-foreground">{d.label}</span>
+                    <span className="font-bold tabular-nums text-red-600 dark:text-red-400">{d.count}</span>
                   </div>
-                )}
-              </div>
-              <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs">
-                <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-red-500 shrink-0" />
-                <span className="text-muted-foreground text-[10px] sm:text-[11px]">Down:</span>
-                <span className="font-semibold text-red-600 dark:text-red-400 tabular-nums">{downPct}%</span>
-              </div>
+                ))
+              ) : (
+                <p className="text-xs text-muted-foreground py-2">No breakdown</p>
+              )}
             </div>
           </div>
-          <div className="absolute top-1 right-1 sm:top-2 sm:right-2">
-            <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
-          </div>
-        </CardContent>
-      </Card>
-    </Link>
+        )}
+      </div>
+      <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs">
+        <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-red-500 shrink-0" />
+        <span className="text-muted-foreground text-[10px] sm:text-[11px]">Down:</span>
+        <span className="font-semibold text-red-600 dark:text-red-400 tabular-nums">{downPct}%</span>
+      </div>
+    </div>
   );
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -230,7 +289,84 @@ function CategoryCard({ slug, name, icon: Icon, color, stats, pct, index }: Cate
       transition={{ delay: (index + 1) * 0.05 }}
       className={showDownPopup ? `relative ${wrapperZ}` : undefined}
     >
-      {card}
+      <div className="relative group/cat">
+        <Link href={`/equipment/${slug}`} className="block rounded-lg sm:rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+          <Card
+            className={`overflow-visible border border-border/80 shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 relative bg-card rounded-lg sm:rounded-xl ${
+              muted ? 'opacity-45 grayscale-[0.2]' : ''
+            }`}
+            style={{ borderLeftWidth: '4px', borderLeftColor: color }}
+          >
+            <CardContent className="p-0">
+              {titleLayout === 'inline' ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-0">
+                  <div className="flex items-start gap-1.5 sm:gap-2.5 p-2 sm:p-3 sm:border-r sm:border-b-0 border-b border-border/60 sm:border-b-transparent">
+                    <div
+                      className="p-1 sm:p-1.5 rounded-md shrink-0 mt-0.5 group-hover:scale-105 transition-transform bg-muted/60"
+                      style={{ color }}
+                    >
+                      <Icon className="h-3 w-3 sm:h-4 sm:w-4" style={{ color }} />
+                    </div>
+                    <div className="min-w-0 flex-1 pr-7 sm:pr-8">
+                      <p className="font-semibold text-[10px] sm:text-xs text-foreground truncate" title={name}>
+                        {name}
+                      </p>
+                      <p className="text-base sm:text-xl font-bold tabular-nums text-foreground mt-0.5">{stats.total.toLocaleString()}</p>
+                      <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5">{pct}% of fleet</p>
+                    </div>
+                  </div>
+                  {statsColumn}
+                </div>
+              ) : (
+                <>
+                  {/* Full-width title row so long names (Heavy / Light Vehicles) are not squeezed into half the card */}
+                  <div className="flex items-center gap-2 px-2 sm:px-3 pt-2 sm:pt-2.5 pb-2 border-b border-border/60">
+                    <div
+                      className="p-1 sm:p-1.5 rounded-md shrink-0 group-hover:scale-105 transition-transform bg-muted/60"
+                      style={{ color }}
+                    >
+                      <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" style={{ color }} />
+                    </div>
+                    <p
+                      className="min-w-0 flex-1 font-semibold text-xs sm:text-sm text-foreground leading-tight tracking-tight pr-10 sm:pr-11"
+                      title={name}
+                    >
+                      {name}
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-0">
+                    <div className="flex flex-col justify-center p-2 sm:p-3 sm:border-r sm:border-b-0 border-b border-border/60 sm:border-b-transparent">
+                      <p className="text-base sm:text-xl font-bold tabular-nums text-foreground">{stats.total.toLocaleString()}</p>
+                      <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5">{pct}% of fleet</p>
+                    </div>
+                    {statsColumn}
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </Link>
+        <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 z-[120] flex items-center gap-0.5">
+          <ChevronRight
+            className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-muted-foreground shrink-0 opacity-0 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0.5 pointer-events-none"
+            aria-hidden
+          />
+          <label
+            className="flex cursor-pointer items-center justify-center rounded-md border border-border/70 bg-background/95 p-1 shadow-sm dark:bg-background/90"
+            title={included ? 'Included in fleet KPI' : 'Excluded from fleet KPI'}
+            onClick={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+          >
+            <Checkbox
+              checked={included}
+              className="cursor-pointer"
+              onChange={(e) => {
+                onIncludedChange(e.target.checked);
+              }}
+            />
+          </label>
+        </div>
+      </div>
     </motion.div>
   );
 }
@@ -276,40 +412,7 @@ function FleetDownPopupPortal({
   );
 }
 
-function getCategoryStats(
-  statusSummary: Awaited<ReturnType<typeof fetchStatusSummary>> | null,
-  dbCategory: string
-) {
-  if (!statusSummary?.rows?.length) return { total: 0, op: 0, idle: 0, down: 0, downBreakdown: [] as { label: string; count: number }[] };
-  const rows = statusSummary.rows.filter((r) => r.category === dbCategory);
-  let total = 0;
-  let op = 0;
-  let idle = 0;
-  const downParts: Record<string, number> = { ur: 0, down: 0, hr: 0, ui: 0, wi: 0, uc: 0, rfd: 0, afd: 0, accident: 0, other: 0 };
-  for (const r of rows) {
-    total += r.total;
-    op += r.op;
-    idle += r.idle;
-    downParts.ur += r.ur;
-    downParts.down += r.down;
-    downParts.hr += r.hr;
-    downParts.ui += r.ui;
-    downParts.wi += r.wi;
-    downParts.uc += r.uc;
-    downParts.rfd += r.rfd;
-    downParts.afd += r.afd;
-    downParts.accident += r.accident;
-    downParts.other += r.other;
-  }
-  const down = Object.values(downParts).reduce((a, b) => a + b, 0);
-  const downBreakdown = Object.entries(downParts)
-    .filter(([, c]) => c > 0)
-    .map(([k, c]) => ({ label: DOWN_BREAKDOWN_LABELS[k] ?? k, count: c }))
-    .sort((a, b) => b.count - a.count);
-  return { total, op, idle, down, downBreakdown };
-}
-
-export default function EquipmentDashboardPage() {
+function EquipmentDashboardContent() {
   const searchParams = useSearchParams();
   const [stats, setStats] = useState<AssetStats | null>(null);
   const [report, setReport] = useState<AssetReportData | null>(null);
@@ -335,6 +438,12 @@ export default function EquipmentDashboardPage() {
   type LocationSortBy = (typeof locationSortColumns)[number];
   const [locationSortBy, setLocationSortBy] = useState<LocationSortBy>('location');
   const [locationSortOrder, setLocationSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [visibleCategorySlugs, setVisibleCategorySlugs] = useState<string[]>([
+    'plant-equipment',
+    'machinery',
+    'heavy-vehicles',
+    'light-vehicles',
+  ]);
   const routeTab = searchParams.get('tab');
   const routeSearch = searchParams.get('search') ?? undefined;
   const routeAssetId = searchParams.get('assetId') ?? undefined;
@@ -643,6 +752,88 @@ export default function EquipmentDashboardPage() {
         fill: LOCATION_CHART_COLORS[i % LOCATION_CHART_COLORS.length],
       })) ?? [];
 
+  const orderedSelectedCategories = useMemo(
+    () => EQUIPMENT_CATEGORIES.filter((c) => visibleCategorySlugs.includes(c.slug)),
+    [visibleCategorySlugs]
+  );
+  const topRowCategorySlugs = ['plant-equipment', 'machinery', 'heavy-vehicles', 'light-vehicles'] as const;
+  const bottomRowCategorySlugs = ['factory-equipment', 'auxiliary-equipment'] as const;
+  const topRowCategories = EQUIPMENT_CATEGORIES.filter((c) =>
+    (topRowCategorySlugs as readonly string[]).includes(c.slug)
+  );
+  const bottomRowCategories = EQUIPMENT_CATEGORIES.filter((c) =>
+    (bottomRowCategorySlugs as readonly string[]).includes(c.slug)
+  );
+  const selectedDbCategories = useMemo(
+    () => orderedSelectedCategories.map((c) => c.dbCategory),
+    [orderedSelectedCategories]
+  );
+  const selectedDbCategorySet = useMemo(
+    () => new Set(selectedDbCategories.map((c) => String(c).trim().toLowerCase().replace(/\s+/g, ' '))),
+    [selectedDbCategories]
+  );
+
+  const selectedSummaryRows = useMemo(
+    () => {
+      if (selectedDbCategories.length === 0) return [];
+      return (statusSummary?.rows ?? []).filter((r) =>
+        selectedDbCategorySet.has(String(r.category ?? '').trim().toLowerCase().replace(/\s+/g, ' '))
+      );
+    },
+    [statusSummary?.rows, selectedDbCategorySet]
+  );
+  const selectedTotal = useMemo(
+    () => selectedSummaryRows.reduce((sum, r) => sum + Number(r.total ?? 0), 0),
+    [selectedSummaryRows]
+  );
+  const selectedOp = useMemo(
+    () => selectedSummaryRows.reduce((sum, r) => sum + Number(r.op ?? 0), 0),
+    [selectedSummaryRows]
+  );
+  const selectedIdle = useMemo(
+    () => selectedSummaryRows.reduce((sum, r) => sum + Number(r.idle ?? 0), 0),
+    [selectedSummaryRows]
+  );
+  const selectedDown = useMemo(
+    () => Math.max(0, selectedTotal - selectedOp - selectedIdle),
+    [selectedTotal, selectedOp, selectedIdle]
+  );
+
+  const slugToLocationField: Record<string, keyof NonNullable<AssetReportData['locationBreakdown']>[number]> = {
+    'plant-equipment': 'plant',
+    'machinery': 'machinery',
+    'heavy-vehicles': 'heavy_vehicle',
+    'light-vehicles': 'light_vehicles',
+    'factory-equipment': 'factory_equipment',
+    'auxiliary-equipment': 'auxiliary',
+  };
+  const selectedLocationFields = useMemo(
+    () =>
+      orderedSelectedCategories.map((c) => slugToLocationField[c.slug]).filter(Boolean),
+    [orderedSelectedCategories]
+  );
+  const selectedProjectSites = useMemo(() => {
+    const rows = report?.locationBreakdown ?? [];
+    return rows.filter((row) => {
+      const location = String(row.location ?? '').trim();
+      if (!location || location === 'Unassigned') return false;
+      const selectedCount = selectedLocationFields.reduce((sum, field) => sum + Number(row[field] ?? 0), 0);
+      return selectedCount > 0;
+    }).length;
+  }, [report?.locationBreakdown, selectedLocationFields]);
+
+  const setCategoryVisibility = (slug: string, checked: boolean) => {
+    setVisibleCategorySlugs((prev) => {
+      const exists = prev.includes(slug);
+      if (checked && !exists) return [...prev, slug];
+      if (!checked && exists) {
+        if (prev.length <= 1) return prev;
+        return prev.filter((s) => s !== slug);
+      }
+      return prev;
+    });
+  };
+
   return (
     <Layout>
       <TooltipProvider>
@@ -654,11 +845,12 @@ export default function EquipmentDashboardPage() {
             animate={{ opacity: 1, y: 0 }}
             className="w-full"
           >
-            {loading ? (
-              <Skeleton className="h-40 min-w-0 rounded-lg w-full" />
-            ) : (
-              <Card className="min-w-0 w-full overflow-hidden rounded-xl border border-border/80 bg-gradient-to-br from-card via-card to-muted/20 shadow-lg">
+            <Card className="min-w-0 w-full overflow-hidden rounded-xl border border-border/80 bg-gradient-to-br from-card via-card to-muted/20 shadow-lg">
                 <CardContent className="p-4 sm:p-5">
+                  {loading ? (
+                    <Skeleton className="min-h-[130px] md:min-h-[180px] w-full rounded-lg" />
+                  ) : (
+                  <>
                   {/* Mobile: row 1 = Total Fleet, row 2 = [Project Sites | OP/Idle/Down]. Desktop: 3 columns */}
                   <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_2fr_minmax(0,1fr)] gap-3 sm:gap-4 items-stretch min-h-[130px] md:min-h-[180px]">
                     {/* Mobile row 1: Total Fleet (full width). Desktop: middle column */}
@@ -669,11 +861,11 @@ export default function EquipmentDashboardPage() {
                         setTimeout(() => allAssetsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
                       }}
                       title="Go to All Assets"
-                      className="order-1 md:order-2 flex flex-col items-center justify-center rounded-2xl bg-primary/10 dark:bg-primary/15 border border-primary/20 px-5 py-4 sm:py-6 sm:px-10 sm:py-8 min-w-0 shadow-inner ring-2 ring-primary/10 hover:bg-primary/15 dark:hover:bg-primary/20 transition-colors cursor-pointer focus:outline-none focus:ring-0"
+                      className="order-1 md:order-2 flex flex-col items-center justify-center rounded-2xl bg-primary/10 dark:bg-primary/15 border border-primary/20 px-5 py-4 sm:px-10 sm:py-8 min-w-0 shadow-inner ring-2 ring-primary/10 hover:bg-primary/15 dark:hover:bg-primary/20 transition-colors cursor-pointer focus:outline-none focus:ring-0"
                     >
                       <span className="text-xs sm:text-sm font-bold uppercase tracking-[0.2em] text-muted-foreground">Total Fleet</span>
                       <p className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold tabular-nums text-foreground mt-2 tracking-tight drop-shadow-sm">
-                        {animatedTotal.toLocaleString()}
+                        {(selectedTotal > 0 ? selectedTotal : 0).toLocaleString()}
                       </p>
                       <span className="text-sm text-muted-foreground mt-1.5 font-medium">Equipment units</span>
                     </button>
@@ -691,27 +883,33 @@ export default function EquipmentDashboardPage() {
                         className="md:order-1 flex flex-col items-center justify-center rounded-xl border border-border bg-muted/30 dark:bg-muted/20 px-3 py-3 sm:px-4 sm:py-5 min-w-0 hover:bg-muted/50 dark:hover:bg-muted/30 transition-colors cursor-pointer focus:outline-none focus:ring-0"
                       >
                         <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-muted-foreground">Project Sites</span>
-                        <p className="text-xl sm:text-3xl font-extrabold tabular-nums text-foreground mt-1">{totalProjectSites}</p>
+                        <p className="text-xl sm:text-3xl font-extrabold tabular-nums text-foreground mt-1">{selectedProjectSites}</p>
                         <span className="text-[9px] sm:text-xs text-muted-foreground mt-0.5">Active locations</span>
                       </button>
 
                       {/* 4 quadrants — OP, Idle, Down %, Down count */}
                       <div className="md:order-3 grid grid-cols-2 gap-1.5 sm:gap-2 min-w-0">
-                      <div className="rounded-lg border border-green-200 dark:border-green-800/50 bg-green-50/50 dark:bg-green-950/20 px-2.5 py-2 sm:py-2.5 flex flex-col justify-center text-center">
-                        <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">OP</span>
-                        <span className="text-base sm:text-lg font-extrabold tabular-nums text-green-600 dark:text-green-500 mt-0.5">{totalOp}</span>
-                        <span className="text-[10px] text-muted-foreground leading-tight mt-0.5">Operational</span>
-                      </div>
-                      <div className="rounded-lg border border-blue-200 dark:border-blue-800/50 bg-blue-50/50 dark:bg-blue-950/20 px-2.5 py-2 sm:py-2.5 flex flex-col justify-center text-center">
-                        <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">Idle</span>
-                        <span className="text-base sm:text-lg font-extrabold tabular-nums text-blue-600 dark:text-blue-500 mt-0.5">{totalIdle}</span>
-                        <span className="text-[10px] text-muted-foreground leading-tight mt-0.5">Standby</span>
-                      </div>
+                      <FlipStatCard
+                        label="OP"
+                        value={selectedOp}
+                        subtitle="Operational"
+                        pct={selectedTotal ? Math.round((selectedOp / selectedTotal) * 100) : 0}
+                        valueClassName="text-green-600 dark:text-green-500"
+                        className="rounded-lg border-green-200 dark:border-green-800/50 bg-green-50/50 dark:bg-green-950/20"
+                      />
+                      <FlipStatCard
+                        label="Idle"
+                        value={selectedIdle}
+                        subtitle="Standby"
+                        pct={selectedTotal ? Math.round((selectedIdle / selectedTotal) * 100) : 0}
+                        valueClassName="text-blue-600 dark:text-blue-500"
+                        className="rounded-lg border-blue-200 dark:border-blue-800/50 bg-blue-50/50 dark:bg-blue-950/20"
+                      />
                       {/* Line between first and second row — minimal space */}
                       <div className="col-span-2 border-t border-border/80 my-0 shrink-0" />
                       <div className="rounded-lg border border-border bg-destructive/5 dark:bg-destructive/10 px-2.5 py-2 sm:py-2.5 flex flex-col justify-center text-center">
                         <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">Down</span>
-                        <span className="text-base sm:text-lg font-extrabold tabular-nums text-destructive mt-0.5">{total ? Math.round((totalDown / total) * 100) : 0}%</span>
+                        <span className="text-base sm:text-lg font-extrabold tabular-nums text-destructive mt-0.5">{selectedTotal ? Math.round((selectedDown / selectedTotal) * 100) : 0}%</span>
                         <span className="text-[10px] text-muted-foreground leading-tight mt-0.5">Out of service</span>
                       </div>
                       <div
@@ -736,15 +934,16 @@ export default function EquipmentDashboardPage() {
                         }}
                       >
                         <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">Down</span>
-                        <span className="text-base sm:text-lg font-extrabold tabular-nums text-destructive mt-1 underline decoration-dotted decoration-destructive/50 underline-offset-1">{totalDown}</span>
+                        <span className="text-base sm:text-lg font-extrabold tabular-nums text-destructive mt-1 underline decoration-dotted decoration-destructive/50 underline-offset-1">{selectedDown}</span>
                         <span className="text-[10px] text-muted-foreground leading-tight mt-0.5">Out of service</span>
                       </div>
                       </div>
                     </div>
                   </div>
+                  </>
+                  )}
                 </CardContent>
               </Card>
-            )}
           </motion.div>
 
           {fleetDownPopup && (
@@ -768,28 +967,72 @@ export default function EquipmentDashboardPage() {
             />
           )}
 
-          {/* 6 KPI cards: 2 rows × 3 columns on mobile and desktop (previous layout on PC) */}
-          <div className="grid grid-cols-3 gap-2 sm:gap-3">
+          <div className="space-y-2 sm:space-y-3">
             {loading ? (
-              [...Array(6)].map((_, i) => <Skeleton key={i} className="h-28 sm:h-32 rounded-lg" />)
+              <>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+                  {[...Array(4)].map((_, i) => (
+                    <Skeleton key={`kpi-top-${i}`} className="h-28 sm:h-32 rounded-lg" />
+                  ))}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                  {[...Array(2)].map((_, i) => (
+                    <Skeleton key={`kpi-bottom-${i}`} className="h-28 sm:h-32 rounded-lg" />
+                  ))}
+                </div>
+              </>
             ) : (
-              EQUIPMENT_CATEGORIES.map((cat, i) => {
-                const Icon = iconMap[cat.slug] ?? FileText;
-                const s = getCategoryStats(statusSummary, cat.dbCategory);
-                const pct = total ? Math.round((s.total / total) * 100) : 0;
-                return (
-                  <CategoryCard
-                    key={cat.slug}
-                    slug={cat.slug}
-                    name={cat.name}
-                    icon={Icon}
-                    color={COLORS[i]}
-                    stats={s}
-                    pct={pct}
-                    index={i}
-                  />
-                );
-              })
+              <>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+                  {topRowCategories.map((cat, i) => {
+                    const isSelected = visibleCategorySlugs.includes(cat.slug);
+                    const Icon = iconMap[cat.slug] ?? FileText;
+                    const s = getCategoryStats(statusSummary, cat.dbCategory);
+                    const pct = total ? Math.round((s.total / total) * 100) : 0;
+                    const idx = EQUIPMENT_CATEGORIES.findIndex((c) => c.slug === cat.slug);
+                    return (
+                      <CategoryCard
+                        key={cat.slug}
+                        slug={cat.slug}
+                        name={cat.name}
+                        icon={Icon}
+                        color={COLORS[idx >= 0 ? idx : i]}
+                        stats={s}
+                        pct={pct}
+                        index={idx >= 0 ? idx : i}
+                        muted={!isSelected}
+                        included={isSelected}
+                        onIncludedChange={(checked) => setCategoryVisibility(cat.slug, checked)}
+                      />
+                    );
+                  })}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                  {bottomRowCategories.map((cat, i) => {
+                    const isSelected = visibleCategorySlugs.includes(cat.slug);
+                    const Icon = iconMap[cat.slug] ?? FileText;
+                    const s = getCategoryStats(statusSummary, cat.dbCategory);
+                    const pct = total ? Math.round((s.total / total) * 100) : 0;
+                    const idx = EQUIPMENT_CATEGORIES.findIndex((c) => c.slug === cat.slug);
+                    return (
+                      <CategoryCard
+                        key={cat.slug}
+                        slug={cat.slug}
+                        name={cat.name}
+                        icon={Icon}
+                        color={COLORS[idx >= 0 ? idx : i]}
+                        stats={s}
+                        pct={pct}
+                        index={idx >= 0 ? idx : i}
+                        muted={!isSelected}
+                        included={isSelected}
+                        titleLayout="inline"
+                        onIncludedChange={(checked) => setCategoryVisibility(cat.slug, checked)}
+                      />
+                    );
+                  })}
+                </div>
+              </>
             )}
           </div>
 
@@ -1690,5 +1933,19 @@ export default function EquipmentDashboardPage() {
         </div>
       </TooltipProvider>
     </Layout>
+  );
+}
+
+export default function EquipmentDashboardPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-[50vh] w-full items-center justify-center text-muted-foreground">
+          Loading dashboard…
+        </div>
+      }
+    >
+      <EquipmentDashboardContent />
+    </Suspense>
   );
 }

@@ -66,7 +66,7 @@ export default function FormModal({ isOpen, onClose, title, children }: FormModa
             </div>
 
             {/* Form content — no padding/margin; form sits flush with body */}
-            <div className="flex-1 min-h-0 flex flex-col overflow-hidden p-0 m-0">
+            <div className="flex-1 min-h-0 flex flex-col overflow-y-auto overflow-x-hidden p-0 m-0">
               {children}
             </div>
 

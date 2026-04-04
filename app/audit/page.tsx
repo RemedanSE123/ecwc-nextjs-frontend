@@ -19,24 +19,9 @@ import { exportAssetsToCsv } from '@/lib/export-utils';
 import { apiUrl } from '@/lib/api-client';
 import { History, Download, ChevronLeft, ChevronRight, X, User, Clock, Hash, Activity, FileText, Columns, Calendar, FilterX, Filter } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { getAuthHeaders } from '@/lib/auth';
 
-const ACTIONS = [
-  { value: '', label: 'All actions' },
-  { value: 'login', label: 'Login' },
-  { value: 'logout', label: 'Logout' },
-  { value: 'asset_create', label: 'Asset create' },
-  { value: 'asset_update', label: 'Asset update' },
-  { value: 'asset_delete', label: 'Asset delete' },
-  { value: 'asset_upload', label: 'Asset upload' },
-  { value: 'heavy_vehicle_details_update', label: 'Heavy vehicle details update' },
-  { value: 'heavy_vehicle_rates_update', label: 'Heavy vehicle rate update' },
-  { value: 'light_vehicle_details_update', label: 'Light vehicle details update' },
-  { value: 'light_vehicle_rates_update', label: 'Light vehicle rate update' },
-  { value: 'machinery_details_update', label: 'Machinery details update' },
-  { value: 'machinery_rates_update', label: 'Machinery rate update' },
-  { value: 'plant_rates_update', label: 'Plant rate update' },
-  { value: 'aux_generator_rates_update', label: 'Auxiliary generator rate update' },
-];
+const ACTIONS = [{ value: '', label: 'All actions' }];
 
 const ENTITY_TYPES = [
   { value: '', label: 'All' },
@@ -83,8 +68,8 @@ function formatDateTime(iso: string): string {
 }
 
 function formatAction(action: string): string {
-  const found = ACTIONS.find((a) => a.value === action);
-  return found?.label ?? action;
+  const normalized = action.replace(/[:_]/g, ' ');
+  return normalized.replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 /** Badge style by action type for table and modal */
@@ -240,9 +225,19 @@ function renderAssetUpdateDetails(details: Record<string, unknown> | null): Reac
     return <p className="text-sm text-muted-foreground">— No extra details</p>;
   }
   const anyDetails = details as any;
-  const previous = (anyDetails.previous_data as Record<string, unknown> | undefined) ?? null;
-  const updated = (anyDetails.updated_data as Record<string, unknown> | undefined) ?? null;
-  const changes = (anyDetails.changes as Array<{ field?: string; from?: string | null; to?: string | null }> | undefined) ?? [];
+  const previous =
+    (anyDetails.before as Record<string, unknown> | undefined) ??
+    (anyDetails.previous_data as Record<string, unknown> | undefined) ??
+    null;
+  const updated =
+    (anyDetails.after as Record<string, unknown> | undefined) ??
+    (anyDetails.updated_data as Record<string, unknown> | undefined) ??
+    null;
+  const metadata = (anyDetails.metadata as Record<string, unknown> | undefined) ?? {};
+  const changes =
+    (anyDetails.changes as Array<{ field?: string; from?: string | null; to?: string | null }> | undefined) ??
+    (metadata.changes as Array<{ field?: string; from?: string | null; to?: string | null }> | undefined) ??
+    [];
 
   const hasPrevious = previous && typeof previous === 'object' && Object.keys(previous).length > 0;
   const hasUpdated = updated && typeof updated === 'object' && Object.keys(updated).length > 0;
@@ -290,6 +285,16 @@ function renderAssetUpdateDetails(details: Record<string, unknown> | null): Reac
 function isAssetFieldUpdateAction(action: string): boolean {
   return (
     action === 'asset_update' ||
+    action === 'asset:update' ||
+    action === 'asset:create' ||
+    action === 'asset:delete' ||
+    action === 'asset:upload' ||
+    action === 'project:update' ||
+    action === 'project:upsert' ||
+    action === 'project:delete' ||
+    action === 'auth:login' ||
+    action === 'auth:logout' ||
+    action === 'employee:approve' ||
     action === 'heavy_vehicle_details_update' ||
     action === 'heavy_vehicle_rates_update' ||
     action === 'light_vehicle_details_update' ||
@@ -351,7 +356,7 @@ function formatDetailValue(key: string, v: unknown): ReactNode {
   if (key === 'created_fields' && v !== null && typeof v === 'object' && !Array.isArray(v)) {
     return renderAssetData(v as Record<string, unknown>);
   }
-  if ((key === 'previous_data' || key === 'updated_data' || key === 'deleted_asset' || key === 'asset_snapshot') && v !== null && typeof v === 'object' && !Array.isArray(v)) {
+  if ((key === 'before' || key === 'after' || key === 'previous_data' || key === 'updated_data' || key === 'deleted_asset' || key === 'asset_snapshot') && v !== null && typeof v === 'object' && !Array.isArray(v)) {
     return renderAssetData(v as Record<string, unknown>);
   }
   if (key === 'changed_fields' && Array.isArray(v)) {
@@ -395,16 +400,21 @@ function getPlainEnglishSummary(entry: AuditLogEntry): string {
     const reason = details.reason as string | undefined;
     return reason ? `${who} signed out (${reason}).` : `${who} signed out.`;
   }
-  if (action === 'asset_create') {
-    const created = details.created_fields as Record<string, unknown> | undefined;
+  if (action === 'asset_create' || action === 'asset:create') {
+    const created =
+      (details.after as Record<string, unknown> | undefined) ??
+      (details.created_fields as Record<string, unknown> | undefined);
     const parts = created && typeof created === 'object' ? Object.entries(created).filter(([, v]) => v != null && v !== '') : [];
     if (parts.length === 0) return `${who} created a new asset${entityId}.`;
     const preview = parts.slice(0, 3).map(([k]) => FIELD_LABELS[k] ?? formatDetailKey(k)).join(', ');
     const more = parts.length > 3 ? ` and ${parts.length - 3} more` : '';
     return `${who} created a new asset${entityId} with: ${preview}${more}.`;
   }
-  if (action === 'asset_update') {
-    const changes = details.changes as Array<{ field: string; from?: string | null; to?: string | null }> | undefined;
+  if (action === 'asset_update' || action === 'asset:update') {
+    const metadata = (details.metadata as Record<string, unknown> | undefined) ?? {};
+    const changes =
+      (details.changes as Array<{ field: string; from?: string | null; to?: string | null }> | undefined) ??
+      (metadata.changes as Array<{ field: string; from?: string | null; to?: string | null }> | undefined);
     if (changes?.length) {
       const first = changes[0];
       const label = FIELD_LABELS[first.field] ?? formatDetailKey(first.field);
@@ -421,8 +431,10 @@ function getPlainEnglishSummary(entry: AuditLogEntry): string {
     }
     return `${who} updated asset${entityId}.`;
   }
-  if (action === 'asset_delete') {
-    const deleted = details.deleted_asset as Record<string, unknown> | undefined;
+  if (action === 'asset_delete' || action === 'asset:delete') {
+    const deleted =
+      (details.before as Record<string, unknown> | undefined) ??
+      (details.deleted_asset as Record<string, unknown> | undefined);
     const idStr = details.deleted_id ?? entry.entity_id ?? '';
     if (deleted && typeof deleted === 'object' && (deleted.asset_no || deleted.description)) {
       const label = [deleted.asset_no, deleted.description].filter(Boolean).join(' – ');
@@ -430,7 +442,7 @@ function getPlainEnglishSummary(entry: AuditLogEntry): string {
     }
     return `${who} deleted asset #${idStr}.`;
   }
-  if (action === 'asset_upload') {
+  if (action === 'asset_upload' || action === 'asset:upload') {
     const fn = details.filename as string | undefined;
     const snap = details.asset_snapshot as Record<string, unknown> | undefined;
     const which = snap && typeof snap === 'object' ? [snap.asset_no, snap.description].filter(Boolean).join(' – ') : null;
@@ -453,6 +465,8 @@ export default function AuditPage() {
   const [limit, setLimit] = useState(50);
   const [response, setResponse] = useState<AuditResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [actionOptions, setActionOptions] = useState<Array<{ value: string; label: string }>>(ACTIONS);
   const [exporting, setExporting] = useState(false);
   const [selectedRow, setSelectedRow] = useState<AuditLogEntry | null>(null);
   const [showEntityId, setShowEntityId] = useState(false);
@@ -488,6 +502,7 @@ export default function AuditPage() {
 
   const fetchAudit = useCallback(async () => {
     setLoading(true);
+    setAuthError(null);
     const params = new URLSearchParams();
     if (userPhone) params.set('user_phone', userPhone);
     if (action) params.set('action', action);
@@ -506,8 +521,19 @@ export default function AuditPage() {
     params.set('limit', String(limit));
     params.set('sort', sort);
     try {
-      const res = await fetch(apiUrl(`/api/v1/audit?${params.toString()}`));
-      if (!res.ok) throw new Error('Failed to fetch audit log');
+      const res = await fetch(apiUrl(`/api/v1/audit?${params.toString()}`), {
+        headers: { ...getAuthHeaders() },
+      });
+      if (!res.ok) {
+        if (res.status === 401) {
+          setAuthError('Your session is not authenticated. Please sign in again.');
+        } else if (res.status === 403) {
+          setAuthError('You do not have permission to view Audit Trail.');
+        } else {
+          setAuthError('Failed to fetch audit records.');
+        }
+        throw new Error('Failed to fetch audit log');
+      }
       const data: AuditResponse = await res.json();
       setResponse(data);
     } catch (err) {
@@ -521,6 +547,24 @@ export default function AuditPage() {
   useEffect(() => {
     fetchAudit();
   }, [fetchAudit]);
+
+  useEffect(() => {
+    const loadActions = async () => {
+      try {
+        const res = await fetch(apiUrl('/api/v1/audit/actions'), { headers: { ...getAuthHeaders() } });
+        if (!res.ok) return;
+        const json = await res.json().catch(() => ({ data: [] }));
+        const dynamic = (json.data ?? [])
+          .map((row: { action?: string }) => String(row.action ?? '').trim())
+          .filter(Boolean)
+          .map((value: string) => ({ value, label: formatAction(value) }));
+        setActionOptions([{ value: '', label: 'All actions' }, ...dynamic]);
+      } catch {
+        // Keep fallback options
+      }
+    };
+    void loadActions();
+  }, []);
 
   const handleExportCsv = () => {
     if (!response?.data?.length) return;
@@ -622,7 +666,7 @@ export default function AuditPage() {
                     <SelectValue placeholder="All actions" />
                   </SelectTrigger>
                   <SelectContent>
-                    {ACTIONS.map((a) => (
+                    {actionOptions.map((a) => (
                       <SelectItem key={a.value || 'all'} value={a.value || 'all'}>
                         {a.label}
                       </SelectItem>
@@ -824,7 +868,18 @@ export default function AuditPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {data.length === 0 ? (
+                      {authError ? (
+                        <tr>
+                          <td colSpan={5 + (showPhoneNumber ? 1 : 0) + (showSessionId ? 1 : 0) + (showEntityType ? 1 : 0) + (showEntityId ? 1 : 0)} className="p-12 text-center">
+                            <div className="flex flex-col items-center gap-3 text-muted-foreground">
+                              <div className="rounded-full bg-destructive/10 p-4">
+                                <History className="h-8 w-8 text-destructive/70" />
+                              </div>
+                              <p className="text-sm font-medium text-destructive">{authError}</p>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : data.length === 0 ? (
                         <tr>
                           <td colSpan={5 + (showPhoneNumber ? 1 : 0) + (showSessionId ? 1 : 0) + (showEntityType ? 1 : 0) + (showEntityId ? 1 : 0)} className="p-12 text-center">
                             <div className="flex flex-col items-center gap-3 text-muted-foreground">

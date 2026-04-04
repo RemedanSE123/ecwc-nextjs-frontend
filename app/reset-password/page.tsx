@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, Suspense } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 
@@ -14,7 +14,14 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { resetPassword } from "@/lib/api/auth"
 import { Loader2, Lock } from "lucide-react"
 
-export default function ResetPasswordPage() {
+function passwordMeetsRules(password: string): boolean {
+  if (password.length < 6) return false
+  if (!/[A-Za-z]/.test(password)) return false
+  if (!/[0-9]/.test(password)) return false
+  return true
+}
+
+function ResetPasswordContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const token = searchParams.get("token") || ""
@@ -28,7 +35,7 @@ export default function ResetPasswordPage() {
   const tokenAvailable = useMemo(() => token.trim().length > 0, [token])
 
   useEffect(() => {
-    if (!tokenAvailable) setError("Reset token is missing.")
+    if (!tokenAvailable) setError("This reset link is invalid or incomplete. Please request a new link from the sign-in page.")
   }, [tokenAvailable])
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -37,11 +44,11 @@ export default function ResetPasswordPage() {
     setSuccess("")
 
     if (!tokenAvailable) {
-      setError("Reset token is missing.")
+      setError("This reset link is invalid or incomplete. Please request a new link from the sign-in page.")
       return
     }
-    if (!newPassword || newPassword.length < 8) {
-      setError("Password must be at least 8 characters.")
+    if (!passwordMeetsRules(newPassword)) {
+      setError("Password must be at least 6 characters and include at least one letter and one number.")
       return
     }
     if (newPassword !== confirm) {
@@ -52,8 +59,8 @@ export default function ResetPasswordPage() {
     setIsLoading(true)
     try {
       const resp = await resetPassword(token, newPassword)
-      setSuccess(resp.message || "Password reset successful.")
-      setTimeout(() => router.push("/sign-in"), 2200)
+      setSuccess(resp.message || "Your password has been updated. You may now sign in.")
+      setTimeout(() => router.push("/sign-in"), 2800)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to reset password.")
     } finally {
@@ -65,9 +72,9 @@ export default function ResetPasswordPage() {
     <div className="min-h-screen bg-background flex items-center justify-center px-4 py-10">
       <Card className="w-full max-w-md shadow-2xl">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl">Reset Password</CardTitle>
+          <CardTitle className="text-2xl">Set a new password</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Enter a new password for your account.
+            Choose a new password for your ECWC PEMS account. After saving, sign in with your email or phone and the new password.
           </p>
         </CardHeader>
         <CardContent>
@@ -87,7 +94,7 @@ export default function ResetPasswordPage() {
                 id="newPassword"
                 name="newPassword"
                 type="password"
-                placeholder="Enter new password"
+                placeholder="At least 6 characters, letters and numbers"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 disabled={isLoading}
@@ -120,9 +127,12 @@ export default function ResetPasswordPage() {
               )}
             </Button>
 
+            <p className="text-xs text-muted-foreground">
+              Use at least 6 characters, including at least one letter (A–Z) and one number (0–9), matching your registration rules.
+            </p>
             <div className="pt-2 text-sm text-muted-foreground flex items-center justify-between">
               <Link href="/sign-in" className="text-[#70c82a] hover:underline">
-                Back to Sign In
+                Back to sign-in
               </Link>
             </div>
           </form>
@@ -132,3 +142,16 @@ export default function ResetPasswordPage() {
   )
 }
 
+export default function ResetPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      }
+    >
+      <ResetPasswordContent />
+    </Suspense>
+  )
+}

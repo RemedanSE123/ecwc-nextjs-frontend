@@ -151,6 +151,26 @@ function highlightText(text: string | null | undefined, searchRegex: RegExp | nu
 
 const INFINITE_SCROLL_PAGE_SIZE = 50;
 
+/**
+ * Master / shared fields every asset has — used for "All Assets" dashboard completeness only.
+ * Category-specific pages show full completeness (incl. Plate No, Engine, etc.).
+ */
+const CORE_ASSET_COMPLETENESS_LABELS: readonly string[] = [
+  'Image',
+  'Location',
+  'Category',
+  'Asset No',
+  'Description',
+  'Serial No',
+  'Make',
+  'Model',
+  'Status',
+  'Responsible',
+  'Phone',
+  'Ownership',
+  'Remark',
+];
+
 interface EquipmentDataViewProps {
   categoryGroup?: string;
   categoryName: string;
@@ -214,6 +234,9 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
       ...f,
       asset_id: focusAssetId ?? f.asset_id,
       category_group: categoryGroup,
+      // Category picker is hidden for grouped pages; clear stale category filters
+      // so completeness and list data are scoped only by category_group.
+      category: categoryGroup ? undefined : f.category,
       page: 1,
       limit,
       search: initialSearch?.trim() || f.search,
@@ -502,6 +525,19 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
 
   const searchRegex = useMemo(() => getSearchRegex(filters.search ?? ''), [filters.search]);
 
+  /** All Assets: core columns only. Category routes: every column returned by API (detail fields included). */
+  const completenessColumnEntries = useMemo(() => {
+    if (!completeness?.columns) return [] as [string, NonNullable<typeof completeness>['columns'][string]][];
+    const raw = completeness.columns;
+    if (categoryGroup) {
+      return Object.entries(raw) as [string, (typeof raw)[string]][];
+    }
+    return CORE_ASSET_COMPLETENESS_LABELS.map((label) => {
+      const v = raw[label];
+      return v != null ? ([label, v] as const) : null;
+    }).filter((x): x is [string, (typeof raw)[string]] => x != null);
+  }, [completeness, categoryGroup]);
+
   const sortedData = useMemo(() => {
     const key = assetsTableSortBy;
     const order = assetsTableSortOrder === 'asc' ? 1 : -1;
@@ -559,25 +595,28 @@ export default function EquipmentDataView({ categoryGroup, categoryName, initial
   return (
     <div className="space-y-6">
       {/* Column completeness report — collapsed by default */}
-      {completeness && completeness.total > 0 && (
+      {completeness && completeness.total > 0 && completenessColumnEntries.length > 0 && (
         <Card className="border-border bg-muted/20 dark:bg-muted/10">
           <CardHeader
             className="py-3 px-4 cursor-pointer hover:bg-muted/30 dark:hover:bg-muted/20 transition-colors rounded-t-lg"
             onClick={() => setDataCompletenessOpen((o) => !o)}
           >
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
               <CardTitle className="text-sm font-semibold flex items-center gap-2 text-foreground">
                 {dataCompletenessOpen ? <ChevronDown className="w-4 h-4 shrink-0" /> : <ChevronRight className="w-4 h-4 shrink-0" />}
                 <BarChart2 className="w-4 h-4 text-muted-foreground" />
                 Data completeness ({completeness.total} assets)
               </CardTitle>
-              <span className="text-xs text-muted-foreground">% empty per column</span>
+              <div className="flex flex-col items-start sm:items-end gap-0.5">
+                <span className="text-xs text-muted-foreground">% empty per column</span>
+              
+              </div>
             </div>
           </CardHeader>
           {dataCompletenessOpen && (
             <CardContent className="pt-0 px-4 pb-4">
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                {Object.entries(completeness.columns).map(([col, v]) => (
+                {completenessColumnEntries.map(([col, v]) => (
                   <div key={col} className="p-3 rounded-lg bg-background border border-border text-[11px]">
                     <div className="flex justify-between items-center font-medium mb-1.5 gap-2">
                       <span className="truncate text-foreground">{col}</span>

@@ -68,7 +68,19 @@ export async function registerAuth(payload: {
       body: JSON.stringify(payload),
     });
     const body = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(body?.detail || "Registration failed");
+    if (!res.ok) {
+      const d = body?.detail;
+      const message =
+        typeof d === "string"
+          ? d
+          : Array.isArray(d)
+            ? d
+                .map((e: { msg?: string }) => e?.msg)
+                .filter(Boolean)
+                .join(" ") || "Registration failed"
+            : "Registration failed";
+      throw new Error(message);
+    }
     return body as { message: string };
   } catch (err) {
     if (err instanceof TypeError) {
@@ -127,7 +139,7 @@ export async function fetchWorkLocations(): Promise<Array<{ id: string; name: st
 }
 
 export async function fetchProjectsForLocation(): Promise<Array<{ id: string; project_name: string; status: string }>> {
-  const res = await fetch(apiUrl("/api/v1/projects"));
+  const res = await fetch(apiUrl("/api/v1/projects?status=active"));
   if (!res.ok) throw new Error("Failed to fetch projects");
   return res.json();
 }

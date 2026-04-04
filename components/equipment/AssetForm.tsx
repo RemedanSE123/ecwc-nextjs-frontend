@@ -213,6 +213,10 @@ export default function AssetForm({
     return false;
   }, [asset?.category, form.category, asset?.description, form.description]);
 
+  /** Rental equipment does not use internal hourly Birr rates — hide fields and submit nulls */
+  const isRentalOwnership = form.ownership === 'Rental';
+  const showRatesSection = shouldShowRates && !isRentalOwnership;
+
   // When category changes, clear description if it's not in the new category's list (create mode)
   useEffect(() => {
     if (isEdit || !form.category) return;
@@ -249,6 +253,11 @@ export default function AssetForm({
       setImageFile(null);
     }
   }, [asset?.id, asset, defaultCategory]);
+
+  const emptyRates = { rate_op: '', rate_idle: '', rate_down: '' } as const;
+  const ratesForForm = (
+    rates: { rate_op: string; rate_idle: string; rate_down: string }
+  ) => (asset?.ownership === 'Rental' ? { ...emptyRates } : rates);
 
   // Load existing detail rates for edit mode
   useEffect(() => {
@@ -309,9 +318,10 @@ export default function AssetForm({
               insurance_coverage: d.insurance_coverage ?? '',
               bolo_renewal_date: d.bolo_renewal_date ?? '',
             };
-            setDetailRates(rates);
+            const r = ratesForForm(rates);
+            setDetailRates(r);
             setDetailFields(fields);
-            if (!initialDetailRates) setInitialDetailRates(rates);
+            if (!initialDetailRates) setInitialDetailRates(r);
             if (!initialDetailFields) setInitialDetailFields(fields);
             return;
           }
@@ -353,8 +363,9 @@ export default function AssetForm({
               rate_idle: d.rate_idle != null ? String(d.rate_idle) : '',
               rate_down: d.rate_down != null ? String(d.rate_down) : '',
             };
-            setDetailRates(rates);
-            if (!initialDetailRates) setInitialDetailRates(rates);
+            const r = ratesForForm(rates);
+            setDetailRates(r);
+            if (!initialDetailRates) setInitialDetailRates(r);
             return;
           }
         } else if (cat === AUXILIARY_CATEGORY && desc.includes('generator')) {
@@ -366,8 +377,9 @@ export default function AssetForm({
               rate_idle: d.rate_idle != null ? String(d.rate_idle) : '',
               rate_down: d.rate_down != null ? String(d.rate_down) : '',
             };
-            setDetailRates(rates);
-            if (!initialDetailRates) setInitialDetailRates(rates);
+            const r = ratesForForm(rates);
+            setDetailRates(r);
+            if (!initialDetailRates) setInitialDetailRates(r);
             return;
           }
         }
@@ -376,10 +388,13 @@ export default function AssetForm({
       }
     };
     load();
-  }, [asset?.id, asset?.category, asset?.description, initialDetailFields, initialDetailRates]);
+  }, [asset?.id, asset?.category, asset?.description, asset?.ownership, initialDetailFields, initialDetailRates]);
 
   const update = (key: string, value: string) => {
     setForm((f) => ({ ...f, [key]: value }));
+    if (key === 'ownership' && value === 'Rental') {
+      setDetailRates({ ...emptyRates });
+    }
     setError(null);
     setSuccess(null);
   };
@@ -430,7 +445,26 @@ export default function AssetForm({
       setError('Category and description are required.');
       return;
     }
+    if (!isEdit && !form.project_name.trim()) {
+      setError('Project location is required.');
+      return;
+    }
     setError(null);
+
+    const toNum = (v: string): number | null => {
+      const trimmed = v.trim();
+      if (!trimmed) return null;
+      const n = Number(trimmed);
+      return Number.isNaN(n) ? null : n;
+    };
+    const ratesAllowed = shouldShowRates && form.ownership !== 'Rental';
+    const ratePayload = ratesAllowed
+      ? {
+          rate_op: toNum(detailRates.rate_op),
+          rate_idle: toNum(detailRates.rate_idle),
+          rate_down: toNum(detailRates.rate_down),
+        }
+      : { rate_op: null, rate_idle: null, rate_down: null };
 
     setSaving(true);
     try {
@@ -440,17 +474,6 @@ export default function AssetForm({
 
         const cat = form.category;
         const desc = form.description.toLowerCase();
-        const toNum = (v: string): number | null => {
-          const trimmed = v.trim();
-          if (!trimmed) return null;
-          const n = Number(trimmed);
-          return Number.isNaN(n) ? null : n;
-        };
-        const ratePayload = {
-          rate_op: toNum(detailRates.rate_op),
-          rate_idle: toNum(detailRates.rate_idle),
-          rate_down: toNum(detailRates.rate_down),
-        };
         try {
           if (cat === HEAVY_VEHICLE_CATEGORY) {
             await updateHeavyVehicleRates(asset.id, ratePayload);
@@ -726,9 +749,11 @@ export default function AssetForm({
               </SelectContent>
             </Select>
           </div>
-          {/* Project Location */}
+          {/* Project Location (required on create) */}
           <div className="space-y-2">
-            <Label htmlFor="project_name">Project Location</Label>
+            <Label htmlFor="project_name">
+              Project Location{!isEdit ? <span className="text-destructive"> *</span> : null}
+            </Label>
             <SearchableCombobox
               id="project_name"
               value={form.project_name}
@@ -736,7 +761,7 @@ export default function AssetForm({
               options={projectLocationOptions}
               placeholder="Type to search location"
               loading={allFacetsLoading}
-              allowEmpty
+              allowEmpty={isEdit}
             />
           </div>
         </div>
@@ -1096,7 +1121,7 @@ export default function AssetForm({
           </Select>
         </div>
 
-        {shouldShowRates && (
+        {showRatesSection && (
           <div className="space-y-2 sm:col-span-2">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Rates (Birr per hour)
