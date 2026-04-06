@@ -14,6 +14,7 @@ import {
   Select,
   SelectItem,
 } from "@/components/ui/select"
+import { SearchableCombobox } from "@/components/ui/searchable-combobox"
 import Image from "next/image"
 import {
   Loader2,
@@ -84,8 +85,11 @@ function isKalitySiteExcludingProjectSite(locationName: string | undefined): boo
   return n.includes("kality")
 }
 
+/** PEM and equivalent heads (maintenance, etc.) at Kality — no separate line manager on sign-up. */
 function isPlantEquipmentManagerTitle(jobTitle: string | undefined): boolean {
-  return normalizeTitleForCompare(jobTitle || "") === "plant and equipment manager"
+  const n = normalizeTitleForCompare(jobTitle || "")
+  if (!n) return false
+  return n === "plant and equipment manager"
 }
 
 /** Line manager omitted for Plant & Equipment Manager at any Kality site (not Project Site). */
@@ -140,24 +144,18 @@ interface WorkLocation {
   city: string
 }
 
-/** Supervisors from Kality (any) and Project Site locations — used when the user selects Project Site. */
-function workLocationIdsKalityOrProjectSite(locations: WorkLocation[]): string[] {
-  const ids = new Set<string>()
-  for (const loc of locations) {
-    const n = loc.name.trim().toLowerCase()
-    if (n.includes("kality") || n.includes("project site")) {
-      ids.add(loc.id)
-    }
-  }
-  return Array.from(ids)
-}
-
 interface ReferenceData {
   departments: Department[]
   positions: Position[]
   workLocations: WorkLocation[]
   projects: { id: string; name: string }[]
-  supervisors: { id: string; full_name: string; job_title?: string | null }[]
+  supervisors: {
+    id: string
+    full_name: string
+    job_title?: string | null
+    department_name?: string | null
+    work_location_name?: string | null
+  }[]
 }
 
 const TOTAL_STEPS = 3
@@ -174,7 +172,7 @@ export default function SignUpPage() {
     position: "",
     workLocation: "",
     projectLocation: "",
-    supervisor: "",
+    supervisorId: "",
     jobTitle: "",
     password: "",
     confirmPassword: "",
@@ -292,9 +290,21 @@ export default function SignUpPage() {
   const projectFieldRequired = needsProjectLocationField(selectedWorkLocationName)
   const passwordChecks = useMemo(() => getPasswordChecks(formData.password), [formData.password])
 
-  const workLocationsKey = useMemo(
-    () => [...referenceData.workLocations.map((w) => w.id)].sort().join(","),
-    [referenceData.workLocations],
+  /** Line manager picker: show name + job title only (not department / location). */
+  function supervisorRowLabel(s: ReferenceData["supervisors"][number]): string {
+    const name = (s.full_name || "").trim()
+    const job = (s.job_title || "").trim()
+    if (job) return `${name} — ${job}`
+    return name
+  }
+
+  const supervisorComboboxOptions = useMemo(
+    () =>
+      referenceData.supervisors.map((s) => ({
+        value: s.id,
+        label: supervisorRowLabel(s),
+      })),
+    [referenceData.supervisors],
   )
 
   const step1Complete = useMemo(
@@ -310,7 +320,7 @@ export default function SignUpPage() {
     if (!formData.workLocation || !formData.department || !formData.employeeId.trim()) return false
     if (!formData.position || !formData.jobTitle.trim()) return false
     if (supervisorFieldRequired) {
-      if (!formData.supervisor || supervisorsLoading) return false
+      if (!formData.supervisorId) return false
     }
     if (projectFieldRequired && !formData.projectLocation) return false
     return true
@@ -320,11 +330,10 @@ export default function SignUpPage() {
     formData.employeeId,
     formData.position,
     formData.jobTitle,
-    formData.supervisor,
+    formData.supervisorId,
     formData.projectLocation,
     supervisorFieldRequired,
     projectFieldRequired,
-    supervisorsLoading,
   ])
 
   const step3Complete = useMemo(
@@ -337,7 +346,7 @@ export default function SignUpPage() {
   )
 
   useEffect(() => {
-    if (!formData.workLocation || !supervisorFieldRequired) {
+    if (!supervisorFieldRequired) {
       setSupervisorsLoading(false)
       setReferenceData((prev) => ({ ...prev, supervisors: [] }))
       return
@@ -348,33 +357,18 @@ export default function SignUpPage() {
 
     const load = async () => {
       try {
-        let locationIds: string[]
-        if (projectFieldRequired) {
-          locationIds = workLocationIdsKalityOrProjectSite(referenceData.workLocations)
-          if (locationIds.length === 0) {
-            if (!cancelled) {
-              setReferenceData((prev) => ({ ...prev, supervisors: [] }))
-              setSupervisorsLoading(false)
-            }
-            return
-          }
-        } else {
-          locationIds = [formData.workLocation]
-        }
-
-        const supervisorDepartmentId = projectFieldRequired ? undefined : formData.department || undefined
-        const lists = await Promise.all(
-          locationIds.map((id) => fetchSupervisors(supervisorDepartmentId, id)),
-        )
-        const merged = new Map<string, { id: string; full_name: string; job_title?: string | null }>()
-        for (const list of lists) {
-          for (const s of list) {
-            merged.set(s.id, {
-              id: s.id,
-              full_name: s.full_name,
-              job_title: s.job_title,
-            })
-          }
+        const list = await fetchSupervisors(undefined, undefined, {
+          includeAllRegistered: true,
+        })
+        const merged = new Map<string, ReferenceData["supervisors"][number]>()
+        for (const s of list) {
+          merged.set(s.id, {
+            id: s.id,
+            full_name: s.full_name,
+            job_title: s.job_title,
+            department_name: s.department_name ?? null,
+            work_location_name: s.work_location_name ?? null,
+          })
         }
         const supervisors = Array.from(merged.values()).sort((a, b) =>
           a.full_name.localeCompare(b.full_name),
@@ -395,13 +389,13 @@ export default function SignUpPage() {
     return () => {
       cancelled = true
     }
-  }, [formData.workLocation, formData.department, supervisorFieldRequired, projectFieldRequired, workLocationsKey])
+  }, [supervisorFieldRequired])
 
   useEffect(() => {
-    if (!supervisorFieldRequired && formData.supervisor) {
-      setFormData((prev) => ({ ...prev, supervisor: "" }))
+    if (!supervisorFieldRequired && formData.supervisorId) {
+      setFormData((prev) => ({ ...prev, supervisorId: "" }))
     }
-  }, [supervisorFieldRequired, formData.supervisor])
+  }, [supervisorFieldRequired, formData.supervisorId])
 
   const getFilteredPositions = () => {
     if (!formData.department) return referenceData.positions
@@ -426,13 +420,13 @@ export default function SignUpPage() {
       if (name === "department") {
         next.position = ""
         next.jobTitle = ""
-        next.supervisor = ""
+        next.supervisorId = ""
       }
       if (name === "workLocation") {
         next.department = ""
         next.position = ""
         next.jobTitle = ""
-        next.supervisor = ""
+        next.supervisorId = ""
         next.projectLocation = ""
       }
       return next
@@ -495,7 +489,7 @@ export default function SignUpPage() {
           return false
         }
         if (supervisorFieldRequired) {
-          if (!formData.supervisor) {
+          if (!formData.supervisorId) {
             setError("Line manager / supervisor is required for this work location.")
             return false
           }
@@ -565,7 +559,7 @@ export default function SignUpPage() {
         site_location: projectFieldRequired
           ? referenceData.projects.find((p) => p.id === formData.projectLocation)?.name
           : undefined,
-        supervisor_name: supervisorFieldRequired ? formData.supervisor : undefined,
+        supervisor_id: supervisorFieldRequired ? formData.supervisorId : undefined,
         job_title: formData.jobTitle || selectedPosition?.title || "",
         password: formData.password,
         agreed_to_terms: agreedToDevelopmentNotice,
@@ -786,13 +780,17 @@ export default function SignUpPage() {
                 <Select
                   value={formData.jobTitle}
                   onValueChange={(value) => {
-                    handleSelectChange("jobTitle", value)
                     const selected = referenceData.positions.find(
                       (p) =>
                         p.title === value &&
                         (!formData.department || p.department_id === formData.department)
                     )
-                    if (selected) handleSelectChange("position", selected.id)
+                    setFormData((prev) => ({
+                      ...prev,
+                      jobTitle: value,
+                      supervisorId: "",
+                      position: selected?.id ?? "",
+                    }))
                   }}
                   disabled={isLoading || !formData.department || positionsLoading}
                   className="bg-background/50 h-9 text-sm"
@@ -816,20 +814,20 @@ export default function SignUpPage() {
               >
                 {supervisorFieldRequired && (
                   <div className="space-y-1.5">
-                    <Label className="text-sm">Line Manager / Supervisor *</Label>
-                    <Select
-                      value={formData.supervisor}
-                      onValueChange={(value) => handleSelectChange("supervisor", value)}
-                      disabled={isLoading || supervisorsLoading || !formData.workLocation}
-                      className="bg-background/50 h-9 text-sm"
-                    >
-                      {referenceData.supervisors.map((s) => (
-                        <SelectItem key={s.id} value={s.full_name}>
-                          {s.full_name}
-                          {s.job_title ? ` - ${s.job_title}` : ""}
-                        </SelectItem>
-                      ))}
-                    </Select>
+                    <Label htmlFor="signup-supervisor" className="text-sm">
+                      Line Manager / Supervisor *
+                    </Label>
+                   
+                    <SearchableCombobox
+                      id="signup-supervisor"
+                      value={formData.supervisorId}
+                      onChange={(id) => handleSelectChange("supervisorId", id)}
+                      options={supervisorComboboxOptions}
+                      placeholder="Search name or job title…"
+                      loading={supervisorsLoading}
+                      disabled={isLoading || !formData.workLocation}
+                      required
+                    />
                   </div>
                 )}
 
@@ -1044,12 +1042,12 @@ export default function SignUpPage() {
               >
                 <CheckCircle className="h-10 w-10 text-[#70c82a]" />
               </motion.div>
-              <h2 className="text-xl font-semibold text-foreground">Registration successful</h2>
+              <h2 className="text-xl font-semibold text-foreground">Registration Submitted</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Your account is created. Login stays disabled until an admin approves your access. If you enabled
-                email on the server, you may receive a welcome message. You can then sign in with your email and
-                password.
-              </p>
+                  Your account has been successfully created. Access to the system will remain disabled until your request
+                  is reviewed and approved by an administrator. You will receive an email notification once your access
+                  has been activated. After approval, you may sign in using your registered email and password.
+                  </p>
               <Button
                 className="w-full bg-[#70c82a] hover:bg-[#5aa022] text-white"
                 onClick={() => router.push("/sign-in")}

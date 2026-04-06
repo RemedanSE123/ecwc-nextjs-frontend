@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useMemo } from 'react';
-import { can } from '@/lib/auth';
+import { can, getSessionUpdatedEventName } from '@/lib/auth';
 import {
   LayoutDashboard,
   Wrench,
@@ -87,6 +87,14 @@ interface SidebarProps {
 export default function Sidebar({ isCollapsed = false, onToggleCollapse, userPhone }: SidebarProps) {
   const pathname = usePathname();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const [authzVersion, setAuthzVersion] = useState(0);
+
+  useEffect(() => {
+    const eventName = getSessionUpdatedEventName();
+    const onSession = () => setAuthzVersion((n) => n + 1);
+    window.addEventListener(eventName, onSession);
+    return () => window.removeEventListener(eventName, onSession);
+  }, []);
 
   const visibleNav = useMemo(() => {
     const permissionByHref: Record<string, string> = {
@@ -102,20 +110,26 @@ export default function Sidebar({ isCollapsed = false, onToggleCollapse, userPho
       '/common-data': 'page:view:master_data',
       '/admin/employees': 'page:view:employee_access',
       '/admin/master-data': 'page:view:master_data',
-      '/admin/access-control': 'page:view:access_control',
+      '/admin/access-control': 'authz:manage',
       '/compound-map': 'page:view:assets',
       '/announcements': 'page:view:announcements',
       '/audit': 'page:view:audit',
     };
 
     return navigation
-      .filter((item) => can(permissionByHref[item.href] ?? 'page:view:*'))
+      .filter((item) => {
+        const permission = permissionByHref[item.href];
+        return permission ? can(permission) : false;
+      })
       .map((item) => ({
         ...item,
-        children: item.children?.filter((child) => can(permissionByHref[child.href] ?? 'page:view:*')),
+        children: item.children?.filter((child) => {
+          const permission = permissionByHref[child.href];
+          return permission ? can(permission) : false;
+        }),
       }))
       .filter((item) => !item.children || item.children.length > 0);
-  }, [userPhone]);
+  }, [authzVersion, userPhone]);
 
   // Standalone form routes: do not add or remove Time Sheet from expanded state (no expand/collapse)
   const isStandaloneFormRoute =

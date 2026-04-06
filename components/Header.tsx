@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { getSession, clearSession, getSessionUpdatedEventName, getAuthHeaders, updateSessionUser } from '@/lib/auth';
-import { getUnreadCount } from '@/lib/announcements-seen';
+import { getUnreadCount, hydrateAnnouncementLastSeen, markAnnouncementsAsSeen } from '@/lib/announcements-seen';
 import { AnnouncementBodyWithStatus } from '@/lib/announcement-body';
 import { apiUrl } from '@/lib/api-client';
 import { getUserImageUrl } from '@/lib/api/auth';
@@ -142,13 +142,15 @@ export default function Header({ sidebarCollapsed = false, sidebarOpen = false, 
       .then((json) => {
         const data = json.data ?? [];
         setAnnouncements(data);
+        if (data.length) markAnnouncementsAsSeen(data.map((a: AnnouncementItem) => a.id));
       })
       .catch(() => setAnnouncements([]))
       .finally(() => setAnnouncementsLoading(false));
   }, [notificationsOpen]);
 
-  // Initial badge feed hydrate + unread count (no aggressive polling).
+  // Hydrate last-seen from server, then badge feed + unread count.
   useEffect(() => {
+    let cancelled = false;
     const fetchBadge = () => {
       const session = getSession();
       if (!session?.accessToken) {
@@ -159,22 +161,29 @@ export default function Header({ sidebarCollapsed = false, sidebarOpen = false, 
       fetch(apiUrl('/api/v1/announcements?limit=50'), { headers: { ...getAuthHeaders() } })
         .then((res) => (res.ok ? res.json() : { data: [] }))
         .then((json) => {
+          if (cancelled) return;
           const data = (json.data ?? []) as AnnouncementItem[];
           setBadgeFeed(data);
-          const count = getUnreadCount(data);
-          setUnreadCount(count);
+          setUnreadCount(getUnreadCount(data));
         })
         .catch(() => {
+          if (cancelled) return;
           setBadgeFeed([]);
           setUnreadCount(0);
         });
     };
-    const onSeen = () => fetchBadge();
-    fetchBadge();
-    const onFocus = () => fetchBadge();
+    const run = async () => {
+      await hydrateAnnouncementLastSeen();
+      if (cancelled) return;
+      fetchBadge();
+    };
+    const onSeen = () => void run();
+    void run();
+    const onFocus = () => void run();
     window.addEventListener('focus', onFocus);
     window.addEventListener('announcements-seen', onSeen);
     return () => {
+      cancelled = true;
       window.removeEventListener('focus', onFocus);
       window.removeEventListener('announcements-seen', onSeen);
     };

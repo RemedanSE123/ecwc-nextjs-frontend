@@ -4,7 +4,8 @@ import { useState, useEffect, useLayoutEffect, useRef } from "react"
 import dynamic from "next/dynamic"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
@@ -782,9 +783,9 @@ export default function LandingPage() {
     }
   }, [pathname])
 
-  // Warm up sign-in route to reduce first-click delay in dev.
   useEffect(() => {
     router.prefetch('/sign-in')
+    router.prefetch('/sign-up')
   }, [router])
 
   useEffect(() => {
@@ -815,13 +816,14 @@ export default function LandingPage() {
   // Close mobile menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement
-      if (mobileMenuOpen && !target.closest('nav') && !target.closest('button[aria-label="Toggle menu"]')) {
+      const el = event.target instanceof Element ? event.target : (event.target as Node).parentElement
+      if (!el) return
+      if (mobileMenuOpen && !el.closest('nav') && !el.closest('button[aria-label="Toggle menu"]')) {
         setMobileMenuOpen(false)
       }
     }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    document.addEventListener('pointerdown', handleClickOutside)
+    return () => document.removeEventListener('pointerdown', handleClickOutside)
   }, [mobileMenuOpen])
 
   return (
@@ -979,12 +981,28 @@ export default function LandingPage() {
                     )
                   })}
                   <div className="pt-2 px-4 space-y-2 border-t border-[#70c82a]/10 mt-2">
-                    <Button variant="outline" size="sm" className="w-full border-[#70c82a]/30 hover:border-[#70c82a] hover:text-[#70c82a]" asChild>
-                      <Link href="/sign-in" onClick={() => setMobileMenuOpen(false)}>Sign In</Link>
-                    </Button>
-                    <Button size="sm" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" asChild>
-                      <Link href="/sign-up" onClick={() => setMobileMenuOpen(false)}>Sign Up</Link>
-                    </Button>
+                    <Link
+                      href="/sign-in"
+                      prefetch
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={cn(
+                        buttonVariants({ variant: 'outline', size: 'sm' }),
+                        'w-full border-[#70c82a]/30 hover:border-[#70c82a] hover:text-[#70c82a]'
+                      )}
+                    >
+                      Sign In
+                    </Link>
+                    <Link
+                      href="/sign-up"
+                      prefetch
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={cn(
+                        buttonVariants({ size: 'sm' }),
+                        'w-full bg-primary hover:bg-primary/90 text-primary-foreground'
+                      )}
+                    >
+                      Sign Up
+                    </Link>
                   </div>
                 </div>
               </motion.nav>

@@ -56,6 +56,8 @@ export async function registerAuth(payload: {
   position_id?: string;
   work_location_id?: string;
   site_location?: string;
+  /** Prefer this when the user picked a row from the directory (avoids duplicate-name ambiguity). */
+  supervisor_id?: string;
   supervisor_name?: string;
   job_title?: string;
   password: string;
@@ -146,11 +148,29 @@ export async function fetchProjectsForLocation(): Promise<Array<{ id: string; pr
 
 export async function fetchSupervisors(
   departmentId?: string,
-  workLocationId?: string
-): Promise<Array<{ id: string; full_name: string; department_id?: string | null; work_location_id?: string | null; job_title?: string | null }>> {
+  workLocationId?: string,
+  opts?: {
+    /** All employees (active + inactive), no dept/location filter — for sign-up line manager picker. */
+    includeAllRegistered?: boolean;
+    /** Server-side search (name, title, employee id, department, work location). */
+    q?: string;
+  },
+): Promise<
+  Array<{
+    id: string;
+    full_name: string;
+    department_id?: string | null;
+    work_location_id?: string | null;
+    job_title?: string | null;
+    department_name?: string | null;
+    work_location_name?: string | null;
+  }>
+> {
   const params = new URLSearchParams();
   if (departmentId) params.set("department_id", departmentId);
   if (workLocationId) params.set("work_location_id", workLocationId);
+  if (opts?.includeAllRegistered) params.set("include_all_registered", "true");
+  if (opts?.q?.trim()) params.set("q", opts.q.trim());
   const q = params.toString();
   const res = await fetch(apiUrl(`/api/v1/hr/supervisors${q ? `?${q}` : ""}`));
   if (!res.ok) throw new Error("Failed to fetch supervisors");
@@ -189,6 +209,7 @@ export interface ManagedEmployee {
   job_title?: string | null;
   is_active: boolean;
   created_at: string;
+  last_login_at?: string | null;
   department_id?: string | null;
   department_name?: string | null;
   position_id?: string | null;
@@ -197,6 +218,7 @@ export interface ManagedEmployee {
   work_location_name?: string | null;
   supervisor_id?: string | null;
   supervisor_name?: string | null;
+  role_name?: string | null;
 }
 
 export async function fetchManagedEmployees(filters?: {

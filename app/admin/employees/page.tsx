@@ -28,15 +28,20 @@ import {
   CheckCircle2,
   Clock3,
   Edit3,
+  Filter,
   ImageIcon,
   LayoutGrid,
   List,
   Loader2,
+  Mail,
   MapPin,
+  Phone,
   Search,
+  ShieldCheck,
   Trash2,
   UserCheck,
   UserRound,
+  X,
 } from "lucide-react";
 
 type StatusFilter = "all" | "true" | "false";
@@ -59,6 +64,7 @@ export default function EmployeeAccessPage() {
   const [success, setSuccess] = useState("");
   const [approvingId, setApprovingId] = useState<string | null>(null);
 
+  // Filter state
   const [q, setQ] = useState("");
   const [departmentId, setDepartmentId] = useState("");
   const [workLocationId, setWorkLocationId] = useState("");
@@ -70,6 +76,7 @@ export default function EmployeeAccessPage() {
   const [uploadingProfileImage, setUploadingProfileImage] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showCrud, setShowCrud] = useState(false);
+  const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [formData, setFormData] = useState({
     full_name: "",
     email: "",
@@ -95,6 +102,57 @@ export default function EmployeeAccessPage() {
 
   function profileSrc(url?: string | null): string | null {
     return getUserImageUrl(url);
+  }
+
+  function formatRoleName(roleName?: string | null): string {
+    if (!roleName) return "User";
+    return roleName
+      .split("_")
+      .map((x) => (x ? x[0].toUpperCase() + x.slice(1) : x))
+      .join(" ");
+  }
+
+  function getLastLoginMeta(lastLoginAt?: string | null): {
+    label: string;
+    cardClass: string;
+    pillClass: string;
+  } {
+    if (!lastLoginAt) {
+      return {
+        label: "Never",
+        cardClass: "text-slate-700",
+        pillClass: "bg-slate-100 text-slate-700",
+      };
+    }
+    const d = new Date(lastLoginAt);
+    if (Number.isNaN(d.getTime())) {
+      return {
+        label: "Unknown",
+        cardClass: "text-slate-700",
+        pillClass: "bg-slate-100 text-slate-700",
+      };
+    }
+    const days = Math.floor((Date.now() - d.getTime()) / 86400000);
+    if (days <= 3) {
+      const recentLabel = days <= 0 ? "Today" : `${days} day${days === 1 ? "" : "s"} ago`;
+      return {
+        label: recentLabel,
+        cardClass: "text-green-700",
+        pillClass: "bg-green-100 text-green-800",
+      };
+    }
+    if (days <= 7) {
+      return {
+        label: `${days} days ago`,
+        cardClass: "text-amber-700",
+        pillClass: "bg-amber-100 text-amber-800",
+      };
+    }
+    return {
+      label: `${days} days ago`,
+      cardClass: "text-red-700",
+      pillClass: "bg-red-100 text-red-800",
+    };
   }
 
   const loadFilters = useCallback(async () => {
@@ -279,6 +337,12 @@ export default function EmployeeAccessPage() {
     }
   }
 
+  // Apply filters and close panel
+  const applyFiltersAndClose = () => {
+    void loadEmployees();
+    setFilterPanelOpen(false);
+  };
+
   if (!canManage) {
     return (
       <Layout>
@@ -299,56 +363,29 @@ export default function EmployeeAccessPage() {
   return (
     <Layout>
       <div className="space-y-3">
-        <Card className="border-[#137638]/20 bg-gradient-to-r from-[#137638]/10 via-background to-background shadow-sm">
+        {/* Main Header Card with stats and filter trigger */}
+        <Card className="border-[#137638]/20 bg-gradient-to-r from-[#137638]/10 via-background to-background shadow-sm overflow-hidden">
           <CardHeader className="pb-3">
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2 text-base md:text-lg">
                 <UserCheck className="h-5 w-5 text-[#137638]" />
                 Employee Access Management
               </CardTitle>
-              <div className="flex flex-wrap gap-2 text-xs">
-                <span className="rounded-full bg-amber-100 text-amber-800 px-2.5 py-1">
-                  Pending: {pendingCount}
-                </span>
-                <span className="rounded-full bg-green-100 text-green-800 px-2.5 py-1">
-                  Approved: {approvedCount}
-                </span>
-                <span className="rounded-full bg-slate-100 text-slate-700 px-2.5 py-1">
-                  Total: {employees.length}
-                </span>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-            {success && (
-              <Alert>
-                <AlertDescription>{success}</AlertDescription>
-              </Alert>
-            )}
-
-            <div className="rounded-xl border bg-background/80 p-3 md:p-4 space-y-3">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
-                  <Search className="h-3.5 w-3.5" />
-                  Smart filters (combine many fields)
+              <div className="flex items-center gap-3">
+                {/* Stats badges */}
+                <div className="hidden sm:flex gap-2 text-xs">
+                  <span className="rounded-full bg-amber-100 text-amber-800 px-2.5 py-1">
+                    Pending: {pendingCount}
+                  </span>
+                  <span className="rounded-full bg-green-100 text-green-800 px-2.5 py-1">
+                    Approved: {approvedCount}
+                  </span>
+                  <span className="rounded-full bg-slate-100 text-slate-700 px-2.5 py-1">
+                    Total: {employees.length}
+                  </span>
                 </div>
+                {/* View mode toggles */}
                 <div className="inline-flex rounded-md border p-0.5">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowCrud((v) => !v);
-                      if (!showCrud) resetForm();
-                    }}
-                    disabled={!canCreate && !canUpdate}
-                    className={`px-2 py-1 text-xs rounded ${showCrud ? "bg-[#137638] text-white" : "text-muted-foreground"}`}
-                  >
-                    {showCrud ? "Close CRUD" : "Open CRUD"}
-                  </button>
                   <button
                     type="button"
                     onClick={() => setViewMode("cards")}
@@ -366,101 +403,185 @@ export default function EmployeeAccessPage() {
                     Table
                   </button>
                 </div>
+                {/* Hamburger filter button */}
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8 relative"
+                  onClick={() => setFilterPanelOpen(!filterPanelOpen)}
+                >
+                  {filterPanelOpen ? <X className="h-4 w-4" /> : <Filter className="h-4 w-4" />}
+                </Button>
               </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            {success && (
+              <Alert>
+                <AlertDescription>{success}</AlertDescription>
+              </Alert>
+            )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2.5">
-                <div className="space-y-1">
-                  <Label className="text-xs">Search</Label>
+            {/* Collapsible Filter Panel - slides from right/left */}
+            {filterPanelOpen && (
+              <div className="rounded-xl border bg-background/95 p-3 md:p-4 space-y-3 shadow-lg transition-all duration-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                    <Filter className="h-3.5 w-3.5" />
+                    Smart Filters
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 text-xs"
+                    onClick={() => setFilterPanelOpen(false)}
+                  >
+                    <X className="h-3 w-3 mr-1" />
+                    Close
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2.5">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Search</Label>
+                    <Input
+                      className="h-8 text-xs"
+                      value={q}
+                      onChange={(e) => setQ(e.target.value)}
+                      placeholder="Name, phone, email, employee ID"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Department</Label>
+                    <select className="w-full h-8 rounded-md border px-2 bg-background text-xs" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)}>
+                      <option value="">All</option>
+                      {departments.map((d) => (
+                        <option key={d.id} value={d.id}>
+                          {d.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Work Location</Label>
+                    <select className="w-full h-8 rounded-md border px-2 bg-background text-xs" value={workLocationId} onChange={(e) => setWorkLocationId(e.target.value)}>
+                      <option value="">All</option>
+                      {locations.map((l) => (
+                        <option key={l.id} value={l.id}>
+                          {l.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Job Title</Label>
+                    <select className="w-full h-8 rounded-md border px-2 bg-background text-xs" value={positionId} onChange={(e) => setPositionId(e.target.value)}>
+                      <option value="">All</option>
+                      {positions.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.title}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Line Manager</Label>
+                    <select className="w-full h-8 rounded-md border px-2 bg-background text-xs" value={supervisorId} onChange={(e) => setSupervisorId(e.target.value)}>
+                      <option value="">All</option>
+                      {supervisors.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.full_name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Status</Label>
+                    <select className="w-full h-8 rounded-md border px-2 bg-background text-xs" value={status} onChange={(e) => setStatus(e.target.value as StatusFilter)}>
+                      <option value="all">All</option>
+                      <option value="false">Pending</option>
+                      <option value="true">Approved</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex gap-2 pt-1">
+                  <Button onClick={applyFiltersAndClose} disabled={loading} size="sm" className="h-8">
+                    {loading ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                        Loading...
+                      </>
+                    ) : (
+                      "Apply Filters"
+                    )}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8"
+                    onClick={() => {
+                      setQ("");
+                      setDepartmentId("");
+                      setWorkLocationId("");
+                      setPositionId("");
+                      setSupervisorId("");
+                      setStatus("all");
+                    }}
+                  >
+                    Clear
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Centered Search Bar - only visible when filters are closed */}
+            {!filterPanelOpen && (
+              <div className="flex justify-center px-2 md:px-8">
+                <div className="relative w-full max-w-md">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    className="h-8 text-xs"
+                    className="pl-9 h-10 text-sm rounded-full border-muted-foreground/20 bg-background shadow-sm"
                     value={q}
                     onChange={(e) => setQ(e.target.value)}
-                    placeholder="Name, phone, email, employee ID"
+                    placeholder="Search employees by name, phone, email or ID..."
+                    onKeyDown={(e) => e.key === "Enter" && void loadEmployees()}
                   />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Department</Label>
-                  <select className="w-full h-8 rounded-md border px-2 bg-background text-xs" value={departmentId} onChange={(e) => setDepartmentId(e.target.value)}>
-                    <option value="">All</option>
-                    {departments.map((d) => (
-                      <option key={d.id} value={d.id}>
-                        {d.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Work Location</Label>
-                  <select className="w-full h-8 rounded-md border px-2 bg-background text-xs" value={workLocationId} onChange={(e) => setWorkLocationId(e.target.value)}>
-                    <option value="">All</option>
-                    {locations.map((l) => (
-                      <option key={l.id} value={l.id}>
-                        {l.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Job Title</Label>
-                  <select className="w-full h-8 rounded-md border px-2 bg-background text-xs" value={positionId} onChange={(e) => setPositionId(e.target.value)}>
-                    <option value="">All</option>
-                    {positions.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.title}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Line Manager</Label>
-                  <select className="w-full h-8 rounded-md border px-2 bg-background text-xs" value={supervisorId} onChange={(e) => setSupervisorId(e.target.value)}>
-                    <option value="">All</option>
-                    {supervisors.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.full_name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Status</Label>
-                  <select className="w-full h-8 rounded-md border px-2 bg-background text-xs" value={status} onChange={(e) => setStatus(e.target.value as StatusFilter)}>
-                    <option value="all">All</option>
-                    <option value="false">Pending</option>
-                    <option value="true">Approved</option>
-                  </select>
+                  <Button
+                    size="sm"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-7 rounded-full px-3 text-xs bg-[#137638] hover:bg-[#0f5c2b]"
+                    onClick={() => void loadEmployees()}
+                    disabled={loading}
+                  >
+                    {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : "Search"}
+                  </Button>
                 </div>
               </div>
+            )}
 
-            <div className="flex gap-2 pt-1">
-              <Button onClick={() => void loadEmployees()} disabled={loading}>
-                {loading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Loading...
-                  </>
-                ) : (
-                  "Apply Filters"
-                )}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setQ("");
-                  setDepartmentId("");
-                  setWorkLocationId("");
-                  setPositionId("");
-                  setSupervisorId("");
-                  setStatus("all");
-                }}
-              >
-                Clear
-              </Button>
-            </div>
-            </div>
+            {/* Quick stats row when filters are closed */}
+            {!filterPanelOpen && (
+              <div className="flex justify-center gap-4 text-xs sm:hidden">
+                <span className="rounded-full bg-amber-100 text-amber-800 px-2.5 py-1">
+                  Pending: {pendingCount}
+                </span>
+                <span className="rounded-full bg-green-100 text-green-800 px-2.5 py-1">
+                  Approved: {approvedCount}
+                </span>
+                <span className="rounded-full bg-slate-100 text-slate-700 px-2.5 py-1">
+                  Total: {employees.length}
+                </span>
+              </div>
+            )}
           </CardContent>
         </Card>
 
+        {/* CRUD Form */}
         {showCrud && (canCreate || canUpdate) && (
           <Card>
             <CardHeader className="pb-2">
@@ -506,34 +627,166 @@ export default function EmployeeAccessPage() {
                   <Button type="button" size="sm" variant="outline" className="h-8" onClick={resetForm}>
                     Reset
                   </Button>
+                  <Button type="button" size="sm" variant="ghost" className="h-8" onClick={() => setShowCrud(false)}>
+                    Cancel
+                  </Button>
                 </div>
               </form>
             </CardContent>
           </Card>
         )}
 
-        {viewMode === "table" ? (
+        {/* Employee Display - Cards View with Centered Big Image */}
+        {viewMode === "cards" ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {employees.length === 0 ? (
+              <Card className="md:col-span-2 xl:col-span-3">
+                <CardContent className="pt-6 text-sm text-muted-foreground text-center">
+                  No employees found for selected filters.
+                </CardContent>
+              </Card>
+            ) : (
+              employees.map((e) => (
+                <Card key={e.id} className="group border-border/60 hover:border-[#137638]/30 hover:shadow-md transition-all overflow-hidden">
+                  <CardContent className="p-4 space-y-3">
+                    {/* Centered Big Image */}
+                    <div className="flex justify-center pt-2">
+                      {profileSrc(e.profile_image) ? (
+                        <div className="relative">
+                          <Image
+                            src={profileSrc(e.profile_image)!}
+                            alt={e.full_name}
+                            width={120}
+                            height={120}
+                            className="h-28 w-28 rounded-full object-cover ring-4 ring-[#137638]/20 shadow-md"
+                            unoptimized
+                          />
+                          <div className="absolute bottom-0 right-0">
+                            <span className={`text-[10px] rounded-full px-2 py-0.5 ${e.is_active ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"} border border-white`}>
+                              {e.is_active ? "Approved" : "Pending"}
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="h-28 w-28 rounded-full bg-gradient-to-br from-[#137638] to-[#0f5c2b] text-white flex items-center justify-center text-3xl font-semibold ring-4 ring-[#137638]/20 shadow-md">
+                          {initials(e.full_name)}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Name and basic info */}
+                    <div className="text-center">
+                      <div className="text-base font-bold truncate">{e.full_name}</div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {e.position_title || e.job_title || "-"}
+                      </div>
+                    </div>
+
+                    {/* Details Grid */}
+                    <div className="grid grid-cols-1 gap-2 text-xs bg-muted/30 rounded-lg p-3">
+                      <div className="flex items-center gap-2">
+                        <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span><strong>Dept:</strong> {e.department_name || "-"}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span><strong>Phone:</strong> {e.phone || "-"}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className="break-all"><strong>Email:</strong> {e.email || "-"}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <ImageIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span><strong>Employee ID:</strong> {e.employee_id || "-"}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <UserCheck className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span><strong>Title:</strong> {e.position_title || e.job_title || "-"}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span><strong>Location:</strong> {e.work_location_name || "-"}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <UserRound className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span><strong>Manager:</strong> {e.supervisor_name || "ECWC Admin"}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <ShieldCheck className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span><strong>Role:</strong> {formatRoleName(e.role_name)}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Clock3 className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span className={getLastLoginMeta(e.last_login_at).cardClass}>
+                          <strong>Last login:</strong> {getLastLoginMeta(e.last_login_at).label}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="pt-2 grid grid-cols-3 gap-2">
+                      <Button
+                        size="sm"
+                        className="h-8 w-full bg-[#137638] hover:bg-[#0f5c2b] text-xs"
+                        onClick={() => void handleApprove(e.id)}
+                        disabled={e.is_active || approvingId === e.id || !canApprove}
+                      >
+                        {e.is_active ? "Approved" : approvingId === e.id ? <Loader2 className="h-3 w-3 animate-spin" /> : "Approve"}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 w-full text-xs"
+                        disabled={!canUpdate}
+                        onClick={() => startEdit(e)}
+                      >
+                        <Edit3 className="h-3 w-3 mr-1" />
+                        Edit
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="h-8 w-full text-xs"
+                        disabled={!canDelete}
+                        onClick={() => void handleDelete(e.id)}
+                      >
+                        <Trash2 className="h-3 w-3 mr-1" />
+                        Delete
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        ) : (
+          /* Table View - keep original compact style but adjust image size slightly */
           <Card>
             <CardContent className="pt-3">
               <div className="overflow-x-auto">
-                <table className="w-full text-xs table-fixed">
+                <table className="w-full text-xs">
                   <thead>
                     <tr className="border-b text-muted-foreground">
-                      <th className="text-left py-2 pr-2 font-medium w-[52px]">Image</th>
-                      <th className="text-left py-2 pr-2 font-medium w-[16%]">Name</th>
+                      <th className="text-left py-2 pr-2 font-medium w-[60px]">Image</th>
+                      <th className="text-left py-2 pr-2 font-medium w-[12%]">Name</th>
+                      <th className="text-left py-2 pr-2 font-medium w-[10%]">Employee ID</th>
                       <th className="text-left py-2 pr-2 font-medium w-[11%]">Phone</th>
-                      <th className="text-left py-2 pr-2 font-medium w-[12%]">Department</th>
-                      <th className="text-left py-2 pr-2 font-medium w-[14%]">Job Title</th>
-                      <th className="text-left py-2 pr-2 font-medium w-[12%]">Location</th>
-                      <th className="text-left py-2 pr-2 font-medium w-[12%]">Line Manager</th>
-                      <th className="text-left py-2 pr-2 font-medium w-[9%]">Status</th>
+                      <th className="text-left py-2 pr-2 font-medium w-[13%]">Email</th>
+                      <th className="text-left py-2 pr-2 font-medium w-[11%]">Department</th>
+                      <th className="text-left py-2 pr-2 font-medium w-[11%]">Job Title</th>
+                      <th className="text-left py-2 pr-2 font-medium w-[10%]">Location</th>
+                      <th className="text-left py-2 pr-2 font-medium w-[10%]">Line Manager</th>
+                      <th className="text-left py-2 pr-2 font-medium w-[8%]">Role</th>
+                      <th className="text-left py-2 pr-2 font-medium w-[9%]">Last Login</th>
+                      <th className="text-left py-2 pr-2 font-medium w-[8%]">Status</th>
                       <th className="text-left py-2 pr-2 font-medium w-[90px]">Action</th>
                     </tr>
                   </thead>
                   <tbody>
                     {employees.length === 0 ? (
                       <tr>
-                        <td className="py-4 text-muted-foreground" colSpan={9}>
+                        <td className="py-4 text-muted-foreground text-center" colSpan={13}>
                           No employees found for selected filters.
                         </td>
                       </tr>
@@ -545,51 +798,68 @@ export default function EmployeeAccessPage() {
                               <Image
                                 src={profileSrc(e.profile_image)!}
                                 alt={e.full_name}
-                                width={36}
-                                height={36}
-                                className="h-8 w-8 rounded-full object-cover ring-2 ring-[#137638]/20"
+                                width={40}
+                                height={40}
+                                className="h-10 w-10 rounded-full object-cover ring-2 ring-[#137638]/20"
                                 unoptimized
                               />
                             ) : (
-                              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#137638] to-[#0f5c2b] text-white flex items-center justify-center text-[11px] font-semibold ring-2 ring-[#137638]/20">
+                              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#137638] to-[#0f5c2b] text-white flex items-center justify-center text-xs font-semibold ring-2 ring-[#137638]/20">
                                 {initials(e.full_name)}
                               </div>
                             )}
                           </td>
                           <td className="py-2 pr-2 font-medium truncate">{e.full_name}</td>
-                          <td className="py-2 pr-2 truncate">{e.phone}</td>
+                          <td className="py-2 pr-2 truncate">{e.employee_id || "-"}</td>
+                          <td className="py-2 pr-2 truncate">
+                            <div className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5">
+                              <Phone className="h-3 w-3 text-slate-600" />
+                              <span>{e.phone}</span>
+                            </div>
+                          </td>
+                          <td className="py-2 pr-2 truncate">
+                            <div className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-blue-800 max-w-[220px]">
+                              <Mail className="h-3 w-3 shrink-0" />
+                              <span className="truncate">{e.email}</span>
+                            </div>
+                          </td>
                           <td className="py-2 pr-2 truncate">{e.department_name || "-"}</td>
                           <td className="py-2 pr-2 truncate">{e.position_title || e.job_title || "-"}</td>
                           <td className="py-2 pr-2 truncate">{e.work_location_name || "-"}</td>
                           <td className="py-2 pr-2 truncate">{e.supervisor_name || "-"}</td>
+                          <td className="py-2 pr-2 truncate">
+                            <span className="inline-flex rounded-full bg-violet-100 text-violet-800 px-2 py-0.5">
+                              {formatRoleName(e.role_name)}
+                            </span>
+                          </td>
+                          <td className="py-2 pr-2">
+                            <span className={`inline-flex rounded-full px-2 py-0.5 ${getLastLoginMeta(e.last_login_at).pillClass}`}>
+                              {getLastLoginMeta(e.last_login_at).label}
+                            </span>
+                          </td>
                           <td className="py-2 pr-3">
                             <span className={`rounded-full px-2 py-0.5 ${e.is_active ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"}`}>
                               {e.is_active ? "Approved" : "Pending"}
                             </span>
                           </td>
                           <td className="py-2 pr-3">
-                            {!e.is_active ? (
-                              <div className="flex items-center gap-1">
-                                {canUpdate && <button title="Edit" className="h-7 w-7 inline-flex items-center justify-center rounded border hover:bg-muted" onClick={() => startEdit(e)}>
-                                  <Edit3 className="h-3.5 w-3.5" />
-                                </button>}
-                                {canDelete && <button title="Delete" className="h-7 w-7 inline-flex items-center justify-center rounded border border-red-200 text-red-600 hover:bg-red-50" onClick={() => void handleDelete(e.id)}>
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </button>}
-                                {canApprove && <button title="Approve" disabled={approvingId === e.id} className="h-7 w-7 inline-flex items-center justify-center rounded border border-green-200 text-green-700 hover:bg-green-50 disabled:opacity-50" onClick={() => void handleApprove(e.id)}>
+                            <div className="flex items-center gap-1">
+                              {!e.is_active && canApprove && (
+                                <button title="Approve" disabled={approvingId === e.id} className="h-7 w-7 inline-flex items-center justify-center rounded border border-green-200 text-green-700 hover:bg-green-50 disabled:opacity-50" onClick={() => void handleApprove(e.id)}>
                                   <CheckCircle2 className="h-3.5 w-3.5" />
-                                </button>}
-                              </div>
-                            ) : (
-                              <div className="flex items-center gap-1">
-                                {canUpdate && <button title="Edit" className="h-7 w-7 inline-flex items-center justify-center rounded border hover:bg-muted" onClick={() => startEdit(e)}>
+                                </button>
+                              )}
+                              {canUpdate && (
+                                <button title="Edit" className="h-7 w-7 inline-flex items-center justify-center rounded border hover:bg-muted" onClick={() => startEdit(e)}>
                                   <Edit3 className="h-3.5 w-3.5" />
-                                </button>}
-                                {canDelete && <button title="Delete" className="h-7 w-7 inline-flex items-center justify-center rounded border border-red-200 text-red-600 hover:bg-red-50" onClick={() => void handleDelete(e.id)}>
+                                </button>
+                              )}
+                              {canDelete && (
+                                <button title="Delete" className="h-7 w-7 inline-flex items-center justify-center rounded border border-red-200 text-red-600 hover:bg-red-50" onClick={() => void handleDelete(e.id)}>
                                   <Trash2 className="h-3.5 w-3.5" />
-                                </button>}
-                              </div>
-                            )}
+                                </button>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       ))
@@ -599,99 +869,8 @@ export default function EmployeeAccessPage() {
               </div>
             </CardContent>
           </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-            {employees.length === 0 ? (
-              <Card className="md:col-span-2 xl:col-span-3">
-                <CardContent className="pt-6 text-sm text-muted-foreground">
-                  No employees found for selected filters.
-                </CardContent>
-              </Card>
-            ) : (
-              employees.map((e) => (
-                <Card key={e.id} className="group border-border/60 hover:border-[#137638]/30 hover:shadow-md transition-all overflow-hidden">
-                  <CardContent className="p-3 space-y-2">
-                    <div className="rounded-lg bg-gradient-to-r from-[#137638]/10 to-[#137638]/5 p-2.5">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          {profileSrc(e.profile_image) ? (
-                            <Image
-                              src={profileSrc(e.profile_image)!}
-                              alt={e.full_name}
-                              width={52}
-                              height={52}
-                              className="h-12 w-12 rounded-full object-cover shrink-0 ring-2 ring-white shadow-sm"
-                              unoptimized
-                            />
-                          ) : (
-                            <div className="h-12 w-12 rounded-full bg-gradient-to-br from-[#137638] to-[#0f5c2b] text-white flex items-center justify-center font-semibold text-sm shrink-0 ring-2 ring-white shadow-sm">
-                              {initials(e.full_name)}
-                            </div>
-                          )}
-                          <div className="min-w-0">
-                            <div className="text-sm font-semibold leading-tight truncate">{e.full_name}</div>
-                            <div className="text-xs text-muted-foreground truncate">{e.phone}</div>
-                            <div className="text-[11px] text-muted-foreground/80 flex items-center gap-1 mt-0.5">
-                              <ImageIcon className="h-3 w-3" />
-                              Circular profile style
-                            </div>
-                          </div>
-                        </div>
-                        <span className={`text-[11px] rounded-full px-2 py-0.5 ${e.is_active ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"}`}>
-                          {e.is_active ? "Approved" : "Pending"}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 gap-1.5 text-xs">
-                      <div className="flex items-center gap-1.5 text-muted-foreground">
-                        <Building2 className="h-3.5 w-3.5" />
-                        <span><strong>Department:</strong> {e.department_name || "-"}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-muted-foreground">
-                        <UserCheck className="h-3.5 w-3.5" />
-                        <span><strong>Title:</strong> {e.position_title || e.job_title || "-"}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-muted-foreground">
-                        <MapPin className="h-3.5 w-3.5" />
-                        <span><strong>Location:</strong> {e.work_location_name || "-"}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-muted-foreground">
-                        <UserRound className="h-3.5 w-3.5" />
-                        <span><strong>Line Manager:</strong> {e.supervisor_name || "ECWC Admin"}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-muted-foreground">
-                        {e.is_active ? <CheckCircle2 className="h-3.5 w-3.5 text-green-700" /> : <Clock3 className="h-3.5 w-3.5 text-amber-700" />}
-                        <span><strong>Status:</strong> {e.is_active ? "Access granted" : "Waiting for admin approval"}</span>
-                      </div>
-                    </div>
-
-                    <div className="pt-1">
-                      <div className="grid grid-cols-3 gap-1.5">
-                        <Button
-                          size="sm"
-                          className="h-7 w-full bg-[#137638] hover:bg-[#0f5c2b] text-xs"
-                          onClick={() => void handleApprove(e.id)}
-                          disabled={e.is_active || approvingId === e.id || !canApprove}
-                        >
-                          {e.is_active ? "Approved" : approvingId === e.id ? "..." : "Approve"}
-                        </Button>
-                        <button title="Edit" disabled={!canUpdate} className="h-7 w-full inline-flex items-center justify-center rounded border hover:bg-muted disabled:opacity-50" onClick={() => startEdit(e)}>
-                          <Edit3 className="h-3.5 w-3.5" />
-                        </button>
-                        <button title="Delete" disabled={!canDelete} className="h-7 w-full inline-flex items-center justify-center rounded border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-50" onClick={() => void handleDelete(e.id)}>
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </div>
         )}
       </div>
     </Layout>
   );
 }
-

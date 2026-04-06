@@ -12,11 +12,15 @@ import { apiUrl } from '@/lib/api-client';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const canAccessRoute = useCallback((route: string) => {
+    if (route.startsWith('/equipment/dashboard')) return can('page:view:equipment_dashboard');
     if (route.startsWith('/equipment')) return can('page:view:assets');
+    if (route.startsWith('/machinery-operations')) return can('page:view:assets');
+    if (route.startsWith('/common-data')) return can('page:view:master_data');
+    if (route.startsWith('/compound-map')) return can('page:view:assets');
     if (route.startsWith('/announcements')) return can('page:view:announcements');
     if (route.startsWith('/audit')) return can('page:view:audit');
     if (route.startsWith('/admin/master-data')) return can('page:view:master_data');
-    if (route.startsWith('/admin/access-control')) return can('page:view:access_control');
+    if (route.startsWith('/admin/access-control')) return can('authz:manage');
     if (route.startsWith('/admin/employees')) return can('page:view:employee_access');
     if (route.startsWith('/profile')) return can('page:view:profile');
     return true;

@@ -185,6 +185,41 @@ export async function refreshAccessTokenIfNeeded(force = false): Promise<boolean
         // Keep refresh token from latest session (or previous one if missing)
         refreshToken: latest.refreshToken ?? session.refreshToken,
       };
+
+      // Refresh permissions/roles snapshot used by `can(...)`.
+      try {
+        const meRes = await fetch(apiUrl('/api/v1/auth/me'), {
+          headers: {
+            'Authorization': `Bearer ${body.access_token}`,
+            'X-User-Phone': next.user.phone,
+            'X-User-Name': next.user.name,
+          },
+        });
+        if (meRes.ok) {
+          const me = (await meRes.json().catch(() => ({}))) as {
+            id?: string;
+            full_name?: string;
+            email?: string;
+            phone?: string;
+            profile_image?: string | null;
+            roles?: string[];
+            permissions?: string[];
+          };
+          next.user = {
+            ...next.user,
+            id: me.id ?? next.user.id,
+            name: me.full_name ?? next.user.name,
+            email: me.email ?? next.user.email,
+            phone: me.phone ?? next.user.phone,
+            profile_image: me.profile_image ?? next.user.profile_image ?? null,
+            roles: Array.isArray(me.roles) ? me.roles : next.user.roles ?? [],
+            permissions: Array.isArray(me.permissions) ? me.permissions : next.user.permissions ?? [],
+          };
+        }
+      } catch {
+        // Keep refreshed token even if /me fails.
+      }
+
       localStorage.setItem(SESSION_KEY, JSON.stringify(next));
       window.dispatchEvent(new CustomEvent(SESSION_EVENT));
       return true;
