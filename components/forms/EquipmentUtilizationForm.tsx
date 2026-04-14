@@ -284,10 +284,59 @@ type UtilRow = {
   typeOfWork: string
 }
 
-/** Status is op or idle (case-insensitive) — only these rows accept data. */
-function isRowEditable(row: UtilRow): boolean {
-  const s = (row.status ?? "").trim().toLowerCase()
-  return s === "op" || s === "idle"
+// Category order priority
+const CATEGORY_ORDER: { [key: string]: number } = {
+  "Plant": 1,
+  "Machinery": 2,
+  "Heavy Vehicle": 3,
+  "Light Vehicle": 4,
+  "Bus": 5,
+  "Auxillary": 6,
+}
+
+// Status order: OP first, then Idle, then others
+const STATUS_ORDER: { [key: string]: number } = {
+  "op": 1,
+  "idle": 2,
+}
+
+function getCategoryPriority(category: string): number {
+  // Try exact match first
+  if (CATEGORY_ORDER[category]) return CATEGORY_ORDER[category]
+  // Try case-insensitive partial match
+  const lowerCat = category.toLowerCase()
+  for (const [key, priority] of Object.entries(CATEGORY_ORDER)) {
+    if (lowerCat.includes(key.toLowerCase())) return priority
+  }
+  return 999 // Unknown categories go to the end
+}
+
+function getStatusPriority(status: string): number {
+  const lowerStatus = status.toLowerCase()
+  if (STATUS_ORDER[lowerStatus]) return STATUS_ORDER[lowerStatus]
+  return 999
+}
+
+// Sort equipment by: Category order first, then within same category by status (OP > Idle > others)
+function sortEquipmentOptions(options: EquipmentOption[]): EquipmentOption[] {
+  return [...options].sort((a, b) => {
+    const catA = a.category ?? ""
+    const catB = b.category ?? ""
+    const catPriorityA = getCategoryPriority(catA)
+    const catPriorityB = getCategoryPriority(catB)
+    
+    if (catPriorityA !== catPriorityB) {
+      return catPriorityA - catPriorityB
+    }
+    
+    // Same category, sort by status priority
+    const statusA = a.status ?? ""
+    const statusB = b.status ?? ""
+    const statusPriorityA = getStatusPriority(statusA)
+    const statusPriorityB = getStatusPriority(statusB)
+    
+    return statusPriorityA - statusPriorityB
+  })
 }
 
 function rowHasAnyData(row: UtilRow): boolean {
@@ -370,7 +419,7 @@ export default function EquipmentUtilizationForm() {
     operatorNightSecondHalf: "",
     typeOfWork: "",
   })
-  const [rows, setRows] = useState<UtilRow[]>([newUtilRow()])
+  const [rows, setRows] = useState<UtilRow[]>([])
   const [recordedBy, setRecordedBy] = useState("")
   const [checkedBy, setCheckedBy] = useState("")
 
@@ -462,13 +511,18 @@ export default function EquipmentUtilizationForm() {
     }
   }, [])
 
-  // When equipment loads for the selected project, populate one row per equipment
-  // Sort: op and idle first, then others at bottom
+  // When equipment loads for the selected project, populate rows with sorted equipment
   useEffect(() => {
-    if (equipmentOptions.length === 0) return
-    const mapped = equipmentOptions.map((opt) => ({
+    if (equipmentOptions.length === 0) {
+      setRows([])
+      return
+    }
+    
+    const sortedOptions = sortEquipmentOptions(equipmentOptions)
+    
+    const mapped = sortedOptions.map((opt) => ({
       ...newUtilRow(),
-      id: `r-${opt.id}-${Date.now()}`,
+      id: `r-${opt.id}-${Date.now()}-${Math.random().toString(36).slice(2)}`,
       assetId: opt.id,
       category: opt.category ?? "",
       description: opt.description ?? "",
@@ -479,8 +533,7 @@ export default function EquipmentUtilizationForm() {
       rateIdle: opt.rate_idle != null ? String(opt.rate_idle) : "",
       rateDown: opt.rate_down != null ? String(opt.rate_down) : "",
     }))
-    const editable = (r: UtilRow) => ((r.status ?? "").trim().toLowerCase() === "op" || (r.status ?? "").trim().toLowerCase() === "idle")
-    mapped.sort((a, b) => (editable(a) ? 0 : 1) - (editable(b) ? 0 : 1))
+    
     setRows(mapped)
   }, [header.project, equipmentOptions])
 
@@ -502,18 +555,14 @@ export default function EquipmentUtilizationForm() {
               rateDown: option?.rate_down != null ? String(option.rate_down) : "",
             }
       )
-      const updatedLast = nextRows[nextRows.length - 1]
-      if (option && updatedLast?.id === rowId && rowHasAnyData(updatedLast)) {
-        return [...nextRows, newUtilRow()]
-      }
       return nextRows
     })
   }
 
   const removeRow = (id: string) => {
-    if (rows.length <= 1) return
     setRows((prev) => prev.filter((r) => r.id !== id))
   }
+  
   const updateRow = (id: string, field: keyof UtilRow, value: string) => {
     setRows((prev) => {
       const nextRows = prev.map((r) => {
@@ -580,10 +629,6 @@ export default function EquipmentUtilizationForm() {
 
         return next
       })
-      const updatedLast = nextRows[nextRows.length - 1]
-      if (updatedLast?.id === id && rowHasAnyData(updatedLast)) {
-        return [...nextRows, newUtilRow()]
-      }
       return nextRows
     })
   }
@@ -978,7 +1023,7 @@ export default function EquipmentUtilizationForm() {
                             <th className="border border-emerald-600 px-1.5 py-1.5 text-center font-semibold">Idle Hr</th>
                             <th className="border border-emerald-600 px-1.5 py-1.5 text-center font-semibold">Down Hr</th>
                             <th className="border border-emerald-600 px-1.5 py-1.5 text-center font-semibold bg-emerald-800">Total revenue (Birr)</th>
-                          </tr>
+                           </tr>
                         </thead>
                         <tbody>
                           {pageRows.map((row, idx) => {
@@ -1056,13 +1101,7 @@ export default function EquipmentUtilizationForm() {
                   value={header.project || "__none__"}
                   onValueChange={(v) => {
                     const nextProject = v === "__none__" ? "" : v
-                    // If project is actually changing and there is data in any row,
-                    // reset all equipment rows so user can freely switch project.
-                    const hasRowData = rows.some((r) => rowHasAnyData(r))
                     setHeader((p) => ({ ...p, project: nextProject }))
-                    if (hasRowData) {
-                      setRows([newUtilRow()])
-                    }
                     // Clear equipment-related UI state so comboboxes refresh correctly
                     setEquipmentOptions([])
                     setOpenEquipmentRowId(null)
@@ -1146,17 +1185,15 @@ export default function EquipmentUtilizationForm() {
                   </thead>
                   <tbody>
                     {rows.map((row, index) => {
-                      const rowDisabled = !isRowEditable(row)
+                      // All rows are now editable
                       return (
                       <tr
                         key={row.id}
                         className={cn(
                           "transition-colors",
-                          rowDisabled
-                            ? "bg-amber-50/80 hover:bg-amber-50"
-                            : index % 2 === 0
-                              ? "bg-white hover:bg-emerald-50/50"
-                              : "bg-emerald-50/20 hover:bg-emerald-50/60"
+                          index % 2 === 0
+                            ? "bg-white hover:bg-emerald-50/50"
+                            : "bg-emerald-50/20 hover:bg-emerald-50/60"
                         )}
                       >
                         <td className="border border-slate-200 p-0 text-center align-middle w-8">
@@ -1166,7 +1203,6 @@ export default function EquipmentUtilizationForm() {
                             size="icon"
                             className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-100"
                             onClick={() => removeRow(row.id)}
-                            disabled={rows.length <= 1}
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>
@@ -1196,31 +1232,28 @@ export default function EquipmentUtilizationForm() {
                         </td>
                         <td className="border border-zinc-200 p-0 min-w-[70px] w-[70px]">
                           <Input
-                            className={cn(cellInput, rowDisabled && "bg-zinc-100 cursor-not-allowed")}
+                            className={cn(cellInput)}
                             value={row.rateOp}
-                            onChange={(e) => !rowDisabled && updateRow(row.id, "rateOp", e.target.value)}
+                            onChange={(e) => updateRow(row.id, "rateOp", e.target.value)}
                             placeholder="—"
-                            readOnly={rowDisabled}
                             title="Operational rate (Birr/hr)"
                           />
                         </td>
                         <td className="border border-zinc-200 p-0 min-w-[70px] w-[70px]">
                           <Input
-                            className={cn(cellInput, rowDisabled && "bg-zinc-100 cursor-not-allowed")}
+                            className={cn(cellInput)}
                             value={row.rateIdle}
-                            onChange={(e) => !rowDisabled && updateRow(row.id, "rateIdle", e.target.value)}
+                            onChange={(e) => updateRow(row.id, "rateIdle", e.target.value)}
                             placeholder="—"
-                            readOnly={rowDisabled}
                             title="Idle rate (Birr/hr)"
                           />
                         </td>
                         <td className="border border-zinc-200 p-0 min-w-[70px] w-[70px]">
                           <Input
-                            className={cn(cellInput, rowDisabled && "bg-zinc-100 cursor-not-allowed")}
+                            className={cn(cellInput)}
                             value={row.rateDown}
-                            onChange={(e) => !rowDisabled && updateRow(row.id, "rateDown", e.target.value)}
+                            onChange={(e) => updateRow(row.id, "rateDown", e.target.value)}
                             placeholder="—"
-                            readOnly={rowDisabled}
                             title="Down rate (Birr/hr)"
                           />
                         </td>
@@ -1235,7 +1268,6 @@ export default function EquipmentUtilizationForm() {
                                 v === "__none__" ? "" : v
                               )
                             }
-                            disabled={rowDisabled}
                             className={cellSelect}
                           >
                             <SelectItem value="__none__">—</SelectItem>
@@ -1257,7 +1289,6 @@ export default function EquipmentUtilizationForm() {
                                 v === "__none__" ? "" : v
                               )
                             }
-                            disabled={rowDisabled}
                             className={cellSelect}
                           >
                             <SelectItem value="__none__">—</SelectItem>
@@ -1279,7 +1310,6 @@ export default function EquipmentUtilizationForm() {
                                 v === "__none__" ? "" : v
                               )
                             }
-                            disabled={rowDisabled}
                             className={cellSelect}
                           >
                             <SelectItem value="__none__">—</SelectItem>
@@ -1301,7 +1331,6 @@ export default function EquipmentUtilizationForm() {
                                 v === "__none__" ? "" : v
                               )
                             }
-                            disabled={rowDisabled}
                             className={cellSelect}
                           >
                             <SelectItem value="__none__">—</SelectItem>
@@ -1323,7 +1352,6 @@ export default function EquipmentUtilizationForm() {
                                 v === "__none__" ? "" : v
                               )
                             }
-                            disabled={rowDisabled}
                             className={cellSelect}
                           >
                             <SelectItem value="__none__">—</SelectItem>
@@ -1345,7 +1373,6 @@ export default function EquipmentUtilizationForm() {
                                 v === "__none__" ? "" : v
                               )
                             }
-                            disabled={rowDisabled}
                             className={cellSelect}
                           >
                             <SelectItem value="__none__">—</SelectItem>
@@ -1367,7 +1394,6 @@ export default function EquipmentUtilizationForm() {
                                 v === "__none__" ? "" : v
                               )
                             }
-                            disabled={rowDisabled}
                             className={cellSelect}
                           >
                             <SelectItem value="__none__">—</SelectItem>
@@ -1389,7 +1415,6 @@ export default function EquipmentUtilizationForm() {
                                 v === "__none__" ? "" : v
                               )
                             }
-                            disabled={rowDisabled}
                             className={cellSelect}
                           >
                             <SelectItem value="__none__">—</SelectItem>
@@ -1403,21 +1428,17 @@ export default function EquipmentUtilizationForm() {
                         <td className="border border-zinc-200 p-0"><Input className={cn(cellInput, "bg-zinc-50")} value={row.workedHrs} readOnly title="Auto-calculated from 1st/2nd half and night shift times" /></td>
                         <td className="border border-zinc-200 p-0">
                           <Input
-                            className={cn(cellInput, isInvalidHours(row.idleHrs) && "ring-1 ring-red-500 rounded", rowDisabled && "bg-zinc-100 cursor-not-allowed")}
+                            className={cn(cellInput, isInvalidHours(row.idleHrs) && "ring-1 ring-red-500 rounded")}
                             value={row.idleHrs}
-                            onChange={(e) => !rowDisabled && updateRow(row.id, "idleHrs", e.target.value)}
-                            onFocus={(e) => !rowDisabled && handleZeroFocus(row.id, "idleHrs", e.target.value)}
-                            readOnly={rowDisabled}
+                            onChange={(e) => updateRow(row.id, "idleHrs", e.target.value)}
+                            onFocus={(e) => handleZeroFocus(row.id, "idleHrs", e.target.value)}
                             title={isInvalidHours(row.idleHrs) ? "Enter a valid number ≥ 0" : undefined}
                           />
                         </td>
                         <td className="border border-zinc-200 p-0">
                           <Select
                             value={row.idleReason || "__none__"}
-                            onValueChange={(v) =>
-                              !rowDisabled && updateRow(row.id, "idleReason", v === "__none__" ? "" : v)
-                            }
-                            disabled={rowDisabled}
+                            onValueChange={(v) => updateRow(row.id, "idleReason", v === "__none__" ? "" : v)}
                             className={cellSelect}
                           >
                             <SelectItem value="__none__">—</SelectItem>
@@ -1430,21 +1451,17 @@ export default function EquipmentUtilizationForm() {
                         </td>
                         <td className="border border-zinc-200 p-0">
                           <Input
-                            className={cn(cellInput, isInvalidHours(row.downHrs) && "ring-1 ring-red-500 rounded", rowDisabled && "bg-zinc-100 cursor-not-allowed")}
+                            className={cn(cellInput, isInvalidHours(row.downHrs) && "ring-1 ring-red-500 rounded")}
                             value={row.downHrs}
-                            onChange={(e) => !rowDisabled && updateRow(row.id, "downHrs", e.target.value)}
-                            onFocus={(e) => !rowDisabled && handleZeroFocus(row.id, "downHrs", e.target.value)}
-                            readOnly={rowDisabled}
+                            onChange={(e) => updateRow(row.id, "downHrs", e.target.value)}
+                            onFocus={(e) => handleZeroFocus(row.id, "downHrs", e.target.value)}
                             title={isInvalidHours(row.downHrs) ? "Enter a valid number ≥ 0" : undefined}
                           />
                         </td>
                         <td className="border border-zinc-200 p-0">
                           <Select
                             value={row.downReason || "__none__"}
-                            onValueChange={(v) =>
-                              !rowDisabled && updateRow(row.id, "downReason", v === "__none__" ? "" : v)
-                            }
-                            disabled={rowDisabled}
+                            onValueChange={(v) => updateRow(row.id, "downReason", v === "__none__" ? "" : v)}
                             className={cellSelect}
                           >
                             <SelectItem value="__none__">—</SelectItem>
@@ -1457,67 +1474,63 @@ export default function EquipmentUtilizationForm() {
                         </td>
                         <td className="border border-zinc-200 p-0 min-w-[90px] w-[100px]">
                           <Input
-                            className={cn(cellInput, rowDisabled && "bg-zinc-100 cursor-not-allowed")}
+                            className={cn(cellInput)}
                             value={row.engineInitial}
-                            onChange={(e) => !rowDisabled && updateRow(row.id, "engineInitial", e.target.value)}
-                            onFocus={(e) => !rowDisabled && handleZeroFocus(row.id, "engineInitial", e.target.value)}
-                            readOnly={rowDisabled}
+                            onChange={(e) => updateRow(row.id, "engineInitial", e.target.value)}
+                            onFocus={(e) => handleZeroFocus(row.id, "engineInitial", e.target.value)}
                           />
                         </td>
                         <td className="border border-zinc-200 p-0 min-w-[90px] w-[100px]">
                           <Input
-                            className={cn(cellInput, rowDisabled && "bg-zinc-100 cursor-not-allowed")}
+                            className={cn(cellInput)}
                             value={row.engineFinal}
-                            onChange={(e) => !rowDisabled && updateRow(row.id, "engineFinal", e.target.value)}
-                            onFocus={(e) => !rowDisabled && handleZeroFocus(row.id, "engineFinal", e.target.value)}
-                            readOnly={rowDisabled}
+                            onChange={(e) => updateRow(row.id, "engineFinal", e.target.value)}
+                            onFocus={(e) => handleZeroFocus(row.id, "engineFinal", e.target.value)}
                           />
                         </td>
                         <td className="border border-zinc-200 p-0 min-w-[80px] w-[90px]"><Input className={`${cellInput} bg-zinc-50`} value={row.engineDiff} readOnly /></td>
                         <td className="border border-zinc-200 p-0">
                           <Input
-                            className={cn(cellInput, rowDisabled && "bg-zinc-100 cursor-not-allowed")}
+                            className={cn(cellInput)}
                             value={row.fuelLtrs}
-                            onChange={(e) => !rowDisabled && updateRow(row.id, "fuelLtrs", e.target.value)}
-                            onFocus={(e) => !rowDisabled && handleZeroFocus(row.id, "fuelLtrs", e.target.value)}
-                            readOnly={rowDisabled}
+                            onChange={(e) => updateRow(row.id, "fuelLtrs", e.target.value)}
+                            onFocus={(e) => handleZeroFocus(row.id, "fuelLtrs", e.target.value)}
                           />
                         </td>
                         <td className="border border-zinc-200 p-0">
                           <Input
-                            className={cn(cellInput, rowDisabled && "bg-zinc-100 cursor-not-allowed")}
+                            className={cn(cellInput)}
                             value={row.fuelReading}
-                            onChange={(e) => !rowDisabled && updateRow(row.id, "fuelReading", e.target.value)}
-                            onFocus={(e) => !rowDisabled && handleZeroFocus(row.id, "fuelReading", e.target.value)}
-                            readOnly={rowDisabled}
+                            onChange={(e) => updateRow(row.id, "fuelReading", e.target.value)}
+                            onFocus={(e) => handleZeroFocus(row.id, "fuelReading", e.target.value)}
                           />
                         </td>
                         <td className="border border-zinc-200 p-0 min-w-[120px] w-[140px]">
-                          <Select value={row.operatorFirstHalf || "__none__"} onValueChange={(v) => !rowDisabled && updateRow(row.id, "operatorFirstHalf", v === "__none__" ? "" : v)} disabled={rowDisabled} className={cellSelect}>
+                          <Select value={row.operatorFirstHalf || "__none__"} onValueChange={(v) => updateRow(row.id, "operatorFirstHalf", v === "__none__" ? "" : v)} className={cellSelect}>
                             <SelectItem value="__none__">—</SelectItem>
                             {operatorOptions.map((op) => <SelectItem key={`op-d1-${op}`} value={op}>{op}</SelectItem>)}
                           </Select>
                         </td>
                         <td className="border border-zinc-200 p-0 min-w-[120px] w-[140px]">
-                          <Select value={row.operatorSecondHalf || "__none__"} onValueChange={(v) => !rowDisabled && updateRow(row.id, "operatorSecondHalf", v === "__none__" ? "" : v)} disabled={rowDisabled} className={cellSelect}>
+                          <Select value={row.operatorSecondHalf || "__none__"} onValueChange={(v) => updateRow(row.id, "operatorSecondHalf", v === "__none__" ? "" : v)} className={cellSelect}>
                             <SelectItem value="__none__">—</SelectItem>
                             {operatorOptions.map((op) => <SelectItem key={`op-d2-${op}`} value={op}>{op}</SelectItem>)}
                           </Select>
                         </td>
                         <td className="border border-zinc-200 p-0 min-w-[120px] w-[140px]">
-                          <Select value={row.operatorNightFirstHalf || "__none__"} onValueChange={(v) => !rowDisabled && updateRow(row.id, "operatorNightFirstHalf", v === "__none__" ? "" : v)} disabled={rowDisabled} className={cellSelect}>
+                          <Select value={row.operatorNightFirstHalf || "__none__"} onValueChange={(v) => updateRow(row.id, "operatorNightFirstHalf", v === "__none__" ? "" : v)} className={cellSelect}>
                             <SelectItem value="__none__">—</SelectItem>
                             {operatorOptions.map((op) => <SelectItem key={`op-n1-${op}`} value={op}>{op}</SelectItem>)}
                           </Select>
                         </td>
                         <td className="border border-zinc-200 p-0 min-w-[120px] w-[140px]">
-                          <Select value={row.operatorNightSecondHalf || "__none__"} onValueChange={(v) => !rowDisabled && updateRow(row.id, "operatorNightSecondHalf", v === "__none__" ? "" : v)} disabled={rowDisabled} className={cellSelect}>
+                          <Select value={row.operatorNightSecondHalf || "__none__"} onValueChange={(v) => updateRow(row.id, "operatorNightSecondHalf", v === "__none__" ? "" : v)} className={cellSelect}>
                             <SelectItem value="__none__">—</SelectItem>
                             {operatorOptions.map((op) => <SelectItem key={`op-n2-${op}`} value={op}>{op}</SelectItem>)}
                           </Select>
                         </td>
                         <td className="border border-zinc-200 p-0 min-w-[200px] w-[240px]">
-                          <Select value={row.typeOfWork || "__none__"} onValueChange={(v) => !rowDisabled && updateRow(row.id, "typeOfWork", v === "__none__" ? "" : v)} disabled={rowDisabled} className={cellSelect}>
+                          <Select value={row.typeOfWork || "__none__"} onValueChange={(v) => updateRow(row.id, "typeOfWork", v === "__none__" ? "" : v)} className={cellSelect}>
                             <SelectItem value="__none__">—</SelectItem>
                             {typeOfWorkOptions.map((work) => <SelectItem key={`work-${work}`} value={work}>{work}</SelectItem>)}
                           </Select>
@@ -1525,11 +1538,6 @@ export default function EquipmentUtilizationForm() {
                       </tr>
                     )
                     })}
-                    {Array.from({ length: Math.max(0, 4 - rows.length) }).map((_, i) => (
-                      <tr key={`empty-${i}`} aria-hidden>
-                        <td colSpan={28} className="border border-zinc-200 bg-zinc-50/30 h-7" />
-                      </tr>
-                    ))}
                   </tbody>
                 </table>
               </div>
