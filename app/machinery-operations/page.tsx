@@ -7,6 +7,7 @@ import EquipmentUtilizationForm from '@/components/forms/EquipmentUtilizationFor
 import EquipmentUtilizationReport from '@/components/forms/EquipmentUtilizationReport';
 import MachineryRentAgreementForm from '@/components/forms/MachineryRentAgreementForm';
 import DailyStatusRegisterForm from '@/components/forms/DailyStatusRegisterForm';
+import MachineryOperationsDataSection from '@/components/forms/MachineryOperationsDataSection';
 
 const FORM_ITEMS: FormItem[] = [
   // { name: 'Equipment Utilization Plan', component: <EquipmentUtilizationPlan /> },
@@ -14,9 +15,9 @@ const FORM_ITEMS: FormItem[] = [
   // { name: 'Daily Dump Trucks Trip Register', component: <DailyDumpTrucksTripRegister /> },
   // { name: 'Daily Full Rented Service Vehicles Register' },
   // { name: 'Morning and Evening Service Vehicles Register' },
-  { name: 'Daily Status Register', component: <DailyStatusRegisterForm /> },
+  { name: 'Daily Status Change Register', component: <DailyStatusRegisterForm /> },
   // { name: 'Down Machinery Daily Status Register', component: <DailyDownForm /> },
-  { name: 'Machinery and Service Vehicles Rent Agreement', component: <MachineryRentAgreementForm /> },
+  { name: ' Rental Asset Agreement Form', component: <MachineryRentAgreementForm /> },
   // { name: 'Equipment Transfer Register', component: <EquipmentTransferForm /> },
   // { name: 'Equipment Arrival Register' },
   // { name: 'Machines Tyre Replacement Register', component: <MachinesTyreReplacementForm /> },
@@ -41,6 +42,7 @@ export default function MachineryOperationsPage() {
       title={undefined}
       formItems={FORM_ITEMS}
       reportItems={REPORT_ITEMS}
+      dataComponent={<MachineryOperationsDataSection />}
       icon={<ClipboardList className="h-6 w-6" />}
     />
   );

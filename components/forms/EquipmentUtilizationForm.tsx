@@ -13,6 +13,13 @@ import { fetchAssetFacets, fetchEquipmentOptions, type EquipmentOption } from "@
 import { getSession } from "@/lib/auth"
 import { FormModalHeaderActionsContext } from "@/components/FormModal"
 import { cn } from "@/lib/utils"
+import {
+  createOperator,
+  createTypeOfWork,
+  createUtilizationRegister,
+  listOperators,
+  listTypeOfWork,
+} from "@/lib/api/machinery-operations"
 
 const IDLE_REASONS = [
   { value: "FL", full: "Fuel/Lubricant Shortage" },
@@ -272,6 +279,8 @@ type UtilRow = {
   fuelReading: string
   operatorFirstHalf: string
   operatorSecondHalf: string
+  operatorNightFirstHalf: string
+  operatorNightSecondHalf: string
   typeOfWork: string
 }
 
@@ -311,6 +320,8 @@ function rowHasAnyData(row: UtilRow): boolean {
     (row.fuelReading !== "0" && row.fuelReading !== "") ||
     row.operatorFirstHalf ||
     row.operatorSecondHalf ||
+    row.operatorNightFirstHalf ||
+    row.operatorNightSecondHalf ||
     row.typeOfWork
   )
 }
@@ -355,6 +366,8 @@ export default function EquipmentUtilizationForm() {
     fuelReading: "0",
     operatorFirstHalf: "",
     operatorSecondHalf: "",
+    operatorNightFirstHalf: "",
+    operatorNightSecondHalf: "",
     typeOfWork: "",
   })
   const [rows, setRows] = useState<UtilRow[]>([newUtilRow()])
@@ -369,6 +382,9 @@ export default function EquipmentUtilizationForm() {
   const [equipmentSearch, setEquipmentSearch] = useState("")
   const [previewOpen, setPreviewOpen] = useState(false)
   const [legendsExpanded, setLegendsExpanded] = useState(false)
+  const [operatorOptions, setOperatorOptions] = useState<string[]>([])
+  const [typeOfWorkOptions, setTypeOfWorkOptions] = useState<string[]>([])
+  const [submittingRegister, setSubmittingRegister] = useState(false)
 
   useEffect(() => {
     if (!setHeaderActions) return
@@ -427,6 +443,24 @@ export default function EquipmentUtilizationForm() {
       })
     return () => { cancelled = true }
   }, [header.project])
+
+  useEffect(() => {
+    let cancelled = false
+    Promise.all([listOperators(), listTypeOfWork()])
+      .then(([ops, works]) => {
+        if (cancelled) return
+        setOperatorOptions((ops ?? []).map((o: any) => o.operator_value).filter(Boolean))
+        setTypeOfWorkOptions((works ?? []).map((w: any) => w.type_value).filter(Boolean))
+      })
+      .catch(() => {
+        if (cancelled) return
+        setOperatorOptions([])
+        setTypeOfWorkOptions([])
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   // When equipment loads for the selected project, populate one row per equipment
   // Sort: op and idle first, then others at bottom
@@ -650,7 +684,7 @@ export default function EquipmentUtilizationForm() {
   const recordedByLabel = recordedBy || "—"
   const checkedByLabel = checkedBy === "c2" ? "Supervisor A" : checkedBy === "c3" ? "Supervisor B" : "—"
 
-  const handleSubmitRegister = () => {
+  const handleSubmitRegister = async () => {
     if (!header.project.trim()) {
       window.alert("Please select project before submitting.")
       return
@@ -659,7 +693,98 @@ export default function EquipmentUtilizationForm() {
       window.alert("Recorded by is required.")
       return
     }
-    setPreviewOpen(true)
+    const activeRows = rows.filter((r) => r.assetId)
+    for (const r of activeRows) {
+      if (r.firstHalfStart && r.firstHalfEnd && !r.operatorFirstHalf.trim()) {
+        window.alert("Operator Day 1st Half is required when Day 1st Half start/end is filled.")
+        return
+      }
+      if (r.secondHalfStart && r.secondHalfEnd && !r.operatorSecondHalf.trim()) {
+        window.alert("Operator Day 2nd Half is required when Day 2nd Half start/end is filled.")
+        return
+      }
+      if (r.nightFirstHalfStart && r.nightFirstHalfEnd && !r.operatorNightFirstHalf.trim()) {
+        window.alert("Operator Night 1st Half is required when Night 1st Half start/end is filled.")
+        return
+      }
+      if (r.nightSecondHalfStart && r.nightSecondHalfEnd && !r.operatorNightSecondHalf.trim()) {
+        window.alert("Operator Night 2nd Half is required when Night 2nd Half start/end is filled.")
+        return
+      }
+    }
+    try {
+      setSubmittingRegister(true)
+      await createUtilizationRegister({
+        project_name: header.project,
+        gc_date: header.gcDate,
+        ref_no: header.refNo,
+        checked_by: checkedBy || null,
+        rows: activeRows.map((r) => ({
+          asset_id: r.assetId || null,
+          category: r.category,
+          description: r.description,
+          asset_no: r.assetNo,
+          plate_no: r.plateNo,
+          status: r.status,
+          rate_op: r.rateOp || null,
+          rate_idle: r.rateIdle || null,
+          rate_down: r.rateDown || null,
+          first_half_start: r.firstHalfStart || null,
+          first_half_end: r.firstHalfEnd || null,
+          second_half_start: r.secondHalfStart || null,
+          second_half_end: r.secondHalfEnd || null,
+          night_first_half_start: r.nightFirstHalfStart || null,
+          night_first_half_end: r.nightFirstHalfEnd || null,
+          night_second_half_start: r.nightSecondHalfStart || null,
+          night_second_half_end: r.nightSecondHalfEnd || null,
+          worked_hrs: r.workedHrs || null,
+          idle_hrs: r.idleHrs || null,
+          idle_reason: r.idleReason || null,
+          down_hrs: r.downHrs || null,
+          down_reason: r.downReason || null,
+          engine_initial: r.engineInitial || null,
+          engine_final: r.engineFinal || null,
+          engine_diff: r.engineDiff || null,
+          fuel_liters: r.fuelLtrs || null,
+          fuel_reading: r.fuelReading || null,
+          operator_day_first_half: r.operatorFirstHalf || null,
+          operator_day_second_half: r.operatorSecondHalf || null,
+          operator_night_first_half: r.operatorNightFirstHalf || null,
+          operator_night_second_half: r.operatorNightSecondHalf || null,
+          type_of_work: r.typeOfWork || null,
+        })),
+      })
+      window.alert("Utilization register submitted successfully.")
+      setPreviewOpen(true)
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : "Failed to submit register.")
+    } finally {
+      setSubmittingRegister(false)
+    }
+  }
+
+  const handleAddOperator = async () => {
+    const value = window.prompt("Enter new operator")
+    if (!value?.trim()) return
+    try {
+      await createOperator(value.trim())
+      const next = await listOperators()
+      setOperatorOptions((next ?? []).map((o: any) => o.operator_value).filter(Boolean))
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : "Failed to add operator")
+    }
+  }
+
+  const handleAddTypeOfWork = async () => {
+    const value = window.prompt("Enter new type of work")
+    if (!value?.trim()) return
+    try {
+      await createTypeOfWork(value.trim())
+      const next = await listTypeOfWork()
+      setTypeOfWorkOptions((next ?? []).map((w: any) => w.type_value).filter(Boolean))
+    } catch (e) {
+      window.alert(e instanceof Error ? e.message : "Failed to add type of work")
+    }
   }
 
   /** Rows per A4 page — ~22 rows fit with header/footer */
@@ -983,7 +1108,9 @@ export default function EquipmentUtilizationForm() {
                       <th className="px-2 py-2 text-left font-semibold tracking-wide text-emerald-50/95 whitespace-nowrap min-w-[90px] w-[90px]" rowSpan={2}>Asset No</th>
                       <th className="px-2 py-2 text-left font-semibold tracking-wide text-emerald-50/95 whitespace-nowrap min-w-[100px] w-[100px]" rowSpan={2}>Plate No</th>
                       <th className="px-2 py-2 text-left font-semibold tracking-wide text-emerald-50/95 whitespace-nowrap min-w-[80px] w-[80px]" rowSpan={2}>Status</th>
-                      <th className="px-1.5 py-2 text-left font-semibold tracking-wide text-emerald-50/95 whitespace-nowrap min-w-[70px] w-[70px] border-r-2 border-r-emerald-200/80" rowSpan={2}>Rate</th>
+                      <th className="px-1.5 py-2 text-left font-semibold tracking-wide text-emerald-50/95 whitespace-nowrap min-w-[70px] w-[70px]" rowSpan={2}>Op Rate</th>
+                      <th className="px-1.5 py-2 text-left font-semibold tracking-wide text-emerald-50/95 whitespace-nowrap min-w-[70px] w-[70px]" rowSpan={2}>Idle Rate</th>
+                      <th className="px-1.5 py-2 text-left font-semibold tracking-wide text-emerald-50/95 whitespace-nowrap min-w-[70px] w-[70px] border-r-2 border-r-emerald-200/80" rowSpan={2}>Down Rate</th>
                       <th className="px-2 py-2 text-center font-semibold tracking-wide text-emerald-50/95 whitespace-nowrap border-l-2 border-l-emerald-200/80" colSpan={2}>Day 1st Half Hr</th>
                       <th className="px-1.5 py-2 text-center font-semibold tracking-wide text-emerald-50/95 whitespace-nowrap border-l border-emerald-400/40" colSpan={2}>Day 2nd Half Hr</th>
                       <th className="px-1.5 py-2 text-center font-semibold tracking-wide text-emerald-50/95 whitespace-nowrap border-l border-emerald-400/40" colSpan={2}>Night 1st Half Hr</th>
@@ -996,7 +1123,7 @@ export default function EquipmentUtilizationForm() {
                       <th className="px-1.5 py-2 text-center font-semibold tracking-wide text-emerald-50/95 whitespace-nowrap border-l border-emerald-400/40" colSpan={3}>Engine Hr/Km</th>
                       <th className="px-1.5 py-2 text-center font-semibold tracking-wide text-emerald-50/95 whitespace-nowrap" rowSpan={2}>Fuel in Liters</th>
                       <th className="px-1.5 py-2 text-center font-semibold tracking-wide text-emerald-50/95 whitespace-nowrap" rowSpan={2}>Hr/Km Reading</th>
-                      <th className="px-1.5 py-2 text-center font-semibold tracking-wide text-emerald-50/95 whitespace-nowrap border-l border-emerald-400/40" colSpan={2}>Operator</th>
+                      <th className="px-1.5 py-2 text-center font-semibold tracking-wide text-emerald-50/95 whitespace-nowrap border-l border-emerald-400/40" colSpan={4}>Operator</th>
                       <th className="px-1.5 py-2 text-center font-semibold tracking-wide text-emerald-50/95 whitespace-nowrap" rowSpan={2}>Type of Work</th>
                     </tr>
                     <tr className="bg-emerald-900/20">
@@ -1011,8 +1138,10 @@ export default function EquipmentUtilizationForm() {
                       <th className="px-1 py-1 text-center text-emerald-100/90 whitespace-nowrap border-l border-emerald-400/40">Initial</th>
                       <th className="px-1 py-1 text-center text-emerald-100/90 whitespace-nowrap">Final</th>
                       <th className="px-1 py-1 text-center text-emerald-100/90 whitespace-nowrap">Diff</th>
-                      <th className="px-1 py-1 text-center text-emerald-100/90 whitespace-nowrap border-l border-emerald-400/40">1st Half</th>
-                      <th className="px-1 py-1 text-center text-emerald-100/90 whitespace-nowrap">2nd Half</th>
+                      <th className="px-1 py-1 text-center text-emerald-100/90 whitespace-nowrap border-l border-emerald-400/40">Day 1st Half</th>
+                      <th className="px-1 py-1 text-center text-emerald-100/90 whitespace-nowrap">Day 2nd Half</th>
+                      <th className="px-1 py-1 text-center text-emerald-100/90 whitespace-nowrap">Night 1st Half</th>
+                      <th className="px-1 py-1 text-center text-emerald-100/90 whitespace-nowrap">Night 2nd Half</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1073,6 +1202,26 @@ export default function EquipmentUtilizationForm() {
                             placeholder="—"
                             readOnly={rowDisabled}
                             title="Operational rate (Birr/hr)"
+                          />
+                        </td>
+                        <td className="border border-zinc-200 p-0 min-w-[70px] w-[70px]">
+                          <Input
+                            className={cn(cellInput, rowDisabled && "bg-zinc-100 cursor-not-allowed")}
+                            value={row.rateIdle}
+                            onChange={(e) => !rowDisabled && updateRow(row.id, "rateIdle", e.target.value)}
+                            placeholder="—"
+                            readOnly={rowDisabled}
+                            title="Idle rate (Birr/hr)"
+                          />
+                        </td>
+                        <td className="border border-zinc-200 p-0 min-w-[70px] w-[70px]">
+                          <Input
+                            className={cn(cellInput, rowDisabled && "bg-zinc-100 cursor-not-allowed")}
+                            value={row.rateDown}
+                            onChange={(e) => !rowDisabled && updateRow(row.id, "rateDown", e.target.value)}
+                            placeholder="—"
+                            readOnly={rowDisabled}
+                            title="Down rate (Birr/hr)"
                           />
                         </td>
                         <td className="border border-zinc-200 p-0">
@@ -1343,15 +1492,42 @@ export default function EquipmentUtilizationForm() {
                             readOnly={rowDisabled}
                           />
                         </td>
-                        <td className="border border-zinc-200 p-0 min-w-[120px] w-[140px]"><Input className={cn(cellInput, rowDisabled && "bg-zinc-100 cursor-not-allowed")} value={row.operatorFirstHalf} onChange={(e) => !rowDisabled && updateRow(row.id, "operatorFirstHalf", e.target.value)} readOnly={rowDisabled} /></td>
-                        <td className="border border-zinc-200 p-0 min-w-[120px] w-[140px]"><Input className={cn(cellInput, rowDisabled && "bg-zinc-100 cursor-not-allowed")} value={row.operatorSecondHalf} onChange={(e) => !rowDisabled && updateRow(row.id, "operatorSecondHalf", e.target.value)} readOnly={rowDisabled} /></td>
-                        <td className="border border-zinc-200 p-0 min-w-[200px] w-[240px]"><Input className={cn(cellInput, rowDisabled && "bg-zinc-100 cursor-not-allowed")} value={row.typeOfWork} onChange={(e) => !rowDisabled && updateRow(row.id, "typeOfWork", e.target.value)} readOnly={rowDisabled} /></td>
+                        <td className="border border-zinc-200 p-0 min-w-[120px] w-[140px]">
+                          <Select value={row.operatorFirstHalf || "__none__"} onValueChange={(v) => !rowDisabled && updateRow(row.id, "operatorFirstHalf", v === "__none__" ? "" : v)} disabled={rowDisabled} className={cellSelect}>
+                            <SelectItem value="__none__">—</SelectItem>
+                            {operatorOptions.map((op) => <SelectItem key={`op-d1-${op}`} value={op}>{op}</SelectItem>)}
+                          </Select>
+                        </td>
+                        <td className="border border-zinc-200 p-0 min-w-[120px] w-[140px]">
+                          <Select value={row.operatorSecondHalf || "__none__"} onValueChange={(v) => !rowDisabled && updateRow(row.id, "operatorSecondHalf", v === "__none__" ? "" : v)} disabled={rowDisabled} className={cellSelect}>
+                            <SelectItem value="__none__">—</SelectItem>
+                            {operatorOptions.map((op) => <SelectItem key={`op-d2-${op}`} value={op}>{op}</SelectItem>)}
+                          </Select>
+                        </td>
+                        <td className="border border-zinc-200 p-0 min-w-[120px] w-[140px]">
+                          <Select value={row.operatorNightFirstHalf || "__none__"} onValueChange={(v) => !rowDisabled && updateRow(row.id, "operatorNightFirstHalf", v === "__none__" ? "" : v)} disabled={rowDisabled} className={cellSelect}>
+                            <SelectItem value="__none__">—</SelectItem>
+                            {operatorOptions.map((op) => <SelectItem key={`op-n1-${op}`} value={op}>{op}</SelectItem>)}
+                          </Select>
+                        </td>
+                        <td className="border border-zinc-200 p-0 min-w-[120px] w-[140px]">
+                          <Select value={row.operatorNightSecondHalf || "__none__"} onValueChange={(v) => !rowDisabled && updateRow(row.id, "operatorNightSecondHalf", v === "__none__" ? "" : v)} disabled={rowDisabled} className={cellSelect}>
+                            <SelectItem value="__none__">—</SelectItem>
+                            {operatorOptions.map((op) => <SelectItem key={`op-n2-${op}`} value={op}>{op}</SelectItem>)}
+                          </Select>
+                        </td>
+                        <td className="border border-zinc-200 p-0 min-w-[200px] w-[240px]">
+                          <Select value={row.typeOfWork || "__none__"} onValueChange={(v) => !rowDisabled && updateRow(row.id, "typeOfWork", v === "__none__" ? "" : v)} disabled={rowDisabled} className={cellSelect}>
+                            <SelectItem value="__none__">—</SelectItem>
+                            {typeOfWorkOptions.map((work) => <SelectItem key={`work-${work}`} value={work}>{work}</SelectItem>)}
+                          </Select>
+                        </td>
                       </tr>
                     )
                     })}
                     {Array.from({ length: Math.max(0, 4 - rows.length) }).map((_, i) => (
                       <tr key={`empty-${i}`} aria-hidden>
-                        <td colSpan={24} className="border border-zinc-200 bg-zinc-50/30 h-7" />
+                        <td colSpan={28} className="border border-zinc-200 bg-zinc-50/30 h-7" />
                       </tr>
                     ))}
                   </tbody>
@@ -1359,6 +1535,21 @@ export default function EquipmentUtilizationForm() {
               </div>
             </div>
 
+            <div className="shrink-0 mt-3 w-full rounded-xl border border-emerald-200 bg-emerald-50/40 px-3 py-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="text-xs text-slate-700">
+                  Operator / Type of Work dropdown helper
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button type="button" variant="outline" className="h-8 px-3 text-xs" onClick={handleAddOperator}>
+                    Add Operator
+                  </Button>
+                  <Button type="button" variant="outline" className="h-8 px-3 text-xs" onClick={handleAddTypeOfWork}>
+                    Add Type of Work
+                  </Button>
+                </div>
+              </div>
+            </div>
             {/* Signature Fields */}
             <div className="shrink-0 mt-4 w-full min-w-0 pt-4 border-t-2 border-emerald-200/80 overflow-hidden">
               <div className="flex items-center justify-between gap-4 px-1">
@@ -1370,13 +1561,16 @@ export default function EquipmentUtilizationForm() {
                     className="h-9 min-w-[220px] border-slate-300 bg-white text-sm font-semibold text-slate-900"
                   />
                 </div>
-                <Button
-                  type="button"
-                  onClick={handleSubmitRegister}
-                  className="h-9 px-5 bg-[#137638] hover:bg-[#0f6430] text-white"
-                >
-                  Submit Register
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    onClick={handleSubmitRegister}
+                    disabled={submittingRegister}
+                    className="h-9 px-5 bg-[#137638] hover:bg-[#0f6430] text-white disabled:opacity-60"
+                  >
+                    {submittingRegister ? "Submitting..." : "Submit Register"}
+                  </Button>
+                </div>
               </div>
             </div>
 

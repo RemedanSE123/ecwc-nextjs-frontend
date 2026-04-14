@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Layout from '@/components/Layout';
 import FormModal from '@/components/FormModal';
 import { FileText, BarChart2, Database, ChevronRight } from 'lucide-react';
@@ -19,11 +20,19 @@ interface SectionPageProps {
   formItems: FormItem[];
   icon?: React.ReactNode;
   reportItems?: FormItem[];
+  dataComponent?: React.ReactNode;
 }
 
-export default function SectionPage({ title, formItems, icon, reportItems }: SectionPageProps) {
+function SectionPageContent({ title, formItems, icon, reportItems, dataComponent }: SectionPageProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<TabId>('form');
+  useEffect(() => {
+    const tab = searchParams?.get('tab');
+    if (tab === 'form' || tab === 'report' || tab === 'data') {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState('');
   const [modalContent, setModalContent] = useState<React.ReactNode>(null);
@@ -179,13 +188,19 @@ export default function SectionPage({ title, formItems, icon, reportItems }: Sec
 
         {/* Data tab */}
         {activeTab === 'data' && (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-12 h-12 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mb-4">
-              <Database className="w-6 h-6 text-zinc-400 dark:text-zinc-500" />
-            </div>
-            <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Data section coming soon</p>
-            <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">This section will be available in a future update.</p>
-          </div>
+          <>
+            {dataComponent ? (
+              <div className="mt-2">{dataComponent}</div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <div className="w-12 h-12 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center mb-4">
+                  <Database className="w-6 h-6 text-zinc-400 dark:text-zinc-500" />
+                </div>
+                <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Data section coming soon</p>
+                <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">This section will be available in a future update.</p>
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -197,5 +212,21 @@ export default function SectionPage({ title, formItems, icon, reportItems }: Sec
         {modalContent}
       </FormModal>
     </Layout>
+  );
+}
+
+export default function SectionPage(props: SectionPageProps) {
+  return (
+    <Suspense
+      fallback={
+        <Layout>
+          <div className="max-w-5xl mx-auto py-8 text-sm text-zinc-500 dark:text-zinc-400">
+            Loading section...
+          </div>
+        </Layout>
+      }
+    >
+      <SectionPageContent {...props} />
+    </Suspense>
   );
 }

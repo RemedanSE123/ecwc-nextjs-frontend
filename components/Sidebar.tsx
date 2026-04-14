@@ -60,7 +60,7 @@ const navigation: NavItem[] = [
 
   
   //{ name: 'Machinery Maintenance', href: '/machinery-maintenance', icon: Wrench },
-  { name: 'Machinery Operations ', href: '/machinery-operations', icon: ClipboardList },
+  { name: 'Machinery Operations', href: '/machinery-operations', icon: ClipboardList },
   //{ name: 'Equipment Admin', href: '/equipment-administration', icon: Settings },
   { name: 'Common Data', href: '/common-data', icon: Database },
   {

@@ -15,12 +15,42 @@ import {
   X,
   Eye,
   FileSignature,
+  User,
+  Hash,
+  MapPin,
+  Wrench,
+  Gauge,
+  Fuel,
+  Box,
+  Calendar as CalendarIcon,
+  Clock,
+  AlertCircle,
+  CheckCircle,
+  FileText,
+  Printer,
+  Download,
+  Settings,
+  Shield,
+  Award,
+  Briefcase,
+  Truck,
+  Fuel as FuelIcon,
+  Ruler,
+  Phone,
+  Mail,
+  Globe,
+  Star,
+  TrendingUp,
+  Users,
+  Package,
+  ClipboardList,
 } from "lucide-react";
 import { FormModalHeaderActionsContext } from "@/components/FormModal";
 import { EQUIPMENT_CATEGORIES } from "@/types/asset";
 import type { AssetFacets } from "@/types/asset";
-import { fetchAssetFacets } from "@/lib/api/assets";
+import { fetchAssetFacets, fetchAssets } from "@/lib/api/assets";
 import { getSession } from "@/lib/auth";
+import { createRentalAgreement, uploadAgreementPdf } from "@/lib/api/machinery-operations";
 
 const CATEGORY_SELECT_OPTIONS = EQUIPMENT_CATEGORIES.map((c) => ({
   value: c.dbCategory,
@@ -60,6 +90,58 @@ function UtilizationStyleHeader({ subtitle }: { subtitle: string }) {
   );
 }
 
+/** Section Header Component */
+function SectionHeader({ icon: Icon, title, description }: { icon: any; title: string; description?: string }) {
+  return (
+    <div className="flex items-center gap-2 mb-4 pb-1.5 border-b-2 border-emerald-500">
+      <div className="p-1.5 bg-emerald-50 rounded-lg">
+        <Icon className="h-4 w-4 text-emerald-700" />
+      </div>
+      <div>
+        <h2 className="text-sm font-bold text-gray-800">{title}</h2>
+        {description && <p className="text-[10px] text-gray-500">{description}</p>}
+      </div>
+    </div>
+  );
+}
+
+/** Form Field Component */
+function FormField({ 
+  number, 
+  label, 
+  required, 
+  children,
+  description 
+}: { 
+  number?: number; 
+  label: string; 
+  required?: boolean; 
+  children: React.ReactNode;
+  description?: string;
+}) {
+  return (
+    <div className="group">
+      <div className="flex flex-col sm:flex-row sm:items-start gap-2">
+        {number && (
+          <div className="w-7 shrink-0">
+            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold">
+              {number}
+            </span>
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <Label className="block text-xs font-semibold text-gray-700 mb-1.5">
+            {label}
+            {required && <span className="text-red-500 ml-0.5">*</span>}
+          </Label>
+          {children}
+          {description && <p className="text-[10px] text-gray-400 mt-1">{description}</p>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function MachineryRentAgreementForm() {
   const pdfRef = useRef<HTMLDivElement>(null);
   const agreementPdfInputRef = useRef<HTMLInputElement>(null);
@@ -81,7 +163,7 @@ export default function MachineryRentAgreementForm() {
       capacity: "",
       remark: "",
       contractStatus: "Active",
-      minHourPerDay: "",
+      minHourPerDay: "8",
       contractFromDate: from,
       contractToDate: defaultContractToDate(from),
     };
@@ -90,16 +172,17 @@ export default function MachineryRentAgreementForm() {
   const [agreedRates, setAgreedRates] = useState({
     operationalRate: "",
     idleRate: "",
-    downRate: "",
+    downRate: "0",
   });
 
   const [refGenerated, setRefGenerated] = useState("");
   const [facets, setFacets] = useState<AssetFacets | null>(null);
   const [allFacets, setAllFacets] = useState<AssetFacets | null>(null);
+  const [rentalAssets, setRentalAssets] = useState<Array<{ id: string; description: string; project_name: string; category: string }>>([]);
   const [facetsLoading, setFacetsLoading] = useState(false);
   const [allFacetsLoading, setAllFacetsLoading] = useState(false);
 
-  /** Today’s date only (auto when the form is opened; not agreement dates). */
+  /** Today's date only (auto when the form is opened; not agreement dates). */
   const [formDateAuto] = useState(() => new Date().toISOString().split("T")[0]);
   const [preparedByName, setPreparedByName] = useState("");
   const [agreementPdfFile, setAgreementPdfFile] = useState<File | null>(null);
@@ -117,10 +200,9 @@ export default function MachineryRentAgreementForm() {
       <button
         type="button"
         onClick={() => setPreviewOpen(true)}
-        className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors"
-        aria-label="Preview agreement"
+        className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-all shadow-sm"
       >
-        <Eye className="h-4 w-4" /> Preview
+        <Eye className="h-4 w-4" /> Preview Agreement
       </button>
     );
     return () => setHeaderActions(null);
@@ -152,6 +234,31 @@ export default function MachineryRentAgreementForm() {
       .finally(() => setFacetsLoading(false));
   }, [header.category]);
 
+  useEffect(() => {
+    if (!header.category.trim()) {
+      setRentalAssets([]);
+      return;
+    }
+    let cancelled = false;
+    fetchAssets({ category: [header.category], ownership: ["Rental"], limit: 2000, page: 1 })
+      .then((res) => {
+        if (cancelled) return;
+        const mapped = (res?.data ?? []).map((a: any) => ({
+          id: a.id,
+          description: a.description ?? "",
+          project_name: a.project_name ?? "",
+          category: a.category ?? "",
+        }));
+        setRentalAssets(mapped);
+      })
+      .catch(() => {
+        if (!cancelled) setRentalAssets([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [header.category]);
+
   const descriptionOptions = useMemo(() => {
     const list = [...new Set(facets?.description ?? [])].filter(Boolean).sort();
     if (header.description && !list.includes(header.description)) {
@@ -171,6 +278,18 @@ export default function MachineryRentAgreementForm() {
       setHeader((h) => ({ ...h, description: "" }));
     }
   }, [header.category, facets?.description, header.description]);
+
+  useEffect(() => {
+    if (!header.description.trim() || !header.category.trim()) return;
+    const match = rentalAssets.find(
+      (a) =>
+        a.category?.toLowerCase().trim() === header.category.toLowerCase().trim() &&
+        a.description?.toLowerCase().trim() === header.description.toLowerCase().trim()
+    );
+    if (match?.project_name) {
+      setHeader((h) => ({ ...h, rentedForProject: match.project_name }));
+    }
+  }, [header.description, header.category, rentalAssets]);
 
   const handleDownloadPdf = async () => {
     setPdfDownloading(true);
@@ -208,7 +327,7 @@ export default function MachineryRentAgreementForm() {
     }
   };
 
-  const handleSubmitAgreement = () => {
+  const handleSubmitAgreement = async () => {
     if (!header.owner.trim()) {
       window.alert("Please enter owner name before submitting.");
       return;
@@ -217,37 +336,57 @@ export default function MachineryRentAgreementForm() {
       window.alert("Please select rented project / location before submitting.");
       return;
     }
-    setPreviewOpen(true);
-  };
-
-  const fi =
-    "h-8 min-w-0 rounded-md border-2 border-slate-600 bg-white px-2 text-xs font-semibold text-slate-900 shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/50 focus-visible:border-emerald-600";
-  /** Native date inputs need min width + room for picker icon; avoid min-w-0 shrink. */
-  const fiContractDate =
-    `${fi} h-9 min-h-9 min-w-[13rem] w-full max-w-full px-2.5 py-1 text-sm tabular-nums [color-scheme:light] [&::-webkit-datetime-edit]:p-0 [&::-webkit-datetime-edit-fields-wrapper]:pr-1 [&::-webkit-calendar-picker-indicator]:ml-0.5 [&::-webkit-calendar-picker-indicator]:h-[1.125rem] [&::-webkit-calendar-picker-indicator]:w-[1.125rem] [&::-webkit-calendar-picker-indicator]:shrink-0 [&::-webkit-calendar-picker-indicator]:cursor-pointer`;
-  /** Party column: field grows; label has fixed width on sm+ so rows align. */
-  const fiParty = `${fi} w-full min-w-0 flex-1`;
-  const sel =
-    "[&_button]:h-8 [&_button]:text-[11px] [&_button]:font-semibold [&_button]:px-2 [&_button]:rounded-md [&_button]:w-full [&_button]:border-2 [&_button]:border-slate-600";
-  const comboWrap =
-    "rounded-md border-2 border-slate-600 bg-white text-xs shadow-sm focus-within:ring-2 focus-within:ring-emerald-500/40 [&_input]:border-0 [&_input]:shadow-none [&_input]:ring-0 [&_input]:focus-visible:ring-0";
-  const partyLbl =
-    "flex min-w-0 shrink-0 flex-nowrap items-baseline gap-2 text-sm font-extrabold leading-snug text-slate-950 sm:w-44 sm:min-w-[11rem]";
-  const partyLblTop = `${partyLbl} sm:pt-1`;
-  const partyNumCls = "font-black tabular-nums text-emerald-800";
-  const secTitle =
-    "flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wide text-emerald-900 mb-2 pb-1.5 border-b-2 border-emerald-400/90";
-  const lbl2 =
-    "min-w-0 shrink-0 text-sm font-extrabold text-slate-950 leading-snug";
-
-  const onAgreementPdfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    if (f.type !== "application/pdf") {
-      e.target.value = "";
+    if (agreedRates.downRate.trim() === "" || Number(agreedRates.downRate) < 0) {
+      window.alert("Down / hr is required and cannot be negative.");
       return;
     }
-    setAgreementPdfFile(f);
+    if (!agreementPdfFile) {
+      window.alert("Supporting Document (Agreement PDF) is required.");
+      return;
+    }
+    try {
+      let pdfKey = "";
+      let pdfName = "";
+      if (agreementPdfFile) {
+        const up = await uploadAgreementPdf(agreementPdfFile);
+        pdfKey = up.key;
+        pdfName = up.name;
+      }
+      const selectedAsset = rentalAssets.find(
+        (a) =>
+          a.category?.toLowerCase().trim() === header.category.toLowerCase().trim() &&
+          a.description?.toLowerCase().trim() === header.description.toLowerCase().trim() &&
+          a.project_name?.toLowerCase().trim() === header.rentedForProject.toLowerCase().trim()
+      );
+      await createRentalAgreement({
+        asset_id: selectedAsset?.id ?? null,
+        owner_name: header.owner,
+        tin_no: header.tinNo,
+        owner_address: header.address,
+        category: header.category,
+        description: header.description,
+        rented_project: header.rentedForProject,
+        make_model: header.makeModel,
+        plate_no: header.plateNo,
+        km_hr_reading: header.kmHrReading,
+        fuel_filled: header.fuelFilled,
+        capacity: header.capacity,
+        contract_from_date: header.contractFromDate || null,
+        contract_to_date: header.contractToDate || null,
+        contract_status: header.contractStatus,
+        min_hour_per_day: header.minHourPerDay || null,
+        rate_op: agreedRates.operationalRate || 0,
+        rate_idle: agreedRates.idleRate || 0,
+        rate_down: agreedRates.downRate || 0,
+        agreement_pdf_key: pdfKey || null,
+        agreement_pdf_name: pdfName || null,
+        remark: header.remark,
+      });
+      window.alert("Agreement submitted successfully.");
+      setPreviewOpen(true);
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : "Failed to submit agreement.");
+    }
   };
 
   const clearAgreementPdf = () => {
@@ -255,409 +394,407 @@ export default function MachineryRentAgreementForm() {
     if (agreementPdfInputRef.current) agreementPdfInputRef.current.value = "";
   };
 
-  return (
-    <div
-      id="form-print-area"
-      className="flex flex-1 min-h-0 w-full min-w-0 flex-col overflow-y-auto overscroll-contain bg-gradient-to-br from-slate-100 via-emerald-50/40 to-slate-100 print:min-h-0 print:flex-none print:overflow-visible print:bg-white"
-    >
-      <div ref={pdfRef} className="w-full min-w-0 max-w-none mx-0 px-0 py-0 print:p-0 print:max-w-[210mm]">
-        <Card className="overflow-visible border-x-0 border-t-0 border-b border-emerald-200/60 sm:border-x sm:rounded-none shadow-md shadow-emerald-950/5 ring-0 ring-transparent bg-white print:shadow-none print:border print:border-slate-900 print:rounded-none">
-          <CardContent className="px-3 py-2.5 sm:px-4 sm:py-3 print:p-5 text-[13px]">
-            {/* Document header — identical structure to EquipmentUtilizationForm */}
-            <UtilizationStyleHeader subtitle="RENTED MACHINERIES AGREEMENT" />
+  // Professional form input classes
+  const inputClass = "w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all bg-white";
+  const textareaClass = "w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all bg-white resize-y";
+  const selectClass = "w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all bg-white";
 
-            <div className="flex flex-wrap justify-between gap-x-3 gap-y-1 text-xs text-slate-700 mb-4 pb-2 border-b border-slate-100">
-              <span>
-                <span className="font-bold text-slate-900">Project:</span>{" "}
-                {header.rentedForProject || "—"}
-              </span>
-              <span title="Today’s date (automatic when this form is opened)">
-                <span className="font-bold text-slate-900">Form date (auto):</span> {formDateAuto}
-              </span>
-              <span>
-                <span className="font-bold text-slate-900">Ref:</span> {refGenerated || "—"}
-              </span>
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-emerald-50/30">
+      <div ref={pdfRef} className="w-full min-w-0 max-w-none mx-0 px-0 py-0">
+        <Card className="overflow-visible border-0 shadow-none bg-transparent">
+          <CardContent className="px-3 py-2.5 sm:px-4 sm:py-3">
+            {/* Original Header - Keep as is */}
+            <UtilizationStyleHeader subtitle="RENTED ASSET AGREEMENT" />
+
+            {/* Header Info Bar */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
+              <div className="flex flex-wrap justify-between items-center gap-3">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 rounded-lg">
+                    <CalendarIcon className="h-4 w-4 text-emerald-600" />
+                    <span className="text-sm font-medium text-gray-700">{formDateAuto}</span>
+                  </div>
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg">
+                    <FileText className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm font-mono text-gray-600">{refGenerated}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                    <span className="text-xs text-gray-500">Draft Mode</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-6">
-              {/* Column 1 — Owner & equipment */}
-              <div className="space-y-2 min-w-0">
-                <p className={secTitle}>
-                  <Building2 className="h-3 w-3 text-emerald-700 shrink-0" />
-                  Party &amp; equipment
-                </p>
-                <div className="space-y-3 min-w-0">
-                  <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
-                    <Label className={partyLbl} htmlFor="mra-owner">
-                      <span className={partyNumCls}>{num(1)}</span>
-                      <span>Owner name</span>
-                    </Label>
-                    <Input
-                      id="mra-owner"
-                      className={fiParty}
-                      value={header.owner}
-                      onChange={(e) => setHeader((p) => ({ ...p, owner: e.target.value }))}
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
-                    <Label className={partyLbl} htmlFor="mra-tin">
-                      <span className={partyNumCls}>{num(2)}</span>
-                      <span>TIN No</span>
-                    </Label>
-                    <Input
-                      id="mra-tin"
-                      className={fiParty}
-                      value={header.tinNo}
-                      onChange={(e) => setHeader((p) => ({ ...p, tinNo: e.target.value }))}
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
-                    <div className={partyLbl}>
-                      <span className={partyNumCls}>{num(3)}</span>
-                      <span>Category</span>
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <Select
-                        value={header.category || "__none__"}
-                        onValueChange={(v) =>
-                          setHeader((p) => ({ ...p, category: v === "__none__" ? "" : v }))
-                        }
-                        className={sel}
-                      >
-                        <SelectItem value="__none__">—</SelectItem>
-                        {CATEGORY_SELECT_OPTIONS.map((o) => (
-                          <SelectItem key={o.value} value={o.value}>
-                            {o.label}
-                          </SelectItem>
-                        ))}
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-1.5 sm:flex-row sm:items-start sm:gap-3">
-                    <div className={partyLblTop}>
-                      <span className={partyNumCls}>{num(4)}</span>
-                      <span>Description</span>
-                    </div>
-                    <div className={`min-w-0 flex-1 ${comboWrap}`}>
-                      {descriptionOptions.length === 0 && !facetsLoading ? (
-                        <Input
-                          id="mra-desc-fallback"
-                          className={`${fi} w-full border-0 shadow-none focus-visible:ring-0`}
-                          value={header.description}
-                          onChange={(e) => setHeader((p) => ({ ...p, description: e.target.value }))}
-                          placeholder={
-                            header.category
-                              ? "No Rental assets in DB for this category — type to add"
-                              : "Select category first"
-                          }
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Main Form - Left 2 columns */}
+              <div className="lg:col-span-2 space-y-6">
+                {/* Party Information Section */}
+                <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                  <CardContent className="p-6">
+                    <SectionHeader icon={Building2} title="Party Information" description="Owner / Lessor Details" />
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField number={1} label="Owner / Company Name" required>
+                          <Input
+                            placeholder="Enter full name or company name"
+                            value={header.owner}
+                            onChange={(e) => setHeader((p) => ({ ...p, owner: e.target.value }))}
+                            className={inputClass}
+                          />
+                        </FormField>
+                        <FormField number={2} label="TIN Number">
+                          <Input
+                            placeholder="Tax Identification Number"
+                            value={header.tinNo}
+                            onChange={(e) => setHeader((p) => ({ ...p, tinNo: e.target.value }))}
+                            className={inputClass}
+                          />
+                        </FormField>
+                      </div>
+                      <FormField number={3} label="Physical Address">
+                        <textarea
+                          rows={2}
+                          placeholder="Full address of the owner/lessor"
+                          value={header.address}
+                          onChange={(e) => setHeader((p) => ({ ...p, address: e.target.value }))}
+                          className={textareaClass}
                         />
-                      ) : (
-                        <div className="px-0.5 py-0.5">
+                      </FormField>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Equipment Information Section */}
+                <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                  <CardContent className="p-6">
+                    <SectionHeader icon={Truck} title="Equipment Information" description="Asset / Machinery Details" />
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField number={4} label="Equipment Category" required>
+                          <Select
+                            value={header.category || "__none__"}
+                            onValueChange={(v) => setHeader((p) => ({ ...p, category: v === "__none__" ? "" : v }))}
+                            className="w-full"
+                          >
+                            <SelectItem value="__none__">Select category...</SelectItem>
+                            {CATEGORY_SELECT_OPTIONS.map((o) => (
+                              <SelectItem key={o.value} value={o.value}>
+                                {o.label}
+                              </SelectItem>
+                            ))}
+                          </Select>
+                        </FormField>
+                        <FormField number={5} label="Equipment Description" required>
                           <SearchableCombobox
                             id="machinery-rent-desc"
                             value={header.description}
                             onChange={(v) => setHeader((p) => ({ ...p, description: v }))}
                             options={descriptionOptions}
-                            placeholder="Rental equipment descriptions (database)"
+                            placeholder="Select or type equipment description"
                             loading={facetsLoading}
                             allowEmpty
                           />
-                        </div>
-                      )}
+                        </FormField>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField number={6} label="Make / Model">
+                          <Input
+                            placeholder="Manufacturer and model"
+                            value={header.makeModel}
+                            onChange={(e) => setHeader((p) => ({ ...p, makeModel: e.target.value }))}
+                            className={inputClass}
+                          />
+                        </FormField>
+                        <FormField number={7} label="Plate / Serial Number">
+                          <Input
+                            placeholder="Vehicle plate or serial number"
+                            value={header.plateNo}
+                            onChange={(e) => setHeader((p) => ({ ...p, plateNo: e.target.value }))}
+                            className={inputClass}
+                          />
+                        </FormField>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <FormField number={8} label="KM/HM Reading">
+                          <Input
+                            type="number"
+                            placeholder="Current reading"
+                            value={header.kmHrReading}
+                            onChange={(e) => setHeader((p) => ({ ...p, kmHrReading: e.target.value }))}
+                            className={inputClass}
+                          />
+                        </FormField>
+                        <FormField number={9} label="Fuel (Liters)">
+                          <Input
+                            type="number"
+                            placeholder="Fuel on delivery"
+                            value={header.fuelFilled}
+                            onChange={(e) => setHeader((p) => ({ ...p, fuelFilled: e.target.value }))}
+                            className={inputClass}
+                          />
+                        </FormField>
+                        <FormField number={10} label="Capacity (M³)">
+                          <Input
+                            type="number"
+                            step="0.01"
+                            placeholder="Capacity"
+                            value={header.capacity}
+                            onChange={(e) => setHeader((p) => ({ ...p, capacity: e.target.value }))}
+                            className={inputClass}
+                          />
+                        </FormField>
+                      </div>
+                      <FormField number={11} label="Rented For Project / Location" required>
+                        <SearchableCombobox
+                          id="machinery-rent-project"
+                          value={header.rentedForProject}
+                          onChange={(v) => setHeader((p) => ({ ...p, rentedForProject: v }))}
+                          options={projectLocationOptions}
+                          placeholder="Search project name or location"
+                          loading={allFacetsLoading}
+                          allowEmpty
+                        />
+                      </FormField>
                     </div>
-                  </div>
-                  <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
-                    <Label className={partyLbl} htmlFor="machinery-rent-project">
-                      <span className={partyNumCls}>{num(5)}</span>
-                      <span>Rented project</span>
-                    </Label>
-                    <div className={`min-w-0 flex-1 ${comboWrap} px-0.5 py-0.5`}>
-                      <SearchableCombobox
-                        id="machinery-rent-project"
-                        value={header.rentedForProject}
-                        onChange={(v) => setHeader((p) => ({ ...p, rentedForProject: v }))}
-                        options={projectLocationOptions}
-                        placeholder="Search project / location"
-                        loading={allFacetsLoading}
-                        allowEmpty
-                      />
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
-                    <Label className={partyLbl} htmlFor="mra-makemodel">
-                      <span className={partyNumCls}>{num(6)}</span>
-                      <span>Make / Model</span>
-                    </Label>
-                    <Input
-                      id="mra-makemodel"
-                      className={fiParty}
-                      value={header.makeModel}
-                      onChange={(e) => setHeader((p) => ({ ...p, makeModel: e.target.value }))}
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
-                    <Label className={partyLbl} htmlFor="mra-plate">
-                      <span className={partyNumCls}>{num(7)}</span>
-                      <span>Plate No</span>
-                    </Label>
-                    <Input
-                      id="mra-plate"
-                      className={fiParty}
-                      value={header.plateNo}
-                      onChange={(e) => setHeader((p) => ({ ...p, plateNo: e.target.value }))}
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
-                    <Label className={partyLbl} htmlFor="mra-kmhr">
-                      <span className={partyNumCls}>{num(8)}</span>
-                      <span>Km/Hr reading</span>
-                    </Label>
-                    <Input
-                      id="mra-kmhr"
-                      className={fiParty}
-                      value={header.kmHrReading}
-                      onChange={(e) => setHeader((p) => ({ ...p, kmHrReading: e.target.value }))}
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
-                    <Label className={partyLbl} htmlFor="mra-fuel">
-                      <span className={partyNumCls}>{num(9)}</span>
-                      <span>Fuel (L)</span>
-                    </Label>
-                    <Input
-                      id="mra-fuel"
-                      className={fiParty}
-                      value={header.fuelFilled}
-                      onChange={(e) => setHeader((p) => ({ ...p, fuelFilled: e.target.value }))}
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
-                    <Label className={partyLbl} htmlFor="mra-capacity">
-                      <span className={partyNumCls}>{num(10)}</span>
-                      <span>Capacity (M³)</span>
-                    </Label>
-                    <Input
-                      id="mra-capacity"
-                      className={fiParty}
-                      value={header.capacity}
-                      onChange={(e) => setHeader((p) => ({ ...p, capacity: e.target.value }))}
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1.5 sm:flex-row sm:items-start sm:gap-3">
-                    <Label className={partyLblTop} htmlFor="mra-address">
-                      <span className={partyNumCls}>{num(11)}</span>
-                      <span>Address</span>
-                    </Label>
-                    <textarea
-                      id="mra-address"
-                      className={`${fiParty} min-h-[48px] py-1.5 resize-y`}
-                      value={header.address}
-                      onChange={(e) => setHeader((p) => ({ ...p, address: e.target.value }))}
-                    />
-                  </div>
-                </div>
-              </div>
+                  </CardContent>
+                </Card>
 
-              {/* Column 2 — Contract, reference, rates (title + fields together) */}
-              <div className="space-y-4 min-w-0 lg:border-l lg:border-emerald-100 lg:pl-6">
-                <div>
-                  <p className={secTitle}>
-                    <FileSignature className="h-3 w-3 text-emerald-700 shrink-0" />
-                    Contract &amp; reference
-                  </p>
-                  <div className="space-y-2">
-                    <div className="space-y-2">
-                      <Label className={lbl2}>Agreement duration</Label>
-                      <div className="grid w-full max-w-[min(100%,20rem)] gap-2 overflow-x-auto">
-                        <div className="grid min-w-0 grid-cols-[2.5rem_minmax(0,1fr)] items-center gap-2">
-                          <span className="text-xs font-bold text-slate-600">From</span>
+                {/* Contract Details Section */}
+                <Card className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                  <CardContent className="p-6">
+                    <SectionHeader icon={FileSignature} title="Contract Details" description="Terms & Duration" />
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField number={12} label="Contract Start Date">
                           <Input
                             type="date"
-                            className={fiContractDate}
                             value={header.contractFromDate}
                             onChange={(e) => {
                               const v = e.target.value;
                               setHeader((p) => ({
                                 ...p,
                                 contractFromDate: v,
-                                contractToDate:
-                                  p.contractToDate && v && p.contractToDate < v ? v : p.contractToDate,
+                                contractToDate: p.contractToDate && v && p.contractToDate < v ? v : p.contractToDate,
                               }));
                             }}
+                            className={inputClass}
                           />
-                        </div>
-                        <div className="grid min-w-0 grid-cols-[2.5rem_minmax(0,1fr)] items-center gap-2">
-                          <span className="text-xs font-bold text-slate-600">To</span>
+                        </FormField>
+                        <FormField number={13} label="Contract End Date">
                           <Input
                             type="date"
-                            className={fiContractDate}
                             value={header.contractToDate}
                             min={header.contractFromDate || undefined}
                             onChange={(e) => setHeader((p) => ({ ...p, contractToDate: e.target.value }))}
+                            className={inputClass}
                           />
-                        </div>
+                        </FormField>
                       </div>
-                    </div>
-                    {/* Same control width as From/To date inputs (12rem ≈ 1fr in the 15rem-wide From/To grid). */}
-                    <div className="grid grid-cols-2 items-center gap-2 gap-y-3 sm:gap-4">
-                      <div className="flex min-w-0 items-center gap-2">
-                        <Label className={`${lbl2} shrink-0`}>Status</Label>
-                        <div className="min-w-0 w-full max-w-[min(100%,12rem)]">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField number={14} label="Contract Status">
                           <Select
                             value={header.contractStatus}
                             onValueChange={(v) => setHeader((p) => ({ ...p, contractStatus: v }))}
-                            className={sel}
+                            className="w-full"
                           >
                             <SelectItem value="Active">Active</SelectItem>
                             <SelectItem value="Inactive">Inactive</SelectItem>
                             <SelectItem value="Suspended">Suspended</SelectItem>
                           </Select>
-                        </div>
-                      </div>
-                      <div className="flex min-w-0 items-center gap-2">
-                        <Label className={`${lbl2} shrink-0`}>Min hr/day</Label>
-                        <div className="min-w-0 w-full max-w-[min(100%,12rem)]">
+                        </FormField>
+                        <FormField number={15} label="Minimum Hours / Day">
                           <Input
                             type="number"
-                            className={`${fi} w-full min-w-0`}
+                            placeholder="Minimum daily operating hours"
                             value={header.minHourPerDay}
                             onChange={(e) => setHeader((p) => ({ ...p, minHourPerDay: e.target.value }))}
+                            className={inputClass}
                           />
+                        </FormField>
+                      </div>
+                      <FormField number={16} label="Additional Remarks / Conditions">
+                        <textarea
+                          rows={3}
+                          placeholder="Any special terms, conditions, or remarks"
+                          value={header.remark}
+                          onChange={(e) => setHeader((p) => ({ ...p, remark: e.target.value }))}
+                          className={textareaClass}
+                        />
+                      </FormField>
+                      <FormField label="Supporting Document" required>
+                        <div className="flex items-center gap-3">
+                          <input
+                            ref={agreementPdfInputRef}
+                            type="file"
+                            accept="application/pdf,.pdf"
+                            className="hidden"
+                            onChange={(e) => {
+                              const f = e.target.files?.[0];
+                              if (f && f.type === "application/pdf") setAgreementPdfFile(f);
+                              else if (f) alert("Only PDF files are allowed");
+                            }}
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => agreementPdfInputRef.current?.click()}
+                            className="gap-2"
+                          >
+                            <Upload className="h-4 w-4" />
+                            Upload Agreement PDF
+                          </Button>
+                          {agreementPdfFile && (
+                            <div className="flex items-center gap-2 text-sm text-gray-600">
+                              <FileText className="h-4 w-4 text-emerald-600" />
+                              <span className="truncate max-w-xs">{agreementPdfFile.name}</span>
+                              <button
+                                onClick={clearAgreementPdf}
+                                className="text-red-500 hover:text-red-700"
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                            </div>
+                          )}
                         </div>
-                      </div>
+                        <p className="text-[10px] text-gray-400 mt-1">Upload signed agreement in PDF format (max 10MB)</p>
+                      </FormField>
                     </div>
-                    <div className="flex flex-wrap items-center gap-3 pt-1">
-                      <Label className="shrink-0 text-sm font-extrabold text-slate-950 whitespace-nowrap">
-                        Agreement scan (PDF)
-                      </Label>
-                      <input
-                        ref={agreementPdfInputRef}
-                        type="file"
-                        accept="application/pdf,.pdf"
-                        className="hidden"
-                        onChange={onAgreementPdfChange}
-                      />
-                      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="h-8 shrink-0 text-xs font-semibold gap-1.5 border-emerald-200"
-                          onClick={() => agreementPdfInputRef.current?.click()}
-                        >
-                          <Upload className="h-3.5 w-3.5" />
-                          Choose PDF
-                        </Button>
-                        {agreementPdfFile && (
-                          <>
-                            <span
-                              className="min-w-0 flex-1 text-xs font-semibold text-slate-800 truncate"
-                              title={agreementPdfFile.name}
-                            >
-                              {agreementPdfFile.name}
-                            </span>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 shrink-0 px-1.5"
-                              onClick={clearAgreementPdf}
-                            >
-                              <X className="h-3.5 w-3.5" />
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
+              </div>
 
-                <div>
-                  <p className={secTitle}>
-                    <Banknote className="h-3 w-3 text-emerald-700 shrink-0" />
-                    Agreed rates
-                  </p>
-                  <div className="space-y-2 rounded-lg border-2 border-emerald-300/90 bg-gradient-to-br from-emerald-50/90 via-white to-emerald-50/40 p-3 shadow-sm ring-1 ring-emerald-100">
-                    <p className="text-center text-[10px] font-extrabold uppercase tracking-wider text-emerald-900">
-                      Rates in Ethiopian Birr (ETB)
-                    </p>
-                    <div className="space-y-2">
-                      {(
-                        [
-                          ["Operational / hr", "operationalRate", agreedRates.operationalRate] as const,
-                          ["Idle / hr", "idleRate", agreedRates.idleRate] as const,
-                          ["Down / hr", "downRate", agreedRates.downRate] as const,
-                        ]
-                      ).map(([label, key, val], i) => (
-                        <div key={key}>
-                          {i > 0 ? <div className="mb-2 h-px bg-emerald-200/80" /> : null}
-                          <div className="flex flex-col gap-2 sm:grid sm:grid-cols-[10.5rem_minmax(0,1fr)_auto] sm:items-center sm:gap-3">
-                            <Label className="text-sm font-extrabold text-slate-950 sm:min-h-[2rem] sm:self-center sm:leading-snug">
-                              {label}
-                            </Label>
-                            <div className="flex min-w-0 items-center gap-2 sm:contents">
+              {/* Right Column - Rates & Summary */}
+              <div className="space-y-6">
+                {/* Rate Card */}
+                <Card className="border-2 border-emerald-200 shadow-md bg-gradient-to-br from-white to-emerald-50/30">
+                  <CardContent className="p-6">
+                    <SectionHeader icon={Banknote} title="Rate Structure" description="Agreed Rates (ETB)" />
+                    <div className="space-y-4">
+                      <div className="bg-white rounded-lg p-4 border border-gray-200">
+                        <div className="space-y-3">
+                          <div>
+                            <Label className="text-xs font-semibold text-gray-700 mb-1 block">Operational Rate</Label>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-semibold">ETB</span>
                               <Input
                                 type="number"
                                 step="0.01"
-                                className={`${fi} min-w-0 w-full`}
-                                value={val}
-                                onChange={(e) =>
-                                  setAgreedRates((p) => ({ ...p, [key]: e.target.value }))
-                                }
                                 placeholder="0.00"
+                                value={agreedRates.operationalRate}
+                                onChange={(e) => setAgreedRates((p) => ({ ...p, operationalRate: e.target.value }))}
+                                className="pl-12 text-base font-semibold"
                               />
-                              <span className="inline-flex h-8 shrink-0 items-center justify-center rounded-md bg-emerald-800 px-3 text-xs font-bold text-white min-w-[3.5rem]">
-                                Birr
-                              </span>
                             </div>
+                            <p className="text-[10px] text-gray-400 mt-1">per operating hour</p>
+                          </div>
+                          <div className="h-px bg-gray-200"></div>
+                          <div>
+                            <Label className="text-xs font-semibold text-gray-700 mb-1 block">Idle Rate</Label>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-semibold">ETB</span>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                placeholder="0.00"
+                                value={agreedRates.idleRate}
+                                onChange={(e) => setAgreedRates((p) => ({ ...p, idleRate: e.target.value }))}
+                                className="pl-12"
+                              />
+                            </div>
+                            <p className="text-[10px] text-gray-400 mt-1">per idle hour</p>
+                          </div>
+                          <div className="h-px bg-gray-200"></div>
+                          <div>
+                            <Label className="text-xs font-semibold text-gray-700 mb-1 block">Down Rate</Label>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-semibold">ETB</span>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                placeholder="0.00"
+                                value={agreedRates.downRate}
+                                onChange={(e) => setAgreedRates((p) => ({ ...p, downRate: e.target.value }))}
+                                className="pl-12"
+                              />
+                            </div>
+                            <p className="text-[10px] text-gray-400 mt-1">per down hour</p>
                           </div>
                         </div>
-                      ))}
+                      </div>
                     </div>
+                  </CardContent>
+                </Card>
+
+                {/* Summary Card */}
+                <Card className="border border-gray-200 shadow-sm bg-gray-50">
+                  <CardContent className="p-5">
+                    <div className="flex items-center gap-2 mb-4">
+                      <ClipboardList className="h-4 w-4 text-emerald-600" />
+                      <h3 className="text-sm font-bold text-gray-800">Form Summary</h3>
+                    </div>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Owner:</span>
+                        <span className="font-medium text-gray-800 truncate max-w-[180px]">{header.owner || "—"}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Equipment:</span>
+                        <span className="font-medium text-gray-800 truncate max-w-[180px]">{header.description || "—"}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Project:</span>
+                        <span className="font-medium text-gray-800 truncate max-w-[180px]">{header.rentedForProject || "—"}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Duration:</span>
+                        <span className="font-medium text-gray-800">{header.contractFromDate?.slice(0,10) || "—"} → {header.contractToDate?.slice(0,10) || "—"}</span>
+                      </div>
+                      <div className="border-t border-gray-200 pt-2 mt-2">
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Operational:</span>
+                          <span className="font-semibold text-emerald-700">ETB {agreedRates.operationalRate || "0"}/hr</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Idle:</span>
+                          <span className="font-semibold text-amber-700">ETB {agreedRates.idleRate || "0"}/hr</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500">Down:</span>
+                          <span className="font-semibold text-red-700">ETB {agreedRates.downRate || "0"}/hr</span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Prepared By & Submit */}
+                <div className="bg-white rounded-lg border border-gray-200 p-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <User className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm font-medium text-gray-700">Prepared by</span>
                   </div>
-                </div>
-
-                <div className="flex items-start gap-2 pt-1">
-                  <Label className={`${lbl2} pt-2`}>Remark</Label>
-                  <textarea
-                    className={`${fi} min-h-[60px] flex-1 py-1.5 resize-y`}
-                    value={header.remark}
-                    onChange={(e) => setHeader((p) => ({ ...p, remark: e.target.value }))}
-                    placeholder="Notes or conditions"
-                  />
+                  <p className="text-base font-semibold text-gray-900 mb-4">{preparedByName || "—"}</p>
+                  <Button
+                    onClick={handleSubmitAgreement}
+                    className="w-full bg-emerald-700 hover:bg-emerald-800 text-white py-2.5 text-base font-semibold gap-2"
+                  >
+                    <CheckCircle className="h-5 w-5" />
+                    Submit Rental Agreement
+                  </Button>
                 </div>
               </div>
-            </div>
-
-            <div className="mt-6 flex w-full min-w-0 flex-col gap-3 border-t-2 border-emerald-200/80 pt-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                <span className="text-sm font-extrabold text-slate-950">Prepared by</span>
-                <span
-                  className="min-w-0 truncate text-sm font-semibold text-slate-800"
-                  title={preparedByName || undefined}
-                >
-                  {preparedByName || "—"}
-                </span>
-              </div>
-              <Button
-                type="button"
-                onClick={handleSubmitAgreement}
-                className="h-9 w-full shrink-0 bg-[#137638] px-5 text-white hover:bg-[#0f6430] sm:w-auto"
-              >
-                Submit agreement
-              </Button>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Preview — same shell as EquipmentUtilizationForm (emerald bar + Download PDF) */}
+      {/* Preview Modal */}
       {previewOpen && (
-        <div
-          className="fixed inset-0 z-[200] flex items-center justify-center overflow-x-hidden overflow-y-auto p-2 bg-slate-950/65 backdrop-blur-md print:hidden"
-          role="dialog"
-          aria-modal="true"
-        >
+        <div className="fixed inset-0 z-[200] flex items-center justify-center overflow-x-hidden overflow-y-auto p-2 bg-slate-950/65 backdrop-blur-md print:hidden">
           <Card
             className="flex min-h-0 w-full min-w-0 max-w-full flex-col overflow-hidden rounded-2xl border border-emerald-200/80 bg-white shadow-2xl ring-1 ring-emerald-100 sm:max-h-[98vh]"
             style={{ maxWidth: "min(210mm, calc(100vw - 1rem))" }}
@@ -740,7 +877,7 @@ export default function MachineryRentAgreementForm() {
                 }}
               >
                 <div className="mb-3 max-w-full overflow-hidden text-slate-900">
-                  <UtilizationStyleHeader subtitle="RENTED MACHINERIES AGREEMENT" />
+                  <UtilizationStyleHeader subtitle="RENTED ASSET AGREEMENT" />
                 </div>
 
                 <div className="mb-3 space-y-1.5 border-l-4 border-emerald-700 bg-slate-50/90 px-3 py-2 font-sans text-[9px] leading-snug text-slate-800 shadow-sm">
@@ -751,7 +888,7 @@ export default function MachineryRentAgreementForm() {
                     </span>
                   </div>
                   <div className="flex justify-between gap-3 border-b border-slate-200/90 pb-1">
-                    <span className="font-serif text-[10px] font-bold text-emerald-950">Form date (auto)</span>
+                    <span className="font-serif text-[10px] font-bold text-emerald-950">Date</span>
                     <span className="font-mono text-[9px] font-semibold text-slate-700">{formDateAuto}</span>
                   </div>
                   <div className="flex justify-between gap-3 border-b border-slate-200/90 pb-1">

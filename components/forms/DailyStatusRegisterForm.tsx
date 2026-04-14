@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { fetchAssetFacets, fetchEquipmentOptions, type EquipmentOption } from "@/lib/api/assets"
 import { Eye, X } from "lucide-react"
 import { FormModalHeaderActionsContext } from "@/components/FormModal"
+import { createDailyStatusChangeRequest } from "@/lib/api/machinery-operations"
 
 type StatusRow = {
   id: string
@@ -40,6 +41,7 @@ export default function DailyStatusRegisterForm() {
   const [rows, setRows] = useState<StatusRow[]>([])
   const [search, setSearch] = useState("")
   const [previewOpen, setPreviewOpen] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
 
   // Load all projects and global status options once
   useEffect(() => {
@@ -176,6 +178,33 @@ export default function DailyStatusRegisterForm() {
     (r) => r.changed && r.newStatus && r.newStatus !== r.status
   )
 
+  const handleSubmitChanges = async () => {
+    if (!header.gcDate) {
+      window.alert("Date is required.")
+      return
+    }
+    if (changedRows.length === 0) {
+      window.alert("No changed rows to submit.")
+      return
+    }
+    try {
+      setSubmitting(true)
+      for (const row of changedRows) {
+        await createDailyStatusChangeRequest({
+          asset_id: row.assetId,
+          request_date: header.gcDate,
+          status_to: row.newStatus,
+          request_note: `Status changed from ${row.status || "—"} to ${row.newStatus || "—"}.`,
+        })
+      }
+      window.alert("Status change requests submitted for approval.")
+    } catch (err) {
+      window.alert(err instanceof Error ? err.message : "Failed to submit status change requests.")
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   return (
     <div className="w-full max-w-6xl mx-auto min-w-0 h-full min-h-0 flex flex-col p-0 m-0 overflow-hidden">
       <Card className="w-full min-w-0 flex-1 min-h-0 border-0 shadow-none rounded-none bg-white overflow-hidden flex flex-col">
@@ -240,13 +269,23 @@ export default function DailyStatusRegisterForm() {
                 className="h-8 w-64 border border-slate-300 rounded-md px-2 text-xs focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
               />
             </div>
-            <div className="text-[11px] text-slate-500">
+            <div className="flex items-center gap-3">
+              <Button
+                type="button"
+                onClick={handleSubmitChanges}
+                disabled={submitting || changedRows.length === 0}
+                className="h-8 px-3 text-xs bg-[#137638] hover:bg-[#0f6430] text-white disabled:opacity-60"
+              >
+                {submitting ? "Submitting..." : "Submit Changed Assets"}
+              </Button>
+              <div className="text-[11px] text-slate-500">
               Showing{" "}
               <span className="font-mono font-semibold">
                 {filteredRows.length}
               </span>{" "}
               of{" "}
               <span className="font-mono font-semibold">{total}</span> equipment
+              </div>
             </div>
           </div>
 
@@ -378,7 +417,7 @@ export default function DailyStatusRegisterForm() {
             {/* Preview header */}
             <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-zinc-200 bg-gradient-to-r from-slate-50 to-white">
               <span className="text-sm font-semibold text-slate-700">
-                Preview — Daily Status Register (A4)
+                Preview — Daily Status Change Register (A4)
               </span>
               <button
                 type="button"
