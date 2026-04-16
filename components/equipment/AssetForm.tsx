@@ -68,6 +68,12 @@ export default function AssetForm({
   onSuccess,
   onCancel,
 }: AssetFormProps) {
+  const toDateInputValue = (v: string | null | undefined): string => {
+    if (!v) return '';
+    const s = String(v).trim();
+    return s.length >= 10 ? s.slice(0, 10) : s;
+  };
+
   const isEdit = !!asset?.id;
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -287,7 +293,7 @@ export default function AssetForm({
               tire_size: d.tire_size ?? '',
               battery_capacity: d.battery_capacity ?? '',
               insurance_coverage: d.insurance_coverage ?? '',
-              bolo_renewal_date: d.bolo_renewal_date ?? '',
+              bolo_renewal_date: toDateInputValue(d.bolo_renewal_date),
             };
             setDetailRates(rates);
             setDetailFields(fields);
@@ -316,7 +322,7 @@ export default function AssetForm({
               tire_size: d.tire_size ?? '',
               battery_capacity: d.battery_capacity ?? '',
               insurance_coverage: d.insurance_coverage ?? '',
-              bolo_renewal_date: d.bolo_renewal_date ?? '',
+              bolo_renewal_date: toDateInputValue(d.bolo_renewal_date),
             };
             const r = ratesForForm(rates);
             setDetailRates(r);
@@ -489,7 +495,7 @@ export default function AssetForm({
               tire_size: detailFields.tire_size || null,
               battery_capacity: detailFields.battery_capacity || null,
               insurance_coverage: detailFields.insurance_coverage || null,
-              bolo_renewal_date: detailFields.bolo_renewal_date || null,
+              bolo_renewal_date: toDateInputValue(detailFields.bolo_renewal_date) || null,
               rate_op: ratePayload.rate_op,
               rate_idle: ratePayload.rate_idle,
               rate_down: ratePayload.rate_down,
@@ -505,7 +511,7 @@ export default function AssetForm({
               tire_size: detailFields.tire_size || null,
               battery_capacity: detailFields.battery_capacity || null,
               insurance_coverage: detailFields.insurance_coverage || null,
-              bolo_renewal_date: detailFields.bolo_renewal_date || null,
+              bolo_renewal_date: toDateInputValue(detailFields.bolo_renewal_date) || null,
               rate_op: ratePayload.rate_op,
               rate_idle: ratePayload.rate_idle,
               rate_down: ratePayload.rate_down,
@@ -531,8 +537,12 @@ export default function AssetForm({
           } else if (cat === AUXILIARY_CATEGORY && desc.includes('generator')) {
             await updateAuxGeneratorRates(asset.id, ratePayload);
           }
-        } catch {
-          // ignore detail update errors
+        } catch (detailErr) {
+          throw new Error(
+            detailErr instanceof Error
+              ? `Asset updated, but detail/rate update failed: ${detailErr.message}`
+              : 'Asset updated, but detail/rate update failed.'
+          );
         }
 
         setSuccess('Asset details updated successfully.');
@@ -569,7 +579,7 @@ export default function AssetForm({
               tire_size: detailFields.tire_size || null,
               battery_capacity: detailFields.battery_capacity || null,
               insurance_coverage: detailFields.insurance_coverage || null,
-              bolo_renewal_date: detailFields.bolo_renewal_date || null,
+              bolo_renewal_date: toDateInputValue(detailFields.bolo_renewal_date) || null,
               rate_op: ratePayload.rate_op,
               rate_idle: ratePayload.rate_idle,
               rate_down: ratePayload.rate_down,
@@ -585,7 +595,7 @@ export default function AssetForm({
               tire_size: detailFields.tire_size || null,
               battery_capacity: detailFields.battery_capacity || null,
               insurance_coverage: detailFields.insurance_coverage || null,
-              bolo_renewal_date: detailFields.bolo_renewal_date || null,
+              bolo_renewal_date: toDateInputValue(detailFields.bolo_renewal_date) || null,
               rate_op: ratePayload.rate_op,
               rate_idle: ratePayload.rate_idle,
               rate_down: ratePayload.rate_down,
@@ -611,8 +621,12 @@ export default function AssetForm({
           } else if (cat === AUXILIARY_CATEGORY && desc.includes('generator')) {
             await updateAuxGeneratorRates(created.id, ratePayload);
           }
-        } catch {
-          // ignore detail update errors
+        } catch (detailErr) {
+          throw new Error(
+            detailErr instanceof Error
+              ? `Asset created, but detail/rate setup failed: ${detailErr.message}`
+              : 'Asset created, but detail/rate setup failed.'
+          );
         }
 
         setSuccess('Asset created successfully.');

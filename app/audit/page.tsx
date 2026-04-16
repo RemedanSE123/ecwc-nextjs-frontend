@@ -34,6 +34,7 @@ const SORT_OPTIONS = [
 ];
 
 const PAGE_SIZES = [10, 25, 50, 100];
+const ACTION_CANON_PREFIX = '__canon__:';
 
 export interface AuditLogEntry {
   id: number;
@@ -72,13 +73,29 @@ function formatAction(action: string): string {
   return normalized.replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+function canonicalAction(action: string): string {
+  return action.replace(/[:_-\s]/g, '').toLowerCase();
+}
+
+function formatActionLabel(action: string): string {
+  const lower = action.toLowerCase();
+  if (lower.includes('rates')) {
+    const base = formatAction(action).replace(/\s+/g, ' ');
+    return base.replace(/\bRates\b/i, 'Rate');
+  }
+  return formatAction(action);
+}
+
 /** Badge style by action type for table and modal */
 function getActionBadgeClass(action: string): string {
   const base = 'inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold';
-  switch (action) {
+  const normalized = action.replace(/:/g, '_');
+  switch (normalized) {
     case 'login':
+    case 'auth_login':
       return `${base} bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/50`;
     case 'logout':
+    case 'auth_logout':
       return `${base} bg-slate-100 text-slate-700 dark:bg-slate-800/50 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/50`;
     case 'asset_create':
       return `${base} bg-blue-100 text-blue-800 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200/60 dark:border-blue-800/50`;
@@ -234,13 +251,26 @@ function renderAssetUpdateDetails(details: Record<string, unknown> | null): Reac
     (anyDetails.updated_data as Record<string, unknown> | undefined) ??
     null;
   const metadata = (anyDetails.metadata as Record<string, unknown> | undefined) ?? {};
+  const updatedFields =
+    (anyDetails.updated_fields as Record<string, unknown> | undefined) ??
+    (metadata.updated_fields as Record<string, unknown> | undefined) ??
+    {};
   const changes =
     (anyDetails.changes as Array<{ field?: string; from?: string | null; to?: string | null }> | undefined) ??
     (metadata.changes as Array<{ field?: string; from?: string | null; to?: string | null }> | undefined) ??
-    [];
+    (Object.entries(updatedFields).map(([field, to]) => ({
+      field,
+      from: null,
+      to: to == null ? null : String(to),
+    })) as Array<{ field?: string; from?: string | null; to?: string | null }>);;
+
+  const updatedFromFields =
+    !updated || Object.keys(updated).length === 0
+      ? (updatedFields as Record<string, unknown>)
+      : updated;
 
   const hasPrevious = previous && typeof previous === 'object' && Object.keys(previous).length > 0;
-  const hasUpdated = updated && typeof updated === 'object' && Object.keys(updated).length > 0;
+  const hasUpdated = updatedFromFields && typeof updatedFromFields === 'object' && Object.keys(updatedFromFields).length > 0;
 
   return (
     <div className="space-y-4">
@@ -261,7 +291,7 @@ function renderAssetUpdateDetails(details: Record<string, unknown> | null): Reac
               Updated asset values
             </p>
             {hasUpdated ? (
-              renderAssetData(updated!)
+              renderAssetData(updatedFromFields!)
             ) : (
               <p className="text-sm text-muted-foreground">—</p>
             )}
@@ -283,27 +313,8 @@ function renderAssetUpdateDetails(details: Record<string, unknown> | null): Reac
 }
 
 function isAssetFieldUpdateAction(action: string): boolean {
-  return (
-    action === 'asset_update' ||
-    action === 'asset:update' ||
-    action === 'asset:create' ||
-    action === 'asset:delete' ||
-    action === 'asset:upload' ||
-    action === 'project:update' ||
-    action === 'project:upsert' ||
-    action === 'project:delete' ||
-    action === 'auth:login' ||
-    action === 'auth:logout' ||
-    action === 'employee:approve' ||
-    action === 'heavy_vehicle_details_update' ||
-    action === 'heavy_vehicle_rates_update' ||
-    action === 'light_vehicle_details_update' ||
-    action === 'light_vehicle_rates_update' ||
-    action === 'machinery_details_update' ||
-    action === 'machinery_rates_update' ||
-    action === 'plant_rates_update' ||
-    action === 'aux_generator_rates_update'
-  );
+  const normalized = action.replace(/:/g, '_').toLowerCase();
+  return normalized.includes('update') || normalized.includes('create') || normalized.includes('delete') || normalized.includes('upload');
 }
 
 /** Render one detail value for display (handles changes, created_fields, changed_fields) */
@@ -505,7 +516,13 @@ export default function AuditPage() {
     setAuthError(null);
     const params = new URLSearchParams();
     if (userPhone) params.set('user_phone', userPhone);
-    if (action) params.set('action', action);
+    if (action) {
+      if (action.startsWith(ACTION_CANON_PREFIX)) {
+        params.set('action_canonical', action.slice(ACTION_CANON_PREFIX.length));
+      } else {
+        params.set('action', action);
+      }
+    }
     if (entityType) params.set('entity_type', entityType);
     if (sessionIdFilter) params.set('session_id', sessionIdFilter);
     if (assetIdFilter) params.set('entity_id', assetIdFilter);
@@ -554,11 +571,23 @@ export default function AuditPage() {
         const res = await fetch(apiUrl('/api/v1/audit/actions'), { headers: { ...getAuthHeaders() } });
         if (!res.ok) return;
         const json = await res.json().catch(() => ({ data: [] }));
-        const dynamic = (json.data ?? [])
+        const dynamicRaw = (json.data ?? [])
           .map((row: { action?: string }) => String(row.action ?? '').trim())
           .filter(Boolean)
-          .map((value: string) => ({ value, label: formatAction(value) }));
-        setActionOptions([{ value: '', label: 'All actions' }, ...dynamic]);
+          .map((value: string) => ({ value, label: formatActionLabel(value), canonical: canonicalAction(value) }));
+        const dedupedByCanonical = new Map<string, { value: string; label: string; canonical: string }>();
+        for (const item of dynamicRaw as Array<{ value: string; label: string; canonical: string }>) {
+          if (!dedupedByCanonical.has(item.canonical)) {
+            dedupedByCanonical.set(item.canonical, item);
+          }
+        }
+        const dynamicUnique = Array.from(dedupedByCanonical.values())
+          .map(({ label, canonical }) => ({
+            value: `${ACTION_CANON_PREFIX}${canonical}`,
+            label,
+          }))
+          .sort((a, b) => a.label.localeCompare(b.label));
+        setActionOptions([{ value: '', label: 'All actions' }, ...dynamicUnique]);
       } catch {
         // Keep fallback options
       }
